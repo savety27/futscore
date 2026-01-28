@@ -722,7 +722,7 @@ function getTeamStaffByTeamId($teamId) {
             FROM team_staff s
             LEFT JOIN teams t ON s.team_id = t.id
             WHERE s.team_id = ?
-            ORDER BY s.role, s.name";
+            ORDER BY s.position, s.name";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $teamId);
     $stmt->execute();
