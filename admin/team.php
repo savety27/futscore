@@ -950,12 +950,26 @@ body {
             </div>
         </div>
 
-        <div class="menu">
-            <?php foreach ($menu_items as $key => $item): ?>
-            <div class="menu-item">
-                <a href="<?php echo $key === 'dashboard' ? '../dashboard.php' : '#'; ?>" 
-                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
-                   data-menu="<?php echo $key; ?>">
+       <div class="menu">
+    <?php foreach ($menu_items as $key => $item): ?>
+    <div class="menu-item">
+        <a href="<?php 
+            if ($key === 'dashboard') {
+                echo 'dashboard.php';
+            } elseif ($key === 'challenge') {
+                echo 'challenge.php';
+            } elseif ($key === 'match') {
+                echo '../match.php';
+            } elseif ($key === 'training') {
+                echo '../training.php';
+            } elseif ($key === 'settings') {
+                echo '../settings.php';
+            } else {
+                echo '#';
+            }
+        ?>" 
+           class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+           data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
@@ -997,7 +1011,7 @@ body {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">0</span>
                 </div>
-                <a href="../logout.php" class="logout-btn">
+                <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>

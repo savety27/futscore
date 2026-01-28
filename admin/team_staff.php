@@ -39,73 +39,107 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
-// Query untuk mengambil data challenges dengan join ke teams
-$base_query = "SELECT c.*, 
-              t1.name as challenger_name, t1.logo as challenger_logo, t1.sport_type as challenger_sport,
-              t2.name as opponent_name, t2.logo as opponent_logo,
-              v.name as venue_name, v.location as venue_location
-              FROM challenges c
-              LEFT JOIN teams t1 ON c.challenger_id = t1.id
-              LEFT JOIN teams t2 ON c.opponent_id = t2.id
-              LEFT JOIN venues v ON c.venue_id = v.id
-              WHERE 1=1";
+// Query untuk mengambil data staff dengan join team dan count certificates
+$base_query = "SELECT 
+    ts.id,
+    ts.team_id,
+    ts.name,
+    ts.position,
+    ts.email,
+    ts.phone,
+    ts.photo,
+    ts.birth_place,
+    ts.birth_date,
+    ts.address,
+    ts.city,
+    ts.province,
+    ts.postal_code,
+    ts.country,
+    ts.is_active,
+    ts.created_at,
+    t.name as team_name,
+    t.alias as team_alias,
+    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count,
+    (SELECT COUNT(*) FROM staff_events se WHERE se.staff_id = ts.id) as event_count,
+    (SELECT COUNT(*) FROM staff_matches sm WHERE sm.staff_id = ts.id) as match_count
+    FROM team_staff ts
+    LEFT JOIN teams t ON ts.team_id = t.id
+    WHERE 1=1";
 
-$count_query = "SELECT COUNT(*) as total 
-                FROM challenges c
+$count_query = "SELECT COUNT(DISTINCT ts.id) as total FROM team_staff ts 
+                LEFT JOIN teams t ON ts.team_id = t.id
                 WHERE 1=1";
 
 // Handle search condition
+$search_condition = "";
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $base_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR t1.name LIKE ? OR t2.name LIKE ?)";
-    $count_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR 
-                         EXISTS (SELECT 1 FROM teams t WHERE t.id = c.challenger_id AND t.name LIKE ?) OR
-                         EXISTS (SELECT 1 FROM teams t WHERE t.id = c.opponent_id AND t.name LIKE ?))";
+    $base_query .= " AND (ts.name LIKE :search1 OR ts.email LIKE :search2 OR ts.phone LIKE :search3 OR ts.position LIKE :search4 OR t.name LIKE :search5 OR t.alias LIKE :search6)";
+    $count_query .= " AND (ts.name LIKE :search1 OR ts.email LIKE :search2 OR ts.phone LIKE :search3 OR ts.position LIKE :search4 OR t.name LIKE :search5 OR t.alias LIKE :search6)";
+    $search_condition = $search_term;
 }
 
-$base_query .= " ORDER BY c.challenge_date DESC, c.created_at DESC";
+$base_query .= " GROUP BY ts.id ORDER BY ts.created_at DESC";
 
 // Get total data
 $total_data = 0;
 $total_pages = 1;
-$challenges = [];
-$error = '';
+$staff_list = [];
 
 try {
     // Count total records
+    $stmt = $conn->prepare($count_query);
+    
     if (!empty($search)) {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } else {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
+        $search_term = "%{$search}%";
+        $stmt->bindParam(':search1', $search_term);
+        $stmt->bindParam(':search2', $search_term);
+        $stmt->bindParam(':search3', $search_term);
+        $stmt->bindParam(':search4', $search_term);
+        $stmt->bindParam(':search5', $search_term);
+        $stmt->bindParam(':search6', $search_term);
     }
+    
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_data = $result['total'];
     
     $total_pages = ceil($total_data / $limit);
     
     // Get data with pagination
-    $query = $base_query . " LIMIT ? OFFSET ?";
+    $query = $base_query . " LIMIT :limit OFFSET :offset";
+    $stmt = $conn->prepare($query);
     
     if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $params = array_merge([$search_term, $search_term, $search_term, $search_term], [$limit, $offset]);
-        $stmt->execute($params);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-        $stmt->execute();
+        $search_term = "%{$search}%";
+        $stmt->bindParam(':search1', $search_term);
+        $stmt->bindParam(':search2', $search_term);
+        $stmt->bindParam(':search3', $search_term);
+        $stmt->bindParam(':search4', $search_term);
+        $stmt->bindParam(':search5', $search_term);
+        $stmt->bindParam(':search6', $search_term);
     }
     
-    $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    $staff_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Calculate age for each staff
+    foreach ($staff_list as &$staff) {
+        if (!empty($staff['birth_date'])) {
+            $birthDate = new DateTime($staff['birth_date']);
+            $today = new DateTime();
+            $age = $today->diff($birthDate)->y;
+            $staff['age'] = $age;
+        } else {
+            $staff['age'] = '-';
+        }
+    }
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
-    error_log("Challenge Query Error: " . $e->getMessage());
 }
 ?>
 <!DOCTYPE html>
@@ -113,13 +147,11 @@ try {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Challenge Management - FutScore</title>
+<title>Team Staff Management - FutScore</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- HAPUS DataTables CSS -->
-<!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"> -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
-/* Include all CSS from team.php here */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -153,7 +185,7 @@ body {
     min-height: 100vh;
 }
 
-/* SIDEBAR STYLES - Same as team.php */
+/* ===== SIDEBAR ===== */
 .sidebar {
     width: 280px;
     background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
@@ -225,6 +257,7 @@ body {
     color: rgba(255, 255, 255, 0.8);
 }
 
+/* Menu */
 .menu {
     padding: 25px 15px;
 }
@@ -281,6 +314,7 @@ body {
     transform: rotate(90deg);
 }
 
+/* Submenu */
 .submenu {
     max-height: 0;
     overflow: hidden;
@@ -322,7 +356,7 @@ body {
     font-size: 18px;
 }
 
-/* MAIN CONTENT */
+/* ===== MAIN CONTENT ===== */
 .main {
     flex: 1;
     padding: 30px;
@@ -558,75 +592,90 @@ body {
     font-size: 12px;
 }
 
-/* Status Badge */
-.status-badge {
+.photo-cell {
+    width: 80px;
+}
+
+.staff-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.name-cell {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.team-cell {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.position-cell {
+    text-align: center;
+}
+
+.position-badge {
+    display: inline-block;
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 11px;
     font-weight: 600;
-    display: inline-block;
+    background: #f0f7ff;
+    color: var(--primary);
+    border: 1px solid rgba(10, 36, 99, 0.2);
+}
+
+.age-cell {
     text-align: center;
-    min-width: 80px;
+    font-weight: 600;
+    color: var(--dark);
 }
 
-.status-open {
-    background: rgba(76, 201, 240, 0.1);
-    color: #4CC9F0;
-    border: 1px solid #4CC9F0;
+.certificate-cell {
+    text-align: center;
 }
 
-.status-accepted {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success);
-    border: 1px solid var(--success);
-}
-
-.status-rejected {
-    background: rgba(211, 47, 47, 0.1);
-    color: var(--danger);
-    border: 1px solid var(--danger);
-}
-
-.status-expired {
-    background: rgba(108, 117, 125, 0.1);
-    color: var(--gray);
-    border: 1px solid var(--gray);
-}
-
-.status-completed {
-    background: rgba(249, 168, 38, 0.1);
-    color: var(--warning);
-    border: 1px solid var(--warning);
-}
-
-/* Team Logo */
-.team-logo-small {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #e0e0e0;
-    vertical-align: middle;
-    margin-right: 8px;
-}
-
-/* Score Badge */
-.score-badge {
-    background: var(--primary);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 14px;
+.certificate-count {
     display: inline-block;
+    padding: 6px 12px;
+    background: #e8f5e9;
+    color: var(--success);
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid rgba(46, 125, 50, 0.2);
 }
 
-/* Action Buttons */
+.certificate-count:hover {
+    background: var(--success);
+    color: white;
+}
+
+.event-cell, .match-cell {
+    text-align: center;
+    color: var(--gray);
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.date-cell {
+    color: var(--gray);
+    font-size: 14px;
+}
+
 .action-cell {
-    min-width: 180px;
+    min-width: 150px;
 }
 
-.action-buttons-inline {
+.action-buttons {
     display: flex;
     gap: 8px;
 }
@@ -673,16 +722,6 @@ body {
 
 .btn-view:hover {
     background: var(--primary);
-    color: white;
-}
-
-.btn-result {
-    background: rgba(249, 168, 38, 0.1);
-    color: var(--warning);
-}
-
-.btn-result:hover {
-    background: var(--warning);
     color: white;
 }
 
@@ -781,6 +820,40 @@ body {
     color: var(--warning);
 }
 
+/* Badge Styles */
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-primary {
+    background: rgba(10, 36, 99, 0.1);
+    color: var(--primary);
+}
+
+.badge-secondary {
+    background: rgba(108, 117, 125, 0.1);
+    color: var(--gray);
+}
+
+.badge-success {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success);
+}
+
+.badge-danger {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--danger);
+}
+
+.badge-warning {
+    background: rgba(249, 168, 38, 0.1);
+    color: var(--warning);
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .main {
@@ -819,7 +892,7 @@ body {
     }
     
     .data-table {
-        min-width: 1200px;
+        min-width: 1000px;
     }
 }
 
@@ -905,25 +978,25 @@ body {
         </div>
 
         <div class="menu">
-    <?php foreach ($menu_items as $key => $item): ?>
-    <div class="menu-item">
-        <a href="<?php 
-            if ($key === 'dashboard') {
-                echo 'dashboard.php';
-            } elseif ($key === 'challenge') {
-                echo 'challenge.php';
-            } elseif ($key === 'match') {
-                echo '../match.php';
-            } elseif ($key === 'training') {
-                echo '../training.php';
-            } elseif ($key === 'settings') {
-                echo '../settings.php';
-            } else {
-                echo '#';
-            }
-        ?>" 
-           class="menu-link <?php echo $key === 'challenge' ? 'active' : ''; ?>" 
-           data-menu="<?php echo $key; ?>">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <div class="menu-item">
+                <a href="<?php 
+                    if ($key === 'dashboard') {
+                        echo 'dashboard.php';
+                    } elseif ($key === 'challenge') {
+                        echo 'challenge.php';
+                    } elseif ($key === 'match') {
+                        echo '../match.php';
+                    } elseif ($key === 'training') {
+                        echo '../training.php';
+                    } elseif ($key === 'settings') {
+                        echo '../settings.php';
+                    } else {
+                        echo '#';
+                    }
+                ?>" 
+                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
@@ -939,7 +1012,7 @@ body {
                         $subitem_url = $subitem . '.php';
                         ?>
                         <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'challenge' ? 'active' : ''; ?>">
+                           class="submenu-link <?php echo $subitem === 'team_staff' ? 'active' : ''; ?>">
                            <?php echo ucfirst(str_replace('_', ' ', $subitem)); ?>
                         </a>
                     </div>
@@ -956,8 +1029,8 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Challenge Management 🏆</h1>
-                <p>Kelola tantangan antar team dengan mudah</p>
+                <h1>Team Staff Management 👔</h1>
+                <p>Kelola data staff team dengan mudah dan cepat</p>
             </div>
             
             <div class="user-actions">
@@ -965,7 +1038,7 @@ body {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">0</span>
                 </div>
-                <a href="logout.php" class="logout-btn">
+                <a href="../logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -975,12 +1048,12 @@ body {
         <!-- PAGE HEADER -->
         <div class="page-header">
             <div class="page-title">
-                <i class="fas fa-trophy"></i>
-                <span>Daftar Challenge</span>
+                <i class="fas fa-user-tie"></i>
+                <span>Daftar Team Staff</span>
             </div>
             
             <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari challenge (kode, status, nama team)..." 
+                <input type="text" name="search" placeholder="Cari staff (nama, email, phone, jabatan)..." 
                        value="<?php echo htmlspecialchars($search); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
@@ -988,18 +1061,18 @@ body {
             </form>
             
             <div class="action-buttons">
-                <a href="challenge_create.php" class="btn btn-primary">
+                <a href="team_staff_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Buat Challenge
+                    Add Staff
                 </a>
-                <button class="btn btn-success" onclick="exportChallenges()">
+                <button class="btn btn-success" onclick="exportStaff()">
                     <i class="fas fa-download"></i>
                     Export Excel
                 </button>
             </div>
         </div>
 
-        <?php if (isset($error) && !empty($error)): ?>
+        <?php if (isset($error)): ?>
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-circle"></i>
             <span><?php echo $error; ?></span>
@@ -1013,130 +1086,121 @@ body {
         </div>
         <?php endif; ?>
 
-        <!-- CHALLENGE TABLE -->
+        <!-- STAFF TABLE -->
         <div class="table-container">
-            <table class="data-table" id="challengesTable">
+            <table class="data-table" id="staffTable">
                 <thead>
                     <tr>
                         <th>No</th>
-                        <th>Kode</th>
+                        <th>Foto</th>
+                        <th>Nama</th>
+                        <th>Team</th>
+                        <th>Jabatan</th>
+                        <th>Usia</th>
+                        <th>Lisensi</th>
+                        <th>Events</th>
+                        <th>Matches</th>
                         <th>Status</th>
-                        <th>Challenger</th>
-                        <th>vs</th>
-                        <th>Opponent</th>
-                        <th>Venue</th>
-                        <th>Date & Time</th>
-                        <th>Expired</th>
-                        <th>Cabor</th>
-                        <th>Match Status</th>
-                        <th>Score</th>
+                        <th>Created At</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($challenges) && count($challenges) > 0): ?>
+                    <?php if (!empty($staff_list) && count($staff_list) > 0): ?>
                         <?php $no = $offset + 1; ?>
-                        <?php foreach($challenges as $challenge): ?>
+                        <?php foreach($staff_list as $staff): ?>
                         <tr>
                             <td class="count-cell"><?php echo $no++; ?></td>
-                            <td class="code-cell">
-                                <strong><?php echo htmlspecialchars($challenge['challenge_code']); ?></strong>
+                            <td class="photo-cell">
+                                <?php if (!empty($staff['photo'])): ?>
+                                    <img src="../<?php echo htmlspecialchars($staff['photo']); ?>" 
+                                         alt="<?php echo htmlspecialchars($staff['name']); ?>" 
+                                         class="staff-photo">
+                                <?php else: ?>
+                                    <div class="staff-photo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-user-tie" style="color: #999; font-size: 24px;"></i>
+                                    </div>
+                                <?php endif; ?>
                             </td>
-                            <td class="status-cell">
+                            <td class="name-cell">
+                                <strong><?php echo htmlspecialchars($staff['name']); ?></strong>
+                                <?php if (!empty($staff['email'])): ?>
+                                    <br><small style="color: var(--gray);"><?php echo htmlspecialchars($staff['email']); ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td class="team-cell">
+                                <?php if (!empty($staff['team_name'])): ?>
+                                    <strong><?php echo htmlspecialchars($staff['team_name']); ?></strong>
+                                    <?php if (!empty($staff['team_alias'])): ?>
+                                        <br><small style="color: var(--gray);">(<?php echo htmlspecialchars($staff['team_alias']); ?>)</small>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span style="color: var(--gray);">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="position-cell">
                                 <?php 
-                                $status_class = 'status-' . strtolower($challenge['status']);
+                                $position_labels = [
+                                    'manager' => 'Manager',
+                                    'headcoach' => 'Head Coach',
+                                    'coach' => 'Coach',
+                                    'goalkeeper_coach' => 'GK Coach',
+                                    'medic' => 'Medic',
+                                    'official' => 'Official'
+                                ];
+                                $position_class = [
+                                    'manager' => 'badge-primary',
+                                    'headcoach' => 'badge-success',
+                                    'coach' => 'badge-secondary',
+                                    'goalkeeper_coach' => 'badge-warning',
+                                    'medic' => 'badge-danger',
+                                    'official' => 'badge-info'
+                                ];
                                 ?>
-                                <span class="status-badge <?php echo $status_class; ?>">
-                                    <?php echo htmlspecialchars($challenge['status']); ?>
+                                <span class="position-badge <?php echo $position_class[$staff['position']] ?? 'badge-secondary'; ?>">
+                                    <?php echo $position_labels[$staff['position']] ?? ucfirst($staff['position']); ?>
                                 </span>
                             </td>
-                            <td class="team-cell">
-                                <?php if (!empty($challenge['challenger_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['challenger_name']); ?>" 
-                                         class="team-logo-small">
-                                <?php else: ?>
-                                    <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['challenger_name']); ?>
+                            <td class="age-cell">
+                                <?php echo $staff['age']; ?>
                             </td>
-                            <td class="vs-cell" style="text-align: center; font-weight: bold; color: var(--primary);">
-                                VS
-                            </td>
-                            <td class="team-cell">
-                                <?php if (!empty($challenge['opponent_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['opponent_name']); ?>" 
-                                         class="team-logo-small">
-                                <?php else: ?>
-                                    <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['opponent_name'] ?? 'TBD'); ?>
-                            </td>
-                            <td class="venue-cell">
-                                <?php echo !empty($challenge['venue_name']) ? htmlspecialchars($challenge['venue_name']) : '-'; ?>
-                            </td>
-                            <td class="datetime-cell">
-                                <?php echo date('d M Y, H:i', strtotime($challenge['challenge_date'])); ?>
-                            </td>
-                            <td class="expired-cell">
-                                <?php echo date('d M Y, H:i', strtotime($challenge['expiry_date'])); ?>
-                            </td>
-                            <td class="sport-cell">
-                                <?php if (!empty($challenge['sport_type'])): ?>
-                                    <span style="padding: 4px 8px; background: #f0f7ff; color: var(--primary); border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['sport_type']); ?>
+                            <td class="certificate-cell">
+                                <?php if ($staff['certificate_count'] > 0): ?>
+                                    <span class="certificate-count" onclick="viewCertificates(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'])); ?>')">
+                                        <i class="fas fa-certificate"></i> <?php echo $staff['certificate_count']; ?>
                                     </span>
                                 <?php else: ?>
-                                    <span style="padding: 4px 8px; background: #f0f0f0; color: #666; border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['challenger_sport'] ?? '-'); ?>
-                                    </span>
+                                    <span style="color: var(--gray);">-</span>
                                 <?php endif; ?>
+                            </td>
+                            <td class="event-cell">
+                                <?php echo $staff['event_count']; ?>
                             </td>
                             <td class="match-cell">
-                                <?php if (!empty($challenge['match_status'])): ?>
-                                    <span style="padding: 4px 8px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['match_status']); ?>
-                                    </span>
+                                <?php echo $staff['match_count']; ?>
+                            </td>
+                            <td class="status-cell">
+                                <?php if ($staff['is_active']): ?>
+                                    <span class="badge badge-success">Aktif</span>
                                 <?php else: ?>
-                                    <span style="padding: 4px 8px; background: #f8f9fa; color: #6c757d; border-radius: 12px; font-size: 11px;">
-                                        Belum Mulai
-                                    </span>
+                                    <span class="badge badge-danger">Non-Aktif</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="score-cell">
-                                <?php if (!empty($challenge['challenger_score']) && !empty($challenge['opponent_score'])): ?>
-                                    <span class="score-badge">
-                                        <?php echo $challenge['challenger_score']; ?> - <?php echo $challenge['opponent_score']; ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span style="color: #999; font-size: 12px;">-</span>
-                                <?php endif; ?>
+                            <td class="date-cell">
+                                <?php echo date('d M Y', strtotime($staff['created_at'])); ?>
                             </td>
                             <td class="action-cell">
-                                <div class="action-buttons-inline">
-                                    <a href="challenge_view.php?id=<?php echo $challenge['id']; ?>" 
+                                <div class="action-buttons">
+                                    <a href="team_staff_view.php?id=<?php echo $staff['id']; ?>" 
                                        class="action-btn btn-view">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <?php if ($challenge['status'] == 'open'): ?>
-                                    <a href="challenge_edit.php?id=<?php echo $challenge['id']; ?>" 
+                                    <a href="team_staff_edit.php?id=<?php echo $staff['id']; ?>" 
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php endif; ?>
-                                    <?php if ($challenge['status'] == 'accepted' && empty($challenge['challenger_score'])): ?>
-                                    <a href="challenge_result.php?id=<?php echo $challenge['id']; ?>" 
-                                       class="action-btn btn-result">
-                                        <i class="fas fa-futbol"></i>
-                                    </a>
-                                    <?php endif; ?>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteChallenge(<?php echo $challenge['id']; ?>, '<?php echo htmlspecialchars(addslashes($challenge['challenge_code'])); ?>')">
+                                            onclick="deleteStaff(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'])); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1144,18 +1208,17 @@ body {
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <!-- PASTIKAN: colspan="13" untuk 13 kolom -->
                         <tr>
-                            <td colspan="13" style="text-align: center; padding: 40px;">
+                            <td colspan="12" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
                                     <div class="empty-icon">
-                                        <i class="fas fa-trophy"></i>
+                                        <i class="fas fa-user-tie"></i>
                                     </div>
-                                    <h3>Belum Ada Challenge</h3>
-                                    <p>Mulai dengan membuat challenge pertama menggunakan tombol "Buat Challenge" di atas.</p>
-                                    <a href="challenge_create.php" class="btn btn-primary" style="margin-top: 20px;">
+                                    <h3>Belum Ada Data Staff</h3>
+                                    <p>Mulai dengan menambahkan staff pertama Anda menggunakan tombol "Add Staff" di atas.</p>
+                                    <a href="team_staff_create.php" class="btn btn-primary" style="margin-top: 20px;">
                                         <i class="fas fa-plus"></i>
-                                        Buat Challenge Pertama
+                                        Tambah Staff Pertama
                                     </a>
                                 </div>
                             </td>
@@ -1206,10 +1269,20 @@ body {
     </div>
 </div>
 
+<!-- Modal untuk melihat sertifikat -->
+<div id="certificatesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 15px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; padding: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 id="modalTitle" style="color: var(--primary);"></h3>
+            <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--danger);">&times;</button>
+        </div>
+        <div id="certificatesContent"></div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<!-- HAPUS DataTables JS -->
-<!-- <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1238,7 +1311,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentPage = window.location.pathname.split('/').pop();
     document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
         if (link.getAttribute('href') === currentPage || 
-            link.getAttribute('href') === 'challenge.php') {
+            link.getAttribute('href') === 'team_staff.php') {
             link.classList.add('active');
             
             // Open parent submenu if exists
@@ -1251,13 +1324,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // HAPUS DataTables initialization - TIDAK PERLU LAGI
-    // $('#challengesTable').DataTable({ ... });
+    // Initialize DataTable
+    $('#staffTable').DataTable({
+        searching: false,
+        paging: false,
+        info: false,
+        ordering: true,
+        language: {
+            emptyTable: "Tidak ada data staff",
+            zeroRecords: "Tidak ada data yang cocok dengan pencarian"
+        }
+    });
 });
 
-function deleteChallenge(challengeId, challengeCode) {
-    if (confirm(`Apakah Anda yakin ingin menghapus challenge "${challengeCode}"?`)) {
-        fetch(`challenge_delete.php?id=${challengeId}`, {
+function deleteStaff(staffId, staffName) {
+    if (confirm(`Apakah Anda yakin ingin menghapus staff "${staffName}"?`)) {
+        fetch(`team_staff_delete.php?id=${staffId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -1266,7 +1348,7 @@ function deleteChallenge(challengeId, challengeCode) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                toastr.success('Challenge berhasil dihapus!');
+                toastr.success('Staff berhasil dihapus!');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
@@ -1276,14 +1358,95 @@ function deleteChallenge(challengeId, challengeCode) {
         })
         .catch(error => {
             console.error('Error:', error);
-            toastr.error('Terjadi kesalahan saat menghapus challenge.');
+            toastr.error('Terjadi kesalahan saat menghapus staff.');
         });
     }
 }
 
-function exportChallenges() {
-    window.location.href = 'challenge_export.php' + (window.location.search ? window.location.search + '&export=excel' : '?export=excel');
+function exportStaff() {
+    window.location.href = 'team_staff_export.php' + (window.location.search ? window.location.search + '&export=excel' : '?export=excel');
 }
+
+function viewCertificates(staffId, staffName) {
+    // Tampilkan modal loading
+    const modal = document.getElementById('certificatesModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const content = document.getElementById('certificatesContent');
+    
+    modalTitle.textContent = `Sertifikat: ${staffName}`;
+    content.innerHTML = '<p style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</p>';
+    
+    modal.style.display = 'flex';
+    
+    // Fetch data sertifikat
+    fetch(`team_staff_certificates.php?id=${staffId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.certificates.length > 0) {
+                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">';
+                data.certificates.forEach(cert => {
+                    const fileExt = cert.certificate_file.split('.').pop().toLowerCase();
+                    const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
+                    
+                    html += `
+                    <div style="border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #f8f9fa;">
+                        <h4 style="margin-bottom: 10px; color: var(--primary);">${cert.certificate_name}</h4>
+                        ${cert.issuing_authority ? `<p><strong>Penerbit:</strong> ${cert.issuing_authority}</p>` : ''}
+                        ${cert.issue_date ? `<p><strong>Tanggal Terbit:</strong> ${cert.issue_date}</p>` : ''}
+                        <div style="margin-top: 15px;">
+                            ${isImage ? 
+                                `<img src="../uploads/certificates/${cert.certificate_file}" 
+                                      alt="${cert.certificate_name}" 
+                                      style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; cursor: pointer;"
+                                      onclick="viewCertificateImage('${cert.certificate_file}', '${cert.certificate_name}')">` :
+                                `<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 5px;">
+                                    <i class="fas fa-file-alt" style="font-size: 48px; color: #666;"></i>
+                                    <p style="margin-top: 10px;">${cert.certificate_file}</p>
+                                </div>`
+                            }
+                        </div>
+                    </div>
+                    `;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+            } else {
+                content.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--gray);">Belum ada sertifikat</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--danger);">Error memuat data</p>';
+        });
+}
+
+function viewCertificateImage(filename, title) {
+    // Tampilkan gambar di modal baru
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center;';
+    modal.innerHTML = `
+        <div style="position: relative;">
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
+            <img src="../uploads/certificates/${filename}" 
+                 alt="${title}" 
+                 style="max-width: 90vw; max-height: 90vh; border-radius: 5px;">
+            <p style="text-align: center; color: white; margin-top: 10px;">${title}</p>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeModal() {
+    document.getElementById('certificatesModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+document.getElementById('certificatesModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
 </script>
 </body>
-</html>
+</html> 

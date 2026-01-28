@@ -667,11 +667,7 @@ try {
         <div class="header">
             <h1><i class="fas fa-user-plus"></i> Tambah Player Baru</h1>
             <div class="breadcrumb">
-                <a href="../dashboard.php">Dashboard</a>
-                <span class="separator">/</span>
-                <a href="../player.php">Player</a>
-                <span class="separator">/</span>
-                <span>Tambah</span>
+               
             </div>
         </div>
 
