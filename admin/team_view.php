@@ -930,7 +930,7 @@ body {
             
             <div style="display: flex; gap: 40px; align-items: center; margin-bottom: 30px; flex-wrap: wrap;">
                 <?php if (!empty($team_data['logo'])): ?>
-                    <img src="../<?php echo htmlspecialchars($team_data['logo']); ?>" 
+                    <img src="../images/teams/<?php echo htmlspecialchars($team_data['logo']); ?>" 
                          alt="<?php echo htmlspecialchars($team_data['name']); ?>" 
                          class="team-logo-large">
                 <?php else: ?>

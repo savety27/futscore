@@ -1171,28 +1171,13 @@ body {
                                 <?php 
                                 $photo_displayed = false;
                                 if (!empty($player['photo'])): 
-                                    // Cek berbagai kemungkinan path
-                                    $possible_paths = [
-                                        '../../images/players/' . $player['photo'],
-                                        '../../' . $player['photo'],
-                                        'images/players/' . $player['photo'],
-                                        'uploads/players/' . $player['photo'],
-                                        $player['photo']
-                                    ];
-                                    
-                                    foreach ($possible_paths as $photo_path):
-                                        if (file_exists($photo_path) && is_file($photo_path)): 
-                                            $photo_displayed = true;
-                                            break;
-                                        endif;
-                                    endforeach;
-                                    
-                                    if ($photo_displayed): 
+                                    $photo_path = '../images/players/' . $player['photo'];
+                                    if (file_exists($photo_path)):
+                                        $photo_displayed = true;
                                 ?>
                                     <img src="<?php echo $photo_path; ?>" 
                                          alt="<?php echo htmlspecialchars($player['name']); ?>" 
-                                         class="player-photo"
-                                         onerror="this.style.display='none'; showDefaultPhoto(this);">
+                                         class="player-photo">
                                 <?php 
                                     endif;
                                 endif; 
@@ -1211,8 +1196,8 @@ body {
                                 </small>
                             </td>
                             <td class="team-cell">
-                                <?php if (!empty($player['team_logo']) && file_exists('../../' . $player['team_logo'])): ?>
-                                    <img src="../../<?php echo htmlspecialchars($player['team_logo']); ?>" 
+                                <?php if (!empty($player['team_logo'])): ?>
+                                    <img src="../images/teams/<?php echo htmlspecialchars($player['team_logo']); ?>" 
                                          alt="<?php echo htmlspecialchars($player['team_name']); ?>" 
                                          class="team-logo">
                                 <?php endif; ?>

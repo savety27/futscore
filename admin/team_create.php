@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Generate unique filename
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             $filename = 'team_' . time() . '_' . uniqid() . '.' . $ext;
-            $upload_dir = '../../images/teams/';
+            $upload_dir = '../images/teams/';
             
             // Create directory if not exists
             if (!file_exists($upload_dir)) {
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $target_path = $upload_dir . $filename;
             
             if (move_uploaded_file($file['tmp_name'], $target_path)) {
-                $logo_path = 'images/teams/' . $filename;
+                $logo_path = $filename;
             } else {
                 $errors['logo'] = "Gagal mengupload logo";
             }

@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $target_path = $upload_dir . $new_filename;
                 
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $target_path)) {
-                    $logo_path = 'images/teams/' . $new_filename;
+                    $logo_path = $new_filename;
                 } else {
                     $errors[] = "Gagal mengupload logo";
                 }

@@ -1074,7 +1074,7 @@ body {
                             <td class="count-cell"><?php echo $no++; ?></td>
                             <td class="logo-cell">
                                 <?php if (!empty($team['logo'])): ?>
-                                    <img src="../<?php echo htmlspecialchars($team['logo']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($team['logo']); ?>" 
                                          alt="<?php echo htmlspecialchars($team['name']); ?>" 
                                          class="team-logo">
                                 <?php else: ?>

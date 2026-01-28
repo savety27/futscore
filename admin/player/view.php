@@ -492,31 +492,14 @@ body {
     <!-- Player Profile -->
     <div class="player-profile">
         <div class="player-photo-section">
-            <?php 
-            $photo_displayed = false;
-            if (!empty($player['photo'])): 
-                // Cek berbagai kemungkinan path
-                $possible_paths = [
-                    '../../images/players/' . $player['photo'],
-                    '../../' . $player['photo'],
-                    'images/players/' . $player['photo'],
-                    'uploads/players/' . $player['photo'],
-                    $player['photo']
-                ];
-                
-                foreach ($possible_paths as $photo_path):
-                    if (file_exists($photo_path) && is_file($photo_path)): 
-                        $photo_displayed = true;
-                        break;
-                    endif;
-                endforeach;
-                
-                if ($photo_displayed): 
+            <?php if (!empty($player['photo'])): 
+                $photo_path = '../../images/players/' . $player['photo'];
+                if (file_exists($photo_path)):
+                    $photo_displayed = true;
             ?>
                 <img src="<?php echo $photo_path; ?>" 
                      alt="<?php echo htmlspecialchars($player['name']); ?>" 
-                     class="player-photo"
-                     onerror="this.style.display='none'; showDefaultPhoto(this);">
+                     class="player-photo">
             <?php 
                 endif;
             endif; 
@@ -788,24 +771,8 @@ body {
                     <?php echo !empty($player['ktp_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                 </div>
                 <?php if (!empty($player['ktp_image'])): 
-                    // Cek berbagai kemungkinan path
-                    $ktp_paths = [
-                        '../../images/players/' . $player['ktp_image'],
-                        '../../' . $player['ktp_image'],
-                        'images/players/' . $player['ktp_image'],
-                        'uploads/players/' . $player['ktp_image'],
-                        $player['ktp_image']
-                    ];
-                    
-                    $ktp_found = false;
-                    foreach ($ktp_paths as $ktp_path):
-                        if (file_exists($ktp_path) && is_file($ktp_path)):
-                            $ktp_found = true;
-                            break;
-                        endif;
-                    endforeach;
-                    
-                    if ($ktp_found): ?>
+                    $ktp_path = '../../images/players/' . $player['ktp_image'];
+                    if (file_exists($ktp_path)): ?>
                     <div class="document-preview">
                         <img src="<?php echo $ktp_path; ?>" 
                              alt="KTP" onclick="viewDocument('<?php echo $ktp_path; ?>')">
@@ -823,24 +790,8 @@ body {
                     <?php echo !empty($player['kk_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                 </div>
                 <?php if (!empty($player['kk_image'])): 
-                    // Cek berbagai kemungkinan path
-                    $kk_paths = [
-                        '../../images/players/' . $player['kk_image'],
-                        '../../' . $player['kk_image'],
-                        'images/players/' . $player['kk_image'],
-                        'uploads/players/' . $player['kk_image'],
-                        $player['kk_image']
-                    ];
-                    
-                    $kk_found = false;
-                    foreach ($kk_paths as $kk_path):
-                        if (file_exists($kk_path) && is_file($kk_path)):
-                            $kk_found = true;
-                            break;
-                        endif;
-                    endforeach;
-                    
-                    if ($kk_found): ?>
+                    $kk_path = '../../images/players/' . $player['kk_image'];
+                    if (file_exists($kk_path)): ?>
                     <div class="document-preview">
                         <img src="<?php echo $kk_path; ?>" 
                              alt="KK" onclick="viewDocument('<?php echo $kk_path; ?>')">
@@ -858,24 +809,8 @@ body {
                     <?php echo !empty($player['birth_cert_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                 </div>
                 <?php if (!empty($player['birth_cert_image'])): 
-                    // Cek berbagai kemungkinan path
-                    $akte_paths = [
-                        '../../images/players/' . $player['birth_cert_image'],
-                        '../../' . $player['birth_cert_image'],
-                        'images/players/' . $player['birth_cert_image'],
-                        'uploads/players/' . $player['birth_cert_image'],
-                        $player['birth_cert_image']
-                    ];
-                    
-                    $akte_found = false;
-                    foreach ($akte_paths as $akte_path):
-                        if (file_exists($akte_path) && is_file($akte_path)):
-                            $akte_found = true;
-                            break;
-                        endif;
-                    endforeach;
-                    
-                    if ($akte_found): ?>
+                    $akte_path = '../../images/players/' . $player['birth_cert_image'];
+                    if (file_exists($akte_path)): ?>
                     <div class="document-preview">
                         <img src="<?php echo $akte_path; ?>" 
                              alt="Akta Lahir" onclick="viewDocument('<?php echo $akte_path; ?>')">
@@ -893,24 +828,8 @@ body {
                     <?php echo !empty($player['diploma_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                 </div>
                 <?php if (!empty($player['diploma_image'])): 
-                    // Cek berbagai kemungkinan path
-                    $ijazah_paths = [
-                        '../../images/players/' . $player['diploma_image'],
-                        '../../' . $player['diploma_image'],
-                        'images/players/' . $player['diploma_image'],
-                        'uploads/players/' . $player['diploma_image'],
-                        $player['diploma_image']
-                    ];
-                    
-                    $ijazah_found = false;
-                    foreach ($ijazah_paths as $ijazah_path):
-                        if (file_exists($ijazah_path) && is_file($ijazah_path)):
-                            $ijazah_found = true;
-                            break;
-                        endif;
-                    endforeach;
-                    
-                    if ($ijazah_found): ?>
+                    $ijazah_path = '../../images/players/' . $player['diploma_image'];
+                    if (file_exists($ijazah_path)): ?>
                     <div class="document-preview">
                         <img src="<?php echo $ijazah_path; ?>" 
                              alt="Ijazah" onclick="viewDocument('<?php echo $ijazah_path; ?>')">

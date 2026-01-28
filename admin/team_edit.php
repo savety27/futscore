@@ -95,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // If delete logo is checked
     if ($form_data['delete_logo'] && $logo_path) {
-        if (file_exists('../' . $logo_path)) {
-            @unlink('../' . $logo_path);
+        if (file_exists('../images/teams/' . $logo_path)) {
+            @unlink('../images/teams/' . $logo_path);
         }
         $logo_path = null;
     }
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Generate unique filename
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             $filename = 'team_' . time() . '_' . uniqid() . '.' . $ext;
-            $upload_dir = '../../images/teams/';
+            $upload_dir = '../images/teams/';
             
             // Create directory if not exists
             if (!file_exists($upload_dir)) {
@@ -132,10 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if (move_uploaded_file($file['tmp_name'], $target_path)) {
                 // Delete old logo if exists
-                if ($logo_path && file_exists('../' . $logo_path)) {
-                    @unlink('../' . $logo_path);
+                if ($logo_path && file_exists('../images/teams/' . $logo_path)) {
+                    @unlink('../images/teams/' . $logo_path);
                 }
-                $logo_path = 'images/teams/' . $filename;
+                $logo_path = $filename;
             } else {
                 $errors['logo'] = "Gagal mengupload logo";
             }
