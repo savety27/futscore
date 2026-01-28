@@ -1273,6 +1273,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Menu toggle functionality
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    e.preventDefault();
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
+        }
+    });
+    
     // Initialize DataTable
     $('#teamsTable').DataTable({
         searching: false,
