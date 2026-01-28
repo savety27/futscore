@@ -1207,10 +1207,7 @@ $db_status = $db ? "connected" : "disconnected";
                 </form>
             </div>
             
-            <div class="login-footer">
-                <p>&copy; 2024 FutScore. All rights reserved.</p>
-                <p>Admin Panel v1.0</p>
-            </div>
+            
         </div>
     </div>
     
