@@ -52,8 +52,8 @@ try {
     $stats['total_events'] = 0;
 }
 
-$academy_name = "Marbella Academy";
-$email = "marbellacommunitycenter@gmail.com";
+$academy_name = "Hi, Welcome...";
+$email = "";
 
 // Data menu dropdown (sama seperti dashboard)
 $menu_items = [

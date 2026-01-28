@@ -1,5 +1,7 @@
 <?php
 session_start();
+// TAMBAHKIN INI - Deklarasi variabel sebelum digunakan
+$photo_displayed = false;
 require_once '../config/database.php';
 
 if (!isset($_SESSION['admin_logged_in'])) {

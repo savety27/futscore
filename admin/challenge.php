@@ -30,8 +30,8 @@ $menu_items = [
     'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
 ];
 
-$academy_name = "Marbella Academy";
-$email = "marbellacommunitycenter@gmail.com";
+$academy_name = "Hi, Welcome...";
+$email = "";
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';

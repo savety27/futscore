@@ -33,8 +33,8 @@ $menu_items = [
     'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
 ];
 
-$academy_name = "Marbella Academy";
-$email = "marbellacommunitycenter@gmail.com";
+$academy_name = "Hi, Welcome...";
+$email = "";
 
 // Initialize variables
 $errors = [];
@@ -1222,11 +1222,25 @@ body {
         </div>
 
         <div class="menu">
-            <?php foreach ($menu_items as $key => $item): ?>
-            <div class="menu-item">
-                <a href="<?php echo $key === 'dashboard' ? '../dashboard.php' : '#'; ?>" 
-                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
-                   data-menu="<?php echo $key; ?>">
+    <?php foreach ($menu_items as $key => $item): ?>
+    <div class="menu-item">
+        <a href="<?php 
+            if ($key === 'dashboard') {
+                echo 'dashboard.php';
+            } elseif ($key === 'challenge') {
+                echo 'challenge.php';
+            } elseif ($key === 'match') {
+                echo '../match.php';
+            } elseif ($key === 'training') {
+                echo '../training.php';
+            } elseif ($key === 'settings') {
+                echo '../settings.php';
+            } else {
+                echo '#';
+            }
+        ?>" 
+           class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+           data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
@@ -1268,7 +1282,7 @@ body {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">0</span>
                 </div>
-                <a href="../logout.php" class="logout-btn">
+                <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -1587,9 +1601,7 @@ body {
                         <span class="error"><?php echo $errors['new_certificates']; ?></span>
                     <?php endif; ?>
                     
-                    <button type="button" class="btn btn-secondary" onclick="addNewCertificate()" style="margin-top: 15px;">
-                        <i class="fas fa-plus"></i> Tambah Sertifikat Baru
-                    </button>
+                    
                 </div>
 
                 <div class="form-section">

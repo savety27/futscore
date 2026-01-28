@@ -933,7 +933,7 @@ body {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">0</span>
                 </div>
-                <a href="../logout.php" class="logout-btn">
+                <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>

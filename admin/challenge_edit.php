@@ -33,8 +33,8 @@ $menu_items = [
     'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
 ];
 
-$academy_name = "Marbella Academy";
-$email = "marbellacommunitycenter@gmail.com";
+$academy_name = "Hi, Welcome...";
+$email = "";
 
 // Initialize variables
 $errors = [];
@@ -1006,7 +1006,7 @@ body {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">0</span>
                 </div>
-                <a href="../logout.php" class="logout-btn">
+                <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>

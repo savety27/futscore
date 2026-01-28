@@ -55,8 +55,8 @@ $menu_items = [
     ]
 ];
 
-$academy_name = "Marbella Academy";
-$email = "marbellacommunitycenter@gmail.com";
+$academy_name = "Hi, Welcome...";
+$email = "";
 
 // Handle search
 $search = isset($_GET['search']) ? $_GET['search'] : '';
@@ -1061,7 +1061,7 @@ body {
                         }
                         ?>
                         <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'player' ? 'active' : ''; ?>">
+                           class="submenu-link <?php echo $subitem === 'Master' ? 'active' : ''; ?>">
                            <?php echo ucwords(str_replace('_', ' ', $subitem)); ?>
                         </a>
                     </div>
