@@ -458,6 +458,89 @@ function getCompletedMatches($limit = 10) {
 }
 
 /**
+ * Mendapatkan tantangan (challenge/match) yang dijadwalkan
+ */
+function getScheduledChallenges($limit = 10) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL)
+            ORDER BY c.challenge_date ASC 
+            LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $challenges = [];
+    while ($row = $result->fetch_assoc()) {
+        $challenges[] = $row;
+    }
+    return $challenges;
+}
+
+/**
+ * Mendapatkan tantangan (challenge/match) yang sudah selesai
+ */
+function getCompletedChallenges($limit = 10) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.match_status = 'completed'
+            ORDER BY c.challenge_date DESC 
+            LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $challenges = [];
+    while ($row = $result->fetch_assoc()) {
+        $challenges[] = $row;
+    }
+    return $challenges;
+}
+
+/**
+ * Mendapatkan tantangan terbaru (untuk card section)
+ */
+function getLatestChallenges($limit = 5) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            ORDER BY c.challenge_date DESC 
+            LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $challenges = [];
+    while ($row = $result->fetch_assoc()) {
+        $challenges[] = $row;
+    }
+    return $challenges;
+}
+
+/**
  * Mendapatkan match goals
  */
 function getMatchGoals($matchId) {
