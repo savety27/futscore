@@ -11,7 +11,7 @@ if (file_exists($config_path)) {
 
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
-    exit; // cokmmet
+    exit;
 }
 
 // Get team ID
@@ -53,10 +53,9 @@ try {
         exit;
     }
     
-    // Fetch players in this team
+    // Fetch players in this team - FIXED QUERY
     $players_stmt = $conn->prepare("
-        SELECT p.*, 
-               (SELECT name FROM positions WHERE id = p.position_id) as position_name
+        SELECT p.*, p.position as position_name
         FROM players p 
         WHERE p.team_id = ? AND p.status = 'active'
         ORDER BY p.name ASC
@@ -65,10 +64,9 @@ try {
     $players_stmt->execute([$team_id]);
     $players = $players_stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Fetch staff in this team
+    // Fetch staff in this team - FIXED QUERY
     $staff_stmt = $conn->prepare("
-        SELECT ts.*, 
-               (SELECT position_name FROM staff_positions WHERE id = ts.position_id) as position_name
+        SELECT ts.*, ts.position as position_name
         FROM team_staff ts 
         WHERE ts.team_id = ?
         ORDER BY ts.name ASC
