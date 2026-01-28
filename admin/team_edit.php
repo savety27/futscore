@@ -12,7 +12,7 @@ if (file_exists($config_path)) {
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
     exit;
-}
+} // comment
 
 // Get team ID
 $team_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
