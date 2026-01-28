@@ -978,7 +978,7 @@ body {
         <div class="menu">
             <?php foreach ($menu_items as $key => $item): ?>
             <div class="menu-item">
-                <a href="<?php echo $key === 'dashboard' ? '../dashboard.php' : '#'; ?>" 
+                <a href="<?php echo $key === 'dashboard' ? 'dashboard.php' : '#'; ?>" 
                    class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
                    data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
@@ -1022,7 +1022,7 @@ body {
                     <i class="fas fa-bell"></i>
                     <span class="notification-badge">0</span>
                 </div>
-                <a href="../logout.php" class="logout-btn">
+                <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
