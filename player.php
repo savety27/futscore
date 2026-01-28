@@ -161,7 +161,7 @@ $pageTitle = "Player List";
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #666;
+    color: #ccc; /* Improved contrast for dark background */
     font-size: 14px;
 }
 
