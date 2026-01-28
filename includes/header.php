@@ -54,7 +54,7 @@ $latestNews = getLatestNews(3);
             <div class="navbar-content">
                 <div class="logo">
                     <a href="<?php echo SITE_URL; ?>">
-                        <img src="<?php echo SITE_URL; ?>/images/logo.webp" alt="Futscore Logo">
+                        <img src="<?php echo SITE_URL; ?>/images/MGP FC.jpeg" alt="Futscore Logo">
                     </a>
                 </div>
                 <ul class="nav-menu">
@@ -78,6 +78,7 @@ $latestNews = getLatestNews(3);
                     <li><a href="<?php echo SITE_URL; ?>/news.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'news.php' ? 'active' : ''; ?>">NEWS</a></li>
                     <li><a href="<?php echo SITE_URL; ?>/bpjs.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'bpjs.php' ? 'active' : ''; ?>">BPJSTK</a></li>
                     <li><a href="<?php echo SITE_URL; ?>/contact.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'contact.php' ? 'active' : ''; ?>">CONTACT</a></li>
+                    <li><a href="<?php echo SITE_URL; ?>/admin/index.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'contact.php' ? 'active' : ''; ?>">LOGIN</a></li>
                 </ul>
                 <div class="hamburger">
                     <span></span>
