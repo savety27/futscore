@@ -458,6 +458,89 @@ function getCompletedMatches($limit = 10) {
 }
 
 /**
+ * Mendapatkan tantangan (challenge/match) yang dijadwalkan
+ */
+function getScheduledChallenges($limit = 10) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL)
+            ORDER BY c.challenge_date ASC 
+            LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $challenges = [];
+    while ($row = $result->fetch_assoc()) {
+        $challenges[] = $row;
+    }
+    return $challenges;
+}
+
+/**
+ * Mendapatkan tantangan (challenge/match) yang sudah selesai
+ */
+function getCompletedChallenges($limit = 10) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.match_status = 'completed'
+            ORDER BY c.challenge_date DESC 
+            LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $challenges = [];
+    while ($row = $result->fetch_assoc()) {
+        $challenges[] = $row;
+    }
+    return $challenges;
+}
+
+/**
+ * Mendapatkan tantangan terbaru (untuk card section)
+ */
+function getLatestChallenges($limit = 5) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            ORDER BY c.challenge_date DESC 
+            LIMIT ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $challenges = [];
+    while ($row = $result->fetch_assoc()) {
+        $challenges[] = $row;
+    }
+    return $challenges;
+}
+
+/**
  * Mendapatkan match goals
  */
 function getMatchGoals($matchId) {
@@ -509,6 +592,28 @@ function getMatchLineups($matchId) {
         $lineups[] = $row;
     }
     return $lineups;
+}
+
+/**
+ * Mendapatkan satu tantangan berdasarkan ID
+ */
+function getChallengeById($id) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_assoc();
 }
 
 // ========== FUNGSI TIM ==========
@@ -642,6 +747,97 @@ function getTeamStats($teamId) {
     }
     
     return null;
+}
+
+/**
+ * Mendapatkan semua tim (untuk listing)
+ */
+function getAllTeams() {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT * FROM teams WHERE is_active = 1 ORDER BY name ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $teams = [];
+    while ($row = $result->fetch_assoc()) {
+        $teams[] = $row;
+    }
+    return $teams;
+}
+
+/**
+ * Mendapatkan pemain berdasarkan team ID
+ */
+function getPlayersByTeamId($teamId, $eventId = null) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    if ($eventId) {
+        // Get players who participated in specific event
+        $sql = "SELECT DISTINCT p.*, t.name as team_name, t.logo as team_logo
+                FROM players p
+                LEFT JOIN teams t ON p.team_id = t.id
+                LEFT JOIN lineups l ON p.id = l.player_id
+                LEFT JOIN matches m ON l.match_id = m.id
+                WHERE p.team_id = ? AND m.event_id = ? AND p.status = 'active'
+                ORDER BY p.position, p.jersey_number";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $teamId, $eventId);
+    } else {
+        // Get all active players for the team
+        $sql = "SELECT p.*, t.name as team_name, t.logo as team_logo
+                FROM players p
+                LEFT JOIN teams t ON p.team_id = t.id
+                WHERE p.team_id = ? AND p.status = 'active'
+                ORDER BY p.position, p.jersey_number";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $teamId);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $players = [];
+    while ($row = $result->fetch_assoc()) {
+        // Calculate age
+        if (!empty($row['birth_date']) && $row['birth_date'] != '0000-00-00') {
+            $birthDate = new DateTime($row['birth_date']);
+            $today = new DateTime('today');
+            $age = $birthDate->diff($today)->y;
+            $row['age'] = $age;
+        } else {
+            $row['age'] = 'N/A';
+        }
+        $players[] = $row;
+    }
+    return $players;
+}
+
+/**
+ * Mendapatkan staff tim berdasarkan team ID
+ */
+function getTeamStaffByTeamId($teamId) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT s.*, t.name as team_name, t.logo as team_logo
+            FROM team_staff s
+            LEFT JOIN teams t ON s.team_id = t.id
+            WHERE s.team_id = ?
+            ORDER BY s.position, s.name";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $teamId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $staff = [];
+    while ($row = $result->fetch_assoc()) {
+        $staff[] = $row;
+    }
+    return $staff;
 }
 
 // ========== FUNGSI PEMAIN ==========

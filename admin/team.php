@@ -321,6 +321,9 @@ body {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -405,6 +408,8 @@ body {
     padding: 25px;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .page-title {
@@ -514,12 +519,13 @@ body {
     box-shadow: var(--card-shadow);
     margin-bottom: 30px;
     overflow-x: auto;
+    max-width: 100%;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 100%;
+    min-width: 1200px;
     table-layout: auto;
 }
 
@@ -828,6 +834,25 @@ body {
 }
 
 /* Responsive */
+@media (max-width: 1400px) {
+    .page-header {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .search-bar {
+        width: 100%;
+        max-width: 500px;
+        order: 3;
+    }
+    
+    .page-title {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+}
+
 @media (max-width: 1200px) {
     .main {
         margin-left: 0;
@@ -950,26 +975,12 @@ body {
             </div>
         </div>
 
-       <div class="menu">
-    <?php foreach ($menu_items as $key => $item): ?>
-    <div class="menu-item">
-        <a href="<?php 
-            if ($key === 'dashboard') {
-                echo 'dashboard.php';
-            } elseif ($key === 'challenge') {
-                echo 'challenge.php';
-            } elseif ($key === 'match') {
-                echo '../match.php';
-            } elseif ($key === 'training') {
-                echo '../training.php';
-            } elseif ($key === 'settings') {
-                echo '../settings.php';
-            } else {
-                echo '#';
-            }
-        ?>" 
-           class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
-           data-menu="<?php echo $key; ?>">
+        <div class="menu">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <div class="menu-item">
+                <a href="<?php echo $key === 'dashboard' ? '../dashboard.php' : '#'; ?>" 
+                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
@@ -1259,6 +1270,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
                 if (arrow) arrow.classList.add('rotate');
             }
+        }
+    });
+    
+    // Menu toggle functionality
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    e.preventDefault();
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
         }
     });
     

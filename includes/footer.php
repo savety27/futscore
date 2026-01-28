@@ -143,7 +143,7 @@
         const SITE_URL = '<?php echo SITE_URL; ?>';
         console.log('SITE_URL set to:', SITE_URL);
     </script>
-     <script src="<?php echo SITE_URL; ?>/js/script.js"></script>
+     <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 
      <!-- Chat Button -->
 <button class="chat-button" id="chatButton">
