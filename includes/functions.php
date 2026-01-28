@@ -594,6 +594,28 @@ function getMatchLineups($matchId) {
     return $lineups;
 }
 
+/**
+ * Mendapatkan satu tantangan berdasarkan ID
+ */
+function getChallengeById($id) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->fetch_assoc();
+}
+
 // ========== FUNGSI TIM ==========
 
 /**
