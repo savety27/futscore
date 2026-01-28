@@ -1091,18 +1091,18 @@ body {
             <table class="data-table" id="staffTable">
                 <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Foto</th>
+                        <th width="30">No</th>
+                        <th width="80">Foto</th>
                         <th>Nama</th>
                         <th>Team</th>
                         <th>Jabatan</th>
                         <th>Usia</th>
-                        <th>Lisensi</th>
+                        <th>Sertifikat</th>
                         <th>Events</th>
                         <th>Matches</th>
                         <th>Status</th>
                         <th>Created At</th>
-                        <th>Action</th>
+                        <th width="120">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1326,13 +1326,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize DataTable
     $('#staffTable').DataTable({
-        searching: false,
-        paging: false,
-        info: false,
-        ordering: true,
-        language: {
-            emptyTable: "Tidak ada data staff",
-            zeroRecords: "Tidak ada data yang cocok dengan pencarian"
+        "searching": false,
+        "paging": false,
+        "info": false,
+        "ordering": true,
+        "autoWidth": false,
+        "responsive": true,
+        "columnDefs": [
+            { "orderable": false, "targets": [1, 11] } // Disable ordering on Photo and Action
+        ],
+        "language": {
+            "emptyTable": "Tidak ada data staff",
+            "zeroRecords": "Tidak ada data yang cocok dengan pencarian"
         }
     });
 });
