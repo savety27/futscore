@@ -137,6 +137,7 @@ try {
             $staff['age'] = '-';
         }
     }
+    unset($staff); // Break the reference with the last element
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
