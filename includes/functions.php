@@ -644,6 +644,97 @@ function getTeamStats($teamId) {
     return null;
 }
 
+/**
+ * Mendapatkan semua tim (untuk listing)
+ */
+function getAllTeams() {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT * FROM teams WHERE is_active = 1 ORDER BY name ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $teams = [];
+    while ($row = $result->fetch_assoc()) {
+        $teams[] = $row;
+    }
+    return $teams;
+}
+
+/**
+ * Mendapatkan pemain berdasarkan team ID
+ */
+function getPlayersByTeamId($teamId, $eventId = null) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    if ($eventId) {
+        // Get players who participated in specific event
+        $sql = "SELECT DISTINCT p.*, t.name as team_name, t.logo as team_logo
+                FROM players p
+                LEFT JOIN teams t ON p.team_id = t.id
+                LEFT JOIN lineups l ON p.id = l.player_id
+                LEFT JOIN matches m ON l.match_id = m.id
+                WHERE p.team_id = ? AND m.event_id = ? AND p.status = 'active'
+                ORDER BY p.position, p.jersey_number";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $teamId, $eventId);
+    } else {
+        // Get all active players for the team
+        $sql = "SELECT p.*, t.name as team_name, t.logo as team_logo
+                FROM players p
+                LEFT JOIN teams t ON p.team_id = t.id
+                WHERE p.team_id = ? AND p.status = 'active'
+                ORDER BY p.position, p.jersey_number";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $teamId);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $players = [];
+    while ($row = $result->fetch_assoc()) {
+        // Calculate age
+        if (!empty($row['birth_date']) && $row['birth_date'] != '0000-00-00') {
+            $birthDate = new DateTime($row['birth_date']);
+            $today = new DateTime('today');
+            $age = $birthDate->diff($today)->y;
+            $row['age'] = $age;
+        } else {
+            $row['age'] = 'N/A';
+        }
+        $players[] = $row;
+    }
+    return $players;
+}
+
+/**
+ * Mendapatkan staff tim berdasarkan team ID
+ */
+function getTeamStaffByTeamId($teamId) {
+    global $db;
+    $conn = $db->getConnection();
+    
+    $sql = "SELECT s.*, t.name as team_name, t.logo as team_logo
+            FROM team_staff s
+            LEFT JOIN teams t ON s.team_id = t.id
+            WHERE s.team_id = ?
+            ORDER BY s.role, s.name";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $teamId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $staff = [];
+    while ($row = $result->fetch_assoc()) {
+        $staff[] = $row;
+    }
+    return $staff;
+}
+
 // ========== FUNGSI PEMAIN ==========
 
 /**
