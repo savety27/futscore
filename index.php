@@ -2,8 +2,9 @@
 require_once 'includes/header.php';
 
 // Get data from database
-$scheduledMatches = getScheduledMatches(5);
-$completedMatches = getCompletedMatches(5);
+$latestChallenges = getLatestChallenges(5);
+$scheduledMatches = getScheduledChallenges(5);
+$completedMatches = getCompletedChallenges(5);
 $newPlayers = getPlayers(5);
 $recentTransfers = [];
 $birthdayPlayers = [];
@@ -30,92 +31,29 @@ $pageTitle = "Home";
     <div class="match-cards-container">
         <div class="match-cards-scroll">
             <?php 
-            $matches = [
-                [
-                    'id' => 1,
-                    'date' => '25 Jan', 
-                    'comp' => 'PL AAFI 2026', 
-                    'team1' => 'PAFCA', 
-                    'team1_logo' => 'PAFCA.png',
-                    'score1' => 5, 
-                    'team2' => '014 BUFC',
-                    'team2_logo' => '014-bufc.png',
-                    'score2' => 1,
-                    'venue' => 'Golden Sport Center'
-                ],
-                [
-                    'id' => 2,
-                    'date' => '25 Jan', 
-                    'comp' => 'PL AAFI 2026', 
-                    'team1' => 'GENERASI FAB', 
-                    'team1_logo' => 'generasi-fab.png',
-                    'score1' => 0, 
-                    'team2' => 'FAMILY FUTSAL BALIKPAPAN',
-                    'team2_logo' => 'famili-balikpapan.png',
-                    'score2' => 4,
-                    'venue' => 'Golden Sport Center'
-                ],
-                [
-                    'id' => 3,
-                    'date' => '25 Jan', 
-                    'comp' => 'JTFL', 
-                    'team1' => 'KUDA LAUT NUSANTARA', 
-                    'team1_logo' => 'kuda-laut-nusantara.png',
-                    'score1' => 3, 
-                    'team2' => 'ANTRI FUTSAL SCHOOL GNR',
-                    'team2_logo' => 'antri-futsal.png',
-                    'score2' => 2,
-                    'venue' => 'Golden Sport Center'
-                ],
-                [
-                    'id' => 4,
-                    'date' => '25 Jan', 
-                    'comp' => 'AAFI TANGGERANG 1', 
-                    'team1' => 'APOLLO FUTSAL ACADEMY', 
-                    'team1_logo' => 'apollo futsal.png',
-                    'score1' => 1, 
-                    'team2' => 'TWO IN ONE FA',
-                    'team2_logo' => 'two in one.png',
-                    'score2' => 5,
-                    'venue' => 'Golden Sport Center'
-                ],
-                [
-                    'id' => 5,
-                    'date' => '26 Jan', 
-                    'comp' => 'JFTL', 
-                    'team1' => 'MESS FUTSAL', 
-                    'team1_logo' => 'mess-futsal.png',
-                    'score1' => 3, 
-                    'team2' => 'BAHATI FUTSAL',
-                    'team2_logo' => 'bahati-futsal.png',
-                    'score2' => 1,
-                    'venue' => 'Sport Center'
-                ]
-            ];
-            
-            foreach ($matches as $match): 
+            foreach ($latestChallenges as $match): 
             ?>
             <div class="match-card-wrapper">
                 <div class="match-card" data-match-id="<?php echo $match['id']; ?>">
                     <div class="match-header">
-                        <span class="match-date"><?php echo $match['date']; ?> | <?php echo $match['comp']; ?></span>
-                        <span class="match-status">FT</span>
+                        <span class="match-date"><?php echo formatDate($match['challenge_date']); ?> | <?php echo $match['sport_type']; ?></span>
+                        <span class="match-status"><?php echo strtoupper($match['match_status'] ?? 'VS'); ?></span>
                     </div>
                     
                     <div class="match-teams">
                         <!-- TEAM 1 -->
                         <div class="team">
                             <?php
-                            $logo1 = $match['team1_logo'];
+                            $logo1 = $match['challenger_logo'];
                             $logo1Path = SITE_URL . '/images/teams/' . $logo1;
                             ?>
                             <div class="team-logo-container">
                                 <img src="<?php echo $logo1Path; ?>" 
-                                     alt="<?php echo $match['team1']; ?>" 
+                                     alt="<?php echo $match['challenger_name']; ?>" 
                                      class="team-logo"
                                      onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                             </div>
-                            <span class="team-name"><?php echo $match['team1']; ?></span>
+                            <span class="team-name"><?php echo $match['challenger_name']; ?></span>
                         </div>
                         
                         <div class="vs">VS</div>
@@ -123,25 +61,31 @@ $pageTitle = "Home";
                         <!-- TEAM 2 -->
                         <div class="team">
                             <?php
-                            $logo2 = $match['team2_logo'];
+                            $logo2 = $match['opponent_logo'];
                             $logo2Path = SITE_URL . '/images/teams/' . $logo2;
                             ?>
                             <div class="team-logo-container">
                                 <img src="<?php echo $logo2Path; ?>" 
-                                     alt="<?php echo $match['team2']; ?>" 
+                                     alt="<?php echo $match['opponent_name']; ?>" 
                                      class="team-logo"
                                      onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                             </div>
-                            <span class="team-name"><?php echo $match['team2']; ?></span>
+                            <span class="team-name"><?php echo $match['opponent_name']; ?></span>
                         </div>
                     </div>
                     
                     <div class="match-score">
-                        <?php echo $match['score1']; ?> - <?php echo $match['score2']; ?>
+                        <?php 
+                        if ($match['match_status'] == 'completed') {
+                            echo $match['challenger_score'] . " - " . $match['opponent_score'];
+                        } else {
+                            echo date('H:i', strtotime($match['challenge_date']));
+                        }
+                        ?>
                     </div>
                     
                     <div class="match-details">
-                        <span class="match-venue"><i class="fas fa-map-marker-alt"></i> <?php echo $match['venue']; ?></span>
+                        <span class="match-venue"><i class="fas fa-map-marker-alt"></i> <?php echo $match['venue_name']; ?></span>
                         <button class="btn-details" data-match-id="<?php echo $match['id']; ?>">View Details</button>
                     </div>
                 </div>
@@ -346,76 +290,7 @@ $pageTitle = "Home";
     <!-- Schedule Tab -->
     <div class="tab-content active" id="match-schedule">
         <?php 
-        // Data schedule yang sinkron dengan result
-        $scheduleMatches = [
-            [
-                'id' => 101,
-                'team1' => 'PAFCA',
-                'team1_logo' => 'PAFCA.png',
-                'team2' => '014 BUFC',
-                'team2_logo' => '014-bufc.png',
-                'date' => '01 Feb 2026',
-                'time' => '10:15',
-                'event' => 'PL AAFI 2026',
-                'round' => 'Semi Final - Pekan ke-3',
-                'venue' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-                'status' => 'scheduled'
-            ],
-            [
-                'id' => 102,
-                'team1' => 'GENERASI FAB',
-                'team1_logo' => 'generasi-fab.png',
-                'team2' => 'FAMILY FUTSAL BALIKPAPAN',
-                'team2_logo' => 'famili-balikpapan.png',
-                'date' => '01 Feb 2026',
-                'time' => '10:45',
-                'event' => 'PL AAFI 2026',
-                'round' => 'Semi Final - Pekan ke-3',
-                'venue' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-                'status' => 'scheduled'
-            ],
-            [
-                'id' => 103,
-                'team1' => 'KUDA LAUT NUSANTARA',
-                'team1_logo' => 'kuda-laut-nusantara.png',
-                'team2' => 'ANTRI FUTSAL SCHOOL GNR',
-                'team2_logo' => 'antri-futsal.png',
-                'date' => '01 Feb 2026',
-                'time' => '10:45',
-                'event' => 'JTFL',
-                'round' => 'Semi Final - Pekan ke-3',
-                'venue' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-                'status' => 'scheduled'
-            ],
-            [
-                'id' => 104,
-                'team1' => 'APOLLO FUTSAL ACADEMY',
-                'team1_logo' => 'apollo futsal.png',
-                'team2' => 'TWO IN ONE FA',
-                'team2_logo' => 'two in one.png',
-                'date' => '01 Feb 2026',
-                'time' => '10:45',
-                'event' => 'AAFI TANGGERANG 1',
-                'round' => 'Semi Final - Pekan ke-3',
-                'venue' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-                'status' => 'scheduled'
-            ],
-            [
-                'id' => 105,
-                'team1' => 'MESS FUTSAL',
-                'team1_logo' => 'mess-futsal.png',
-                'team2' => 'BAHATI FUTSAL',
-                'team2_logo' => 'bahati-futsal.png',
-                'date' => '01 Feb 2026',
-                'time' => '11:15',
-                'event' => 'JFTL',
-                'round' => 'Semi Final - Pekan ke-3',
-                'venue' => 'Golden Sport Center - Lap 2',
-                'status' => 'scheduled'
-            ]
-        ];
-        
-        if (empty($scheduleMatches)): 
+        if (empty($scheduledMatches)): 
         ?>
         <div class="empty-state">
             <i class="fas fa-calendar-times"></i>
@@ -444,22 +319,22 @@ $pageTitle = "Home";
                                 <div class="match-teams-info">
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['team1']); ?>" 
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['team1']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
                                     </div>
                                     <div class="vs-sm">VS</div>
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['team2']); ?>" 
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['team2']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
                                     </div>
                                 </div>
                             </td>
@@ -472,12 +347,12 @@ $pageTitle = "Home";
                             <td class="match-venue-cell">
                                 <div class="venue-info">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue']); ?></span>
+                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name']); ?></span>
                                 </div>
                             </td>
                             <td class="match-event-cell">
-                                <span class="event-badge"><?php echo htmlspecialchars($match['event']); ?></span>
-                                <div class="round-info"><?php echo htmlspecialchars($match['round']); ?></div>
+                                <span class="event-badge"><?php echo htmlspecialchars($match['sport_type']); ?></span>
+                                <div class="round-info"><?php echo htmlspecialchars($match['challenge_code']); ?></div>
                             </td>
                             <td class="match-actions-cell">
                                 <button class="btn-view btn-view-schedule" data-match-id="<?php echo $match['id']; ?>">
@@ -502,81 +377,7 @@ $pageTitle = "Home";
     <!-- Result Tab -->
     <div class="tab-content" id="match-result">
         <?php 
-        // Data result yang sinkron dengan schedule
-        $resultMatches = [
-            [
-                'id' => 1,
-                'team1' => 'PAFCA',
-                'team1_logo' => 'PAFCA.png',
-                'score1' => 5,
-                'team2' => '014 BUFC',
-                'team2_logo' => '014-bufc.png',
-                'score2' => 1,
-                'date' => '1 Feb 2026',
-                'time' => '16:40',
-                'event' => 'PL AAFI 2026',
-                'venue' => 'LAP SEPINGGAN PRATAMA',
-                'status' => 'completed'
-            ],
-            [
-                'id' => 2,
-                'team1' => 'GENERASI FAB',
-                'team1_logo' => 'generasi-fab.png',
-                'score1' => 0,
-                'team2' => 'FAMILY FUTSAL BALIKPAPAN',
-                'team2_logo' => 'famili-balikpapan.png',
-                'score2' => 4,
-                'date' => '1 Feb 2026',
-                'time' => '15:50',
-                'event' => 'PL AAFI 2026',
-                'venue' => 'LAP SEPINGGAN PRATAMA',
-                'status' => 'completed'
-            ],
-            [
-                'id' => 3,
-                'team1' => 'KUDA LAUT NUSANTARA',
-                'team1_logo' => 'kuda-laut-nusantara.png',
-                'score1' => 3,
-                'team2' => 'ANTRI FUTSAL SCHOOL GNR',
-                'team2_logo' => 'antri-futsal.png',
-                'score2' => 2,
-                'date' => '1 Feb 2026',
-                'time' => '15:50',
-                'event' => 'JTFL',
-                'venue' => 'LAP SEPINGGAN PRATAMA',
-                'status' => 'completed'
-            ],
-            [
-                'id' => 4,
-                'team1' => 'APOLLO FUTSAL ACADEMY',
-                'team1_logo' => 'apollo futsal.png',
-                'score1' => 1,
-                'team2' => 'TWO IN ONE FA',
-                'team2_logo' => 'two in one.png',
-                'score2' => 5,
-                'date' => '1 Feb 2026',
-                'time' => '15:40',
-                'event' => 'AAFI TANGGERANG 1',
-                'venue' => 'LAP SEPINGGAN PRATAMA',
-                'status' => 'completed'
-            ],
-            [
-                'id' => 5,
-                'team1' => 'MESS FUTSAL',
-                'team1_logo' => 'mess-futsal.png',
-                'score1' => 3,
-                'team2' => 'BAHATI FUTSAL',
-                'team2_logo' => 'bahati-futsal.png',
-                'score2' => 1,
-                'date' => '1 Feb 2026',
-                'time' => '10:15',
-                'event' => 'JFTL',
-                'venue' => 'Golden Sport Center',
-                'status' => 'completed'
-            ]
-        ];
-        
-        if (empty($resultMatches)): 
+        if (empty($completedMatches)): 
         ?>
         <div class="empty-state">
             <i class="fas fa-trophy"></i>
@@ -598,50 +399,50 @@ $pageTitle = "Home";
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($resultMatches as $index => $match): ?>
+                        <?php foreach ($completedMatches as $index => $match): ?>
                         <tr class="match-row result-row" data-match-id="<?php echo $match['id']; ?>">
                             <td class="match-number"><?php echo $index + 1; ?></td>
                             <td class="match-teams-cell">
                                 <div class="match-teams-info">
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['team1']); ?>" 
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['team1']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
                                     </div>
                                     <div class="vs-sm">VS</div>
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['team2']); ?>" 
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['team2']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
                                     </div>
                                 </div>
                             </td>
                             <td class="match-score-cell">
                                 <div class="score-info">
-                                    <span class="score-team"><?php echo $match['score1']; ?></span>
+                                    <span class="score-team"><?php echo $match['challenger_score']; ?></span>
                                     <span class="score-separator">-</span>
-                                    <span class="score-team"><?php echo $match['score2']; ?></span>
+                                    <span class="score-team"><?php echo $match['opponent_score']; ?></span>
                                 </div>
                                 <div class="match-status-badge completed">FT</div>
                             </td>
                             <td class="match-datetime-cell">
                                 <div class="datetime-info">
-                                    <span class="date-info"><?php echo htmlspecialchars($match['date']); ?></span>
-                                    <span class="time-info"><?php echo htmlspecialchars($match['time']); ?></span>
+                                    <span class="date-info"><?php echo formatDate($match['challenge_date']); ?></span>
+                                    <span class="time-info"><?php echo date('H:i', strtotime($match['challenge_date'])); ?></span>
                                 </div>
                             </td>
                             <td class="match-venue-cell">
                                 <div class="venue-info">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue']); ?></span>
+                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name']); ?></span>
                                 </div>
                             </td>
                             <td class="match-actions-cell">
