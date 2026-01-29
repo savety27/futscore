@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         try {
             // Query untuk mencari admin berdasarkan username atau email
-            $query = "SELECT id, username, email, password_hash, full_name, role, is_active 
+            $query = "SELECT id, username, email, password_hash, full_name, role, team_id, is_active 
                       FROM admin_users 
                       WHERE (username = :username OR email = :email) 
                       AND is_active = 1 
@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $_SESSION['admin_email'] = $admin['email'];
                     $_SESSION['admin_fullname'] = $admin['full_name'];
                     $_SESSION['admin_role'] = $admin['role'];
+                    $_SESSION['team_id'] = $admin['team_id'] ?? null; // Store team_id
                     $_SESSION['login_time'] = time();
                     
                     // Update last login
@@ -58,8 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $updateStmt->bindParam(':id', $admin['id']);
                     $updateStmt->execute();
                     
-                    // Redirect ke dashboard
-                    header('Location: admin/dashboard.php');
+                    // Redirect based on role
+                    if ($admin['role'] === 'pelatih') {
+                        header('Location: pelatih/dashboard.php');
+                    } else {
+                        header('Location: admin/dashboard.php');
+                    }
                     exit();
                 } else {
                     // Password salah
