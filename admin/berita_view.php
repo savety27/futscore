@@ -1,0 +1,1218 @@
+<?php
+session_start();
+
+// Load database config
+$config_path = __DIR__ . '/config/database.php';
+if (file_exists($config_path)) {
+    require_once $config_path;
+} else {
+    die("Database configuration file not found at: $config_path");
+}
+
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: ../index.php");
+    exit;
+}
+
+// Get berita ID
+$berita_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($berita_id <= 0) {
+    header("Location: berita.php");
+    exit;
+}
+
+// Menu items
+$menu_items = [
+    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'submenu' => false],
+    'master' => ['icon' => '📊', 'name' => 'Master Data', 'submenu' => true, 'items' => ['player', 'team', 'team_staff', 'pelatih', 'berita']],
+    'event' => ['icon' => '📅', 'name' => 'Event', 'submenu' => true, 'items' => ['event', 'player_liga', 'staff_liga']],
+    'match' => ['icon' => '⚽', 'name' => 'Match', 'submenu' => false],
+    'challenge' => ['icon' => '🏆', 'name' => 'Challenge', 'submenu' => false],
+    'training' => ['icon' => '🎯', 'name' => 'Training', 'submenu' => false],
+    'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
+];
+
+$academy_name = "Hi, Welcome...";
+$email = "";
+
+// Fetch berita data
+try {
+    $stmt = $conn->prepare("SELECT * FROM berita WHERE id = ?");
+    $stmt->execute([$berita_id]);
+    $berita = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$berita) {
+        header("Location: berita.php");
+        exit;
+    }
+} catch (PDOException $e) {
+    die("Error fetching berita data: " . $e->getMessage());
+}
+
+// Format date
+$created_at = date('d F Y H:i', strtotime($berita['created_at']));
+$updated_at = date('d F Y H:i', strtotime($berita['updated_at']));
+
+// Format status badge
+$status_badges = [
+    'published' => ['class' => 'status-published', 'text' => 'Published'],
+    'draft' => ['class' => 'status-draft', 'text' => 'Draft'],
+    'archived' => ['class' => 'status-archived', 'text' => 'Archived']
+];
+$status_info = $status_badges[$berita['status']];
+
+// Split tags
+$tags = !empty($berita['tag']) ? explode(',', $berita['tag']) : [];
+
+// Fungsi untuk sanitasi HTML yang aman
+function sanitizeHtml($html) {
+    // Basic sanitization - allow common HTML tags for content
+    $allowed_tags = '<h1><h2><h3><h4><h5><h6><p><br><b><strong><i><em><u><ul><ol><li><a><img><table><tr><td><th><thead><tbody><tfoot><div><span><blockquote><code><pre><hr>';
+    $html = strip_tags($html, $allowed_tags);
+    
+    // Remove any dangerous attributes
+    $html = preg_replace('/ on\w+="[^"]*"/', '', $html);
+    $html = preg_replace('/javascript:/i', '', $html);
+    $html = preg_replace('/data:/i', '', $html);
+    
+    // Decode HTML entities
+    $html = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
+    
+    return $html;
+}
+
+// Fungsi untuk membersihkan teks dari multiple newlines
+function cleanTextContent($text) {
+    // Remove multiple newlines and spaces
+    $text = preg_replace('/\n\s*\n\s*\n+/', "\n\n", $text);
+    $text = preg_replace('/\s+/', ' ', $text);
+    $text = trim($text);
+    return $text;
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detail Berita - <?php echo htmlspecialchars($berita['judul']); ?></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<style>
+:root {
+    --primary: #0A2463;
+    --secondary: #FFD700;
+    --accent: #4CC9F0;
+    --success: #2E7D32;
+    --warning: #F9A826;
+    --danger: #D32F2F;
+    --light: #F8F9FA;
+    --dark: #1A1A2E;
+    --gray: #6C757D;
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    color: var(--dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
+    color: white;
+    padding: 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.sidebar-header {
+    padding: 30px 25px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid var(--secondary);
+}
+
+.logo-container {
+    position: relative;
+    display: inline-block;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary) 0%, #FFEC8B 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 4px solid white;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.logo:hover {
+    transform: rotate(15deg) scale(1.05);
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+}
+
+.logo::before {
+    content: "📰";
+    font-size: 48px;
+    color: var(--primary);
+}
+
+.academy-info {
+    text-align: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.academy-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.academy-email {
+    font-size: 14px;
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Menu */
+.menu {
+    padding: 25px 15px;
+}
+
+.menu-item {
+    margin-bottom: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: var(--transition);
+    position: relative;
+    border-left: 4px solid transparent;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: var(--secondary);
+    padding-left: 25px;
+}
+
+.menu-link.active {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--secondary);
+    border-left-color: var(--secondary);
+    font-weight: 600;
+}
+
+.menu-icon {
+    font-size: 22px;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 16px;
+}
+
+.menu-arrow {
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.menu-arrow.rotate {
+    transform: rotate(90deg);
+}
+
+/* Submenu */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 12px 12px;
+}
+
+.submenu.open {
+    max-height: 300px;
+}
+
+.submenu-item {
+    padding: 5px 15px 5px 70px;
+}
+
+.submenu-link {
+    display: block;
+    padding: 12px 15px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--transition);
+    position: relative;
+    font-size: 14px;
+}
+
+.submenu-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--secondary);
+    font-size: 18px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+    flex: 1;
+    padding: 30px;
+    margin-left: 280px;
+    transition: var(--transition);
+}
+
+/* Topbar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 20px 25px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
+}
+
+.greeting h1 {
+    font-size: 28px;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.greeting p {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.notification {
+    position: relative;
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--primary);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--danger);
+    color: white;
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+}
+
+.logout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+}
+
+.page-title {
+    font-size: 28px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-title i {
+    color: var(--secondary);
+    font-size: 32px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(10, 36, 99, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success), #4CAF50);
+    color: white;
+    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+}
+
+.btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning), #FFB74D);
+    color: white;
+    box-shadow: 0 5px 15px rgba(249, 168, 38, 0.2);
+}
+
+.btn-warning:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(249, 168, 38, 0.3);
+}
+
+/* Detail Container */
+.detail-container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+}
+
+.berita-header {
+    margin-bottom: 40px;
+    text-align: center;
+    position: relative;
+}
+
+.berita-title {
+    font-size: 36px;
+    color: var(--primary);
+    margin-bottom: 20px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+.berita-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.meta-item i {
+    color: var(--primary);
+}
+
+.status-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-published {
+    background: rgba(46, 125, 50, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(46, 125, 50, 0.3);
+}
+
+.status-draft {
+    background: rgba(108, 117, 125, 0.15);
+    color: var(--gray);
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.status-archived {
+    background: rgba(211, 47, 47, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(211, 47, 47, 0.3);
+}
+
+/* Berita Image */
+.berita-image-container {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.berita-image {
+    max-width: 100%;
+    max-height: 500px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+}
+
+.image-placeholder {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, #f5f7fa, #e4edf5);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    color: var(--gray);
+}
+
+/* Berita Content */
+.berita-content {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--dark);
+    margin-bottom: 40px;
+}
+
+.berita-content h1, .berita-content h2, .berita-content h3, .berita-content h4 {
+    color: var(--primary);
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.berita-content p {
+    margin-bottom: 20px;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.berita-content ul, .berita-content ol {
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+
+.berita-content li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.berita-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin: 20px 0;
+    display: block;
+}
+
+.berita-content a {
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 2px solid var(--secondary);
+    transition: var(--transition);
+}
+
+.berita-content a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* Konten tanpa format - untuk teks biasa */
+.plain-text-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 18px;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Tags Section */
+.tags-section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.section-title {
+    font-size: 20px;
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tag-item {
+    background: white;
+    color: var(--primary);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 2px solid #e0e0e0;
+    transition: var(--transition);
+}
+
+.tag-item:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+/* Stats Section */
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-box {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow);
+}
+
+.stat-icon {
+    font-size: 32px;
+    color: var(--primary);
+    margin-bottom: 15px;
+    display: block;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--gray);
+}
+
+/* Action Buttons */
+.action-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.action-btn {
+    padding: 12px 25px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    font-size: 15px;
+    text-decoration: none;
+}
+
+/* Slug Info */
+.slug-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    font-size: 14px;
+    color: var(--gray);
+}
+
+/* Alert */
+.alert {
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert-danger {
+    background: rgba(211, 47, 47, 0.1);
+    border-left: 4px solid var(--danger);
+    color: var(--danger);
+}
+
+.alert-success {
+    background: rgba(46, 125, 50, 0.1);
+    border-left: 4px solid var(--success);
+    color: var(--success);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .berita-title {
+        font-size: 28px;
+    }
+    
+    .berita-meta {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons-container {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .berita-content, .plain-text-content {
+        font-size: 16px;
+        line-height: 1.6;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: var(--transition);
+}
+
+.menu-toggle:hover {
+    background: var(--secondary);
+    color: var(--primary);
+    transform: rotate(90deg);
+}
+
+/* Mobile Styles */
+@media (max-width: 1200px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .main {
+        margin-left: 0;
+        padding: 20px;
+    }
+}
+
+/* Content Formatting */
+.content-wrapper {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.content-wrapper p {
+    margin-bottom: 1.2em;
+    line-height: 1.8;
+}
+
+.content-wrapper br {
+    display: none; /* Sembunyikan <br> yang berlebihan */
+}
+
+.content-wrapper p:empty {
+    display: none; /* Sembunyikan paragraf kosong */
+}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" id="menuToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="wrapper">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo"></div>
+            </div>
+            <div class="academy-info">
+                <div class="academy-name"><?php echo $academy_name; ?></div>
+                <div class="academy-email"><?php echo $email; ?></div>
+            </div>
+        </div>
+
+        <div class="menu">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <div class="menu-item">
+                <a href="<?php 
+                    if ($key === 'dashboard') {
+                        echo 'dashboard.php';
+                    } elseif ($key === 'challenge') {
+                        echo 'challenge.php';
+                    } elseif ($key === 'match') {
+                        echo '../match.php';
+                    } elseif ($key === 'training') {
+                        echo '../training.php';
+                    } elseif ($key === 'settings') {
+                        echo '../settings.php';
+                    } else {
+                        echo '#';
+                    }
+                ?>" 
+                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
+                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                    <span class="menu-text"><?php echo $item['name']; ?></span>
+                    <?php if ($item['submenu']): ?>
+                    <span class="menu-arrow">›</span>
+                    <?php endif; ?>
+                </a>
+                
+                <?php if ($item['submenu']): ?>
+                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subitem): ?>
+                    <div class="submenu-item">
+                        <?php 
+                        $subitem_url = $subitem . '.php';
+                        ?>
+                        <a href="<?php echo $subitem_url; ?>" 
+                           class="submenu-link <?php echo $subitem === 'berita' ? 'active' : ''; ?>">
+                           <?php 
+                           if ($subitem === 'berita') {
+                               echo 'Berita';
+                           } else {
+                               echo ucfirst(str_replace('_', ' ', $subitem));
+                           }
+                           ?>
+                        </a>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="greeting">
+                <h1>Detail Berita 📰</h1>
+                <p>Lihat detail lengkap berita</p>
+            </div>
+            
+            <div class="user-actions">
+                <div class="notification">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">0</span>
+                </div>
+                <a href="logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-eye"></i>
+                <span>Detail Berita</span>
+            </div>
+            <div class="action-buttons">
+                <a href="berita.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali ke Daftar
+                </a>
+                <a href="berita_edit.php?id=<?php echo $berita_id; ?>" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Berita
+                </a>
+            </div>
+        </div>
+
+        <!-- DETAIL BERITA -->
+        <div class="detail-container">
+            <!-- Berita Header -->
+            <div class="berita-header">
+                <h1 class="berita-title"><?php echo htmlspecialchars($berita['judul']); ?></h1>
+                
+                <div class="berita-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-user"></i>
+                        <span>Penulis: <?php echo htmlspecialchars($berita['penulis']); ?></span>
+                    </div>
+                    
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Dibuat: <?php echo $created_at; ?></span>
+                    </div>
+                    
+                    <div class="meta-item">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Diupdate: <?php echo $updated_at; ?></span>
+                    </div>
+                    
+                    <span class="status-badge <?php echo $status_info['class']; ?>">
+                        <?php echo $status_info['text']; ?>
+                    </span>
+                </div>
+                
+                <div class="slug-info">
+                    <i class="fas fa-link"></i> Slug: <?php echo htmlspecialchars($berita['slug']); ?>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+                <div class="stat-box">
+                    <i class="fas fa-eye stat-icon"></i>
+                    <div class="stat-value"><?php echo $berita['views']; ?></div>
+                    <div class="stat-label">Total Views</div>
+                </div>
+                
+                <div class="stat-box">
+                    <i class="fas fa-file-alt stat-icon"></i>
+                    <div class="stat-value"><?php echo strlen($berita['konten']); ?></div>
+                    <div class="stat-label">Karakter Konten</div>
+                </div>
+                
+                <div class="stat-box">
+                    <i class="fas fa-hashtag stat-icon"></i>
+                    <div class="stat-value"><?php echo count($tags); ?></div>
+                    <div class="stat-label">Total Tags</div>
+                </div>
+                
+                <div class="stat-box">
+                    <i class="fas fa-id-badge stat-icon"></i>
+                    <div class="stat-value">#<?php echo $berita['id']; ?></div>
+                    <div class="stat-label">ID Berita</div>
+                </div>
+            </div>
+
+            <!-- Berita Image -->
+            <div class="berita-image-container">
+                <?php if (!empty($berita['gambar'])): ?>
+                    <img src="../images/berita/<?php echo htmlspecialchars($berita['gambar']); ?>" 
+                         alt="<?php echo htmlspecialchars($berita['judul']); ?>" 
+                         class="berita-image">
+                <?php else: ?>
+                    <div class="image-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Tags Section -->
+            <?php if (!empty($tags)): ?>
+            <div class="tags-section">
+                <div class="section-title">
+                    <i class="fas fa-tags"></i>
+                    Tags Berita
+                </div>
+                <div class="tags-container">
+                    <?php foreach ($tags as $tag): ?>
+                        <?php $tag = trim($tag); ?>
+                        <?php if (!empty($tag)): ?>
+                        <span class="tag-item"><?php echo htmlspecialchars($tag); ?></span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Berita Content -->
+            <div class="content-wrapper">
+                <?php 
+                // Deteksi apakah konten mengandung HTML tags
+                $content = trim($berita['konten']);
+                $hasHtmlTags = preg_match('/<[^>]+>/', $content);
+                
+                if ($hasHtmlTags) {
+                    // Konten mengandung HTML - tampilkan dengan sanitasi
+                    $sanitized_content = sanitizeHtml($content);
+                    // Hapus multiple newlines dan whitespace berlebihan
+                    $sanitized_content = preg_replace('/(\s*\n\s*){3,}/', "\n\n", $sanitized_content);
+                    echo $sanitized_content;
+                } else {
+                    // Konten plain text - tampilkan dengan formatting yang baik
+                    $cleaned_content = cleanTextContent($content);
+                    echo '<div class="plain-text-content">' . nl2br(htmlspecialchars($cleaned_content)) . '</div>';
+                }
+                ?>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons-container">
+                <a href="berita_edit.php?id=<?php echo $berita_id; ?>" class="action-btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Berita
+                </a>
+                
+                <button onclick="deleteBerita(<?php echo $berita_id; ?>, '<?php echo htmlspecialchars(addslashes($berita['judul'])); ?>')" 
+                        class="action-btn" style="background: var(--danger); color: white;">
+                    <i class="fas fa-trash"></i>
+                    Hapus Berita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle sidebar untuk mobile
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    menuToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('active');
+        this.innerHTML = sidebar.classList.contains('active') 
+            ? '<i class="fas fa-times"></i>' 
+            : '<i class="fas fa-bars"></i>';
+    });
+    
+    // Auto close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 1200) {
+            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        }
+    });
+    
+    // Highlight active menu
+    const currentPage = window.location.pathname.split('/').pop();
+    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
+        if (link.getAttribute('href') === currentPage || 
+            link.getAttribute('href') === 'berita.php') {
+            link.classList.add('active');
+            
+            // Open parent submenu if exists
+            const parentMenu = link.closest('.submenu');
+            if (parentMenu) {
+                parentMenu.classList.add('open');
+                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
+                if (arrow) arrow.classList.add('rotate');
+            }
+        }
+    });
+    
+    // Clean up content formatting
+    const contentWrapper = document.querySelector('.content-wrapper');
+    if (contentWrapper) {
+        // Hapus tag <br> berlebihan
+        const content = contentWrapper.innerHTML;
+        let cleanedContent = content;
+        
+        // Hapus multiple <br> tags
+        cleanedContent = cleanedContent.replace(/(<br\s*\/?>\s*){3,}/gi, '<br><br>');
+        
+        // Hapus spasi berlebihan
+        cleanedContent = cleanedContent.replace(/\s+/g, ' ');
+        
+        // Hapus paragraf kosong
+        cleanedContent = cleanedContent.replace(/<p>\s*<\/p>/gi, '');
+        
+        contentWrapper.innerHTML = cleanedContent;
+    }
+});
+
+function deleteBerita(beritaId, judul) {
+    if (confirm(`Apakah Anda yakin ingin menghapus berita "${judul}"?`)) {
+        fetch(`berita_delete.php?id=${beritaId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                toastr.success('Berita berhasil dihapus!');
+                setTimeout(() => {
+                    window.location.href = 'berita.php';
+                }, 1000);
+            } else {
+                toastr.error('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            toastr.error('Terjadi kesalahan saat menghapus berita.');
+        });
+    }
+}
+</script>
+</body>
+</html>

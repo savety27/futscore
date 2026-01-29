@@ -1066,7 +1066,7 @@ $db_status = $db ? "connected" : "disconnected";
                 <i class="fas fa-futbol"></i>
             </div>
             <div class="hero-content">
-                <h1>FutScore<br>Admin Dashboard</h1>
+                <h1>MGP<br>DASHBOARD</h1>
                 <p>Sistem manajemen pertandingan futsal terintegrasi untuk mengelola jadwal, statistik, dan performa tim dengan mudah dan efisien.</p>
                 
                 <div class="features">
@@ -1075,8 +1075,8 @@ $db_status = $db ? "connected" : "disconnected";
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         <div class="feature-text">
-                            <h4>Jadwal Otomatis</h4>
-                            <p>Kelola jadwal pertandingan dengan mudah</p>
+                            <h4>Kalender Pertandingan</h4>
+                            <p>Atur dan pantau jadwal pertandingan dengan sistem terintegrasi</p>
                         </div>
                     </div>
                     <div class="feature">
@@ -1084,8 +1084,8 @@ $db_status = $db ? "connected" : "disconnected";
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="feature-text">
-                            <h4>Analisis Statistik</h4>
-                            <p>Pantau performa tim secara real-time</p>
+                            <h4>Data Pemain & Tim</h4>
+                            <p>Kelola informasi pemain, staff, dan detail tim</p>
                         </div>
                     </div>
                     <div class="feature">
@@ -1093,17 +1093,17 @@ $db_status = $db ? "connected" : "disconnected";
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="feature-text">
-                            <h4>Manajemen Tim</h4>
-                            <p>Kelola pemain dan staff dengan sistem terpadu</p>
+                            <h4>Pendaftaran Tim</h4>
+                            <p>Daftarkan tim dan pemain dengan sistem terpadu</p>
                         </div>
                     </div>
                     <div class="feature">
                         <div class="feature-icon">
-                            <i class="fas fa-bell"></i>
+                            <i class="fas fa-eye"></i>
                         </div>
                         <div class="feature-text">
-                            <h4>Notifikasi Real-time</h4>
-                            <p>Update langsung ke perangkat Anda</p>
+                            <h4>Dashboard Monitoring</h4>
+                            <p>Pantau semua informasi tim</p>
                         </div>
                     </div>
                 </div>

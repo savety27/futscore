@@ -68,32 +68,11 @@ $menu_items = [
         'submenu' => true,
         'items' => ['player', 'team', 'team_staff']
     ],
-    'event' => [
-        'icon' => '📅',
-        'name' => 'Event',
-        'submenu' => true,
-        'items' => ['event', 'player_liga', 'staff_liga']
-    ],
-    'match' => [
-        'icon' => '⚽',
-        'name' => 'Match',
-        'submenu' => false
-    ],
-    'challenge' => [
+    'Event' => [
         'icon' => '🏆',
-        'name' => 'Challenge',
+        'name' => 'Event',
         'submenu' => false,
          'url' => 'challenge.php'
-    ],
-    'training' => [
-        'icon' => '🎯',
-        'name' => 'Training',
-        'submenu' => false
-    ],
-    'settings' => [
-        'icon' => '⚙️',
-        'name' => 'Settings',
-        'submenu' => false
     ]
 ];
 ?>
@@ -102,15 +81,13 @@ $menu_items = [
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard - FutScore</title>
+<title>Admin Dashboard - MGP</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
     --accent: #4CC9F0;
-    --success: #2E7D32;
-    --warning: #F9A826;
     --danger: #D32F2F;
     --light: #F8F9FA;
     --dark: #1A1A2E;
@@ -159,11 +136,6 @@ body {
     border-bottom: 2px solid var(--secondary);
 }
 
-.logo-container {
-    position: relative;
-    display: inline-block;
-}
-
 .logo {
     width: 100px;
     height: 100px;
@@ -175,8 +147,6 @@ body {
     margin: 0 auto 20px;
     border: 4px solid white;
     box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-    position: relative;
-    overflow: hidden;
     transition: var(--transition);
 }
 
@@ -189,11 +159,6 @@ body {
     content: "⚽";
     font-size: 48px;
     color: var(--primary);
-}
-
-.academy-info {
-    text-align: center;
-    animation: fadeIn 0.8s ease-out;
 }
 
 .academy-name {
@@ -327,7 +292,6 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -345,28 +309,6 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-}
-
-.notification {
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    color: var(--primary);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--danger);
-    color: white;
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .logout-btn {
@@ -450,125 +392,6 @@ body {
     font-weight: 500;
 }
 
-/* Charts Section */
-.charts-section {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 25px;
-    margin-bottom: 40px;
-}
-
-.chart-card {
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.chart-title {
-    font-size: 18px;
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.chart-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.chart-btn {
-    padding: 8px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    background: white;
-    color: var(--dark);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.chart-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: #f8f9ff;
-}
-
-/* Recent Activity */
-.activity-card {
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-}
-
-.activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.activity-title {
-    font-size: 18px;
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.activity-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px 0;
-    border-bottom: 1px solid #f0f0f0;
-    transition: var(--transition);
-}
-
-.activity-item:hover {
-    background: #f8f9ff;
-    border-radius: 8px;
-}
-
-.activity-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: white;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-}
-
-.activity-content {
-    flex: 1;
-}
-
-.activity-content h4 {
-    font-size: 16px;
-    color: var(--dark);
-    margin-bottom: 4px;
-}
-
-.activity-content p {
-    font-size: 13px;
-    color: var(--gray);
-}
-
-.activity-time {
-    font-size: 12px;
-    color: var(--gray);
-    font-weight: 500;
-}
-
 /* Quick Actions */
 .quick-actions {
     display: grid;
@@ -642,9 +465,6 @@ body {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .charts-section {
-        grid-template-columns: 1fr;
-    }
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -665,23 +485,6 @@ body {
     }
     .sidebar.active {
         transform: translateX(0);
-    }
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
 
@@ -742,14 +545,8 @@ body {
         <a href="<?php 
             if ($key === 'dashboard') {
                 echo 'dashboard.php';
-            } elseif ($key === 'challenge') {
+            } elseif ($key === 'Event') {
                 echo 'challenge.php';
-            } elseif ($key === 'match') {
-                echo '../match.php';
-            } elseif ($key === 'training') {
-                echo '../training.php';
-            } elseif ($key === 'settings') {
-                echo '../settings.php';
             } else {
                 echo '#';
             }
@@ -794,15 +591,11 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?>! 👋</h1>
-                <p>Dashboard admin FutScore - Sistem manajemen pertandingan futsal</p>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <p>Dashboard admin MGP - Sistem manajemen pertandingan futsal</p>
             </div>
             
             <div class="user-actions">
-                <div class="notification">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">0</span>
-                </div>
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
@@ -883,101 +676,11 @@ body {
                 </div>
                 <div class="action-title">Kelola Event</div>
                 <div class="action-desc">Atur jadwal pertandingan dan turnamen futsal</div>
-                <a href="#" class="action-link">
+                <a href="challenge.php" class="action-link">
                     <i class="fas fa-calendar"></i> Kelola Event
                 </a>
             </div>
         </div>
-
-        <!-- CHARTS SECTION -->
-        <div class="charts-section">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title">Statistik Pemain</div>
-                    <div class="chart-actions">
-                        <button class="chart-btn">Bulanan</button>
-                        <button class="chart-btn">Tahunan</button>
-                    </div>
-                </div>
-                <div style="height: 300px; display: flex; align-items: center; justify-content: center; color: var(--gray);">
-                    <i class="fas fa-chart-bar" style="font-size: 48px; opacity: 0.3;"></i>
-                    <div style="margin-left: 20px;">
-                        <div style="font-size: 18px; font-weight: 600;">Grafik Statistik</div>
-                        <div style="font-size: 14px;">Data visualisasi akan ditampilkan di sini</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title">Performa Team</div>
-                    <div class="chart-actions">
-                        <button class="chart-btn">Lihat Detail</button>
-                    </div>
-                </div>
-                <div style="height: 300px; display: flex; align-items: center; justify-content: center; color: var(--gray);">
-                    <i class="fas fa-chart-pie" style="font-size: 48px; opacity: 0.3;"></i>
-                    <div style="margin-left: 20px;">
-                        <div style="font-size: 18px; font-weight: 600;">Grafik Pie</div>
-                        <div style="font-size: 14px;">Distribusi data team</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RECENT ACTIVITY -->
-        <div class="activity-card">
-            <div class="activity-header">
-                <div class="activity-title">Aktivitas Terbaru</div>
-                <a href="#" style="color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600;">Lihat Semua</a>
-            </div>
-            
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <div class="activity-content">
-                    <h4>Player Registration</h4>
-                    <p>5 pemain baru telah mendaftar hari ini</p>
-                </div>
-                <div class="activity-time">2 menit lalu</div>
-            </div>
-
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-futbol"></i>
-                </div>
-                <div class="activity-content">
-                    <h4>Team Created</h4>
-                    <p>Team BUFC telah ditambahkan ke sistem</p>
-                </div>
-                <div class="activity-time">15 menit lalu</div>
-            </div>
-
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="activity-content">
-                    <h4>Event Scheduled</h4>
-                    <p>Jadwal pertandingan pekan depan telah diatur</p>
-                </div>
-                <div class="activity-time">1 jam lalu</div>
-            </div>
-
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="activity-content">
-                    <h4>Document Updated</h4>
-                    <p>Dokumen pemain telah diperbarui</p>
-                </div>
-                <div class="activity-time">3 jam lalu</div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
