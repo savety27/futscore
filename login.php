@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config/database.php'; // Sesuaikan path
+require_once 'admin/config/database.php'; // Sesuaikan path
 
 // Gunakan koneksi database yang sudah ada
 $db = $conn;
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $updateStmt->execute();
                     
                     // Redirect ke dashboard
-                    header('Location: dashboard.php');
+                    header('Location: admin/dashboard.php');
                     exit();
                 } else {
                     // Password salah

@@ -13,7 +13,7 @@ echo "</ul>";
 echo "<p>📁 File-file penting yang harus dipertahankan:</p>";
 echo "<ul>";
 echo "<li>admin/config/database.php</li>";
-echo "<li>admin/index.php</li>";
+echo "<li>login.php (was admin/index.php)</li>";
 echo "<li>admin/dashboard.php</li>";
 echo "<li>admin/logout.php</li>";
 echo "</ul>";
