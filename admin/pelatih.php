@@ -1227,17 +1227,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize DataTable
-    $('#pelatihTable').DataTable({
-        searching: false,
-        paging: false,
-        info: false,
-        ordering: true,
-        language: {
-            emptyTable: "Tidak ada data pelatih",
-            zeroRecords: "Tidak ada data yang cocok dengan pencarian"
-        }
-    });
 });
 
 function deletePelatih(pelatihId, username) {
