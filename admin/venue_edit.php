@@ -40,16 +40,16 @@ $menu_items = [
             // HAPUS 'venue' DARI SINI
         ]
     ],
-    'venue' => [  // Menu Venue terpisah
-        'icon' => '📍',
-        'name' => 'Venue',
-        'url' => 'venue.php',
-        'submenu' => false
-    ],
     'Event' => [
         'icon' => '🏆',
         'name' => 'Event',
         'url' => 'challenge.php',
+        'submenu' => false
+    ],
+    'venue' => [  // Menu Venue terpisah
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
         'submenu' => false
     ],
     'Pelatih' => [
