@@ -1443,17 +1443,17 @@ select.form-control {
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input type="radio" name="dominant_foot" value="Kanan" 
-                                           <?php echo $player['dominant_foot'] === 'Kanan' ? 'checked' : ''; ?>>
+                                           <?php echo strtolower($player['dominant_foot']) === 'kanan' ? 'checked' : ''; ?>>
                                     <span>Kanan</span>
                                 </label>
                                 <label class="radio-option">
                                     <input type="radio" name="dominant_foot" value="Kiri"
-                                           <?php echo $player['dominant_foot'] === 'Kiri' ? 'checked' : ''; ?>>
+                                           <?php echo strtolower($player['dominant_foot']) === 'kiri' ? 'checked' : ''; ?>>
                                     <span>Kiri</span>
                                 </label>
                                 <label class="radio-option">
                                     <input type="radio" name="dominant_foot" value="Kedua"
-                                           <?php echo $player['dominant_foot'] === 'Kedua' ? 'checked' : ''; ?>>
+                                           <?php echo strtolower($player['dominant_foot']) === 'kedua' ? 'checked' : ''; ?>>
                                     <span>Kedua-duanya</span>
                                 </label>
                             </div>
