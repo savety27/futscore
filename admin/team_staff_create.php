@@ -1520,10 +1520,6 @@ body {
                         <span class="error"><?php echo $errors['certificates']; ?></span>
                     <?php endif; ?>
                     
-                    <button type="button" class="btn btn-secondary" onclick="addCertificate()">
-                        <i class="fas fa-plus"></i>
-                        Tambah Sertifikat
-                    </button>
                 </div>
 
                 <div class="form-section">
