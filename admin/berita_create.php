@@ -1242,7 +1242,7 @@ body {
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="reset" class="btn btn-secondary">
+                    <button type="button" class="btn btn-secondary" id="customResetBtn">
                         <i class="fas fa-redo"></i>
                         Reset Form
                     </button>
@@ -1327,36 +1327,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // File Upload Logic
+    // File Upload Logic - FIXED VERSION (klik sekali langsung bekerja)
     const gambarUpload = document.getElementById('gambarUpload');
     const gambarInput = document.getElementById('gambar');
     const gambarPreview = document.getElementById('gambarPreview');
     const gambarPreviewImg = document.getElementById('gambarPreviewImg');
     const gambarFileInfo = document.getElementById('gambarFileInfo');
 
+    // Fungsi untuk membuka file dialog
+    function openFileDialog() {
+        gambarInput.click();
+    }
+
+    // Event listener yang lebih spesifik untuk mencegah multiple triggers
+    const fileUploadIcon = document.querySelector('.file-upload-icon');
+    const fileUploadText = document.querySelector('.file-upload-text');
+    const fileUploadSubtext = document.querySelector('.file-upload-subtext');
+
+    // Tambahkan event listener ke elemen individual dengan mencegah event bubbling
+    [fileUploadIcon, fileUploadText, fileUploadSubtext].forEach(element => {
+        element.style.cursor = 'pointer';
+        element.addEventListener('click', function(e) {
+            e.stopPropagation(); // Mencegah event bubbling ke parent
+            e.preventDefault();  // Mencegah default behavior
+            openFileDialog();
+        });
+    });
+
+    // Untuk container, gunakan event delegation yang lebih spesifik
+    gambarUpload.addEventListener('click', function(e) {
+        // Hanya trigger jika yang diklik adalah container itu sendiri (area kosong)
+        // atau jika target adalah container (bukan child elements yang sudah ada handler-nya)
+        if (e.target === this || 
+            (e.target.classList && e.target.classList.contains('file-upload-container')) ||
+            (!e.target.closest('.file-preview') && 
+             e.target !== fileUploadIcon && 
+             e.target !== fileUploadText && 
+             e.target !== fileUploadSubtext)) {
+            openFileDialog();
+        }
+    });
+
+    // Mencegah input file sendiri dari triggering event berulang
+    gambarInput.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
     // Drag and Drop
     gambarUpload.addEventListener('dragover', function(e) {
         e.preventDefault();
-        gambarUpload.classList.add('drag-over');
+        e.stopPropagation();
+        this.classList.add('drag-over');
     });
 
-    gambarUpload.addEventListener('dragleave', function() {
-        gambarUpload.classList.remove('drag-over');
+    gambarUpload.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('drag-over');
     });
 
     gambarUpload.addEventListener('drop', function(e) {
         e.preventDefault();
-        gambarUpload.classList.remove('drag-over');
-        const files = e.dataTransfer.files;
-        if (files.length) {
-            gambarInput.files = files;
-            handleFileSelect(files[0]);
+        e.stopPropagation();
+        this.classList.remove('drag-over');
+        
+        if (e.dataTransfer.files.length) {
+            gambarInput.files = e.dataTransfer.files;
+            handleFileSelect(e.dataTransfer.files[0]);
         }
-    });
-
-    // Click to Upload
-    gambarUpload.addEventListener('click', function() {
-        gambarInput.click();
     });
 
     gambarInput.addEventListener('change', function() {
@@ -1364,6 +1402,56 @@ document.addEventListener('DOMContentLoaded', function() {
             handleFileSelect(this.files[0]);
         }
     });
+
+    // Custom reset function untuk handle semua elemen form
+    function resetForm() {
+        // Reset judul
+        document.getElementById('judul').value = '';
+        document.getElementById('judul').classList.remove('is-invalid');
+        
+        // Reset slug
+        document.getElementById('slug').value = '';
+        
+        // Reset penulis
+        document.getElementById('penulis').value = '';
+        document.getElementById('penulis').classList.remove('is-invalid');
+        
+        // Reset tag
+        document.getElementById('tag').value = '';
+        
+        // Reset Summernote content
+        $('#konten').summernote('code', '');
+        document.getElementById('konten').classList.remove('is-invalid');
+        
+        // Reset status radio buttons
+        document.getElementById('status_draft').checked = true;
+        
+        // Reset file upload
+        document.getElementById('gambar').value = '';
+        document.getElementById('gambarPreview').style.display = 'none';
+        document.getElementById('gambarPreviewImg').src = '';
+        document.getElementById('gambarFileInfo').textContent = '';
+        
+        // Reset karakter count
+        updateCharCount('judulCount', '');
+        updateCharCount('kontenCount', '');
+        
+        // Reset preview
+        updatePreview('judul', '');
+        updatePreview('slug', '');
+        updatePreview('status', 'Draft');
+        
+        // Remove error messages
+        document.querySelectorAll('.error').forEach(error => error.remove());
+        
+        // Reset drag-over class
+        gambarUpload.classList.remove('drag-over');
+        
+        
+    }
+
+    // Event listener untuk tombol reset
+    document.getElementById('customResetBtn').addEventListener('click', resetForm);
 
     function handleFileSelect(file) {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -1517,8 +1605,6 @@ document.addEventListener('DOMContentLoaded', function() {
     adjustLayout();
     window.addEventListener('resize', adjustLayout);
 
-    // Auto-focus on first field
-    judulInput.focus();
 });
 </script>
 </body>
