@@ -167,6 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     challenger_score = ?, 
                     opponent_score = ?, 
                     winner_team_id = ?, 
+                    status = 'completed',
                     match_status = ?, 
                     match_duration = ?, 
                     match_official = ?, 
