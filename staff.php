@@ -57,9 +57,7 @@ $query = "SELECT
     t.name as team_name, 
     t.logo as team_logo,
     t.alias as team_alias,
-    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count,
-    (SELECT COUNT(*) FROM staff_events se WHERE se.staff_id = ts.id) as event_count,
-    (SELECT COUNT(*) FROM staff_matches sm WHERE sm.staff_id = ts.id) as match_count
+    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
     FROM team_staff ts 
     LEFT JOIN teams t ON ts.team_id = t.id 
     WHERE ts.is_active = 1";
@@ -867,15 +865,13 @@ $pageTitle = "Staff List";
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
-                            <th class="col-events">Events</th>
-                            <th class="col-matches">Matches</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($staffs)): ?>
                             <tr>
-                                <td colspan="10" class="no-data">
+                                <td colspan="8" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada staff ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -985,29 +981,7 @@ $pageTitle = "Staff List";
                                     <?php endif; ?>
                                 </td>
                                 
-                                <!-- Kolom Events -->
-                                <td class="col-events">
-                                    <?php if ($s['event_count'] > 0): ?>
-                                        <div class="event-match-count">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            <span><?php echo $s['event_count']; ?></span>
-                                        </div>
-                                    <?php else: ?>
-                                        <span style="color: #a0aec0;">0</span>
-                                    <?php endif; ?>
-                                </td>
-                                
-                                <!-- Kolom Matches -->
-                                <td class="col-matches">
-                                    <?php if ($s['match_count'] > 0): ?>
-                                        <div class="event-match-count">
-                                            <i class="fas fa-futbol"></i>
-                                            <span><?php echo $s['match_count']; ?></span>
-                                        </div>
-                                    <?php else: ?>
-                                        <span style="color: #a0aec0;">0</span>
-                                    <?php endif; ?>
-                                </td>
+
                                 
                                 <!-- Kolom Created At -->
                                 <td class="col-created">

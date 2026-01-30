@@ -82,9 +82,7 @@ try {
         SELECT ts.*, 
                t.name as team_name,
                t.alias as team_alias,
-               (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count,
-               (SELECT COUNT(*) FROM staff_events se WHERE se.staff_id = ts.id) as event_count,
-               (SELECT COUNT(*) FROM staff_matches sm WHERE sm.staff_id = ts.id) as match_count
+               (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
         FROM team_staff ts
         LEFT JOIN teams t ON ts.team_id = t.id
         WHERE ts.id = ?
@@ -111,15 +109,7 @@ try {
     $stmt->execute([$staff_id]);
     $certificates = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Fetch events (akan diisi nanti)
-    $stmt = $conn->prepare("SELECT * FROM staff_events WHERE staff_id = ? ORDER BY created_at DESC LIMIT 5");
-    $stmt->execute([$staff_id]);
-    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Fetch matches (akan diisi nanti)
-    $stmt = $conn->prepare("SELECT * FROM staff_matches WHERE staff_id = ? ORDER BY created_at DESC LIMIT 5");
-    $stmt->execute([$staff_id]);
-    $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
     
 } catch (PDOException $e) {
     die("Error fetching staff data: " . $e->getMessage());
@@ -1019,21 +1009,7 @@ tbody tr:hover {
                 <div class="stat-label">Total Sertifikat</div>
             </div>
             
-            <div class="stat-card">
-                <div class="stat-icon" style="color: #FFD700;">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="stat-number"><?php echo $staff_data['event_count']; ?></div>
-                <div class="stat-label">Total Events</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon" style="color: #4CC9F0;">
-                    <i class="fas fa-futbol"></i>
-                </div>
-                <div class="stat-number"><?php echo $staff_data['match_count']; ?></div>
-                <div class="stat-label">Total Matches</div>
-            </div>
+
             
             <div class="stat-card">
                 <div class="stat-icon" style="color: #2E7D32;">
@@ -1278,83 +1254,7 @@ tbody tr:hover {
             <?php endif; ?>
         </div>
 
-        <!-- EVENTS SECTION -->
-        <div class="info-card">
-            <div class="info-header">
-                <div class="info-title">
-                    <i class="fas fa-calendar-alt"></i>
-                    Events (<?php echo count($events); ?>)
-                </div>
-            </div>
-            
-            <?php if (!empty($events)): ?>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f8f9fa;">
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">Event</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">Role</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">Tanggal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($events as $event): ?>
-                            <tr style="border-bottom: 1px solid #f0f0f0;">
-                                <td style="padding: 12px;">Event #<?php echo $event['event_id']; ?></td>
-                                <td style="padding: 12px;"><?php echo htmlspecialchars($event['role'] ?? '-'); ?></td>
-                                <td style="padding: 12px;"><?php echo date('d/m/Y', strtotime($event['created_at'])); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="empty-state" style="background: none; box-shadow: none; padding: 40px 0;">
-                    <i class="fas fa-calendar-times" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
-                    <h4 style="color: #999;">Belum ada events</h4>
-                    <p style="color: #999;">Staff ini belum mengikuti events</p>
-                </div>
-            <?php endif; ?>
-        </div>
 
-        <!-- MATCHES SECTION -->
-        <div class="info-card">
-            <div class="info-header">
-                <div class="info-title">
-                    <i class="fas fa-futbol"></i>
-                    Matches (<?php echo count($matches); ?>)
-                </div>
-            </div>
-            
-            <?php if (!empty($matches)): ?>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f8f9fa;">
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">Match</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">Role</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">Tanggal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($matches as $match): ?>
-                            <tr style="border-bottom: 1px solid #f0f0f0;">
-                                <td style="padding: 12px;">Match #<?php echo $match['match_id']; ?></td>
-                                <td style="padding: 12px;"><?php echo htmlspecialchars($match['role'] ?? '-'); ?></td>
-                                <td style="padding: 12px;"><?php echo date('d/m/Y', strtotime($match['created_at'])); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php else: ?>
-                <div class="empty-state" style="background: none; box-shadow: none; padding: 40px 0;">
-                    <i class="fas fa-futbol" style="font-size: 60px; color: #ddd; margin-bottom: 20px;"></i>
-                    <h4 style="color: #999;">Belum ada matches</h4>
-                    <p style="color: #999;">Staff ini belum mengikuti matches</p>
-                </div>
-            <?php endif; ?>
-        </div>
     </div>
 </div>
 
