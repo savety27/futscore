@@ -188,7 +188,6 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Team Staff Management - FutScore</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 :root {
@@ -1318,8 +1317,6 @@ body {
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1360,22 +1357,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize DataTable
-    $('#staffTable').DataTable({
-        "searching": false,
-        "paging": false,
-        "info": false,
-        "ordering": true,
-        "autoWidth": false,
-        "responsive": true,
-        "columnDefs": [
-            { "orderable": false, "targets": [1, 9] } // Disable ordering on Photo and Action
-        ],
-        "language": {
-            "emptyTable": "Tidak ada data staff",
-            "zeroRecords": "Tidak ada data yang cocok dengan pencarian"
-        }
-    });
 });
 
 function deleteStaff(staffId, staffName) {
