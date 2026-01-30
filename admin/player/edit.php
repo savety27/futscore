@@ -7,6 +7,58 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// --- DATA MENU DROPDOWN ---
+$menu_items = [
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => '../dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => '../player.php',
+            'team' => '../team.php',
+            'team_staff' => '../team_staff.php'
+        ]
+    ],
+    'Event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => '../challenge.php',
+        'submenu' => false
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => '../venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => '../pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => '../berita.php',
+        'submenu' => false
+    ]
+];
+
+$academy_name = "Hi, Welcome...";
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+$email = $admin_email;
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     header("Location: ../player.php");
     exit;
@@ -222,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Edit Player - FutScore</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* CSS styles remain the same as in your original file */
+/* CSS styles for sidebar and layout */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -248,9 +300,243 @@ body {
     background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
     color: var(--dark);
     min-height: 100vh;
-    padding: 20px;
+    overflow-x: hidden;
 }
 
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
+    color: white;
+    padding: 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.sidebar-header {
+    padding: 30px 25px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid var(--secondary);
+}
+
+.logo-container {
+    position: relative;
+    display: inline-block;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary) 0%, #FFEC8B 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 4px solid white;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.logo:hover {
+    transform: rotate(15deg) scale(1.05);
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+}
+
+.logo::before {
+    content: "⚽";
+    font-size: 48px;
+    color: var(--primary);
+}
+
+.academy-info {
+    text-align: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.academy-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.academy-email {
+    font-size: 14px;
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Menu */
+.menu {
+    padding: 25px 15px;
+}
+
+.menu-item {
+    margin-bottom: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: var(--transition);
+    position: relative;
+    border-left: 4px solid transparent;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: var(--secondary);
+    padding-left: 25px;
+}
+
+.menu-link.active {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--secondary);
+    border-left-color: var(--secondary);
+    font-weight: 600;
+}
+
+.menu-icon {
+    font-size: 22px;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 16px;
+}
+
+.menu-arrow {
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.menu-arrow.rotate {
+    transform: rotate(90deg);
+}
+
+/* Submenu */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 12px 12px;
+}
+
+.submenu.open {
+    max-height: 300px;
+}
+
+.submenu-item {
+    padding: 5px 15px 5px 70px;
+}
+
+.submenu-link {
+    display: block;
+    padding: 12px 15px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--transition);
+    position: relative;
+    font-size: 14px;
+}
+
+.submenu-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--secondary);
+    font-size: 18px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+    flex: 1;
+    padding: 30px;
+    margin-left: 280px;
+    transition: var(--transition);
+}
+
+/* Topbar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 20px 25px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
+}
+
+.greeting h1 {
+    font-size: 28px;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.greeting p {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+}
+
+.logout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
+}
+
+/* Form Container Styles */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -657,7 +943,52 @@ select.form-control {
     }
 }
 
+/* Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: var(--transition);
+}
+
+.menu-toggle:hover {
+    background: var(--secondary);
+    color: var(--primary);
+    transform: rotate(90deg);
+}
+
 /* Responsive */
+@media (max-width: 1200px) {
+    .main {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        width: 300px;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .menu-toggle {
+        display: block;
+    }
+}
+
 @media (max-width: 768px) {
     .header {
         flex-direction: column;
@@ -687,424 +1018,550 @@ select.form-control {
 </style>
 </head>
 <body>
-<div class="container">
-    <!-- Header -->
-    <div class="header">
-        <a href="../player.php" class="back-btn">
-            <i class="fas fa-arrow-left"></i>
-            Kembali ke Players
-        </a>
-        <div class="page-title">
-            <i class="fas fa-edit"></i>
-            <span>Edit Player: <?php echo htmlspecialchars($player['name']); ?></span>
-        </div>
-        <div></div> <!-- Empty div for spacing -->
-    </div>
 
-    <?php if (isset($error)): ?>
-    <div class="alert alert-danger">
-        <i class="fas fa-exclamation-circle"></i>
-        <span><?php echo $error; ?></span>
-    </div>
-    <?php endif; ?>
+<button class="menu-toggle" id="menuToggle">
+    <i class="fas fa-bars"></i>
+</button>
 
-    <!-- Form -->
-    <form method="POST" action="" enctype="multipart/form-data" class="form-container">
-        <input type="hidden" name="player_id" value="<?php echo $player['id']; ?>">
-        
-        <!-- Tabs -->
-        <div class="tabs">
-            <button type="button" class="tab-btn active" data-tab="profile">
-                <i class="fas fa-user-circle"></i>
-                Profile
-            </button>
-            <button type="button" class="tab-btn" data-tab="documents">
-                <i class="fas fa-file-alt"></i>
-                Dokumen
-            </button>
-            <button type="button" class="tab-btn" data-tab="skills">
-                <i class="fas fa-futbol"></i>
-                Info & Skills
-            </button>
-        </div>
-
-        <!-- Profile Tab -->
-        <div class="tab-content active" id="profileTab">
-            <div class="form-grid">
-                <div class="form-group full-width">
-                    <div class="photo-preview" id="photoPreview">
-                        <?php if (!empty($player['photo'])): 
-                            $photo_path = '../../images/players/' . $player['photo'];
-                            if (file_exists($photo_path)): ?>
-                                <img src="<?php echo $photo_path; ?>" 
-                                     alt="<?php echo htmlspecialchars($player['name']); ?>"
-                                     id="currentPhoto">
-                            <?php else: ?>
-                                <div class="default-photo">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <div class="default-photo">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="file-upload" onclick="document.getElementById('photo').click()">
-                        <input type="file" id="photo" name="photo" accept="image/*" onchange="previewImage(this)">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Upload Photo Player Baru (Opsional)</p>
-                        <small>Format: JPG, PNG | Maks: 5MB</small>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="name">Nama <span class="required">*</span></label>
-                    <input type="text" id="name" name="name" class="form-control" 
-                           value="<?php echo htmlspecialchars($player['name']); ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="birth_place">Tempat Lahir <span class="required">*</span></label>
-                    <input type="text" id="birth_place" name="birth_place" class="form-control" 
-                           value="<?php echo htmlspecialchars($player['birth_place']); ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="birth_date">Tanggal Lahir <span class="required">*</span></label>
-                    <input type="date" id="birth_date" name="birth_date" class="form-control" 
-                           value="<?php echo $player['birth_date']; ?>" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="sport_type">Cabor <span class="required">*</span></label>
-                    <select id="sport_type" name="sport_type" class="form-control" required>
-                        <option value="">Pilih Cabor</option>
-                        <?php 
-                        $sports = ['Futsal', 'Sepakbola', 'Panahan', 'Karate', 'Angkat Besi', 'Atletik', 'Dayung', 
-                                  'Pencak Silat', 'Taekwondo', 'Sepak Takraw', 'Bola Voli', 'Cricket', 
-                                  'Mini Soccer/Mini Football', 'Basket'];
-                        foreach ($sports as $sport_option): 
-                        ?>
-                            <option value="<?php echo $sport_option; ?>" 
-                                <?php echo $player['sport_type'] === $sport_option ? 'selected' : ''; ?>>
-                                <?php echo $sport_option; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="gender">Jenis Kelamin <span class="required">*</span></label>
-                    <div class="radio-group">
-                        <?php 
-                        $gender_display = ($player['gender'] == 'L') ? 'Laki-laki' : 
-                                        (($player['gender'] == 'P') ? 'Perempuan' : '');
-                        ?>
-                        <label class="radio-option">
-                            <input type="radio" name="gender" value="Laki-laki" 
-                                   <?php echo $gender_display === 'Laki-laki' ? 'checked' : ''; ?> required>
-                            <span>Laki-laki</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="gender" value="Perempuan"
-                                   <?php echo $gender_display === 'Perempuan' ? 'checked' : ''; ?> required>
-                            <span>Perempuan</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="nik">NIK <span class="required">*</span></label>
-                    <input type="text" id="nik" name="nik" class="form-control" 
-                           value="<?php echo htmlspecialchars($player['nik']); ?>" required maxlength="16">
-                </div>
-
-                <div class="form-group">
-                    <label for="nisn">NISN</label>
-                    <input type="text" id="nisn" name="nisn" class="form-control" 
-                           value="<?php echo htmlspecialchars($player['nisn']); ?>" maxlength="20">
-                </div>
-
-                <div class="form-group">
-                    <label for="height">Tinggi (cm)</label>
-                    <input type="number" id="height" name="height" class="form-control" 
-                           value="<?php echo $player['height']; ?>" min="100" max="250">
-                </div>
-
-                <div class="form-group">
-                    <label for="weight">Berat (kg)</label>
-                    <input type="number" id="weight" name="weight" class="form-control" 
-                           value="<?php echo $player['weight']; ?>" min="20" max="150">
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" class="form-control"
-                           value="<?php echo htmlspecialchars($player['email']); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Telpon</label>
-                    <input type="tel" id="phone" name="phone" class="form-control"
-                           value="<?php echo htmlspecialchars($player['phone']); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="nationality">Kewarganegaraan</label>
-                    <input type="text" id="nationality" name="nationality" class="form-control"
-                           value="<?php echo htmlspecialchars($player['nationality']); ?>">
-                </div>
-
-                <div class="form-group full-width">
-                    <label for="street">Alamat - Jalan/No</label>
-                    <input type="text" id="street" name="street" class="form-control"
-                           value="<?php echo htmlspecialchars($player['street']); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="city">Kota</label>
-                    <input type="text" id="city" name="city" class="form-control"
-                           value="<?php echo htmlspecialchars($player['city']); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="province">Provinsi</label>
-                    <input type="text" id="province" name="province" class="form-control"
-                           value="<?php echo htmlspecialchars($player['province']); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="postal_code">Kode Pos</label>
-                    <input type="text" id="postal_code" name="postal_code" class="form-control"
-                           value="<?php echo htmlspecialchars($player['postal_code']); ?>">
-                </div>
-
-                <div class="form-group">
-                    <label for="country">Negara</label>
-                    <input type="text" id="country" name="country" class="form-control"
-                           value="<?php echo htmlspecialchars($player['country']); ?>">
-                </div>
+<div class="wrapper">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo"></div>
+            </div>
+            <div class="academy-info">
+                <div class="academy-name"><?php echo $academy_name; ?></div>
+                <div class="academy-email"><?php echo $email; ?></div>
             </div>
         </div>
 
-        <!-- Documents Tab -->
-        <div class="tab-content" id="documentsTab">
-            <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid var(--primary);">
-                <strong><i class="fas fa-info-circle"></i> Note!</strong> Dokumen digunakan untuk memverifikasi keaslian data yang diberikan. 
-                Pastikan file yang diunggah asli, relevan, dan mudah dibaca. Hanya file berformat gambar yang diterima.
-            </div>
-
-            <div class="form-grid">
-                <!-- KTP -->
-                <div class="form-group">
-                    <label>KTP / KIA / Kartu Pelajar</label>
-                    <div class="file-upload" onclick="document.getElementById('ktp_image').click()">
-                        <input type="file" id="ktp_image" name="ktp_image" accept="image/*" onchange="previewKTP(this)">
-                        <i class="fas fa-id-card"></i>
-                        <p>Upload KTP/Kartu Identitas Baru</p>
-                        <small>Format: JPG, PNG | Maks: 5MB</small>
-                    </div>
-                    
-                    <?php if (!empty($player['ktp_image'])): 
-                        $ktp_path = '../../images/players/' . $player['ktp_image'];
-                        if (file_exists($ktp_path)): ?>
-                        <div class="document-preview">
-                            <img src="<?php echo $ktp_path; ?>" 
-                                 alt="KTP" onclick="viewDocument('<?php echo $ktp_path; ?>')"
-                                 style="cursor: pointer;">
-                            <div class="delete-checkbox">
-                                <input type="checkbox" id="delete_ktp_image" name="delete_ktp_image" value="1">
-                                <label for="delete_ktp_image">Hapus dokumen ini</label>
-                            </div>
-                        </div>
-                    <?php endif; endif; ?>
-                </div>
-
-                <!-- KK -->
-                <div class="form-group">
-                    <label>Kartu Keluarga</label>
-                    <div class="file-upload" onclick="document.getElementById('kk_image').click()">
-                        <input type="file" id="kk_image" name="kk_image" accept="image/*" onchange="previewKK(this)">
-                        <i class="fas fa-home"></i>
-                        <p>Upload Kartu Keluarga Baru</p>
-                        <small>Format: JPG, PNG | Maks: 5MB</small>
-                    </div>
-                    
-                    <?php if (!empty($player['kk_image'])): 
-                        $kk_path = '../../images/players/' . $player['kk_image'];
-                        if (file_exists($kk_path)): ?>
-                        <div class="document-preview">
-                            <img src="<?php echo $kk_path; ?>" 
-                                 alt="KK" onclick="viewDocument('<?php echo $kk_path; ?>')"
-                                 style="cursor: pointer;">
-                            <div class="delete-checkbox">
-                                <input type="checkbox" id="delete_kk_image" name="delete_kk_image" value="1">
-                                <label for="delete_kk_image">Hapus dokumen ini</label>
-                            </div>
-                        </div>
-                    <?php endif; endif; ?>
-                </div>
-
-                <!-- Akta Lahir -->
-                <div class="form-group">
-                    <label>Akta Lahir / Surat Ket. Lahir</label>
-                    <div class="file-upload" onclick="document.getElementById('birth_cert_image').click()">
-                        <input type="file" id="birth_cert_image" name="birth_cert_image" accept="image/*" onchange="previewAkte(this)">
-                        <i class="fas fa-baby"></i>
-                        <p>Upload Akta Lahir Baru</p>
-                        <small>Format: JPG, PNG | Maks: 5MB</small>
-                    </div>
-                    
-                    <?php if (!empty($player['birth_cert_image'])): 
-                        $akte_path = '../../images/players/' . $player['birth_cert_image'];
-                        if (file_exists($akte_path)): ?>
-                        <div class="document-preview">
-                            <img src="<?php echo $akte_path; ?>" 
-                                 alt="Akta Lahir" onclick="viewDocument('<?php echo $akte_path; ?>')"
-                                 style="cursor: pointer;">
-                            <div class="delete-checkbox">
-                                <input type="checkbox" id="delete_birth_cert_image" name="delete_birth_cert_image" value="1">
-                                <label for="delete_birth_cert_image">Hapus dokumen ini</label>
-                            </div>
-                        </div>
-                    <?php endif; endif; ?>
-                </div>
-
-                <!-- Ijazah -->
-                <div class="form-group">
-                    <label>Ijazah / Biodata Raport / Kartu NISN</label>
-                    <div class="file-upload" onclick="document.getElementById('diploma_image').click()">
-                        <input type="file" id="diploma_image" name="diploma_image" accept="image/*" onchange="previewIjazah(this)">
-                        <i class="fas fa-graduation-cap"></i>
-                        <p>Upload Ijazah/Raport Baru</p>
-                        <small>Format: JPG, PNG | Maks: 5MB</small>
-                    </div>
-                    
-                    <?php if (!empty($player['diploma_image'])): 
-                        $ijazah_path = '../../images/players/' . $player['diploma_image'];
-                        if (file_exists($ijazah_path)): ?>
-                        <div class="document-preview">
-                            <img src="<?php echo $ijazah_path; ?>" 
-                                 alt="Ijazah" onclick="viewDocument('<?php echo $ijazah_path; ?>')"
-                                 style="cursor: pointer;">
-                            <div class="delete-checkbox">
-                                <input type="checkbox" id="delete_diploma_image" name="delete_diploma_image" value="1">
-                                <label for="delete_diploma_image">Hapus dokumen ini</label>
-                            </div>
-                        </div>
-                    <?php endif; endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Skills Tab -->
-        <div class="tab-content" id="skillsTab">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="team_id">Team</label>
-                    <select id="team_id" name="team_id" class="form-control">
-                        <option value="">Pilih Team</option>
-                        <?php foreach ($teams as $team): ?>
-                            <option value="<?php echo $team['id']; ?>"
-                                <?php echo $player['team_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($team['name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="jersey_number">No Punggung</label>
-                    <input type="number" id="jersey_number" name="jersey_number" class="form-control" 
-                           value="<?php echo $player['jersey_number']; ?>" min="1" max="99">
-                </div>
-
-                <div class="form-group">
-                    <label for="dominant_foot">Kaki Dominan</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="dominant_foot" value="Kanan" 
-                                   <?php echo $player['dominant_foot'] === 'Kanan' ? 'checked' : ''; ?>>
-                            <span>Kanan</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="dominant_foot" value="Kiri"
-                                   <?php echo $player['dominant_foot'] === 'Kiri' ? 'checked' : ''; ?>>
-                            <span>Kiri</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="dominant_foot" value="Kedua"
-                                   <?php echo $player['dominant_foot'] === 'Kedua' ? 'checked' : ''; ?>>
-                            <span>Kedua-duanya</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="position">Posisi</label>
-                    <select id="position" name="position" class="form-control">
-                        <option value="">Pilih Posisi</option>
-                        <option value="GK" <?php echo $player['position'] === 'GK' ? 'selected' : ''; ?>>Kiper (GK)</option>
-                        <option value="DF" <?php echo $player['position'] === 'DF' ? 'selected' : ''; ?>>Bek (DF)</option>
-                        <option value="MF" <?php echo $player['position'] === 'MF' ? 'selected' : ''; ?>>Gelandang (MF)</option>
-                        <option value="FW" <?php echo $player['position'] === 'FW' ? 'selected' : ''; ?>>Penyerang (FW)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Skills Section -->
-            <div style="margin-top: 30px;">
-                <h3 style="color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-chart-line"></i>
-                    Player Skills (Range: 0-10)
-                </h3>
+        <div class="menu">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
                 
-                <div class="skills-grid">
-                    <?php 
-                    $skills = [
-                        'dribbling' => 'Dribbling',
-                        'technique' => 'Technique', 
-                        'speed' => 'Speed',
-                        'juggling' => 'Juggling',
-                        'shooting' => 'Shooting',
-                        'setplay_position' => 'Setplay Position',
-                        'passing' => 'Passing',
-                        'control' => 'Control'
-                    ];
-                    
-                    foreach ($skills as $key => $label): 
-                        $value = $player[$key] ?? 5;
-                    ?>
-                    <div class="skill-item">
-                        <div class="skill-header">
-                            <span class="skill-name"><?php echo $label; ?></span>
-                            <span class="skill-value" id="<?php echo $key; ?>Value"><?php echo $value; ?></span>
-                        </div>
-                        <input type="range" class="skill-range" id="<?php echo $key; ?>" name="<?php echo $key; ?>" 
-                               min="0" max="10" value="<?php echo $value; ?>" step="1"
-                               oninput="document.getElementById('<?php echo $key; ?>Value').textContent = this.value">
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subUrl) {
+                        // Karena kita di dalam folder 'player', perlu relative path
+                        if($current_page === 'edit.php' && $subUrl === '../player.php') {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // Untuk menu tanpa submenu
+                    if ($current_page === 'edit.php' && $item['url'] === '../player.php') {
+                        $isActive = true;
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
+                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                        <span class="menu-text"><?php echo $item['name']; ?></span>
+                        <?php if ($item['submenu']): ?>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                        <?php endif; ?>
+                </a>
+                
+                <?php if ($item['submenu']): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
+                    <div class="submenu-item">
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === 'edit.php' && $subUrl === '../player.php') ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
+                        </a>
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="greeting">
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <p>Edit Player - Sistem manajemen pemain futsal</p>
+            </div>
+            
+            <div class="user-actions">
+                <a href="../logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
             </div>
         </div>
 
-        <!-- Form Actions -->
-        <div class="form-actions">
-            <a href="../player.php" class="btn btn-secondary">
-                <i class="fas fa-times"></i>
-                Batal
-            </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                Update Player
-            </button>
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <a href="../player.php" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali ke Players
+                </a>
+                <div class="page-title">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Player: <?php echo htmlspecialchars($player['name']); ?></span>
+                </div>
+                <div></div> <!-- Empty div for spacing -->
+            </div>
+
+            <?php if (isset($error)): ?>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?php echo $error; ?></span>
+            </div>
+            <?php endif; ?>
+
+            <!-- Form -->
+            <form method="POST" action="" enctype="multipart/form-data" class="form-container">
+                <input type="hidden" name="player_id" value="<?php echo $player['id']; ?>">
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button type="button" class="tab-btn active" data-tab="profile">
+                        <i class="fas fa-user-circle"></i>
+                        Profile
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="documents">
+                        <i class="fas fa-file-alt"></i>
+                        Dokumen
+                    </button>
+                    <button type="button" class="tab-btn" data-tab="skills">
+                        <i class="fas fa-futbol"></i>
+                        Info & Skills
+                    </button>
+                </div>
+
+                <!-- Profile Tab -->
+                <div class="tab-content active" id="profileTab">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <div class="photo-preview" id="photoPreview">
+                                <?php if (!empty($player['photo'])): 
+                                    $photo_path = '../../images/players/' . $player['photo'];
+                                    if (file_exists($photo_path)): ?>
+                                        <img src="<?php echo $photo_path; ?>" 
+                                             alt="<?php echo htmlspecialchars($player['name']); ?>"
+                                             id="currentPhoto">
+                                    <?php else: ?>
+                                        <div class="default-photo">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <div class="default-photo">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="file-upload" onclick="document.getElementById('photo').click()">
+                                <input type="file" id="photo" name="photo" accept="image/*" onchange="previewImage(this)">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Upload Photo Player Baru (Opsional)</p>
+                                <small>Format: JPG, PNG | Maks: 5MB</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Nama <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" class="form-control" 
+                                   value="<?php echo htmlspecialchars($player['name']); ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birth_place">Tempat Lahir <span class="required">*</span></label>
+                            <input type="text" id="birth_place" name="birth_place" class="form-control" 
+                                   value="<?php echo htmlspecialchars($player['birth_place']); ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birth_date">Tanggal Lahir <span class="required">*</span></label>
+                            <input type="date" id="birth_date" name="birth_date" class="form-control" 
+                                   value="<?php echo $player['birth_date']; ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sport_type">Cabor <span class="required">*</span></label>
+                            <select id="sport_type" name="sport_type" class="form-control" required>
+                                <option value="">Pilih Cabor</option>
+                                <?php 
+                                $sports = ['Futsal', 'Sepakbola', 'Panahan', 'Karate', 'Angkat Besi', 'Atletik', 'Dayung', 
+                                          'Pencak Silat', 'Taekwondo', 'Sepak Takraw', 'Bola Voli', 'Cricket', 
+                                          'Mini Soccer/Mini Football', 'Basket'];
+                                foreach ($sports as $sport_option): 
+                                ?>
+                                    <option value="<?php echo $sport_option; ?>" 
+                                        <?php echo $player['sport_type'] === $sport_option ? 'selected' : ''; ?>>
+                                        <?php echo $sport_option; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">Jenis Kelamin <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <?php 
+                                $gender_display = ($player['gender'] == 'L') ? 'Laki-laki' : 
+                                                (($player['gender'] == 'P') ? 'Perempuan' : '');
+                                ?>
+                                <label class="radio-option">
+                                    <input type="radio" name="gender" value="Laki-laki" 
+                                           <?php echo $gender_display === 'Laki-laki' ? 'checked' : ''; ?> required>
+                                    <span>Laki-laki</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="gender" value="Perempuan"
+                                           <?php echo $gender_display === 'Perempuan' ? 'checked' : ''; ?> required>
+                                    <span>Perempuan</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nik">NIK <span class="required">*</span></label>
+                            <input type="text" id="nik" name="nik" class="form-control" 
+                                   value="<?php echo htmlspecialchars($player['nik']); ?>" required maxlength="16">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nisn">NISN</label>
+                            <input type="text" id="nisn" name="nisn" class="form-control" 
+                                   value="<?php echo htmlspecialchars($player['nisn']); ?>" maxlength="20">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="height">Tinggi (cm)</label>
+                            <input type="number" id="height" name="height" class="form-control" 
+                                   value="<?php echo $player['height']; ?>" min="100" max="250">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="weight">Berat (kg)</label>
+                            <input type="number" id="weight" name="weight" class="form-control" 
+                                   value="<?php echo $player['weight']; ?>" min="20" max="150">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['email']); ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Telpon</label>
+                            <input type="tel" id="phone" name="phone" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['phone']); ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nationality">Kewarganegaraan</label>
+                            <input type="text" id="nationality" name="nationality" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['nationality']); ?>">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="street">Alamat - Jalan/No</label>
+                            <input type="text" id="street" name="street" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['street']); ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="city">Kota</label>
+                            <input type="text" id="city" name="city" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['city']); ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="province">Provinsi</label>
+                            <input type="text" id="province" name="province" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['province']); ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="postal_code">Kode Pos</label>
+                            <input type="text" id="postal_code" name="postal_code" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['postal_code']); ?>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="country">Negara</label>
+                            <input type="text" id="country" name="country" class="form-control"
+                                   value="<?php echo htmlspecialchars($player['country']); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Tab -->
+                <div class="tab-content" id="documentsTab">
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid var(--primary);">
+                        <strong><i class="fas fa-info-circle"></i> Note!</strong> Dokumen digunakan untuk memverifikasi keaslian data yang diberikan. 
+                        Pastikan file yang diunggah asli, relevan, dan mudah dibaca. Hanya file berformat gambar yang diterima.
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- KTP -->
+                        <div class="form-group">
+                            <label>KTP / KIA / Kartu Pelajar</label>
+                            <div class="file-upload" onclick="document.getElementById('ktp_image').click()">
+                                <input type="file" id="ktp_image" name="ktp_image" accept="image/*" onchange="previewKTP(this)">
+                                <i class="fas fa-id-card"></i>
+                                <p>Upload KTP/Kartu Identitas Baru</p>
+                                <small>Format: JPG, PNG | Maks: 5MB</small>
+                            </div>
+                            
+                            <?php if (!empty($player['ktp_image'])): 
+                                $ktp_path = '../../images/players/' . $player['ktp_image'];
+                                if (file_exists($ktp_path)): ?>
+                                <div class="document-preview">
+                                    <img src="<?php echo $ktp_path; ?>" 
+                                         alt="KTP" onclick="viewDocument('<?php echo $ktp_path; ?>')"
+                                         style="cursor: pointer;">
+                                    <div class="delete-checkbox">
+                                        <input type="checkbox" id="delete_ktp_image" name="delete_ktp_image" value="1">
+                                        <label for="delete_ktp_image">Hapus dokumen ini</label>
+                                    </div>
+                                </div>
+                            <?php endif; endif; ?>
+                        </div>
+
+                        <!-- KK -->
+                        <div class="form-group">
+                            <label>Kartu Keluarga</label>
+                            <div class="file-upload" onclick="document.getElementById('kk_image').click()">
+                                <input type="file" id="kk_image" name="kk_image" accept="image/*" onchange="previewKK(this)">
+                                <i class="fas fa-home"></i>
+                                <p>Upload Kartu Keluarga Baru</p>
+                                <small>Format: JPG, PNG | Maks: 5MB</small>
+                            </div>
+                            
+                            <?php if (!empty($player['kk_image'])): 
+                                $kk_path = '../../images/players/' . $player['kk_image'];
+                                if (file_exists($kk_path)): ?>
+                                <div class="document-preview">
+                                    <img src="<?php echo $kk_path; ?>" 
+                                         alt="KK" onclick="viewDocument('<?php echo $kk_path; ?>')"
+                                         style="cursor: pointer;">
+                                    <div class="delete-checkbox">
+                                        <input type="checkbox" id="delete_kk_image" name="delete_kk_image" value="1">
+                                        <label for="delete_kk_image">Hapus dokumen ini</label>
+                                    </div>
+                                </div>
+                            <?php endif; endif; ?>
+                        </div>
+
+                        <!-- Akta Lahir -->
+                        <div class="form-group">
+                            <label>Akta Lahir / Surat Ket. Lahir</label>
+                            <div class="file-upload" onclick="document.getElementById('birth_cert_image').click()">
+                                <input type="file" id="birth_cert_image" name="birth_cert_image" accept="image/*" onchange="previewAkte(this)">
+                                <i class="fas fa-baby"></i>
+                                <p>Upload Akta Lahir Baru</p>
+                                <small>Format: JPG, PNG | Maks: 5MB</small>
+                            </div>
+                            
+                            <?php if (!empty($player['birth_cert_image'])): 
+                                $akte_path = '../../images/players/' . $player['birth_cert_image'];
+                                if (file_exists($akte_path)): ?>
+                                <div class="document-preview">
+                                    <img src="<?php echo $akte_path; ?>" 
+                                         alt="Akta Lahir" onclick="viewDocument('<?php echo $akte_path; ?>')"
+                                         style="cursor: pointer;">
+                                    <div class="delete-checkbox">
+                                        <input type="checkbox" id="delete_birth_cert_image" name="delete_birth_cert_image" value="1">
+                                        <label for="delete_birth_cert_image">Hapus dokumen ini</label>
+                                    </div>
+                                </div>
+                            <?php endif; endif; ?>
+                        </div>
+
+                        <!-- Ijazah -->
+                        <div class="form-group">
+                            <label>Ijazah / Biodata Raport / Kartu NISN</label>
+                            <div class="file-upload" onclick="document.getElementById('diploma_image').click()">
+                                <input type="file" id="diploma_image" name="diploma_image" accept="image/*" onchange="previewIjazah(this)">
+                                <i class="fas fa-graduation-cap"></i>
+                                <p>Upload Ijazah/Raport Baru</p>
+                                <small>Format: JPG, PNG | Maks: 5MB</small>
+                            </div>
+                            
+                            <?php if (!empty($player['diploma_image'])): 
+                                $ijazah_path = '../../images/players/' . $player['diploma_image'];
+                                if (file_exists($ijazah_path)): ?>
+                                <div class="document-preview">
+                                    <img src="<?php echo $ijazah_path; ?>" 
+                                         alt="Ijazah" onclick="viewDocument('<?php echo $ijazah_path; ?>')"
+                                         style="cursor: pointer;">
+                                    <div class="delete-checkbox">
+                                        <input type="checkbox" id="delete_diploma_image" name="delete_diploma_image" value="1">
+                                        <label for="delete_diploma_image">Hapus dokumen ini</label>
+                                    </div>
+                                </div>
+                            <?php endif; endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills Tab -->
+                <div class="tab-content" id="skillsTab">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="team_id">Team</label>
+                            <select id="team_id" name="team_id" class="form-control">
+                                <option value="">Pilih Team</option>
+                                <?php foreach ($teams as $team): ?>
+                                    <option value="<?php echo $team['id']; ?>"
+                                        <?php echo $player['team_id'] == $team['id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($team['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jersey_number">No Punggung</label>
+                            <input type="number" id="jersey_number" name="jersey_number" class="form-control" 
+                                   value="<?php echo $player['jersey_number']; ?>" min="1" max="99">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dominant_foot">Kaki Dominan</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="dominant_foot" value="Kanan" 
+                                           <?php echo $player['dominant_foot'] === 'Kanan' ? 'checked' : ''; ?>>
+                                    <span>Kanan</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="dominant_foot" value="Kiri"
+                                           <?php echo $player['dominant_foot'] === 'Kiri' ? 'checked' : ''; ?>>
+                                    <span>Kiri</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="dominant_foot" value="Kedua"
+                                           <?php echo $player['dominant_foot'] === 'Kedua' ? 'checked' : ''; ?>>
+                                    <span>Kedua-duanya</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="position">Posisi</label>
+                            <select id="position" name="position" class="form-control">
+                                <option value="">Pilih Posisi</option>
+                                <option value="GK" <?php echo $player['position'] === 'GK' ? 'selected' : ''; ?>>Kiper (GK)</option>
+                                <option value="DF" <?php echo $player['position'] === 'DF' ? 'selected' : ''; ?>>Bek (DF)</option>
+                                <option value="MF" <?php echo $player['position'] === 'MF' ? 'selected' : ''; ?>>Gelandang (MF)</option>
+                                <option value="FW" <?php echo $player['position'] === 'FW' ? 'selected' : ''; ?>>Penyerang (FW)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Skills Section -->
+                    <div style="margin-top: 30px;">
+                        <h3 style="color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-chart-line"></i>
+                            Player Skills (Range: 0-10)
+                        </h3>
+                        
+                        <div class="skills-grid">
+                            <?php 
+                            $skills = [
+                                'dribbling' => 'Dribbling',
+                                'technique' => 'Technique', 
+                                'speed' => 'Speed',
+                                'juggling' => 'Juggling',
+                                'shooting' => 'Shooting',
+                                'setplay_position' => 'Setplay Position',
+                                'passing' => 'Passing',
+                                'control' => 'Control'
+                            ];
+                            
+                            foreach ($skills as $key => $label): 
+                                $value = $player[$key] ?? 5;
+                            ?>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name"><?php echo $label; ?></span>
+                                    <span class="skill-value" id="<?php echo $key; ?>Value"><?php echo $value; ?></span>
+                                </div>
+                                <input type="range" class="skill-range" id="<?php echo $key; ?>" name="<?php echo $key; ?>" 
+                                       min="0" max="10" value="<?php echo $value; ?>" step="1"
+                                       oninput="document.getElementById('<?php echo $key; ?>Value').textContent = this.value">
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="../player.php" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Player
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 
 <script>
+// Toggle sidebar untuk mobile
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+
+menuToggle.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+    this.innerHTML = sidebar.classList.contains('active') 
+        ? '<i class="fas fa-times"></i>' 
+        : '<i class="fas fa-bars"></i>';
+});
+
+// Auto close sidebar when clicking outside on mobile
+document.addEventListener('click', function(e) {
+    if (window.innerWidth <= 1200) {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+            menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+    }
+});
+
+// Menu toggle functionality (untuk Submenu)
+document.querySelectorAll('.menu-link').forEach(link => {
+    if (link.querySelector('.menu-arrow')) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const submenu = this.nextElementSibling;
+            const arrow = this.querySelector('.menu-arrow');
+            
+            if (submenu) {
+                submenu.classList.toggle('open');
+                arrow.classList.toggle('rotate');
+            }
+        });
+    }
+});
+
 // Tab Navigation
 document.querySelectorAll('.tab-btn').forEach(button => {
     button.addEventListener('click', () => {

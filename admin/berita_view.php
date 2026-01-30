@@ -22,19 +22,59 @@ if ($berita_id <= 0) {
     exit;
 }
 
-// Menu items
+// --- DATA MENU DROPDOWN ---
 $menu_items = [
-    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'submenu' => false],
-    'master' => ['icon' => '📊', 'name' => 'Master Data', 'submenu' => true, 'items' => ['player', 'team', 'team_staff', 'pelatih', 'berita']],
-    'event' => ['icon' => '📅', 'name' => 'Event', 'submenu' => true, 'items' => ['event', 'player_liga', 'staff_liga']],
-    'match' => ['icon' => '⚽', 'name' => 'Match', 'submenu' => false],
-    'challenge' => ['icon' => '🏆', 'name' => 'Challenge', 'submenu' => false],
-    'training' => ['icon' => '🎯', 'name' => 'Training', 'submenu' => false],
-    'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => 'dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => 'player.php',
+            'team' => 'team.php',
+            'team_staff' => 'team_staff.php'
+        ]
+    ],
+    'Event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => 'challenge.php',
+        'submenu' => false
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
+        'submenu' => false
+    ]
 ];
 
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// Get admin info
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+
 $academy_name = "Hi, Welcome...";
-$email = "";
+$email = $admin_email;
 
 // Fetch berita data
 try {
@@ -154,11 +194,6 @@ body {
     border-bottom: 2px solid var(--secondary);
 }
 
-.logo-container {
-    position: relative;
-    display: inline-block;
-}
-
 .logo {
     width: 100px;
     height: 100px;
@@ -170,8 +205,6 @@ body {
     margin: 0 auto 20px;
     border: 4px solid white;
     box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-    position: relative;
-    overflow: hidden;
     transition: var(--transition);
 }
 
@@ -181,14 +214,9 @@ body {
 }
 
 .logo::before {
-    content: "📰";
+    content: "⚽";
     font-size: 48px;
     color: var(--primary);
-}
-
-.academy-info {
-    text-align: center;
-    animation: fadeIn 0.8s ease-out;
 }
 
 .academy-name {
@@ -296,6 +324,11 @@ body {
     padding-left: 20px;
 }
 
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+}
+
 .submenu-link::before {
     content: "•";
     position: absolute;
@@ -322,7 +355,6 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -340,28 +372,6 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-}
-
-.notification {
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    color: var(--primary);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--danger);
-    color: white;
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .logout-btn {
@@ -458,17 +468,6 @@ body {
 .btn-secondary:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-}
-
-.btn-warning {
-    background: linear-gradient(135deg, var(--warning), #FFB74D);
-    color: white;
-    box-shadow: 0 5px 15px rgba(249, 168, 38, 0.2);
-}
-
-.btn-warning:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(249, 168, 38, 0.3);
 }
 
 /* Detail Container */
@@ -745,30 +744,71 @@ body {
     color: var(--gray);
 }
 
-/* Alert */
-.alert {
-    padding: 15px 20px;
+/* Content Formatting */
+.content-wrapper {
+    background: #f8f9fa;
     border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    padding: 30px;
+    margin-bottom: 30px;
 }
 
-.alert-danger {
-    background: rgba(211, 47, 47, 0.1);
-    border-left: 4px solid var(--danger);
-    color: var(--danger);
+.content-wrapper p {
+    margin-bottom: 1.2em;
+    line-height: 1.8;
 }
 
-.alert-success {
-    background: rgba(46, 125, 50, 0.1);
-    border-left: 4px solid var(--success);
-    color: var(--success);
+.content-wrapper br {
+    display: none;
+}
+
+.content-wrapper p:empty {
+    display: none;
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: var(--transition);
+}
+
+.menu-toggle:hover {
+    background: var(--secondary);
+    color: var(--primary);
+    transform: rotate(90deg);
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .main {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
     .stats-section {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -802,89 +842,6 @@ body {
         line-height: 1.6;
     }
 }
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Menu Toggle Button */
-.menu-toggle {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 101;
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    transition: var(--transition);
-}
-
-.menu-toggle:hover {
-    background: var(--secondary);
-    color: var(--primary);
-    transform: rotate(90deg);
-}
-
-/* Mobile Styles */
-@media (max-width: 1200px) {
-    .menu-toggle {
-        display: block;
-    }
-    
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .main {
-        margin-left: 0;
-        padding: 20px;
-    }
-}
-
-/* Content Formatting */
-.content-wrapper {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.content-wrapper p {
-    margin-bottom: 1.2em;
-    line-height: 1.8;
-}
-
-.content-wrapper br {
-    display: none; /* Sembunyikan <br> yang berlebihan */
-}
-
-.content-wrapper p:empty {
-    display: none; /* Sembunyikan paragraf kosong */
-}
 </style>
 </head>
 <body>
@@ -901,54 +858,53 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
             </div>
         </div>
 
         <div class="menu">
             <?php foreach ($menu_items as $key => $item): ?>
-            <div class="menu-item">
-                <a href="<?php 
-                    if ($key === 'dashboard') {
-                        echo 'dashboard.php';
-                    } elseif ($key === 'challenge') {
-                        echo 'challenge.php';
-                    } elseif ($key === 'match') {
-                        echo '../match.php';
-                    } elseif ($key === 'training') {
-                        echo '../training.php';
-                    } elseif ($key === 'settings') {
-                        echo '../settings.php';
-                    } else {
-                        echo '#';
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subUrl) {
+                        if($current_page === $subUrl) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
                     }
-                ?>" 
-                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+                } else {
+                    // Untuk menu Berita, cek juga berita_view.php, berita_edit.php, dan berita_create.php
+                    if ($current_page === $item['url'] || 
+                        ($item['url'] === 'berita.php' && in_array($current_page, ['berita_view.php', 'berita_edit.php', 'berita_create.php']))) {
+                        $isActive = true;
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                    data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow">›</span>
+                    <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
                     <?php endif; ?>
                 </a>
                 
                 <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subitem): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
                     <div class="submenu-item">
-                        <?php 
-                        $subitem_url = $subitem . '.php';
-                        ?>
-                        <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'berita' ? 'active' : ''; ?>">
-                           <?php 
-                           if ($subitem === 'berita') {
-                               echo 'Berita';
-                           } else {
-                               echo ucfirst(str_replace('_', ' ', $subitem));
-                           }
-                           ?>
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subUrl) ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
                         </a>
                     </div>
                     <?php endforeach; ?>
@@ -969,10 +925,6 @@ body {
             </div>
             
             <div class="user-actions">
-                <div class="notification">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">0</span>
-                </div>
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
@@ -1151,20 +1103,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Highlight active menu
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage || 
-            link.getAttribute('href') === 'berita.php') {
-            link.classList.add('active');
-            
-            // Open parent submenu if exists
-            const parentMenu = link.closest('.submenu');
-            if (parentMenu) {
-                parentMenu.classList.add('open');
-                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.add('rotate');
-            }
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
         }
     });
     
@@ -1186,6 +1137,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         contentWrapper.innerHTML = cleanedContent;
     }
+
+    // Responsive adjustments
+    function adjustLayout() {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            document.querySelector('.main').style.marginLeft = '0';
+        } else if (window.innerWidth > 1200) {
+            document.querySelector('.main').style.marginLeft = '280px';
+        }
+    }
+    
+    adjustLayout();
+    window.addEventListener('resize', adjustLayout);
 });
 
 function deleteBerita(beritaId, judul) {

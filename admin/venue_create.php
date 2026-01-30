@@ -14,19 +14,60 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
-// Menu items
+// Get admin info
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// --- DATA MENU DROPDOWN ---
 $menu_items = [
-    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'submenu' => false],
-    'master' => ['icon' => '📊', 'name' => 'Master Data', 'submenu' => true, 'items' => ['player', 'team', 'team_staff', 'venue']],
-    'event' => ['icon' => '📅', 'name' => 'Event', 'submenu' => true, 'items' => ['event', 'player_liga', 'staff_liga']],
-    'match' => ['icon' => '⚽', 'name' => 'Match', 'submenu' => false],
-    'challenge' => ['icon' => '🏆', 'name' => 'Challenge', 'submenu' => false],
-    'training' => ['icon' => '🎯', 'name' => 'Training', 'submenu' => false],
-    'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => 'dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => ['name' => 'Player', 'url' => 'player.php'],
+            'team' => ['name' => 'Team', 'url' => 'team.php'],
+            'team_staff' => ['name' => 'Team Staff', 'url' => 'team_staff.php']
+            // HAPUS 'venue' DARI SINI
+        ]
+    ],
+    'venue' => [  // Menu Venue terpisah
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
+        'submenu' => false
+    ],
+    'Event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => 'challenge.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
+        'submenu' => false
+    ]
 ];
 
 $academy_name = "Hi, Welcome...";
-$email = "";
+$email = $admin_email;
 
 // Initialize variables
 $errors = [];
@@ -97,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Venue - FutScore</title>
+<title>Add Venue - MGP</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
@@ -297,6 +338,12 @@ body {
     padding-left: 20px;
 }
 
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    font-weight: 600;
+}
+
 .submenu-link::before {
     content: "•";
     position: absolute;
@@ -341,28 +388,6 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-}
-
-.notification {
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    color: var(--primary);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--danger);
-    color: white;
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .logout-btn {
@@ -758,41 +783,46 @@ body {
 
         <div class="menu">
             <?php foreach ($menu_items as $key => $item): ?>
-            <div class="menu-item">
-                <a href="<?php 
-                    if ($key === 'dashboard') {
-                        echo 'dashboard.php';
-                    } elseif ($key === 'challenge') {
-                        echo 'challenge.php';
-                    } elseif ($key === 'match') {
-                        echo '../match.php';
-                    } elseif ($key === 'training') {
-                        echo '../training.php';
-                    } elseif ($key === 'settings') {
-                        echo '../settings.php';
-                    } else {
-                        echo '#';
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subKey => $subItem) {
+                        if($current_page === $subItem['url']) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
                     }
-                ?>" 
-                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+                } else {
+                    // Cek jika halaman saat ini adalah venue.php atau venue_create.php
+                    if ($current_page === $item['url'] || 
+                        ($key === 'venue' && ($current_page === 'venue.php' || $current_page === 'venue_create.php' || $current_page === 'venue_edit.php' || $current_page === 'venue_view.php'))) {
+                        $isActive = true;
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                    data-menu="<?php echo $key; ?>">
-                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                    <span class="menu-text"><?php echo $item['name']; ?></span>
-                    <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow">›</span>
-                    <?php endif; ?>
+                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                        <span class="menu-text"><?php echo $item['name']; ?></span>
+                        <?php if ($item['submenu']): ?>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                        <?php endif; ?>
                 </a>
                 
                 <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subitem): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subItem): ?>
                     <div class="submenu-item">
-                        <?php 
-                        $subitem_url = $subitem . '.php';
-                        ?>
-                        <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'venue' ? 'active' : ''; ?>">
-                           <?php echo ucfirst(str_replace('_', ' ', $subitem)); ?>
+                        <a href="<?php echo $subItem['url']; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subItem['url']) ? 'active' : ''; ?>">
+                           <?php echo $subItem['name']; ?>
                         </a>
                     </div>
                     <?php endforeach; ?>
@@ -813,10 +843,6 @@ body {
             </div>
             
             <div class="user-actions">
-                <div class="notification">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">0</span>
-                </div>
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
@@ -986,20 +1012,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Highlight active menu
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage || 
-            link.getAttribute('href') === 'venue.php') {
-            link.classList.add('active');
-            
-            // Open parent submenu if exists
-            const parentMenu = link.closest('.submenu');
-            if (parentMenu) {
-                parentMenu.classList.add('open');
-                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.add('rotate');
-            }
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
         }
     });
 

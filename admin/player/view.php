@@ -9,6 +9,58 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// --- DATA MENU DROPDOWN ---
+$menu_items = [
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => '../dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => '../player.php',
+            'team' => '../team.php',
+            'team_staff' => '../team_staff.php'
+        ]
+    ],
+    'Event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => '../challenge.php',
+        'submenu' => false
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => '../venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => '../pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => '../berita.php',
+        'submenu' => false
+    ]
+];
+
+$academy_name = "Hi, Welcome...";
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+$email = $admin_email;
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     header("Location: ../player.php");
     exit;
@@ -79,7 +131,7 @@ try {
 <title>View Player - FutScore</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* CSS styles remain the same as in your original file */
+/* CSS styles for sidebar and layout */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -105,9 +157,243 @@ body {
     background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
     color: var(--dark);
     min-height: 100vh;
-    padding: 20px;
+    overflow-x: hidden;
 }
 
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
+    color: white;
+    padding: 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.sidebar-header {
+    padding: 30px 25px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid var(--secondary);
+}
+
+.logo-container {
+    position: relative;
+    display: inline-block;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary) 0%, #FFEC8B 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 4px solid white;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.logo:hover {
+    transform: rotate(15deg) scale(1.05);
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+}
+
+.logo::before {
+    content: "⚽";
+    font-size: 48px;
+    color: var(--primary);
+}
+
+.academy-info {
+    text-align: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.academy-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.academy-email {
+    font-size: 14px;
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Menu */
+.menu {
+    padding: 25px 15px;
+}
+
+.menu-item {
+    margin-bottom: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: var(--transition);
+    position: relative;
+    border-left: 4px solid transparent;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: var(--secondary);
+    padding-left: 25px;
+}
+
+.menu-link.active {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--secondary);
+    border-left-color: var(--secondary);
+    font-weight: 600;
+}
+
+.menu-icon {
+    font-size: 22px;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 16px;
+}
+
+.menu-arrow {
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.menu-arrow.rotate {
+    transform: rotate(90deg);
+}
+
+/* Submenu */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 12px 12px;
+}
+
+.submenu.open {
+    max-height: 300px;
+}
+
+.submenu-item {
+    padding: 5px 15px 5px 70px;
+}
+
+.submenu-link {
+    display: block;
+    padding: 12px 15px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--transition);
+    position: relative;
+    font-size: 14px;
+}
+
+.submenu-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--secondary);
+    font-size: 18px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+    flex: 1;
+    padding: 30px;
+    margin-left: 280px;
+    transition: var(--transition);
+}
+
+/* Topbar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 20px 25px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
+}
+
+.greeting h1 {
+    font-size: 28px;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.greeting p {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+}
+
+.logout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
+}
+
+/* Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -347,6 +633,7 @@ body {
     height: 100%;
     background: linear-gradient(90deg, var(--primary), var(--accent));
     border-radius: 5px;
+    transition: width 1s ease-in-out;
 }
 
 .skill-value {
@@ -437,7 +724,52 @@ body {
     transform: scale(1.05);
 }
 
+/* Menu Toggle Button */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 101;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: var(--transition);
+}
+
+.menu-toggle:hover {
+    background: var(--secondary);
+    color: var(--primary);
+    transform: rotate(90deg);
+}
+
 /* Responsive */
+@media (max-width: 1200px) {
+    .main {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        width: 300px;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .menu-toggle {
+        display: block;
+    }
+}
+
 @media (max-width: 992px) {
     .player-profile {
         grid-template-columns: 1fr;
@@ -468,381 +800,507 @@ body {
 </style>
 </head>
 <body>
-<div class="container">
-    <!-- Header -->
-    <div class="header">
-        <a href="../player.php" class="back-btn">
-            <i class="fas fa-arrow-left"></i>
-            Kembali ke Players
-        </a>
-        <div class="page-title">
-            <i class="fas fa-user"></i>
-            <span>Player Profile</span>
-        </div>
-        <div class="action-buttons">
-            <a href="edit.php?id=<?php echo $player['id']; ?>" class="btn btn-warning">
-                <i class="fas fa-edit"></i>
-                Edit Player
-            </a>
-            <a href="../player.php" class="btn btn-primary">
-                <i class="fas fa-list"></i>
-                All Players
-            </a>
-        </div>
-    </div>
 
-    <!-- Player Profile -->
-    <div class="player-profile">
-        <div class="player-photo-section">
-            <?php if (!empty($player['photo'])): 
-                $photo_path = '../../images/players/' . $player['photo'];
-                if (file_exists($photo_path)):
-                    $photo_displayed = true;
-            ?>
-                <img src="<?php echo $photo_path; ?>" 
-                     alt="<?php echo htmlspecialchars($player['name']); ?>" 
-                     class="player-photo">
-            <?php 
-                endif;
-            endif; 
-            ?>
-            
-            <?php if (!$photo_displayed): ?>
-                <div class="default-photo">
-                    <i class="fas fa-user"></i>
-                </div>
-            <?php endif; ?>
-            
-            <h2 class="player-name"><?php echo htmlspecialchars($player['name']); ?></h2>
-            
-            <?php if (!empty($player['team_name'])): ?>
-                <div class="player-team">
-                    <i class="fas fa-users"></i>
-                    <?php echo htmlspecialchars($player['team_name']); ?>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (!empty($player['jersey_number'])): ?>
-                <div class="player-number">#<?php echo $player['jersey_number']; ?></div>
-            <?php endif; ?>
+<button class="menu-toggle" id="menuToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="wrapper">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo"></div>
+            </div>
+            <div class="academy-info">
+                <div class="academy-name"><?php echo $academy_name; ?></div>
+                <div class="academy-email"><?php echo $email; ?></div>
+            </div>
         </div>
-        
-        <div class="player-details">
-            <h3 class="section-title">
-                <i class="fas fa-info-circle"></i>
-                Personal Information
-            </h3>
-            
-            <div class="details-grid">
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-id-card"></i>
-                        NIK
-                    </div>
-                    <div class="detail-value">
-                        <?php 
-                        $nik = $player['nik'];
-                        if (!empty($nik)) {
-                            $masked_nik = substr($nik, 0, 3) . '*********' . substr($nik, -4);
-                            echo $masked_nik;
-                        } else {
-                            echo '-';
+
+        <div class="menu">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subUrl) {
+                        // Karena kita di dalam folder 'player', perlu relative path
+                        if($current_page === 'view.php' && $subUrl === '../player.php') {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
                         }
-                        ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-id-card"></i>
-                        NISN
-                    </div>
-                    <div class="detail-value">
-                        <?php echo !empty($player['nisn']) ? htmlspecialchars($player['nisn']) : '-'; ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-birthday-cake"></i>
-                        Tempat/Tanggal Lahir
-                    </div>
-                    <div class="detail-value">
-                        <?php 
-                        echo !empty($player['birth_place']) ? htmlspecialchars($player['birth_place']) : '-';
-                        echo ' / ';
-                        echo !empty($player['birth_date']) && $player['birth_date'] != '0000-00-00' ? 
-                             date('d M Y', strtotime($player['birth_date'])) : '-';
-                        ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-user-clock"></i>
-                        Usia
-                    </div>
-                    <div class="detail-value">
-                        <?php echo $player['age_years']; ?> tahun <?php echo $player['age_months']; ?> bulan
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-venus-mars"></i>
-                        Jenis Kelamin
-                    </div>
-                    <div class="detail-value">
-                        <?php echo formatGenderView($player['gender']); ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-running"></i>
-                        Cabor
-                    </div>
-                    <div class="detail-value">
-                        <?php echo !empty($player['sport_type']) ? htmlspecialchars($player['sport_type']) : '-'; ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-ruler-vertical"></i>
-                        Tinggi/Berat
-                    </div>
-                    <div class="detail-value">
-                        <?php 
-                        $height = !empty($player['height']) ? $player['height'] . ' cm' : '-';
-                        $weight = !empty($player['weight']) ? $player['weight'] . ' kg' : '-';
-                        echo $height . ' / ' . $weight;
-                        ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-envelope"></i>
-                        Email
-                    </div>
-                    <div class="detail-value">
-                        <?php echo !empty($player['email']) ? htmlspecialchars($player['email']) : '-'; ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-phone"></i>
-                        Telpon
-                    </div>
-                    <div class="detail-value">
-                        <?php echo !empty($player['phone']) ? htmlspecialchars($player['phone']) : '-'; ?>
-                    </div>
-                </div>
-                
-                <div class="detail-group">
-                    <div class="detail-label">
-                        <i class="fas fa-flag"></i>
-                        Kewarganegaraan
-                    </div>
-                    <div class="detail-value">
-                        <?php echo !empty($player['nationality']) ? htmlspecialchars($player['nationality']) : '-'; ?>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="detail-group">
-                <div class="detail-label">
-                    <i class="fas fa-map-marker-alt"></i>
-                    Alamat
-                </div>
-                <div class="detail-value">
-                    <?php 
-                    $address_parts = [];
-                    if (!empty($player['street'])) $address_parts[] = $player['street'];
-                    if (!empty($player['city'])) $address_parts[] = $player['city'];
-                    if (!empty($player['province'])) $address_parts[] = $player['province'];
-                    if (!empty($player['postal_code'])) $address_parts[] = $player['postal_code'];
-                    if (!empty($player['country'])) $address_parts[] = $player['country'];
-                    
-                    echo !empty($address_parts) ? htmlspecialchars(implode(', ', $address_parts)) : '-';
-                    ?>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Football Info -->
-    <div class="skills-section">
-        <h3 class="section-title">
-            <i class="fas fa-futbol"></i>
-            Football Information & Skills
-        </h3>
-        
-        <div class="details-grid" style="margin-bottom: 30px;">
-            <div class="detail-group">
-                <div class="detail-label">
-                    <i class="fas fa-football-ball"></i>
-                    Kaki Dominan
-                </div>
-                <div class="detail-value">
-                    <?php echo !empty($player['dominant_foot']) ? htmlspecialchars($player['dominant_foot']) : '-'; ?>
-                </div>
-            </div>
-            
-            <div class="detail-group">
-                <div class="detail-label">
-                    <i class="fas fa-crosshairs"></i>
-                    Posisi
-                </div>
-                <div class="detail-value">
-                    <?php echo !empty($player['position']) ? htmlspecialchars($player['position']) : '-'; ?>
-                </div>
-            </div>
-            
-            <div class="detail-group">
-                <div class="detail-label">
-                    <i class="fas fa-calendar-plus"></i>
-                    Created At
-                </div>
-                <div class="detail-value">
-                    <?php echo date('d M Y, H:i', strtotime($player['created_at'])); ?>
-                </div>
-            </div>
-            
-            <div class="detail-group">
-                <div class="detail-label">
-                    <i class="fas fa-calendar-check"></i>
-                    Last Updated
-                </div>
-                <div class="detail-value">
-                    <?php echo date('d M Y, H:i', strtotime($player['updated_at'])); ?>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Skills Display -->
-        <h4 style="font-size: 18px; color: var(--primary); margin-bottom: 20px;">
-            Player Skills
-        </h4>
-        
-        <div class="skills-grid">
-            <?php 
-            $skills = [
-                'dribbling' => 'Dribbling',
-                'technique' => 'Technique',
-                'speed' => 'Speed',
-                'juggling' => 'Juggling',
-                'shooting' => 'Shooting',
-                'setplay_position' => 'Setplay Position',
-                'passing' => 'Passing',
-                'control' => 'Control'
-            ];
-            
-            foreach ($skills as $key => $label): 
-                $value = $player[$key] ?? 5;
-                $percentage = ($value / 10) * 100;
+                    }
+                } else {
+                    // Untuk menu tanpa submenu
+                    if ($current_page === 'view.php' && $item['url'] === '../player.php') {
+                        $isActive = true;
+                    }
+                }
             ?>
-            <div class="skill-item">
-                <div class="skill-name"><?php echo $label; ?></div>
-                <div class="skill-bar">
-                    <div class="skill-fill" style="width: <?php echo $percentage; ?>%"></div>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
+                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                        <span class="menu-text"><?php echo $item['name']; ?></span>
+                        <?php if ($item['submenu']): ?>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                        <?php endif; ?>
+                </a>
+                
+                <?php if ($item['submenu']): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
+                    <div class="submenu-item">
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === 'view.php' && $subUrl === '../player.php') ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
+                        </a>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <div class="skill-value"><?php echo $value; ?>/10</div>
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
         </div>
     </div>
-    
-    <!-- Documents -->
-    <div class="documents-section">
-        <h3 class="section-title">
-            <i class="fas fa-file-alt"></i>
-            Documents
-        </h3>
-        
-        <div class="documents-grid">
-            <!-- KTP -->
-            <div class="document-card">
-                <div class="document-icon">
-                    <i class="fas fa-id-card"></i>
-                </div>
-                <div class="document-name">KTP / Kartu Identitas</div>
-                <div class="document-status <?php echo !empty($player['ktp_image']) ? 'status-available' : 'status-unavailable'; ?>">
-                    <?php echo !empty($player['ktp_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
-                </div>
-                <?php if (!empty($player['ktp_image'])): 
-                    $ktp_path = '../../images/players/' . $player['ktp_image'];
-                    if (file_exists($ktp_path)): ?>
-                    <div class="document-preview">
-                        <img src="<?php echo $ktp_path; ?>" 
-                             alt="KTP" onclick="viewDocument('<?php echo $ktp_path; ?>')">
-                    </div>
-                <?php endif; endif; ?>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="greeting">
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <p>Player Profile - Sistem manajemen pemain futsal</p>
             </div>
             
-            <!-- KK -->
-            <div class="document-card">
-                <div class="document-icon">
-                    <i class="fas fa-home"></i>
+            <div class="user-actions">
+                <a href="../logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <a href="../player.php" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali ke Players
+                </a>
+                <div class="page-title">
+                    <i class="fas fa-user"></i>
+                    <span>Player Profile</span>
                 </div>
-                <div class="document-name">Kartu Keluarga</div>
-                <div class="document-status <?php echo !empty($player['kk_image']) ? 'status-available' : 'status-unavailable'; ?>">
-                    <?php echo !empty($player['kk_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
+                <div class="action-buttons">
+                    <a href="edit.php?id=<?php echo $player['id']; ?>" class="btn btn-warning">
+                        <i class="fas fa-edit"></i>
+                        Edit Player
+                    </a>
+                    <a href="../player.php" class="btn btn-primary">
+                        <i class="fas fa-list"></i>
+                        All Players
+                    </a>
                 </div>
-                <?php if (!empty($player['kk_image'])): 
-                    $kk_path = '../../images/players/' . $player['kk_image'];
-                    if (file_exists($kk_path)): ?>
-                    <div class="document-preview">
-                        <img src="<?php echo $kk_path; ?>" 
-                             alt="KK" onclick="viewDocument('<?php echo $kk_path; ?>')">
+            </div>
+
+            <!-- Player Profile -->
+            <div class="player-profile">
+                <div class="player-photo-section">
+                    <?php if (!empty($player['photo'])): 
+                        $photo_path = '../../images/players/' . $player['photo'];
+                        if (file_exists($photo_path)):
+                            $photo_displayed = true;
+                    ?>
+                        <img src="<?php echo $photo_path; ?>" 
+                             alt="<?php echo htmlspecialchars($player['name']); ?>" 
+                             class="player-photo">
+                    <?php 
+                        endif;
+                    endif; 
+                    ?>
+                    
+                    <?php if (!$photo_displayed): ?>
+                        <div class="default-photo">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <h2 class="player-name"><?php echo htmlspecialchars($player['name']); ?></h2>
+                    
+                    <?php if (!empty($player['team_name'])): ?>
+                        <div class="player-team">
+                            <i class="fas fa-users"></i>
+                            <?php echo htmlspecialchars($player['team_name']); ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($player['jersey_number'])): ?>
+                        <div class="player-number">#<?php echo $player['jersey_number']; ?></div>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="player-details">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Personal Information
+                    </h3>
+                    
+                    <div class="details-grid">
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-id-card"></i>
+                                NIK
+                            </div>
+                            <div class="detail-value">
+                                <?php 
+                                $nik = $player['nik'];
+                                if (!empty($nik)) {
+                                    $masked_nik = substr($nik, 0, 3) . '*********' . substr($nik, -4);
+                                    echo $masked_nik;
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-id-card"></i>
+                                NISN
+                            </div>
+                            <div class="detail-value">
+                                <?php echo !empty($player['nisn']) ? htmlspecialchars($player['nisn']) : '-'; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-birthday-cake"></i>
+                                Tempat/Tanggal Lahir
+                            </div>
+                            <div class="detail-value">
+                                <?php 
+                                echo !empty($player['birth_place']) ? htmlspecialchars($player['birth_place']) : '-';
+                                echo ' / ';
+                                echo !empty($player['birth_date']) && $player['birth_date'] != '0000-00-00' ? 
+                                     date('d M Y', strtotime($player['birth_date'])) : '-';
+                                ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-user-clock"></i>
+                                Usia
+                            </div>
+                            <div class="detail-value">
+                                <?php echo $player['age_years']; ?> tahun <?php echo $player['age_months']; ?> bulan
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-venus-mars"></i>
+                                Jenis Kelamin
+                            </div>
+                            <div class="detail-value">
+                                <?php echo formatGenderView($player['gender']); ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-running"></i>
+                                Cabor
+                            </div>
+                            <div class="detail-value">
+                                <?php echo !empty($player['sport_type']) ? htmlspecialchars($player['sport_type']) : '-'; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-ruler-vertical"></i>
+                                Tinggi/Berat
+                            </div>
+                            <div class="detail-value">
+                                <?php 
+                                $height = !empty($player['height']) ? $player['height'] . ' cm' : '-';
+                                $weight = !empty($player['weight']) ? $player['weight'] . ' kg' : '-';
+                                echo $height . ' / ' . $weight;
+                                ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </div>
+                            <div class="detail-value">
+                                <?php echo !empty($player['email']) ? htmlspecialchars($player['email']) : '-'; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-phone"></i>
+                                Telpon
+                            </div>
+                            <div class="detail-value">
+                                <?php echo !empty($player['phone']) ? htmlspecialchars($player['phone']) : '-'; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-label">
+                                <i class="fas fa-flag"></i>
+                                Kewarganegaraan
+                            </div>
+                            <div class="detail-value">
+                                <?php echo !empty($player['nationality']) ? htmlspecialchars($player['nationality']) : '-'; ?>
+                            </div>
+                        </div>
                     </div>
-                <?php endif; endif; ?>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Alamat
+                        </div>
+                        <div class="detail-value">
+                            <?php 
+                            $address_parts = [];
+                            if (!empty($player['street'])) $address_parts[] = $player['street'];
+                            if (!empty($player['city'])) $address_parts[] = $player['city'];
+                            if (!empty($player['province'])) $address_parts[] = $player['province'];
+                            if (!empty($player['postal_code'])) $address_parts[] = $player['postal_code'];
+                            if (!empty($player['country'])) $address_parts[] = $player['country'];
+                            
+                            echo !empty($address_parts) ? htmlspecialchars(implode(', ', $address_parts)) : '-';
+                            ?>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <!-- Akta Lahir -->
-            <div class="document-card">
-                <div class="document-icon">
-                    <i class="fas fa-baby"></i>
-                </div>
-                <div class="document-name">Akta Lahir</div>
-                <div class="document-status <?php echo !empty($player['birth_cert_image']) ? 'status-available' : 'status-unavailable'; ?>">
-                    <?php echo !empty($player['birth_cert_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
-                </div>
-                <?php if (!empty($player['birth_cert_image'])): 
-                    $akte_path = '../../images/players/' . $player['birth_cert_image'];
-                    if (file_exists($akte_path)): ?>
-                    <div class="document-preview">
-                        <img src="<?php echo $akte_path; ?>" 
-                             alt="Akta Lahir" onclick="viewDocument('<?php echo $akte_path; ?>')">
+            <!-- Football Info -->
+            <div class="skills-section">
+                <h3 class="section-title">
+                    <i class="fas fa-futbol"></i>
+                    Football Information & Skills
+                </h3>
+                
+                <div class="details-grid" style="margin-bottom: 30px;">
+                    <div class="detail-group">
+                        <div class="detail-label">
+                            <i class="fas fa-football-ball"></i>
+                            Kaki Dominan
+                        </div>
+                        <div class="detail-value">
+                            <?php echo !empty($player['dominant_foot']) ? htmlspecialchars($player['dominant_foot']) : '-'; ?>
+                        </div>
                     </div>
-                <?php endif; endif; ?>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">
+                            <i class="fas fa-crosshairs"></i>
+                            Posisi
+                        </div>
+                        <div class="detail-value">
+                            <?php echo !empty($player['position']) ? htmlspecialchars($player['position']) : '-'; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">
+                            <i class="fas fa-calendar-plus"></i>
+                            Created At
+                        </div>
+                        <div class="detail-value">
+                            <?php echo date('d M Y, H:i', strtotime($player['created_at'])); ?>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <div class="detail-label">
+                            <i class="fas fa-calendar-check"></i>
+                            Last Updated
+                        </div>
+                        <div class="detail-value">
+                            <?php echo date('d M Y, H:i', strtotime($player['updated_at'])); ?>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skills Display -->
+                <h4 style="font-size: 18px; color: var(--primary); margin-bottom: 20px;">
+                    Player Skills
+                </h4>
+                
+                <div class="skills-grid">
+                    <?php 
+                    $skills = [
+                        'dribbling' => 'Dribbling',
+                        'technique' => 'Technique',
+                        'speed' => 'Speed',
+                        'juggling' => 'Juggling',
+                        'shooting' => 'Shooting',
+                        'setplay_position' => 'Setplay Position',
+                        'passing' => 'Passing',
+                        'control' => 'Control'
+                    ];
+                    
+                    foreach ($skills as $key => $label): 
+                        $value = $player[$key] ?? 5;
+                        $percentage = ($value / 10) * 100;
+                    ?>
+                    <div class="skill-item">
+                        <div class="skill-name"><?php echo $label; ?></div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" style="width: <?php echo $percentage; ?>%"></div>
+                        </div>
+                        <div class="skill-value"><?php echo $value; ?>/10</div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
             
-            <!-- Ijazah -->
-            <div class="document-card">
-                <div class="document-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <div class="document-name">Ijazah / Raport</div>
-                <div class="document-status <?php echo !empty($player['diploma_image']) ? 'status-available' : 'status-unavailable'; ?>">
-                    <?php echo !empty($player['diploma_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
-                </div>
-                <?php if (!empty($player['diploma_image'])): 
-                    $ijazah_path = '../../images/players/' . $player['diploma_image'];
-                    if (file_exists($ijazah_path)): ?>
-                    <div class="document-preview">
-                        <img src="<?php echo $ijazah_path; ?>" 
-                             alt="Ijazah" onclick="viewDocument('<?php echo $ijazah_path; ?>')">
+            <!-- Documents -->
+            <div class="documents-section">
+                <h3 class="section-title">
+                    <i class="fas fa-file-alt"></i>
+                    Documents
+                </h3>
+                
+                <div class="documents-grid">
+                    <!-- KTP -->
+                    <div class="document-card">
+                        <div class="document-icon">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <div class="document-name">KTP / Kartu Identitas</div>
+                        <div class="document-status <?php echo !empty($player['ktp_image']) ? 'status-available' : 'status-unavailable'; ?>">
+                            <?php echo !empty($player['ktp_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
+                        </div>
+                        <?php if (!empty($player['ktp_image'])): 
+                            $ktp_path = '../../images/players/' . $player['ktp_image'];
+                            if (file_exists($ktp_path)): ?>
+                            <div class="document-preview">
+                                <img src="<?php echo $ktp_path; ?>" 
+                                     alt="KTP" onclick="viewDocument('<?php echo $ktp_path; ?>')">
+                            </div>
+                        <?php endif; endif; ?>
                     </div>
-                <?php endif; endif; ?>
+                    
+                    <!-- KK -->
+                    <div class="document-card">
+                        <div class="document-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="document-name">Kartu Keluarga</div>
+                        <div class="document-status <?php echo !empty($player['kk_image']) ? 'status-available' : 'status-unavailable'; ?>">
+                            <?php echo !empty($player['kk_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
+                        </div>
+                        <?php if (!empty($player['kk_image'])): 
+                            $kk_path = '../../images/players/' . $player['kk_image'];
+                            if (file_exists($kk_path)): ?>
+                            <div class="document-preview">
+                                <img src="<?php echo $kk_path; ?>" 
+                                     alt="KK" onclick="viewDocument('<?php echo $kk_path; ?>')">
+                            </div>
+                        <?php endif; endif; ?>
+                    </div>
+                    
+                    <!-- Akta Lahir -->
+                    <div class="document-card">
+                        <div class="document-icon">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <div class="document-name">Akta Lahir</div>
+                        <div class="document-status <?php echo !empty($player['birth_cert_image']) ? 'status-available' : 'status-unavailable'; ?>">
+                            <?php echo !empty($player['birth_cert_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
+                        </div>
+                        <?php if (!empty($player['birth_cert_image'])): 
+                            $akte_path = '../../images/players/' . $player['birth_cert_image'];
+                            if (file_exists($akte_path)): ?>
+                            <div class="document-preview">
+                                <img src="<?php echo $akte_path; ?>" 
+                                     alt="Akta Lahir" onclick="viewDocument('<?php echo $akte_path; ?>')">
+                            </div>
+                        <?php endif; endif; ?>
+                    </div>
+                    
+                    <!-- Ijazah -->
+                    <div class="document-card">
+                        <div class="document-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="document-name">Ijazah / Raport</div>
+                        <div class="document-status <?php echo !empty($player['diploma_image']) ? 'status-available' : 'status-unavailable'; ?>">
+                            <?php echo !empty($player['diploma_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
+                        </div>
+                        <?php if (!empty($player['diploma_image'])): 
+                            $ijazah_path = '../../images/players/' . $player['diploma_image'];
+                            if (file_exists($ijazah_path)): ?>
+                            <div class="document-preview">
+                                <img src="<?php echo $ijazah_path; ?>" 
+                                     alt="Ijazah" onclick="viewDocument('<?php echo $ijazah_path; ?>')">
+                            </div>
+                        <?php endif; endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// Toggle sidebar untuk mobile
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+
+menuToggle.addEventListener('click', function() {
+    sidebar.classList.toggle('active');
+    this.innerHTML = sidebar.classList.contains('active') 
+        ? '<i class="fas fa-times"></i>' 
+        : '<i class="fas fa-bars"></i>';
+});
+
+// Auto close sidebar when clicking outside on mobile
+document.addEventListener('click', function(e) {
+    if (window.innerWidth <= 1200) {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+            menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        }
+    }
+});
+
+// Menu toggle functionality (untuk Submenu)
+document.querySelectorAll('.menu-link').forEach(link => {
+    if (link.querySelector('.menu-arrow')) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const submenu = this.nextElementSibling;
+            const arrow = this.querySelector('.menu-arrow');
+            
+            if (submenu) {
+                submenu.classList.toggle('open');
+                arrow.classList.toggle('rotate');
+            }
+        });
+    }
+});
+
 function viewDocument(imagePath) {
     window.open(imagePath, '_blank');
 }

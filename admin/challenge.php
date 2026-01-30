@@ -19,19 +19,59 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
-// Menu items
+// --- DATA MENU DROPDOWN ---
 $menu_items = [
-    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'submenu' => false],
-    'master' => ['icon' => '📊', 'name' => 'Master Data', 'submenu' => true, 'items' => ['player', 'team', 'team_staff']],
-    'event' => ['icon' => '📅', 'name' => 'Event', 'submenu' => true, 'items' => ['event', 'player_liga', 'staff_liga']],
-    'match' => ['icon' => '⚽', 'name' => 'Match', 'submenu' => false],
-    'challenge' => ['icon' => '🏆', 'name' => 'Challenge', 'submenu' => false],
-    'training' => ['icon' => '🎯', 'name' => 'Training', 'submenu' => false],
-    'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => 'dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => 'player.php',
+            'team' => 'team.php',
+            'team_staff' => 'team_staff.php'
+        ]
+    ],
+    'event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => 'challenge.php',  // Langsung ke challenge.php
+        'submenu' => false         // Tidak ada submenu
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
+        'submenu' => false
+    ]
 ];
 
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// Get admin info
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+
 $academy_name = "Hi, Welcome...";
-$email = "";
+$email = $admin_email;
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -113,13 +153,10 @@ try {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Challenge Management - FutScore</title>
+<title>Challenge Management - MGP</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- HAPUS DataTables CSS -->
-<!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"> -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
-/* Include all CSS from team.php here */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -153,7 +190,7 @@ body {
     min-height: 100vh;
 }
 
-/* SIDEBAR STYLES - Same as team.php */
+/* ===== SIDEBAR ===== */
 .sidebar {
     width: 280px;
     background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
@@ -174,11 +211,6 @@ body {
     border-bottom: 2px solid var(--secondary);
 }
 
-.logo-container {
-    position: relative;
-    display: inline-block;
-}
-
 .logo {
     width: 100px;
     height: 100px;
@@ -190,8 +222,6 @@ body {
     margin: 0 auto 20px;
     border: 4px solid white;
     box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-    position: relative;
-    overflow: hidden;
     transition: var(--transition);
 }
 
@@ -204,11 +234,6 @@ body {
     content: "⚽";
     font-size: 48px;
     color: var(--primary);
-}
-
-.academy-info {
-    text-align: center;
-    animation: fadeIn 0.8s ease-out;
 }
 
 .academy-name {
@@ -225,6 +250,7 @@ body {
     color: rgba(255, 255, 255, 0.8);
 }
 
+/* Menu */
 .menu {
     padding: 25px 15px;
 }
@@ -281,6 +307,7 @@ body {
     transform: rotate(90deg);
 }
 
+/* Submenu */
 .submenu {
     max-height: 0;
     overflow: hidden;
@@ -314,6 +341,11 @@ body {
     padding-left: 20px;
 }
 
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+}
+
 .submenu-link::before {
     content: "•";
     position: absolute;
@@ -322,11 +354,14 @@ body {
     font-size: 18px;
 }
 
-/* MAIN CONTENT */
+/* ===== MAIN CONTENT ===== */
 .main {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -340,7 +375,6 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -358,28 +392,6 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-}
-
-.notification {
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    color: var(--primary);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--danger);
-    color: white;
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .logout-btn {
@@ -411,6 +423,8 @@ body {
     padding: 25px;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .page-title {
@@ -781,65 +795,6 @@ body {
     color: var(--warning);
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .main {
-        margin-left: 0;
-        padding: 20px;
-    }
-    
-    .sidebar {
-        transform: translateX(-100%);
-        width: 300px;
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .menu-toggle {
-        display: block;
-    }
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-    
-    .search-bar {
-        width: 100%;
-    }
-    
-    .action-buttons {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .data-table {
-        min-width: 1200px;
-    }
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* Menu Toggle Button */
 .menu-toggle {
     display: none;
@@ -865,7 +820,7 @@ body {
     transform: rotate(90deg);
 }
 
-/* Mobile Styles */
+/* Responsive */
 @media (max-width: 1200px) {
     .menu-toggle {
         display: block;
@@ -881,6 +836,48 @@ body {
     
     .main {
         margin-left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .page-header {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .search-bar {
+        width: 100%;
+        max-width: 500px;
+        order: 3;
+    }
+    
+    .page-title {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .search-bar {
+        width: 100%;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .data-table {
+        min-width: 1200px;
     }
 }
 </style>
@@ -899,48 +896,54 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
             </div>
         </div>
 
         <div class="menu">
-    <?php foreach ($menu_items as $key => $item): ?>
-    <div class="menu-item">
-        <a href="<?php 
-            if ($key === 'dashboard') {
-                echo 'dashboard.php';
-            } elseif ($key === 'challenge') {
-                echo 'challenge.php';
-            } elseif ($key === 'match') {
-                echo '../match.php';
-            } elseif ($key === 'training') {
-                echo '../training.php';
-            } elseif ($key === 'settings') {
-                echo '../settings.php';
-            } else {
-                echo '#';
-            }
-        ?>" 
-           class="menu-link <?php echo $key === 'challenge' ? 'active' : ''; ?>" 
-           data-menu="<?php echo $key; ?>">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subKey => $subUrl) {
+                        if($current_page === $subUrl) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // Untuk menu Event, aktif jika di challenge.php atau halaman challenge lainnya
+                    if ($key === 'event') {
+                        $isActive = in_array($current_page, ['challenge.php', 'challenge_create.php', 'challenge_edit.php', 'challenge_view.php', 'challenge_result.php']);
+                    } else {
+                        $isActive = ($current_page === $item['url']);
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow">›</span>
+                    <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
                     <?php endif; ?>
                 </a>
                 
                 <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subitem): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
                     <div class="submenu-item">
-                        <?php 
-                        $subitem_url = $subitem . '.php';
-                        ?>
-                        <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'challenge' ? 'active' : ''; ?>">
-                           <?php echo ucfirst(str_replace('_', ' ', $subitem)); ?>
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subUrl) ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
                         </a>
                     </div>
                     <?php endforeach; ?>
@@ -961,10 +964,6 @@ body {
             </div>
             
             <div class="user-actions">
-                <div class="notification">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">0</span>
-                </div>
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
@@ -1144,7 +1143,7 @@ body {
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <!-- PASTIKAN: colspan="13" untuk 13 kolom -->
+                        <!-- colspan="13" untuk 13 kolom -->
                         <tr>
                             <td colspan="13" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
@@ -1207,9 +1206,6 @@ body {
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<!-- HAPUS DataTables JS -->
-<!-- <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1234,25 +1230,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Highlight active menu
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage || 
-            link.getAttribute('href') === 'challenge.php') {
-            link.classList.add('active');
-            
-            // Open parent submenu if exists
-            const parentMenu = link.closest('.submenu');
-            if (parentMenu) {
-                parentMenu.classList.add('open');
-                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.add('rotate');
-            }
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
         }
     });
+
+    // Responsive adjustments
+    function adjustLayout() {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            document.querySelector('.main').style.marginLeft = '0';
+        } else if (window.innerWidth > 1200) {
+            document.querySelector('.main').style.marginLeft = '280px';
+        }
+    }
     
-    // HAPUS DataTables initialization - TIDAK PERLU LAGI
-    // $('#challengesTable').DataTable({ ... });
+    adjustLayout();
+    window.addEventListener('resize', adjustLayout);
 });
 
 function deleteChallenge(challengeId, challengeCode) {

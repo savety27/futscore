@@ -14,49 +14,57 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
-// Data menu dropdown
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// --- DATA MENU DROPDOWN ---
 $menu_items = [
     'dashboard' => [
         'icon' => '🏠',
         'name' => 'Dashboard',
+        'url' => 'dashboard.php',
         'submenu' => false
     ],
     'master' => [
         'icon' => '📊',
         'name' => 'Master Data',
         'submenu' => true,
-        'items' => ['player', 'team', 'team_staff']
+        'items' => [
+            'player' => 'player.php',
+            'team' => 'team.php',
+            'team_staff' => 'team_staff.php'
+        ]
     ],
-    'event' => [
-        'icon' => '📅',
-        'name' => 'Event',
-        'submenu' => true,
-        'items' => ['event', 'player_liga', 'staff_liga']
-    ],
-    'match' => [
-        'icon' => '⚽',
-        'name' => 'Match',
-        'submenu' => false
-    ],
-    'challenge' => [
+    'Event' => [
         'icon' => '🏆',
-        'name' => 'Challenge',
+        'name' => 'Event',
+        'url' => 'challenge.php',
         'submenu' => false
     ],
-    'training' => [
-        'icon' => '🎯',
-        'name' => 'Training',
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
         'submenu' => false
     ],
-    'settings' => [
-        'icon' => '⚙️',
-        'name' => 'Settings',
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
         'submenu' => false
     ]
 ];
 
 $academy_name = "Hi, Welcome...";
-$email = "";
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+$email = $admin_email;
 
 // Handle search
 $search = isset($_GET['search']) ? $_GET['search'] : '';
@@ -363,6 +371,12 @@ body {
     padding-left: 20px;
 }
 
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
 .submenu-link::before {
     content: "•";
     position: absolute;
@@ -407,28 +421,6 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-}
-
-.notification {
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    color: var(--primary);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--danger);
-    color: white;
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .logout-btn {
@@ -1025,44 +1017,44 @@ body {
 
         <div class="menu">
             <?php foreach ($menu_items as $key => $item): ?>
-            <div class="menu-item">
-                <?php 
-                $menu_link = '#';
-                if (!$item['submenu']) {
-                    $menu_link = $key === 'dashboard' ? 'dashboard.php' : ($key . '.php');
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subUrl) {
+                        if($current_page === $subUrl) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if ($current_page === $item['url']) {
+                        $isActive = true;
+                    }
                 }
-                ?>
-                <a href="<?php echo $menu_link; ?>" 
-                   class="menu-link <?php echo $key === 'master' ? 'active' : ''; ?>" 
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
                    data-menu="<?php echo $key; ?>">
-                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                    <span class="menu-text"><?php echo $item['name']; ?></span>
-                    <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow">›</span>
-                    <?php endif; ?>
+                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                        <span class="menu-text"><?php echo $item['name']; ?></span>
+                        <?php if ($item['submenu']): ?>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                        <?php endif; ?>
                 </a>
                 
                 <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subitem): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
                     <div class="submenu-item">
-                        <?php 
-                        $subitem_url = '';
-                        if ($subitem === 'player') {
-                            $subitem_url = 'player.php';
-                        } elseif ($subitem === 'team_staff') {
-                            $subitem_url = 'team_staff.php';
-                        } elseif ($subitem === 'player_liga') {
-                            $subitem_url = 'player_liga.php';
-                        } elseif ($subitem === 'staff_liga') {
-                            $subitem_url = 'staff_liga.php';
-                        } else {
-                            $subitem_url = $subitem . '.php';
-                        }
-                        ?>
-                        <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'Master' ? 'active' : ''; ?>">
-                           <?php echo ucwords(str_replace('_', ' ', $subitem)); ?>
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subUrl) ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
                         </a>
                     </div>
                     <?php endforeach; ?>
@@ -1078,15 +1070,11 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Player Management ⚽</h1>
-                <p>Kelola data pemain dengan mudah dan cepat</p>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <p>Player Management - Sistem manajemen pemain futsal</p>
             </div>
             
             <div class="user-actions">
-                <div class="notification">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">0</span>
-                </div>
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
@@ -1352,72 +1340,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
     
-    if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            this.innerHTML = sidebar.classList.contains('active') 
-                ? '<i class="fas fa-times"></i>' 
-                : '<i class="fas fa-bars"></i>';
-        });
-    }
+    menuToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('active');
+        this.innerHTML = sidebar.classList.contains('active') 
+            ? '<i class="fas fa-times"></i>' 
+            : '<i class="fas fa-bars"></i>';
+    });
     
     // Auto close sidebar when clicking outside on mobile
     document.addEventListener('click', function(e) {
         if (window.innerWidth <= 1200) {
-            if (sidebar && !sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) {
+            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
                 sidebar.classList.remove('active');
-                if (menuToggle) {
-                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                }
+                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
             }
         }
     });
     
-    // Menu dropdown functionality
-    document.querySelectorAll('.menu-link[data-menu]').forEach(link => {
-        link.addEventListener('click', function(e) {
-            const menuKey = this.getAttribute('data-menu');
-            const submenu = document.getElementById('submenu-' + menuKey);
-            
-            if (submenu) {
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
                 e.preventDefault();
-                const isOpen = submenu.classList.contains('open');
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
                 
-                // Close all other submenus
-                document.querySelectorAll('.submenu').forEach(sm => {
-                    sm.classList.remove('open');
-                });
-                document.querySelectorAll('.menu-arrow').forEach(arrow => {
-                    arrow.classList.remove('rotate');
-                });
-                
-                // Toggle current submenu
-                if (!isOpen) {
-                    submenu.classList.add('open');
-                    this.querySelector('.menu-arrow').classList.add('rotate');
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
                 }
-            }
-        });
-    });
-    
-    // Highlight active menu based on current page
-    const currentPage = window.location.pathname.split('/').pop() || 'player.php';
-    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
-        const href = link.getAttribute('href');
-        if (href === currentPage || 
-            (currentPage === 'player.php' && href.includes('player.php'))) {
-            link.classList.add('active');
-            
-            // Open parent submenu if exists
-            const parentMenu = link.closest('.submenu');
-            if (parentMenu) {
-                parentMenu.classList.add('open');
-                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.add('rotate');
-            }
+            });
         }
     });
-    
+
     // Handle image loading errors
     document.querySelectorAll('.player-photo').forEach(img => {
         img.addEventListener('error', function() {

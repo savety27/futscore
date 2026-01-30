@@ -14,6 +14,65 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
+// Check database connection
+if (!isset($conn) || !$conn) {
+    die("Database connection failed. Please check your configuration.");
+}
+
+// --- DATA MENU DROPDOWN ---
+$menu_items = [
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => 'dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => 'player.php',
+            'team' => 'team.php',
+            'team_staff' => 'team_staff.php'
+        ]
+    ],
+    'event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => 'challenge.php',  // Langsung ke challenge.php
+        'submenu' => false         // Tidak ada submenu
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
+        'submenu' => false
+    ]
+];
+
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// Get admin info
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+
+$academy_name = "Hi, Welcome...";
+$email = $admin_email;
+
 // Get challenge ID
 $challenge_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -21,20 +80,6 @@ if ($challenge_id <= 0) {
     header("Location: challenge.php");
     exit;
 }
-
-// Menu items
-$menu_items = [
-    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'submenu' => false],
-    'master' => ['icon' => '📊', 'name' => 'Master Data', 'submenu' => true, 'items' => ['player', 'team', 'team_staff']],
-    'event' => ['icon' => '📅', 'name' => 'Event', 'submenu' => true, 'items' => ['event', 'player_liga', 'staff_liga']],
-    'match' => ['icon' => '⚽', 'name' => 'Match', 'submenu' => false],
-    'challenge' => ['icon' => '🏆', 'name' => 'Challenge', 'submenu' => false],
-    'training' => ['icon' => '🎯', 'name' => 'Training', 'submenu' => false],
-    'settings' => ['icon' => '⚙️', 'name' => 'Settings', 'submenu' => false]
-];
-
-$academy_name = "Hi, Welcome...";
-$email = "";
 
 // Fetch challenge data with all details
 try {
@@ -66,10 +111,9 @@ try {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>View Challenge - FutScore</title>
+<title>View Challenge - MGP</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-/* Using the same CSS structure as team_view.php */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -124,11 +168,6 @@ body {
     border-bottom: 2px solid var(--secondary);
 }
 
-.logo-container {
-    position: relative;
-    display: inline-block;
-}
-
 .logo {
     width: 100px;
     height: 100px;
@@ -140,8 +179,6 @@ body {
     margin: 0 auto 20px;
     border: 4px solid white;
     box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-    position: relative;
-    overflow: hidden;
     transition: var(--transition);
 }
 
@@ -154,11 +191,6 @@ body {
     content: "⚽";
     font-size: 48px;
     color: var(--primary);
-}
-
-.academy-info {
-    text-align: center;
-    animation: fadeIn 0.8s ease-out;
 }
 
 .academy-name {
@@ -266,6 +298,11 @@ body {
     padding-left: 20px;
 }
 
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+}
+
 .submenu-link::before {
     content: "•";
     position: absolute;
@@ -279,6 +316,9 @@ body {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -292,7 +332,6 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -310,28 +349,6 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-}
-
-.notification {
-    position: relative;
-    cursor: pointer;
-    font-size: 22px;
-    color: var(--primary);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--danger);
-    color: white;
-    font-size: 12px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .logout-btn {
@@ -363,6 +380,8 @@ body {
     padding: 25px;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .page-title {
@@ -707,26 +726,6 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 1200px) {
-    .main {
-        margin-left: 0;
-        padding: 20px;
-    }
-    
-    .sidebar {
-        transform: translateX(-100%);
-        width: 300px;
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .menu-toggle {
-        display: block;
-    }
-}
-
 @media (max-width: 768px) {
     .page-header {
         flex-direction: column;
@@ -755,23 +754,6 @@ body {
     }
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* Menu Toggle Button */
 .menu-toggle {
     display: none;
@@ -797,7 +779,7 @@ body {
     transform: rotate(90deg);
 }
 
-/* Mobile Styles */
+/* Responsive */
 @media (max-width: 1200px) {
     .menu-toggle {
         display: block;
@@ -813,6 +795,21 @@ body {
     
     .main {
         margin-left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 1400px) {
+    .page-header {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .page-title {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
     }
 }
 </style>
@@ -831,48 +828,54 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
             </div>
         </div>
 
-           <div class="menu">
-    <?php foreach ($menu_items as $key => $item): ?>
-    <div class="menu-item">
-        <a href="<?php 
-            if ($key === 'dashboard') {
-                echo 'dashboard.php';
-            } elseif ($key === 'challenge') {
-                echo 'challenge.php';
-            } elseif ($key === 'match') {
-                echo '../match.php';
-            } elseif ($key === 'training') {
-                echo '../training.php';
-            } elseif ($key === 'settings') {
-                echo '../settings.php';
-            } else {
-                echo '#';
-            }
-        ?>" 
-           class="menu-link <?php echo $key === 'challenge' ? 'active' : ''; ?>" 
-           data-menu="<?php echo $key; ?>">
+        <div class="menu">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subKey => $subUrl) {
+                        if($current_page === $subUrl) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // Untuk menu Event, aktif jika di challenge_view.php, challenge.php, atau challenge_create.php
+                    if ($key === 'event') {
+                        $isActive = in_array($current_page, ['challenge_view.php', 'challenge.php', 'challenge_create.php', 'challenge_edit.php', 'challenge_result.php']);
+                    } else {
+                        $isActive = ($current_page === $item['url']);
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
                     <span class="menu-icon"><?php echo $item['icon']; ?></span>
                     <span class="menu-text"><?php echo $item['name']; ?></span>
                     <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow">›</span>
+                    <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
                     <?php endif; ?>
                 </a>
                 
                 <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subitem): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
                     <div class="submenu-item">
-                        <?php 
-                        $subitem_url = $subitem . '.php';
-                        ?>
-                        <a href="<?php echo $subitem_url; ?>" 
-                           class="submenu-link <?php echo $subitem === 'challenge' ? 'active' : ''; ?>">
-                           <?php echo ucfirst(str_replace('_', ' ', $subitem)); ?>
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subUrl) ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
                         </a>
                     </div>
                     <?php endforeach; ?>
@@ -893,10 +896,6 @@ body {
             </div>
             
             <div class="user-actions">
-                <div class="notification">
-                    <i class="fas fa-bell"></i>
-                    <span class="notification-badge">0</span>
-                </div>
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
@@ -1209,22 +1208,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Highlight active menu
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage || 
-            link.getAttribute('href') === 'challenge.php') {
-            link.classList.add('active');
-            
-            // Open parent submenu if exists
-            const parentMenu = link.closest('.submenu');
-            if (parentMenu) {
-                parentMenu.classList.add('open');
-                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.add('rotate');
-            }
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
         }
     });
+
+    // Responsive adjustments
+    function adjustLayout() {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            document.querySelector('.main').style.marginLeft = '0';
+        } else if (window.innerWidth > 1200) {
+            document.querySelector('.main').style.marginLeft = '280px';
+        }
+    }
+    
+    adjustLayout();
+    window.addEventListener('resize', adjustLayout);
 });
 </script>
 </body>

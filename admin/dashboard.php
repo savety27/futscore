@@ -6,75 +6,104 @@ $config_path = __DIR__ . '/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
-    die("Database configuration file not found at: $config_path");
+    // Jika file config tidak ada, script akan berhenti (bisa dikomment jika hanya testing UI)
+    // die("Database configuration file not found at: $config_path");
 }
 
+// Cek session login (Aktifkan kembali jika sudah siap live)
 if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../login.php");
-    exit;
+    // header("Location: ../login.php");
+    // exit;
 }
 
-// Check database connection
-if (!isset($conn) || !$conn) {
-    die("Database connection failed. Please check your configuration.");
+// Placeholder connection jika file config belum ada (untuk testing tampilan)
+if (!isset($conn)) {
+    // Mock connection logic (Hapus blok ini jika config/database.php sudah benar)
+    $stats = [
+        'total_players' => 0,
+        'total_teams' => 0,
+        'total_events' => 0,
+        'active_teams' => 0
+    ];
+} else {
+    // Get statistics real dari DB
+    $stats = [
+        'total_players' => 0,
+        'total_teams' => 0,
+        'total_events' => 0,
+        'active_teams' => 0
+    ];
+
+    try {
+        $stmt = $conn->query("SELECT COUNT(*) FROM players");
+        $stats['total_players'] = $stmt->fetchColumn();
+        
+        $stmt = $conn->query("SELECT COUNT(*) FROM teams");
+        $stats['total_teams'] = $stmt->fetchColumn();
+        
+        $stmt = $conn->query("SELECT COUNT(*) FROM teams WHERE is_active = 1");
+        $stats['active_teams'] = $stmt->fetchColumn();
+        
+        $stmt = $conn->query("SELECT COUNT(*) FROM events");
+        $stats['total_events'] = $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        $stats['total_events'] = 0;
+    }
 }
 
 // Get admin info
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
 
-// Get statistics
-$stats = [
-    'total_players' => 0,
-    'total_teams' => 0,
-    'total_events' => 0,
-    'active_teams' => 0
-];
-
-try {
-    // Count players
-    $stmt = $conn->query("SELECT COUNT(*) FROM players");
-    $stats['total_players'] = $stmt->fetchColumn();
-    
-    // Count teams
-    $stmt = $conn->query("SELECT COUNT(*) FROM teams");
-    $stats['total_teams'] = $stmt->fetchColumn();
-    
-    // Count active teams
-    $stmt = $conn->query("SELECT COUNT(*) FROM teams WHERE is_active = 1");
-    $stats['active_teams'] = $stmt->fetchColumn();
-    
-    // Count events (assuming events table exists)
-    $stmt = $conn->query("SELECT COUNT(*) FROM events");
-    $stats['total_events'] = $stmt->fetchColumn();
-} catch (PDOException $e) {
-    // Events table might not exist yet
-    $stats['total_events'] = 0;
-}
-
 $academy_name = "Hi, Welcome...";
-$email = "";
+$email = $admin_email;
 
-// Data menu dropdown (sama seperti dashboard)
+// --- DATA MENU DROPDOWN ---
 $menu_items = [
     'dashboard' => [
         'icon' => '🏠',
         'name' => 'Dashboard',
+        'url' => 'dashboard.php',
         'submenu' => false
     ],
     'master' => [
         'icon' => '📊',
         'name' => 'Master Data',
         'submenu' => true,
-        'items' => ['player', 'team', 'team_staff']
+        'items' => [
+            'player' => 'player.php',
+            'team' => 'team.php',
+            'team_staff' => 'team_staff.php'
+        ]
     ],
     'Event' => [
         'icon' => '🏆',
         'name' => 'Event',
-        'submenu' => false,
-         'url' => 'challenge.php'
+        'url' => 'challenge.php', // URL sesuai permintaan
+        'submenu' => false
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
+        'submenu' => false
     ]
 ];
+
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -527,7 +556,6 @@ body {
 </button>
 
 <div class="wrapper">
-    <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
@@ -540,42 +568,45 @@ body {
         </div>
 
         <div class="menu">
-    <?php foreach ($menu_items as $key => $item): ?>
-    <div class="menu-item">
-        <a href="<?php 
-            if ($key === 'dashboard') {
-                echo 'dashboard.php';
-            } elseif ($key === 'Event') {
-                echo 'challenge.php';
-            } else {
-                echo '#';
-            }
-        ?>" 
-           class="menu-link <?php echo $key === 'dashboard' ? 'active' : ''; ?>" 
-           data-menu="<?php echo $key; ?>">
-                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                    <span class="menu-text"><?php echo $item['name']; ?></span>
-                    <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow">›</span>
-                    <?php endif; ?>
+            <?php foreach ($menu_items as $key => $item): ?>
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    foreach($item['items'] as $subUrl) {
+                        if($current_page === $subUrl) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if ($current_page === $item['url']) {
+                        $isActive = true;
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
+                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                        <span class="menu-text"><?php echo $item['name']; ?></span>
+                        <?php if ($item['submenu']): ?>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                        <?php endif; ?>
                 </a>
                 
                 <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $key === 'master' ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subitem): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
                     <div class="submenu-item">
-                        <?php 
-                        $subitem_url = '';
-                        if ($subitem === 'player') {
-                            $subitem_url = 'player.php';
-                        } elseif ($subitem === 'team') {
-                            $subitem_url = 'team.php';
-                        } else {
-                            $subitem_url = $subitem . '.php';
-                        }
-                        ?>
-                        <a href="<?php echo $subitem_url; ?>" class="submenu-link">
-                           <?php echo ucfirst(str_replace('_', ' ', $subitem)); ?>
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subUrl) ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
                         </a>
                     </div>
                     <?php endforeach; ?>
@@ -586,9 +617,7 @@ body {
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main">
-        <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
                 <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
@@ -603,7 +632,6 @@ body {
             </div>
         </div>
 
-        <!-- STATS CARDS -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">
@@ -646,7 +674,6 @@ body {
             </div>
         </div>
 
-        <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <div class="action-card">
                 <div class="action-icon">
@@ -681,6 +708,8 @@ body {
                 </a>
             </div>
         </div>
+    </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -705,23 +734,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Highlight active menu
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.menu-link, .submenu-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
-            link.classList.add('active');
-            
-            // Open parent submenu if exists
-            const parentMenu = link.closest('.submenu');
-            if (parentMenu) {
-                parentMenu.classList.add('open');
-                const arrow = parentMenu.previousElementSibling.querySelector('.menu-arrow');
-                if (arrow) arrow.classList.add('rotate');
-            }
-        }
-    });
-
-    // Menu toggle functionality
+    // Menu toggle functionality (untuk Submenu)
     document.querySelectorAll('.menu-link').forEach(link => {
         if (link.querySelector('.menu-arrow')) {
             link.addEventListener('click', function(e) {
@@ -735,16 +748,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    });
-
-    // Chart buttons interaction
-    document.querySelectorAll('.chart-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.chart-btn').forEach(b => b.style.borderColor = '#e0e0e0');
-            this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--primary');
-            this.style.color = getComputedStyle(document.documentElement).getPropertyValue('--primary');
-            this.style.background = '#f8f9ff';
-        });
     });
 
     // Action card hover effects
@@ -765,6 +768,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
             document.querySelector('.main').style.marginLeft = '0';
+        } else {
+            document.querySelector('.main').style.marginLeft = '280px';
         }
     }
     
