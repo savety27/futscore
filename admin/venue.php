@@ -37,7 +37,6 @@ $menu_items = [
             'player' => ['name' => 'Player', 'url' => 'player.php'],
             'team' => ['name' => 'Team', 'url' => 'team.php'],
             'team_staff' => ['name' => 'Team Staff', 'url' => 'team_staff.php']
-            // HAPUS 'venue' DARI SINI
         ]
     ],
     'Event' => [
@@ -46,7 +45,7 @@ $menu_items = [
         'url' => 'challenge.php',
         'submenu' => false
     ],
-    'venue' => [  // Menu Venue terpisah
+    'venue' => [
         'icon' => '📍',
         'name' => 'Venue',
         'url' => 'venue.php',
@@ -76,6 +75,23 @@ if (!isset($conn) || !$conn) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Handle sorting
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'created_at';
+$order = isset($_GET['order']) ? $_GET['order'] : 'desc';
+
+// Validasi sort column
+$allowed_sort = ['name', 'location', 'capacity', 'created_at', 'updated_at'];
+if (!in_array($sort, $allowed_sort)) {
+    $sort = 'created_at';
+}
+
+// Validasi order
+$allowed_order = ['asc', 'desc'];
+if (!in_array($order, $allowed_order)) {
+    $order = 'desc';
+}
+
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -91,7 +107,8 @@ if (!empty($search)) {
     $count_query .= " AND (v.name LIKE ? OR v.location LIKE ? OR v.facilities LIKE ?)";
 }
 
-$base_query .= " ORDER BY v.created_at DESC";
+// Tambahkan sorting - PASTIKAN sorting ini ADA sebelum LIMIT
+$base_query .= " ORDER BY v.$sort $order";
 
 // Get total data
 $total_data = 0;
@@ -114,7 +131,7 @@ try {
     
     $total_pages = ceil($total_data / $limit);
     
-    // Get data with pagination
+    // Get data with pagination - PASTIKAN sorting MASUK di query
     $query = $base_query . " LIMIT ? OFFSET ?";
     
     if (!empty($search)) {
@@ -137,6 +154,39 @@ try {
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
 }
+
+// Fungsi untuk mendapatkan URL dengan parameter yang tepat
+function getSortUrl($sort_field, $current_sort, $current_order) {
+    $params = $_GET;
+    $params['sort'] = $sort_field;
+    
+    if ($current_sort == $sort_field) {
+        // Jika sudah sorting field yang sama, toggle order
+        $params['order'] = $current_order == 'asc' ? 'desc' : 'asc';
+    } else {
+        // Jika field berbeda, default ke asc
+        $params['order'] = 'asc';
+    }
+    
+    return '?' . http_build_query($params);
+}
+
+// Fungsi untuk mendapatkan arrow icon
+// Fungsi untuk mendapatkan arrow icon dengan FontAwesome
+function getSortIcon($sort_field, $current_sort, $current_order) {
+    if ($current_sort == $sort_field) {
+        if ($current_order == 'asc') {
+            return '<i class="fas fa-sort-up" style="color: #FFD700;"></i>';
+        } else {
+            return '<i class="fas fa-sort-down" style="color: #FFD700;"></i>';
+        }
+    }
+    // Tampilkan kedua icon (up dan down) tapi lebih transparan
+    return '<div class="sort-icons">
+                <i class="fas fa-sort-up"></i>
+                <i class="fas fa-sort-down"></i>
+            </div>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -145,9 +195,9 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Venue Management - MGP</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
+/* Semua CSS tetap sama seperti sebelumnya, hanya tambahkan style untuk sorting link */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -563,6 +613,33 @@ body {
     font-size: 12px;
 }
 
+/* Style untuk header yang bisa di-sort */
+.sortable-header {
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    padding-right: 20px !important;
+}
+
+.sortable-header:hover {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.sortable-header a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+}
+
+.sort-arrow {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+}
+
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
     transition: var(--transition);
@@ -666,6 +743,45 @@ body {
 .btn-view:hover {
     background: var(--primary);
     color: white;
+}
+
+/* Tambahkan style ini di bagian CSS */
+.sortable-header {
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    padding-right: 30px !important; /* Perbesar padding untuk icon */
+    user-select: none; /* Supaya tidak bisa di-select text */
+}
+
+.sortable-header:hover {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.sortable-header a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.sort-icons {
+    display: flex;
+    flex-direction: column;
+    margin-left: 8px;
+    font-size: 10px;
+    opacity: 0.6;
+}
+
+.sort-icons .active {
+    opacity: 1;
+    color: var(--secondary);
+}
+
+.sort-icons i {
+    line-height: 0.8;
 }
 
 /* Badge Styles */
@@ -795,21 +911,6 @@ body {
     background: rgba(249, 168, 38, 0.1);
     border-left: 4px solid var(--warning);
     color: var(--warning);
-}
-
-/* DataTable Custom Style */
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 8px 12px;
-    margin: 0 2px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: white;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: var(--primary) !important;
-    color: white !important;
-    border-color: var(--primary);
 }
 
 /* Responsive */
@@ -1064,21 +1165,46 @@ body {
         </div>
         <?php endif; ?>
 
-        <!-- VENUE TABLE -->
-        <div class="table-container">
-            <table class="data-table" id="venuesTable">
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Nama Venue</th>
-                        <th>Lokasi</th>
-                        <th>Kapasitas</th>
-                        <th>Fasilitas</th>
-                        <th>Status</th>
-                        <th>Created At</th>
-                        <th>Updated At</th>
-                        <th>Action</th>
-                    </tr>
+       <!-- VENUE TABLE -->
+<div class="table-container">
+    <table class="data-table" id="venuesTable">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th class="sortable-header">
+                    <a href="<?php echo getSortUrl('name', $sort, $order); ?>">
+                        <span>Nama Venue</span>
+                        <?php echo getSortIcon('name', $sort, $order); ?>
+                    </a>
+                </th>
+                <th class="sortable-header">
+                    <a href="<?php echo getSortUrl('location', $sort, $order); ?>">
+                        <span>Lokasi</span>
+                        <?php echo getSortIcon('location', $sort, $order); ?>
+                    </a>
+                </th>
+                <th class="sortable-header">
+                    <a href="<?php echo getSortUrl('capacity', $sort, $order); ?>">
+                        <span>Kapasitas</span>
+                        <?php echo getSortIcon('capacity', $sort, $order); ?>
+                    </a>
+                </th>
+                <th>Fasilitas</th>
+                <th>Status</th>
+                <th class="sortable-header">
+                    <a href="<?php echo getSortUrl('created_at', $sort, $order); ?>">
+                        <span>Created At</span>
+                        <?php echo getSortIcon('created_at', $sort, $order); ?>
+                    </a>
+                </th>
+                <th class="sortable-header">
+                    <a href="<?php echo getSortUrl('updated_at', $sort, $order); ?>">
+                        <span>Updated At</span>
+                        <?php echo getSortIcon('updated_at', $sort, $order); ?>
+                    </a>
+                </th>
+                <th>Action</th>
+            </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($venues) && count($venues) > 0): ?>
@@ -1154,7 +1280,7 @@ body {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page-1])); ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-left"></i>
                 </a>
@@ -1170,14 +1296,14 @@ body {
             
             for ($i = $start_page; $i <= $end_page; $i++): 
             ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $i])); ?>" 
                    class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
                    <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($_GET, ['page' => $page+1])); ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-right"></i>
                 </a>
@@ -1192,8 +1318,6 @@ body {
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1231,18 +1355,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     arrow.classList.toggle('rotate');
                 }
             });
-        }
-    });
-
-    // Initialize DataTable
-    $('#venuesTable').DataTable({
-        searching: false,
-        paging: false,
-        info: false,
-        ordering: true,
-        language: {
-            emptyTable: "Tidak ada data venue",
-            zeroRecords: "Tidak ada data yang cocok dengan pencarian"
         }
     });
 });
