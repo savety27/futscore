@@ -21,16 +21,17 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $query = "SELECT c.*, 
           t1.name as challenger_name, t1.sport_type as challenger_sport,
           t2.name as opponent_name,
-          l.name as venue_name, l.location as venue_location
+          v.name as venue_name, v.location as venue_location
           FROM challenges c
           LEFT JOIN teams t1 ON c.challenger_id = t1.id
           LEFT JOIN teams t2 ON c.opponent_id = t2.id
-          LEFT JOIN venues l ON c.venue_id = l.id
+          LEFT JOIN venues v ON c.venue_id = v.id
           WHERE 1=1";
 
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ?)";
+    $query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? 
+              OR t1.name LIKE ? OR t2.name LIKE ?)";
 }
 
 $query .= " ORDER BY c.challenge_date DESC";
@@ -38,7 +39,7 @@ $query .= " ORDER BY c.challenge_date DESC";
 try {
     if (!empty($search)) {
         $stmt = $conn->prepare($query);
-        $stmt->execute([$search_term, $search_term]);
+        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
     } else {
         $stmt = $conn->prepare($query);
         $stmt->execute();
