@@ -264,7 +264,7 @@ body {
 }
 
 .logo::before {
-    content: "👤";
+    content: "⚽";
     font-size: 48px;
     color: var(--primary);
 }
