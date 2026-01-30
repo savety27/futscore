@@ -75,6 +75,16 @@ $email = $admin_email;
 // Mendapatkan nama file saat ini untuk penanda menu 'Active'
 $current_page = basename($_SERVER['PHP_SELF']);
 
+// Ambil data tim dari database untuk dropdown
+$teams = [];
+try {
+    $stmt = $conn->prepare("SELECT id, name FROM teams WHERE is_active = 1 ORDER BY name ASC");
+    $stmt->execute();
+    $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $teams_error = "Gagal mengambil data tim: " . $e->getMessage();
+}
+
 // Initialize variables
 $errors = [];
 $pelatih_data = null;
@@ -103,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'confirm_password' => $_POST['confirm_password'] ?? '',
         'full_name' => trim($_POST['full_name'] ?? ''),
         'role' => $_POST['role'] ?? 'admin',
+        'team_id' => !empty($_POST['team_id']) ? (int)$_POST['team_id'] : null,
         'is_active' => isset($_POST['is_active']) ? 1 : 0
     ];
     
@@ -133,6 +144,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if (empty($form_data['full_name'])) {
         $errors['full_name'] = "Nama lengkap harus diisi";
+    }
+    
+    // Jika role bukan superadmin, validasi team_id
+    if ($form_data['role'] !== 'superadmin' && empty($form_data['team_id'])) {
+        $errors['team_id'] = "Tim harus dipilih untuk role admin";
     }
     
     // Check for existing username and email (excluding current user)
@@ -174,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         password_hash = ?, 
                         full_name = ?, 
                         role = ?, 
+                        team_id = ?,
                         is_active = ?, 
                         updated_at = NOW()
                     WHERE id = ?
@@ -185,6 +202,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $password_hash,
                     $form_data['full_name'],
                     $form_data['role'],
+                    $form_data['team_id'],
                     $form_data['is_active'],
                     $pelatih_id
                 ]);
@@ -196,6 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         email = ?, 
                         full_name = ?, 
                         role = ?, 
+                        team_id = ?,
                         is_active = ?, 
                         updated_at = NOW()
                     WHERE id = ?
@@ -206,6 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $form_data['email'],
                     $form_data['full_name'],
                     $form_data['role'],
+                    $form_data['team_id'],
                     $form_data['is_active'],
                     $pelatih_id
                 ]);
@@ -809,6 +829,25 @@ body {
     color: var(--primary);
     margin-right: 8px;
 }
+
+/* Team Select */
+.team-select-group {
+    position: relative;
+}
+
+.team-select-wrapper {
+    position: relative;
+}
+
+.team-select-wrapper::after {
+    content: "";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -1051,6 +1090,35 @@ body {
                                 Super Admin: akses penuh, Admin: akses terbatas, Editor: hanya lihat data
                             </small>
                         </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="team_id">
+                                Tim <span class="required">*</span>
+                            </label>
+                            <div class="team-select-wrapper">
+                                <select id="team_id" name="team_id" class="form-select <?php echo isset($errors['team_id']) ? 'is-invalid' : ''; ?>">
+                                    <option value="">-- Pilih Tim --</option>
+                                    <?php if (!empty($teams_error)): ?>
+                                        <option value="" disabled>Error: <?php echo $teams_error; ?></option>
+                                    <?php elseif (empty($teams)): ?>
+                                        <option value="" disabled>Belum ada tim tersedia</option>
+                                    <?php else: ?>
+                                        <?php foreach ($teams as $team): ?>
+                                            <option value="<?php echo $team['id']; ?>" 
+                                                <?php echo $pelatih_data['team_id'] == $team['id'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($team['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <?php if (isset($errors['team_id'])): ?>
+                                <span class="error"><?php echo $errors['team_id']; ?></span>
+                            <?php endif; ?>
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Pilih tim untuk admin. Super Admin tidak perlu memilih tim.
+                            </small>
+                        </div>
                     </div>
                 </div>
 
@@ -1146,6 +1214,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Tampilkan/sembunyikan field tim berdasarkan role
+    const roleSelect = document.getElementById('role');
+    const teamSelect = document.getElementById('team_id');
+    
+    function toggleTeamField() {
+        const teamGroup = teamSelect.closest('.form-group');
+        if (roleSelect.value === 'superadmin') {
+            teamGroup.style.opacity = '0.6';
+            teamGroup.style.pointerEvents = 'none';
+            teamSelect.required = false;
+            // teamSelect.value = '';
+        } else {
+            teamGroup.style.opacity = '1';
+            teamGroup.style.pointerEvents = 'auto';
+            teamSelect.required = true;
+        }
+    }
+    
+    // Jalankan saat halaman dimuat
+    toggleTeamField();
+    
+    // Jalankan saat role berubah
+    roleSelect.addEventListener('change', toggleTeamField);
+
     // Form Validation
     const form = document.getElementById('pelatihForm');
     form.addEventListener('submit', function(e) {
@@ -1154,6 +1246,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirm_password').value;
         const fullName = document.getElementById('full_name').value.trim();
+        const role = document.getElementById('role').value;
+        const teamId = document.getElementById('team_id').value;
 
         // Clear previous error highlights
         document.querySelectorAll('.is-invalid').forEach(el => {
@@ -1195,6 +1289,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!fullName) {
             markError('full_name', 'Nama lengkap harus diisi');
+            hasError = true;
+        }
+
+        if (role !== 'superadmin' && !teamId) {
+            markError('team_id', 'Tim harus dipilih untuk role admin');
             hasError = true;
         }
 

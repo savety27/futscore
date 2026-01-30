@@ -76,9 +76,15 @@ $email = $admin_email;
 // Mendapatkan nama file saat ini untuk penanda menu 'Active'
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Fetch pelatih data
+// Fetch pelatih data dengan JOIN ke tabel teams
 try {
-    $stmt = $conn->prepare("SELECT * FROM admin_users WHERE id = ?");
+    $stmt = $conn->prepare("
+        SELECT au.*, t.name as team_name, t.logo as team_logo, t.alias as team_alias, 
+               t.sport_type, t.uniform_color, t.coach as team_coach, t.basecamp as team_basecamp
+        FROM admin_users au 
+        LEFT JOIN teams t ON au.team_id = t.id 
+        WHERE au.id = ?
+    ");
     $stmt->execute([$pelatih_id]);
     $pelatih_data = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -569,6 +575,74 @@ body {
     color: #333;
 }
 
+/* Team Info Styles */
+.team-info-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 5px solid var(--primary);
+}
+
+.team-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.team-logo-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 30px;
+    border: 3px solid white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.team-details {
+    flex: 1;
+}
+
+.team-name {
+    font-size: 24px;
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.team-alias {
+    font-size: 18px;
+    color: var(--gray);
+    margin-bottom: 10px;
+}
+
+.team-sport {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 15px;
+    background: rgba(76, 201, 240, 0.2);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Color Display */
+.color-display {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+    border: 2px solid #e0e0e0;
+}
+
 /* Badge Styles */
 .badge {
     padding: 4px 8px;
@@ -643,6 +717,11 @@ body {
     
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .team-display {
+        flex-direction: column;
+        text-align: center;
     }
 }
 
@@ -851,6 +930,16 @@ body {
             
             <div class="stat-card">
                 <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-label">Tim</div>
+                <div class="stat-number" style="font-size: 18px;">
+                    <?php echo !empty($pelatih_data['team_name']) ? htmlspecialchars($pelatih_data['team_name']) : '-'; ?>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div class="stat-label">Bergabung Sejak</div>
@@ -868,17 +957,77 @@ body {
                     <?php echo !empty($pelatih_data['last_login']) ? date('d F Y H:i', strtotime($pelatih_data['last_login'])) : '-'; ?>
                 </div>
             </div>
-            
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-sync-alt"></i>
+        </div>
+
+        <!-- TEAM INFORMATION SECTION -->
+        <?php if (!empty($pelatih_data['team_name'])): ?>
+        <div class="info-card team-info-section">
+            <div class="info-header">
+                <div class="info-title">
+                    <i class="fas fa-users"></i>
+                    Informasi Tim
                 </div>
-                <div class="stat-label">Terakhir Update</div>
-                <div class="stat-number" style="font-size: 18px;">
-                    <?php echo date('d F Y H:i', strtotime($pelatih_data['updated_at'])); ?>
+            </div>
+            
+            <div class="team-display">
+                <div class="team-logo-placeholder">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="team-details">
+                    <h3 class="team-name"><?php echo htmlspecialchars($pelatih_data['team_name']); ?></h3>
+                    <div class="team-alias">(<?php echo htmlspecialchars($pelatih_data['team_alias']); ?>)</div>
+                    <?php if (!empty($pelatih_data['sport_type'])): ?>
+                        <span class="team-sport"><?php echo htmlspecialchars($pelatih_data['sport_type']); ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nama Tim</span>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['team_name']); ?></div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Alias Tim</span>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['team_alias']); ?></div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Jenis Olahraga</span>
+                    <div class="info-value">
+                        <?php echo !empty($pelatih_data['sport_type']) ? htmlspecialchars($pelatih_data['sport_type']) : '-'; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Warna Seragam</span>
+                    <div class="info-value">
+                        <?php if (!empty($pelatih_data['uniform_color'])): ?>
+                            <span class="color-display" style="background-color: <?php echo htmlspecialchars($pelatih_data['uniform_color']); ?>;"></span>
+                            <?php echo htmlspecialchars($pelatih_data['uniform_color']); ?>
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Pelatih Tim</span>
+                    <div class="info-value">
+                        <?php echo !empty($pelatih_data['team_coach']) ? htmlspecialchars($pelatih_data['team_coach']) : '-'; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Basecamp</span>
+                    <div class="info-value">
+                        <?php echo !empty($pelatih_data['team_basecamp']) ? htmlspecialchars($pelatih_data['team_basecamp']) : '-'; ?>
+                    </div>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- DETAILED INFORMATION -->
         <div class="info-card">
@@ -921,6 +1070,18 @@ body {
                         </span>
                     </div>
                 </div>
+                
+                <?php if (!empty($pelatih_data['team_name'])): ?>
+                <div class="info-item">
+                    <span class="info-label">Tim</span>
+                    <div class="info-value">
+                        <span class="badge badge-primary">
+                            <i class="fas fa-users"></i>
+                            <?php echo htmlspecialchars($pelatih_data['team_name']); ?>
+                        </span>
+                    </div>
+                </div>
+                <?php endif; ?>
                 
                 <div class="info-item">
                     <span class="info-label">Status Akun</span>
@@ -1013,6 +1174,9 @@ body {
                     <li>Jangan bagikan password dengan siapapun</li>
                     <li>Pastikan email yang terdaftar masih aktif</li>
                     <li>Gunakan password yang kuat dengan kombinasi huruf, angka, dan simbol</li>
+                    <?php if (!empty($pelatih_data['team_name'])): ?>
+                    <li>Akun ini terhubung dengan tim: <?php echo htmlspecialchars($pelatih_data['team_name']); ?></li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

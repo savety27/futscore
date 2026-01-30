@@ -78,18 +78,25 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
-// Query untuk mengambil data pelatih
-$base_query = "SELECT * FROM admin_users WHERE 1=1";
-$count_query = "SELECT COUNT(*) as total FROM admin_users WHERE 1=1";
+// Query untuk mengambil data pelatih dengan JOIN ke tabel teams
+$base_query = "SELECT au.*, t.name as team_name, t.alias as team_alias 
+               FROM admin_users au 
+               LEFT JOIN teams t ON au.team_id = t.id 
+               WHERE 1=1";
+               
+$count_query = "SELECT COUNT(*) as total 
+                FROM admin_users au 
+                LEFT JOIN teams t ON au.team_id = t.id 
+                WHERE 1=1";
 
 // Handle search condition
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $base_query .= " AND (username LIKE ? OR email LIKE ? OR full_name LIKE ? OR role LIKE ?)";
-    $count_query .= " AND (username LIKE ? OR email LIKE ? OR full_name LIKE ? OR role LIKE ?)";
+    $base_query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR t.alias LIKE ?)";
+    $count_query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR t.alias LIKE ?)";
 }
 
-$base_query .= " ORDER BY created_at DESC";
+$base_query .= " ORDER BY au.created_at DESC";
 
 // Get total data
 $total_data = 0;
@@ -100,7 +107,7 @@ try {
     // Count total records
     if (!empty($search)) {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
+        $stmt->execute([$search_term, $search_term, $search_term, $search_term, $search_term, $search_term]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $total_data = $result['total'];
     } else {
@@ -121,8 +128,10 @@ try {
         $stmt->bindValue(2, $search_term);
         $stmt->bindValue(3, $search_term);
         $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(6, $offset, PDO::PARAM_INT);
+        $stmt->bindValue(5, $search_term);
+        $stmt->bindValue(6, $search_term);
+        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
         $stmt->execute();
     } else {
         $stmt = $conn->prepare($query);
@@ -525,7 +534,7 @@ body {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1200px;
+    min-width: 1400px;
     table-layout: auto;
 }
 
@@ -598,6 +607,27 @@ body {
 .role-editor {
     background: linear-gradient(135deg, var(--warning), #FFD166);
     color: var(--dark);
+}
+
+.team-cell {
+    text-align: center;
+    font-weight: 500;
+}
+
+.team-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(76, 201, 240, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(76, 201, 240, 0.3);
+}
+
+.no-team {
+    color: var(--gray);
+    font-style: italic;
 }
 
 .status-cell {
@@ -854,7 +884,7 @@ body {
     }
     
     .data-table {
-        min-width: 1000px;
+        min-width: 1200px;
     }
 }
 
@@ -1014,7 +1044,7 @@ body {
             </div>
             
             <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari pelatih (username, email, nama)..." 
+                <input type="text" name="search" placeholder="Cari pelatih (username, email, nama, tim)..." 
                        value="<?php echo htmlspecialchars($search); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
@@ -1057,6 +1087,7 @@ body {
                         <th>Email</th>
                         <th>Nama Lengkap</th>
                         <th>Role</th>
+                        <th>Tim</th>
                         <th>Status</th>
                         <th>Login Terakhir</th>
                         <th>Tanggal Dibuat</th>
@@ -1086,6 +1117,16 @@ body {
                                     <span class="role-badge role-admin">Admin</span>
                                 <?php else: ?>
                                     <span class="role-badge role-editor">Editor</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="team-cell">
+                                <?php if (!empty($p['team_name'])): ?>
+                                    <span class="team-badge" title="<?php echo htmlspecialchars($p['team_alias']); ?>">
+                                        <i class="fas fa-users"></i>
+                                        <?php echo htmlspecialchars($p['team_name']); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="no-team">-</span>
                                 <?php endif; ?>
                             </td>
                             <td class="status-cell">
@@ -1124,7 +1165,7 @@ body {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="10" style="text-align: center; padding: 40px;">
+                            <td colspan="11" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
                                     <div class="empty-icon">
                                         <i class="fas fa-user-slash"></i>
