@@ -1113,7 +1113,7 @@ body {
                     <?php foreach ($players as $player): ?>
                         <div class="player-card">
                             <?php if (!empty($player['photo'])): ?>
-                                <img src="../<?php echo htmlspecialchars($player['photo']); ?>" 
+                                <img src="../images/players/<?php echo htmlspecialchars($player['photo']); ?>" 
                                      alt="<?php echo htmlspecialchars($player['name']); ?>" 
                                      class="player-avatar">
                             <?php else: ?>
