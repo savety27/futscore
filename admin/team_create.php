@@ -1279,10 +1279,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Click to Upload
-    logoUpload.addEventListener('click', function() {
-        logoInput.click();
-    });
+    // Click to Upload removed because input file covers the container
+    // logoUpload.addEventListener('click', function() {
+    //     logoInput.click();
+    // });
 
     logoInput.addEventListener('change', function() {
         if (this.files.length) {
