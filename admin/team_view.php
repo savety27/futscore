@@ -1127,7 +1127,7 @@ body {
                                     <?php echo !empty($player['position_name']) ? htmlspecialchars($player['position_name']) : 'No Position'; ?>
                                 </div>
                                 <div style="font-size: 12px; color: #999;">
-                                    Back Number: <?php echo !empty($player['back_number']) ? $player['back_number'] : '-'; ?>
+                                    Back Number: <?php echo !empty($player['jersey_number']) ? $player['jersey_number'] : '-'; ?>
                                 </div>
                             </div>
                         </div>
