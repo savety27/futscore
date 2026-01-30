@@ -99,9 +99,7 @@ $base_query = "SELECT
     ts.created_at,
     t.name as team_name,
     t.alias as team_alias,
-    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count,
-    (SELECT COUNT(*) FROM staff_events se WHERE se.staff_id = ts.id) as event_count,
-    (SELECT COUNT(*) FROM staff_matches sm WHERE sm.staff_id = ts.id) as match_count
+    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
     FROM team_staff ts
     LEFT JOIN teams t ON ts.team_id = t.id
     WHERE 1=1";
@@ -1143,9 +1141,7 @@ body {
                         <th>Team</th>
                         <th>Jabatan</th>
                         <th>Usia</th>
-                        <th>Sertifikat</th>
-                        <th>Events</th>
-                        <th>Matches</th>
+                        <th class="certificate-cell">Cert</th>
                         <th>Status</th>
                         <th>Created At</th>
                         <th width="120">Action</th>
@@ -1219,12 +1215,7 @@ body {
                                     <span style="color: var(--gray);">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="event-cell">
-                                <?php echo $staff['event_count']; ?>
-                            </td>
-                            <td class="match-cell">
-                                <?php echo $staff['match_count']; ?>
-                            </td>
+
                             <td class="status-cell">
                                 <?php if ($staff['is_active']): ?>
                                     <span class="badge badge-success">Aktif</span>
@@ -1255,7 +1246,7 @@ body {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="12" style="text-align: center; padding: 40px;">
+                            <td colspan="10" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
                                     <div class="empty-icon">
                                         <i class="fas fa-user-tie"></i>
@@ -1378,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', function() {
         "autoWidth": false,
         "responsive": true,
         "columnDefs": [
-            { "orderable": false, "targets": [1, 11] } // Disable ordering on Photo and Action
+            { "orderable": false, "targets": [1, 9] } // Disable ordering on Photo and Action
         ],
         "language": {
             "emptyTable": "Tidak ada data staff",
