@@ -692,7 +692,7 @@ body {
                 </div>
                 <div class="action-title">Tambah Team</div>
                 <div class="action-desc">Buat team baru dengan informasi lengkap dan logo team</div>
-                <a href="team/add.php" class="action-link">
+                <a href="team_create.php" class="action-link">
                     <i class="fas fa-plus"></i> Tambah Team
                 </a>
             </div>
