@@ -149,7 +149,6 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Team Management - FutScore</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 :root {
@@ -842,21 +841,6 @@ body {
     color: var(--warning);
 }
 
-/* DataTable Custom Style */
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    padding: 8px 12px;
-    margin: 0 2px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: white;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: var(--primary) !important;
-    color: white !important;
-    border-color: var(--primary);
-}
-
 /* Responsive */
 @media (max-width: 1400px) {
     .page-header {
@@ -1269,8 +1253,6 @@ body {
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1311,17 +1293,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize DataTable
-    $('#teamsTable').DataTable({
-        searching: false,
-        paging: false,
-        info: false,
-        ordering: true,
-        language: {
-            emptyTable: "Tidak ada data team",
-            zeroRecords: "Tidak ada data yang cocok dengan pencarian"
-        }
-    });
 });
 
 function deleteTeam(teamId, teamName) {
