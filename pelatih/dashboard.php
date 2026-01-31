@@ -10,10 +10,12 @@ $team_name = 'Unknown Team';
 
 if ($team_id) {
     try {
-        // Get Team Name
-        $stmt = $conn->prepare("SELECT name FROM teams WHERE id = ?");
+        // Get Team Name and Logo
+        $stmt = $conn->prepare("SELECT name, logo FROM teams WHERE id = ?");
         $stmt->execute([$team_id]);
-        $team_name = $stmt->fetchColumn() ?: 'Unknown Team';
+        $team = $stmt->fetch(PDO::FETCH_ASSOC);
+        $team_name = $team ? ($team['name'] ?: 'Unknown Team') : 'Unknown Team';
+        $team_logo = $team ? $team['logo'] : null;
 
         // Get Player Count
         $stmt = $conn->prepare("SELECT COUNT(*) FROM players WHERE team_id = ?");
@@ -23,6 +25,7 @@ if ($team_id) {
     } catch (PDOException $e) {
         $player_count = 0;
         $team_name = 'Unknown Team';
+        $team_logo = null;
     }
 }
 ?>
@@ -30,8 +33,12 @@ if ($team_id) {
 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; margin-bottom: 40px;">
     <!-- Team Card -->
     <div class="stat-card" style="background: white; padding: 25px; border-radius: 20px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 20px;">
-        <div class="stat-icon" style="width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; background: linear-gradient(135deg, var(--primary), var(--accent));">
-            🛡️
+        <div class="stat-icon" style="width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white; background: linear-gradient(135deg, var(--primary), var(--accent)); overflow: hidden;">
+            <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
+                <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team Logo" style="width: 100%; height: 100%; object-fit: cover;">
+            <?php else: ?>
+                🛡️
+            <?php endif; ?>
         </div>
         <div class="stat-content">
             <h3 style="font-size: 24px; color: var(--dark); margin-bottom: 5px; font-weight: 700;"><?php echo htmlspecialchars($team_name); ?></h3>
