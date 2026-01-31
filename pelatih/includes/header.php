@@ -42,6 +42,13 @@ if ($team_id && isset($conn)) {
 </head>
 <body>
 
+
+<!-- Mobile Menu Components (hidden by default via CSS) -->
+<div class="menu-overlay"></div>
+<button class="mobile-menu-toggle" aria-label="Toggle menu">
+    <i class="fas fa-bars"></i>
+</button>
+
 <div class="wrapper">
     <!-- SIDEBAR -->
     <div class="sidebar">
