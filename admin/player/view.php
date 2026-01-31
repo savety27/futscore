@@ -724,83 +724,249 @@ body {
     transform: scale(1.05);
 }
 
-/* Menu Toggle Button */
+
+/* =========================================
+   MOBILE RESPONSIVE DESIGN
+   ========================================= */
+
+/* Default: Hide mobile-only elements on desktop */
 .menu-toggle {
     display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 101;
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    transition: var(--transition);
 }
 
-.menu-toggle:hover {
-    background: var(--secondary);
-    color: var(--primary);
-    transform: rotate(90deg);
+.menu-overlay {
+    display: none;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
+/* ===== TABLET (max-width: 1024px) ===== */
+@media screen and (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+
     .main {
-        margin-left: 0;
+        margin-left: 240px;
+    }
+    
+    .player-profile {
+        grid-template-columns: 250px 1fr;
+        gap: 20px;
         padding: 20px;
     }
+}
+
+/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
+@media screen and (max-width: 768px) {
     
+    /* Show Mobile Menu Toggle Button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
+        color: var(--primary);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        z-index: 1001;
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    /* Sidebar: Hidden by default on mobile */
     .sidebar {
         transform: translateX(-100%);
-        width: 300px;
+        box-shadow: none;
+        width: 280px;
     }
-    
+
+    /* Sidebar: Show when active */
     .sidebar.active {
         transform: translateX(0);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
     }
-    
-    .menu-toggle {
+
+    /* Overlay: Show when menu is open */
+    .menu-overlay {
         display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+        backdrop-filter: blur(2px);
     }
-}
 
-@media (max-width: 992px) {
-    .player-profile {
-        grid-template-columns: 1fr;
+    body.menu-open .menu-overlay {
+        opacity: 1;
+        visibility: visible;
     }
-    
-    .details-grid {
-        grid-template-columns: 1fr;
-    }
-}
 
-@media (max-width: 768px) {
+    /* Main Content: Full width on mobile */
+    .main {
+        margin-left: 0;
+        padding: 20px 15px;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    /* Topbar: Stack vertically */
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .user-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* Header */
     .header {
         flex-direction: column;
         gap: 15px;
+        align-items: center;
         text-align: center;
+        padding: 20px;
+    }
+    
+    .page-title {
+        order: -1; /* Title first */
     }
     
     .action-buttons {
         flex-wrap: wrap;
         justify-content: center;
+        width: 100%;
     }
     
     .btn {
-        width: 100%;
+        flex: 1;
         justify-content: center;
+        min-width: 140px;
+    }
+
+    /* Player Profile Layout */
+    .player-profile {
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 30px;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .documents-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    
+    /* Reduce font sizes */
+    .greeting h1 {
+        font-size: 20px;
+    }
+    
+    .greeting p {
+        font-size: 13px;
+    }
+
+    /* Compact sidebar */
+    .sidebar {
+        width: 260px;
+    }
+
+    .sidebar-header {
+        padding: 20px 15px;
+    }
+
+    .logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .logo::before {
+        font-size: 36px;
+    }
+
+    .academy-name {
+        font-size: 18px;
+    }
+    
+    /* Compact menu */
+    .menu {
+        padding: 20px 10px;
+    }
+
+    .menu-link {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+
+    .menu-icon {
+        font-size: 20px;
+        width: 28px;
+    }
+
+    /* Smaller mobile toggle button */
+    .menu-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+    }
+    
+    .player-photo, .default-photo {
+        width: 180px;
+        height: 180px;
     }
 }
 </style>
 </head>
 <body>
 
+
+<!-- Mobile Menu Components (hidden by default via CSS) -->
+<div class="menu-overlay"></div>
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
@@ -1264,41 +1430,73 @@ body {
 </div>
 
 <script>
-// Toggle sidebar untuk mobile
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
 
-menuToggle.addEventListener('click', function() {
-    sidebar.classList.toggle('active');
-    this.innerHTML = sidebar.classList.contains('active') 
-        ? '<i class="fas fa-times"></i>' 
-        : '<i class="fas fa-bars"></i>';
-});
+// Mobile Menu Toggle Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.menu-overlay');
 
-// Auto close sidebar when clicking outside on mobile
-document.addEventListener('click', function(e) {
-    if (window.innerWidth <= 1200) {
-        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+    if (menuToggle && sidebar && overlay) {
+        // Toggle menu when clicking hamburger button
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking overlay
+        overlay.addEventListener('click', function() {
             sidebar.classList.remove('active');
-            menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-        }
-    }
-});
+            document.body.classList.remove('menu-open');
+        });
 
-// Menu toggle functionality (untuk Submenu)
-document.querySelectorAll('.menu-link').forEach(link => {
-    if (link.querySelector('.menu-arrow')) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const submenu = this.nextElementSibling;
-            const arrow = this.querySelector('.menu-arrow');
-            
-            if (submenu) {
-                submenu.classList.toggle('open');
-                arrow.classList.toggle('rotate');
+        // Close menu when clicking a menu link (better UX on mobile)
+        const menuLinks = document.querySelectorAll('.menu-link');
+        menuLinks.forEach(function(link) {
+            // Only close if it's not a submenu toggle
+            if (!link.querySelector('.menu-arrow')) {
+                link.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                });
             }
         });
     }
+    
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
+        }
+    });
+
+    // Animate skill bars on load (Merged from below)
+    const skillBars = document.querySelectorAll('.skill-fill');
+    skillBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 100);
+    });
+    
+    // Handle image errors (Merged from below)
+    document.querySelectorAll('.player-photo, .document-preview img').forEach(img => {
+        img.addEventListener('error', function() {
+            if (this.classList.contains('player-photo')) {
+                showDefaultPhoto(this);
+            }
+        });
+    });
 });
 
 function viewDocument(imagePath) {
@@ -1314,25 +1512,6 @@ function showDefaultPhoto(imgElement) {
 }
 
 // Animate skill bars on load
-document.addEventListener('DOMContentLoaded', function() {
-    const skillBars = document.querySelectorAll('.skill-fill');
-    skillBars.forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0';
-        setTimeout(() => {
-            bar.style.width = width;
-        }, 100);
-    });
-    
-    // Handle image errors
-    document.querySelectorAll('.player-photo, .document-preview img').forEach(img => {
-        img.addEventListener('error', function() {
-            if (this.classList.contains('player-photo')) {
-                showDefaultPhoto(this);
-            }
-        });
-    });
-});
 </script>
 </body>
 </html>

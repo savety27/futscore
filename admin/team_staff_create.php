@@ -1064,129 +1064,220 @@ body {
     100% { transform: scale(1); }
 }
 
-/* Menu Toggle Button */
+
+/* =========================================
+   MOBILE RESPONSIVE DESIGN
+   ========================================= */
+
+/* Default: Hide mobile-only elements on desktop */
 .menu-toggle {
     display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 101;
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    transition: var(--transition);
 }
 
-.menu-toggle:hover {
-    background: var(--secondary);
-    color: var(--primary);
-    transform: rotate(90deg);
+.menu-overlay {
+    display: none;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* ===== TABLET (max-width: 1024px) ===== */
+@media screen and (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+
+    .main {
+        margin-left: 240px;
+    }
+}
+
+/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
+@media screen and (max-width: 768px) {
+    
+    /* Show Mobile Menu Toggle Button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
+        color: var(--primary);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        z-index: 1001;
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    /* Sidebar: Hidden by default on mobile */
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+        width: 280px;
+    }
+
+    /* Sidebar: Show when active */
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Overlay: Show when menu is open */
+    .menu-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+        backdrop-filter: blur(2px);
+    }
+
+    body.menu-open .menu-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Main Content: Full width on mobile */
+    .main {
+        margin-left: 0;
+        padding: 20px 15px;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    /* Topbar: Stack vertically */
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .user-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* Page Header */
+    .page-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .page-title {
+        order: -1; /* Title first */
+        font-size: 22px;
+    }
+
+    /* Form Layout */
     .form-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
     
     .form-actions {
         flex-direction: column;
+        gap: 15px;
     }
-    
+
     .btn {
         width: 100%;
         justify-content: center;
     }
-    
-    .search-bar {
-        width: 100%;
-    }
-    
-    .page-header {
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-    
-    .action-buttons {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
 }
 
-/* Mobile Styles */
-@media (max-width: 1200px) {
-    .menu-toggle {
-        display: block;
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    
+    /* Reduce font sizes */
+    .greeting h1 {
+        font-size: 20px;
     }
     
+    .greeting p {
+        font-size: 13px;
+    }
+
+    /* Compact sidebar */
     .sidebar {
-        transform: translateX(-100%);
+        width: 260px;
     }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .main {
-        margin-left: 0;
-        padding: 20px;
-    }
-    
-    .topbar {
-        padding: 15px 20px;
-    }
-    
-    .form-container {
-        padding: 20px;
-    }
-}
 
-/* Small Mobile */
-@media (max-width: 480px) {
-    .main {
-        padding: 15px;
+    .sidebar-header {
+        padding: 20px 15px;
     }
-    
-    .topbar {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-        padding: 15px;
+
+    .logo {
+        width: 80px;
+        height: 80px;
     }
-    
-    .user-actions {
-        justify-content: center;
+
+    .logo::before {
+        font-size: 36px;
     }
-    
-    .form-container {
-        padding: 15px;
-    }
-    
-    .form-section {
-        padding-bottom: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .section-title {
+
+    .academy-name {
         font-size: 18px;
     }
     
-    .btn {
-        padding: 10px 20px;
-        font-size: 14px;
+    /* Compact menu */
+    .menu {
+        padding: 20px 10px;
+    }
+
+    .menu-link {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+
+    .menu-icon {
+        font-size: 20px;
+        width: 28px;
+    }
+
+    /* Smaller mobile toggle button */
+    .menu-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+        bottom: 20px;
+        right: 20px;
     }
 }
 </style>
 </head>
 <body>
 
+
+<!-- Mobile Menu Components (hidden by default via CSS) -->
+<div class="menu-overlay"></div>
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
@@ -1559,26 +1650,38 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Toggle sidebar untuk mobile
+
+
+    // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    
-    menuToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('active');
-        this.innerHTML = sidebar.classList.contains('active') 
-            ? '<i class="fas fa-times"></i>' 
-            : '<i class="fas fa-bars"></i>';
-    });
-    
-    // Auto close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 1200) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                sidebar.classList.remove('active');
-                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.menu-overlay');
+
+    if (menuToggle && sidebar && overlay) {
+        // Toggle menu when clicking hamburger button
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            document.body.classList.remove('menu-open');
+        });
+
+        // Close menu when clicking a menu link (better UX on mobile)
+        const menuLinks = document.querySelectorAll('.menu-link');
+        menuLinks.forEach(function(link) {
+            // Only close if it's not a submenu toggle
+            if (!link.querySelector('.menu-arrow')) {
+                link.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                });
             }
-        }
-    });
+        });
+    }
     
     // Menu toggle functionality (untuk Submenu)
     document.querySelectorAll('.menu-link').forEach(link => {
