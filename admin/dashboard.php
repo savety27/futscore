@@ -12,8 +12,8 @@ if (file_exists($config_path)) {
 
 // Cek session login (Aktifkan kembali jika sudah siap live)
 if (!isset($_SESSION['admin_logged_in'])) {
-    // header("Location: ../login.php");
-    // exit;
+    header("Location: ../login.php");
+    exit;
 }
 
 // Placeholder connection jika file config belum ada (untuk testing tampilan)

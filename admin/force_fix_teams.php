@@ -7,6 +7,11 @@ if (file_exists($config_path)) {
     die("Database configuration file not found at: $config_path");
 }
 
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: ../index.php");
+    exit;
+}
+
 // Check database connection
 if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");

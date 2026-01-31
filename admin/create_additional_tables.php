@@ -3,6 +3,11 @@
 
 require_once 'config/database.php';
 
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: ../index.php");
+    exit;
+}
+
 try {
     // Create player_documents table
     $createDocsTable = "

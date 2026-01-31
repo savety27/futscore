@@ -7,6 +7,11 @@ if (file_exists($config_path)) {
     die(json_encode(['success' => false, 'message' => 'Database configuration not found']));
 }
 
+if (!isset($_SESSION['admin_logged_in'])) {
+    die(json_encode(['success' => false, 'message' => 'Unauthorized access']));
+}
+
+
 // Get parameters
 $berita_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
