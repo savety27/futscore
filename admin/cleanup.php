@@ -1,4 +1,10 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: ../index.php");
+    exit;
+}
 // File untuk membersihkan file-file setup yang tidak perlu
 
 echo "<h2>🧹 File Setup Cleanup</h2>";
