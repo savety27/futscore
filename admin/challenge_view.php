@@ -725,23 +725,149 @@ body {
     gap: 10px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+
+/* =========================================
+   MOBILE RESPONSIVE DESIGN
+   ========================================= */
+
+/* Default: Hide mobile-only elements on desktop */
+.menu-toggle {
+    display: none;
+}
+
+.menu-overlay {
+    display: none;
+}
+
+/* ===== TABLET (max-width: 1024px) ===== */
+@media screen and (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+
+    .main {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        max-width: calc(100vw - 240px);
+    }
+}
+
+/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
+@media screen and (max-width: 768px) {
+    
+    /* Show Mobile Menu Toggle Button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
+        color: var(--primary);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        z-index: 1001;
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    /* Sidebar: Hidden by default on mobile */
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+        width: 280px;
+    }
+
+    /* Sidebar: Show when active */
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Overlay: Show when menu is open */
+    .menu-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+        backdrop-filter: blur(2px);
+    }
+
+    body.menu-open .menu-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Main Content: Full width on mobile */
+    .main {
+        margin-left: 0;
+        padding: 20px 15px;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    /* Topbar: Stack vertically */
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .user-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* Page Header: Stack vertically */
     .page-header {
         flex-direction: column;
         gap: 20px;
-        text-align: center;
+        align-items: flex-start;
     }
-    
+
     .search-bar {
         width: 100%;
+        max-width: 100%;
     }
-    
+
     .action-buttons {
+        width: 100%;
         flex-wrap: wrap;
+    }
+
+    .btn {
+        flex: 1;
         justify-content: center;
     }
     
+    /* Layout adaptations */
     .teams-vs {
         flex-direction: column;
         gap: 30px;
@@ -752,51 +878,109 @@ body {
         gap: 15px;
         text-align: center;
     }
-}
-
-/* Menu Toggle Button */
-.menu-toggle {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 101;
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    transition: var(--transition);
-}
-
-.menu-toggle:hover {
-    background: var(--secondary);
-    color: var(--primary);
-    transform: rotate(90deg);
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-    .menu-toggle {
-        display: block;
+    
+    .info-grid {
+        grid-template-columns: 1fr;
     }
     
-    .sidebar {
-        transform: translateX(-100%);
+    .time-info {
+        flex-direction: column;
+        gap: 15px;
     }
     
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .main {
-        margin-left: 0;
+    .time-item {
         width: 100%;
-        padding: 20px;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    
+    /* Reduce font sizes */
+    .greeting h1 {
+        font-size: 20px;
+    }
+    
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
+    .page-title i {
+        font-size: 26px;
+    }
+
+    /* Compact sidebar */
+    .sidebar {
+        width: 260px;
+    }
+
+    .sidebar-header {
+        padding: 20px 15px;
+    }
+
+    .logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .logo::before {
+        font-size: 36px;
+    }
+
+    .academy-name {
+        font-size: 18px;
+    }
+    
+    /* Compact menu */
+    .menu {
+        padding: 20px 10px;
+    }
+
+    .menu-link {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+
+    .menu-icon {
+        font-size: 20px;
+        width: 28px;
+    }
+
+    /* Smaller mobile toggle button */
+    .menu-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+        bottom: 20px;
+        right: 20px;
+    }
+
+    /* Compact buttons */
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .team-logo-large {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .team-name {
+        font-size: 18px;
+    }
+    
+    .score-text {
+        font-size: 36px;
     }
 }
 
@@ -816,6 +1000,9 @@ body {
 </head>
 <body>
 
+
+<!-- Mobile Menu Components (hidden by default via CSS) -->
+<div class="menu-overlay"></div>
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
@@ -1186,27 +1373,38 @@ body {
 </div>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Toggle sidebar untuk mobile
+    // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    
-    menuToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('active');
-        this.innerHTML = sidebar.classList.contains('active') 
-            ? '<i class="fas fa-times"></i>' 
-            : '<i class="fas fa-bars"></i>';
-    });
-    
-    // Auto close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 1200) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                sidebar.classList.remove('active');
-                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.menu-overlay');
+
+    if (menuToggle && sidebar && overlay) {
+        // Toggle menu when clicking hamburger button
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            document.body.classList.remove('menu-open');
+        });
+
+        // Close menu when clicking a menu link (better UX on mobile)
+        const menuLinks = document.querySelectorAll('.menu-link');
+        menuLinks.forEach(function(link) {
+            // Only close if it's not a submenu toggle
+            if (!link.querySelector('.menu-arrow')) {
+                link.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                });
             }
-        }
-    });
+        });
+    }
     
     // Menu toggle functionality (untuk Submenu)
     document.querySelectorAll('.menu-link').forEach(link => {
@@ -1223,19 +1421,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-
-    // Responsive adjustments
-    function adjustLayout() {
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            document.querySelector('.main').style.marginLeft = '0';
-        } else if (window.innerWidth > 1200) {
-            document.querySelector('.main').style.marginLeft = '280px';
-        }
-    }
-    
-    adjustLayout();
-    window.addEventListener('resize', adjustLayout);
 });
 </script>
 </body>
