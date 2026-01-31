@@ -302,6 +302,9 @@ body {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -677,51 +680,283 @@ body {
     color: var(--warning);
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .main {
-        margin-left: 0;
-        padding: 20px;
-    }
-    
+/* =========================================
+   MOBILE RESPONSIVE DESIGN
+   ========================================= */
+
+/* Default: Hide mobile-only elements on desktop */
+.menu-toggle {
+    display: none;
+}
+
+.menu-overlay {
+    display: none;
+}
+
+/* ===== TABLET (max-width: 1024px) ===== */
+@media screen and (max-width: 1024px) {
     .sidebar {
-        transform: translateX(-100%);
-        width: 300px;
+        width: 240px;
     }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .menu-toggle {
-        display: block;
+
+    .main {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        max-width: calc(100vw - 240px);
     }
 }
 
-@media (max-width: 768px) {
+/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
+@media screen and (max-width: 768px) {
+    
+    /* Show Mobile Menu Toggle Button - Golden & Bottom-Right */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
+        color: var(--primary);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        z-index: 1001;
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    /* Sidebar: Hidden by default on mobile */
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+        width: 280px;
+    }
+
+    /* Sidebar: Show when active */
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Overlay: Show when menu is open */
+    .menu-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+        backdrop-filter: blur(2px);
+    }
+
+    body.menu-open .menu-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Main Content: Full width on mobile */
+    .main {
+        margin-left: 0;
+        padding: 20px 15px;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    /* Topbar: Stack vertically */
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .user-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* Page Header: Stack vertically */
     .page-header {
         flex-direction: column;
         gap: 20px;
-        text-align: center;
+        align-items: flex-start;
     }
-    
+
     .action-buttons {
+        width: 100%;
         flex-wrap: wrap;
+    }
+
+    .btn {
+        flex: 1;
         justify-content: center;
     }
-    
+
+    /* Profile Card: Stack vertically */
     .profile-card {
         flex-direction: column;
         text-align: center;
     }
-    
+
+    .profile-info {
+        min-width: auto;
+    }
+
+    /* Stats Grid: 2 columns */
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
+    /* Info Grid: Single column */
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Team Display: Stack vertically */
     .team-display {
         flex-direction: column;
         text-align: center;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    
+    /* Reduce font sizes */
+    .greeting h1 {
+        font-size: 20px;
+    }
+    
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .page-title i {
+        font-size: 24px;
+    }
+
+    /* Compact sidebar */
+    .sidebar {
+        width: 260px;
+    }
+
+    .sidebar-header {
+        padding: 20px 15px;
+    }
+
+    .logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .logo::before {
+        font-size: 36px;
+    }
+
+    .academy-name {
+        font-size: 18px;
+    }
+    
+    /* Compact menu */
+    .menu {
+        padding: 20px 10px;
+    }
+
+    .menu-link {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+
+    .menu-icon {
+        font-size: 20px;
+        width: 28px;
+    }
+
+    /* Smaller mobile toggle button */
+    .menu-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+        bottom: 20px;
+        right: 20px;
+    }
+
+    /* Compact buttons */
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    /* Profile adjustments */
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        font-size: 48px;
+    }
+
+    .profile-name {
+        font-size: 24px;
+    }
+
+    .profile-username {
+        font-size: 16px;
+    }
+
+    /* Stats Grid: Single column on very small screens */
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-number {
+        font-size: 16px !important;
+    }
+
+    /* Team display adjustments */
+    .team-logo-placeholder {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .team-name {
+        font-size: 20px;
+    }
+
+    .team-alias {
+        font-size: 16px;
     }
 }
 
@@ -741,54 +976,12 @@ body {
         transform: translateY(0);
     }
 }
-
-/* Menu Toggle Button */
-.menu-toggle {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 101;
-    background: var(--primary);
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    transition: var(--transition);
-}
-
-.menu-toggle:hover {
-    background: var(--secondary);
-    color: var(--primary);
-    transform: rotate(90deg);
-}
-
-/* Mobile Styles */
-@media (max-width: 1200px) {
-    .menu-toggle {
-        display: block;
-    }
-    
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .main {
-        margin-left: 0;
-    }
-}
 </style>
 </head>
 <body>
 
+<!-- Mobile Menu Components -->
+<div class="menu-overlay" id="menuOverlay"></div>
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
@@ -1188,20 +1381,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle sidebar untuk mobile
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
+    const menuOverlay = document.getElementById('menuOverlay');
     
-    menuToggle.addEventListener('click', function() {
+    menuToggle.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent click from bubbling to document
         sidebar.classList.toggle('active');
+        document.body.classList.toggle('menu-open');
         this.innerHTML = sidebar.classList.contains('active') 
             ? '<i class="fas fa-times"></i>' 
             : '<i class="fas fa-bars"></i>';
     });
     
+    // Close menu when clicking overlay
+    menuOverlay.addEventListener('click', function() {
+        sidebar.classList.remove('active');
+        document.body.classList.remove('menu-open');
+        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    });
+    
     // Auto close sidebar when clicking outside on mobile
     document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 1200) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-                sidebar.classList.remove('active');
-                menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        if (window.innerWidth <= 768) {
+            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && !menuOverlay.contains(e.target)) {
+                if (sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                }
             }
         }
     });
