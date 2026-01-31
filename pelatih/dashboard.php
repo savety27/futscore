@@ -10,6 +10,11 @@ $team_name = 'Unknown Team';
 
 if ($team_id) {
     try {
+        // Get Team Name
+        $stmt = $conn->prepare("SELECT name FROM teams WHERE id = ?");
+        $stmt->execute([$team_id]);
+        $team_name = $stmt->fetchColumn() ?: 'Unknown Team';
+
         // Get Player Count
         $stmt = $conn->prepare("SELECT COUNT(*) FROM players WHERE team_id = ?");
         $stmt->execute([$team_id]);
@@ -17,6 +22,7 @@ if ($team_id) {
 
     } catch (PDOException $e) {
         $player_count = 0;
+        $team_name = 'Unknown Team';
     }
 }
 ?>
