@@ -1278,13 +1278,6 @@ tbody tr:hover {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Username Login</span>
-                    <div class="info-value">
-                        <?php echo !empty($staff_data['username']) ? htmlspecialchars($staff_data['username']) : '-'; ?>
-                    </div>
-                </div>
-                
-                <div class="info-item">
                     <span class="info-label">Status</span>
                     <div class="info-value">
                         <?php if ($staff_data['is_active']): ?>
