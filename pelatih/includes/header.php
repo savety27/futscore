@@ -92,7 +92,7 @@ if ($team_id && isset($conn)) {
             </div>
 
              <div class="menu-item">
-                <a href="#" class="menu-link <?php echo $current_page === 'schedule' ? 'active' : ''; ?>">
+                <a href="schedule.php" class="menu-link <?php echo $current_page === 'schedule' ? 'active' : ''; ?>">
                     <span class="menu-icon">📅</span>
                     <span class="menu-text">Schedule</span>
                 </a>
