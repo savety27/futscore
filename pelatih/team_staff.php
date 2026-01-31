@@ -92,6 +92,17 @@ try {
 }
 ?>
 
+<!-- Modal untuk menampilkan sertifikat -->
+<div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
+    <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; position: relative;">
+        <span class="close-modal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: var(--danger);">&times;</span>
+        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Certificates</h3>
+        <div id="certificatesList" style="max-height: 400px; overflow-y: auto;">
+            <!-- Daftar sertifikat akan dimuat di sini -->
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Team Staff</h2>
@@ -124,7 +135,8 @@ try {
                     <?php foreach ($staff_list as $staff): ?>
                     <tr>
                          <td>
-                            <img src="../images/staff/<?php echo $staff['photo']; ?>" alt="<?php echo $staff['name']; ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
+                            <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
+                            alt="<?php echo htmlspecialchars($staff['name']); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
                         </td>
                         <td class="name-cell">
                             <?php echo htmlspecialchars($staff['name']); ?>
@@ -136,7 +148,16 @@ try {
                         </td>
                         <td class="age-cell"><?php echo $staff['age']; ?></td>
                         <td class="certificate-cell">
-                             <span class="certificate-count"><?php echo $staff['certificate_count']; ?> Certs</span>
+                            <a href="javascript:void(0);" 
+                            class="view-certificates" 
+                            data-staff-id="<?php echo $staff['id']; ?>"
+                            data-staff-name="<?php echo htmlspecialchars($staff['name']); ?>"
+                            style="text-decoration: none;">
+                                <span class="certificate-count clickable" style="cursor: pointer; position: relative; padding-right: 20px;">
+                        <?php echo $staff['certificate_count']; ?> Certs
+                                <span style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%);">▶</span>
+                            </span>
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -163,5 +184,116 @@ try {
 
     <?php endif; ?>
 </div>
+
+<script>
+// JavaScript untuk menangani modal sertifikat
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('certificatesModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const certificatesList = document.getElementById('certificatesList');
+    const closeModal = document.querySelector('.close-modal');
+    const viewCertificatesLinks = document.querySelectorAll('.view-certificates');
+    
+    // Fungsi untuk menutup modal
+    function closeCertificateModal() {
+        modal.style.display = 'none';
+    }
+    
+    // Event listener untuk tombol close
+    closeModal.addEventListener('click', closeCertificateModal);
+    
+    // Event listener untuk klik di luar modal
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeCertificateModal();
+        }
+    });
+    
+    // Event listener untuk setiap link sertifikat
+    viewCertificatesLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+            const staffId = this.getAttribute('data-staff-id');
+            const staffName = this.getAttribute('data-staff-name');
+            
+            // Set judul modal
+            modalTitle.textContent = 'Certificates - ' + staffName;
+            
+            // Tampilkan loading
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Loading certificates...</p></div>';
+            
+            // Tampilkan modal
+            modal.style.display = 'block';
+            
+            // Load sertifikat via AJAX
+            loadCertificates(staffId);
+        });
+    });
+    
+    // Fungsi untuk memuat sertifikat via AJAX
+    function loadCertificates(staffId) {
+        // Buat objek XMLHttpRequest
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'get_certificates.php?staff_id=' + staffId, true);
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                certificatesList.innerHTML = xhr.responseText;
+            } else {
+                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Error loading certificates</p></div>';
+            }
+        };
+        
+        xhr.onerror = function() {
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Network error</p></div>';
+        };
+        
+        xhr.send();
+    }
+});
+</script>
+
+<style>
+/* Styling untuk modal */
+.modal-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Styling untuk daftar sertifikat */
+.certificate-item {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background: #f8f9fa;
+}
+
+.certificate-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 10px;
+    border: 2px solid #ddd;
+}
+
+.certificate-info {
+    margin-bottom: 10px;
+}
+
+.certificate-info h4 {
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.certificate-info p {
+    color: var(--gray);
+    font-size: 14px;
+    margin: 3px 0;
+}
+</style>
 
 <?php require_once 'includes/footer.php'; ?>
