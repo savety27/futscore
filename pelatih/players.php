@@ -330,16 +330,21 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.skill-score').forEach(score => {
         const skillValue = parseFloat(score.textContent);
         
-        // Data extraction
+        // Data extraction - FIXED: Handled 0 correctly
+        const getSkillBase = (attr) => {
+            const val = score.getAttribute(attr);
+            return (val !== null && val !== "") ? parseInt(val) : 5;
+        };
+        
         const data = {
-            dribbling: parseInt(score.getAttribute('data-dribbling')) || 5,
-            technique: parseInt(score.getAttribute('data-technique')) || 5,
-            speed: parseInt(score.getAttribute('data-speed')) || 5,
-            juggling: parseInt(score.getAttribute('data-juggling')) || 5,
-            shooting: parseInt(score.getAttribute('data-shooting')) || 5,
-            setplay: parseInt(score.getAttribute('data-setplay')) || 5,
-            passing: parseInt(score.getAttribute('data-passing')) || 5,
-            control: parseInt(score.getAttribute('data-control')) || 5
+            dribbling: getSkillBase('data-dribbling'),
+            technique: getSkillBase('data-technique'),
+            speed: getSkillBase('data-speed'),
+            juggling: getSkillBase('data-juggling'),
+            shooting: getSkillBase('data-shooting'),
+            setplay: getSkillBase('data-setplay'),
+            passing: getSkillBase('data-passing'),
+            control: getSkillBase('data-control')
         };
         
         const row = score.closest('tr');
