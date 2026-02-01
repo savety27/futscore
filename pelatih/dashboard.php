@@ -366,9 +366,9 @@ if ($team_id) {
 <div class="dashboard-container">
     <!-- Header Section -->
     <div class="dashboard-hero reveal">
-        <span class="hero-label">Tactical Dashboard</span>
-        <h1 class="hero-title">Team Management Center</h1>
-        <p class="hero-description">Oversee squad performance, upcoming fixtures, and management staff. Real-time updates for the current active season.</p>
+        <span class="hero-label">Dasbor Taktis</span>
+        <h1 class="hero-title">Pusat Manajemen Tim</h1>
+        <p class="hero-description">Pantau performa skuad, jadwal pertandingan mendatang, dan staf manajemen. Pembaruan waktu nyata untuk musim aktif saat ini.</p>
     </div>
 
     <!-- Quick Stats -->
@@ -378,7 +378,7 @@ if ($team_id) {
             <div class="card-top">
                 <div class="card-icon-box">
                     <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team" style="width: 32px; height: 32px; object-fit: contain;">
+                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Tim" style="width: 32px; height: 32px; object-fit: contain;">
                     <?php else: ?>
                         <i class="fas fa-shield"></i>
                     <?php endif; ?>
@@ -386,7 +386,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value" style="font-size: 1.5rem;"><?php echo htmlspecialchars($team_name); ?></div>
-                <div class="card-label">Primary Squad</div>
+                <div class="card-label">Tim Utama</div>
             </div>
         </div>
 
@@ -397,7 +397,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value"><?php echo $player_count; ?></div>
-                <div class="card-label">Total Players</div>
+                <div class="card-label">Total Pemain</div>
             </div>
         </div>
 
@@ -408,7 +408,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value"><?php echo $staff_count; ?></div>
-                <div class="card-label">Team Officials</div>
+                <div class="card-label">Ofisial Tim</div>
             </div>
         </div>
 
@@ -419,7 +419,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value"><?php echo $wins; ?></div>
-                <div class="card-label">Total Wins</div>
+                <div class="card-label">Total Kemenangan</div>
             </div>
         </div>
     </div>
@@ -433,7 +433,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value"><?php echo $losses; ?></div>
-                <div class="card-label">Total Losses</div>
+                <div class="card-label">Total Kekalahan</div>
             </div>
         </div>
 
@@ -444,7 +444,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value"><?php echo $draws; ?></div>
-                <div class="card-label">Matches Drawn</div>
+                <div class="card-label">Hasil Seri</div>
             </div>
         </div>
     </div>
@@ -452,7 +452,7 @@ if ($team_id) {
     <!-- Match Spotlight -->
     <div class="match-spotlight reveal" style="animation-delay: 0.6s;">
         <div class="section-header">
-            <h2 class="section-title">Upcoming Fixture</h2>
+            <h2 class="section-title">Pertandingan Mendatang</h2>
             <div class="section-line"></div>
         </div>
 
@@ -488,28 +488,28 @@ if ($team_id) {
 
                 <div class="match-footer">
                     <div class="info-group">
-                        <div class="info-label">Kickoff Date</div>
+                        <div class="info-label">Tanggal Kickoff</div>
                         <div class="info-data"><?php echo $match_date->format('l, d M Y'); ?></div>
                     </div>
                     <div class="info-group">
-                        <div class="info-label">Match Time</div>
+                        <div class="info-label">Waktu Pertandingan</div>
                         <div class="info-data"><?php echo $match_date->format('H:i'); ?> WIB</div>
                     </div>
                     <div class="info-group">
-                        <div class="info-label">Venue Location</div>
-                        <div class="info-data"><?php echo htmlspecialchars($next_match['location'] ?: 'To be announced'); ?></div>
+                        <div class="info-label">Lokasi Stadion</div>
+                        <div class="info-data"><?php echo htmlspecialchars($next_match['location'] ?: 'Akan diumumkan'); ?></div>
                     </div>
                 </div>
                 
                 <div style="padding: 15px; text-align: center; background: var(--premium-accent); color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
-                    <?php echo htmlspecialchars($next_match['event_name'] ?: 'Official League Match'); ?>
+                    <?php echo htmlspecialchars($next_match['event_name'] ?: 'Pertandingan Liga Resmi'); ?>
                 </div>
             </div>
         <?php else: ?>
             <div class="empty-state-light">
                 <i class="far fa-calendar-times"></i>
-                <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">No Scheduled Matches</h3>
-                <p style="color: var(--premium-text-muted);">The team is currently in a rest period between match operations.</p>
+                <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">Tidak Ada Pertandingan Terjadwal</h3>
+                <p style="color: var(--premium-text-muted);">Tim saat ini sedang dalam masa istirahat di antara jadwal pertandingan.</p>
             </div>
         <?php endif; ?>
     </div>
