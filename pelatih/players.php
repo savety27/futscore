@@ -818,84 +818,153 @@ if ($team_id) {
 .data-table tbody tr:nth-child(9) { animation-delay: 0.9s; }
 .data-table tbody tr:nth-child(10) { animation-delay: 1.0s; }
 
-/* Custom Tooltip */
+/* Custom Tooltip - Premium Design */
 .custom-tooltip {
     position: absolute;
-    background: rgba(0, 0, 0, 0.95);
+    background: rgba(20, 25, 40, 0.95);
     color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
+    padding: 0;
+    border-radius: 16px;
     font-size: 13px;
-    line-height: 1.5;
     z-index: 10000;
     pointer-events: none;
-    white-space: pre-line;
-    max-width: 320px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.15);
-    animation: tooltipFadeIn 0.2s ease-out;
+    width: 300px;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+        0 10px 30px -5px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-.custom-tooltip::before {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 10px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
+.custom-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.tooltip-header {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tooltip-player-info h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.01em;
+}
+
+.tooltip-player-info span {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.tooltip-rating-badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4ade80; /* Default green, updated via JS */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-body {
+    padding: 16px 20px;
 }
 
 .skill-details {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    margin-top: 10px;
+}
+
+.skill-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 }
 
 .skill-item {
     display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.skill-header {
+    display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 3px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.skill-name {
-    font-weight: 500;
-    color: #e0e0e0;
-}
-
-.skill-value {
+    font-size: 11px;
     font-weight: 600;
-    color: #fff;
+    color: #cbd5e1;
 }
 
-.skill-bar {
-    width: 80px;
+.skill-track {
     height: 6px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 3px;
     overflow: hidden;
-    margin-left: 10px;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .skill-progress {
     height: 100%;
     border-radius: 3px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-@keyframes tooltipFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Add shimmer effect to high stats */
+.skill-progress.high-stat::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(255,255,255,0.4), 
+        transparent
+    );
+    transform: translateX(-100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+
+.tooltip-footer {
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+}
+
+.overall-text {
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.overall-value {
+    color: #fff;
+    font-weight: 700;
 }
 
 /* Responsive */
@@ -941,8 +1010,7 @@ if ($team_id) {
     }
     
     .custom-tooltip {
-        max-width: 280px;
-        font-size: 12px;
+        width: 280px;
     }
 }
 
@@ -979,235 +1047,204 @@ if ($team_id) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize skill scores with data attributes
+    // Initialize skill scores
     document.querySelectorAll('.skill-score').forEach(score => {
         const skillValue = parseFloat(score.textContent);
-        const roundedValue = Math.round(skillValue);
-        score.setAttribute('data-score', roundedValue);
         
-        // Get ALL skill data from data attributes
-        const dribbling = parseInt(score.getAttribute('data-dribbling')) || 5;
-        const technique = parseInt(score.getAttribute('data-technique')) || 5;
-        const speed = parseInt(score.getAttribute('data-speed')) || 5;
-        const juggling = parseInt(score.getAttribute('data-juggling')) || 5;
-        const shooting = parseInt(score.getAttribute('data-shooting')) || 5;
-        const setplay = parseInt(score.getAttribute('data-setplay')) || 5;
-        const passing = parseInt(score.getAttribute('data-passing')) || 5;
-        const control = parseInt(score.getAttribute('data-control')) || 5;
+        // Data extraction
+        const data = {
+            dribbling: parseInt(score.getAttribute('data-dribbling')) || 5,
+            technique: parseInt(score.getAttribute('data-technique')) || 5,
+            speed: parseInt(score.getAttribute('data-speed')) || 5,
+            juggling: parseInt(score.getAttribute('data-juggling')) || 5,
+            shooting: parseInt(score.getAttribute('data-shooting')) || 5,
+            setplay: parseInt(score.getAttribute('data-setplay')) || 5,
+            passing: parseInt(score.getAttribute('data-passing')) || 5,
+            control: parseInt(score.getAttribute('data-control')) || 5
+        };
         
         const row = score.closest('tr');
         const name = row.querySelector('.name-cell strong').textContent;
         const position = row.querySelector('.position-badge').textContent;
+        const positionClass = row.querySelector('.position-badge').className;
         
-        // Get skill color based on value
-        function getSkillColor(value) {
-            if (value >= 9) return '#4CAF50';
-            if (value >= 7) return '#8BC34A';
-            if (value >= 6) return '#CDDC39';
-            if (value >= 5) return '#FFC107';
-            if (value >= 4) return '#FF9800';
-            if (value >= 3) return '#FF5722';
-            return '#f44336';
+        // Advanced Colors
+        const colors = {
+            9: ['#10b981', '#059669'], // Emerald
+            8: ['#84cc16', '#65a30d'], // Lime
+            7: ['#facc15', '#eab308'], // Yellow
+            6: ['#fbbf24', '#d97706'], // Amber
+            5: ['#f97316', '#ea580c'], // Orange
+            4: ['#ef4444', '#dc2626'], // Red
+            3: ['#ec4899', '#db2777'], // Pink
+            1: ['#a855f7', '#9333ea'], // Purple
+        };
+
+        function getGradient(value) {
+            const level = Math.floor(value);
+            const palette = colors[level] || (value >= 9 ? colors[9] : colors[1]);
+            return `linear-gradient(90deg, ${palette[0]}, ${palette[1]})`;
         }
         
-        // Build tooltip content with ALL skills
-        let tooltipContent = `
-            <div style="text-align: center; margin-bottom: 10px;">
-                <strong style="font-size: 14px; color: #fff;">${name}</strong><br>
-                <span style="color: #bbb; font-size: 12px;">${position}</span>
+        function getColor(value) {
+             if (value >= 9) return '#10b981';
+             if (value >= 7) return '#84cc16';
+             if (value >= 6) return '#facc15';
+             if (value >= 5) return '#f97316';
+             return '#ef4444';
+        }
+
+        const overallColor = getColor(skillValue);
+
+        // Build premium tooltip
+        let tooltipHTML = `
+            <div class="tooltip-header">
+                <div class="tooltip-player-info">
+                    <h4>${name}</h4>
+                    <span>${position}</span>
+                </div>
+                <div class="tooltip-rating-badge" style="color: ${overallColor}; border-color: ${overallColor}40; background: ${overallColor}10;">
+                    ${skillValue.toFixed(1)}
+                </div>
             </div>
-            <div class="skill-details">
+            <div class="tooltip-body">
+                <div class="skill-details">
         `;
         
-        // Add all skills to tooltip
-        const skills = [
-            { name: 'Dribbling', value: dribbling, color: getSkillColor(dribbling) },
-            { name: 'Technique', value: technique, color: getSkillColor(technique) },
-            { name: 'Speed', value: speed, color: getSkillColor(speed) },
-            { name: 'Juggling', value: juggling, color: getSkillColor(juggling) },
-            { name: 'Shooting', value: shooting, color: getSkillColor(shooting) },
-            { name: 'Set Play', value: setplay, color: getSkillColor(setplay) },
-            { name: 'Passing', value: passing, color: getSkillColor(passing) },
-            { name: 'Control', value: control, color: getSkillColor(control) }
+        // Define skill pairs for grid layout
+        const skillPairs = [
+            [{n:'Dribbling', v:data.dribbling}, {n:'Control', v:data.control}],
+            [{n:'Passing', v:data.passing}, {n:'Shooting', v:data.shooting}],
+            [{n:'Speed', v:data.speed}, {n:'Technique', v:data.technique}],
+            [{n:'Set Play', v:data.setplay}, {n:'Juggling', v:data.juggling}]
         ];
         
-        skills.forEach(skill => {
-            tooltipContent += `
-                <div class="skill-item">
-                    <span class="skill-name">${skill.name}</span>
-                    <div style="display: flex; align-items: center;">
-                        <span class="skill-value">${skill.value}/10</span>
-                        <div class="skill-bar">
-                            <div class="skill-progress" style="width: ${skill.value * 10}%; background: ${skill.color};"></div>
+        skillPairs.forEach(pair => {
+            tooltipHTML += `<div class="skill-row">`;
+            pair.forEach(skill => {
+                const gradient = getGradient(skill.v);
+                const isHigh = skill.v >= 8 ? 'high-stat' : '';
+                tooltipHTML += `
+                    <div class="skill-item">
+                        <div class="skill-header">
+                            <span>${skill.n}</span>
+                            <span>${skill.v}</span>
+                        </div>
+                        <div class="skill-track">
+                            <div class="skill-progress ${isHigh}" style="width: ${skill.v * 10}%; background: ${gradient};"></div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            });
+            tooltipHTML += `</div>`;
         });
         
-        tooltipContent += `
+        tooltipHTML += `
+                </div>
             </div>
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); text-align: center;">
-                <strong style="color: #4CAF50; font-size: 14px;">Overall Rating: ${skillValue.toFixed(1)}/10</strong>
+            <div class="tooltip-footer">
+                <div class="overall-text">
+                    OVERALL RATING <span class="overall-value" style="color: ${overallColor}">${skillValue.toFixed(1)}</span>
+                </div>
             </div>
         `;
         
-        // Store tooltip content
-        score.setAttribute('data-full-tooltip', tooltipContent);
+        score.setAttribute('data-full-tooltip', tooltipHTML);
         
-        // Add event listeners for tooltip
-        score.addEventListener('mouseenter', showSkillTooltip);
-        score.addEventListener('mouseleave', hideSkillTooltip);
-        score.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showSkillTooltip(e);
-        });
-        
-        // Add touch support for mobile
-        score.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            showSkillTooltip(e);
-        });
+        // Listeners
+        score.addEventListener('mouseenter', showTooltip);
+        score.addEventListener('mouseleave', hideTooltip);
+        // Mobile touch
+        score.addEventListener('touchstart', (e) => {
+             // toggle check for mobile
+             if(tooltip && tooltip._source === score) {
+                 hideTooltip();
+             } else {
+                 showTooltip(e);
+             }
+        }, {passive: true});
     });
     
-    // Add gender data attributes for styling
-    document.querySelectorAll('.gender-cell').forEach(cell => {
-        const gender = cell.getAttribute('data-gender');
-        if (gender) {
-            cell.setAttribute('data-gender', gender);
-        }
-    });
-    
-    // Position badge styling
-    document.querySelectorAll('.position-badge').forEach(badge => {
-        const position = badge.getAttribute('data-position');
-        if (position) {
-            badge.setAttribute('data-position', position);
-        }
-    });
-    
-    // Tooltip functions
+    // Global Tooltip Management
     let tooltip = null;
     let tooltipTimeout = null;
-    
-    function showSkillTooltip(e) {
-        // Clear any existing timeout
-        if (tooltipTimeout) {
-            clearTimeout(tooltipTimeout);
-            tooltipTimeout = null;
-        }
+
+    function showTooltip(e) {
+        if (tooltipTimeout) clearTimeout(tooltipTimeout);
+        if (tooltip) tooltip.remove();
+
+        const target = e.currentTarget;
+        const html = target.getAttribute('data-full-tooltip');
         
-        // Remove existing tooltip
-        if (tooltip) {
-            tooltip.remove();
-            tooltip = null;
-        }
-        
-        // Create new tooltip
         tooltip = document.createElement('div');
         tooltip.className = 'custom-tooltip';
-        tooltip.innerHTML = e.target.getAttribute('data-full-tooltip');
+        tooltip.innerHTML = html;
+        tooltip._source = target; // Track source for toggle logic
         
-        // Position tooltip
-        const rect = e.target.getBoundingClientRect();
-        tooltip.style.position = 'fixed';
-        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-        tooltip.style.top = (rect.top - 10) + 'px';
-        tooltip.style.transform = 'translate(-50%, -100%)';
-        
-        // Add to document
         document.body.appendChild(tooltip);
         
-        // Adjust position if tooltip goes off screen
-        setTimeout(() => {
-            if (tooltip) {
-                const tooltipRect = tooltip.getBoundingClientRect();
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                
-                // Check if tooltip goes off left side
-                if (tooltipRect.left < 10) {
-                    tooltip.style.left = (rect.left + rect.width) + 'px';
-                    tooltip.style.transform = 'translate(0, -100%)';
-                }
-                
-                // Check if tooltip goes off right side
-                if (tooltipRect.right > viewportWidth - 10) {
-                    tooltip.style.left = rect.left + 'px';
-                    tooltip.style.transform = 'translate(-100%, -100%)';
-                }
-                
-                // Check if tooltip goes off top
-                if (tooltipRect.top < 10) {
-                    tooltip.style.top = (rect.bottom + 10) + 'px';
-                    tooltip.style.transform = 'translate(-50%, 0)';
-                    
-                    // Also adjust arrow
-                    tooltip.style.setProperty('--tooltip-arrow', 'none');
-                }
-                
-                // Check if tooltip goes off bottom
-                if (tooltipRect.bottom > viewportHeight - 10 && tooltipRect.top > 10) {
-                    tooltip.style.top = (rect.top - tooltipRect.height - 10) + 'px';
-                    tooltip.style.transform = 'translate(-50%, 0)';
-                }
-            }
-        }, 0);
+        // Position Logic
+        const rect = target.getBoundingClientRect();
+        const tipRect = tooltip.getBoundingClientRect(); // will be 0 height initially if hidden? No, opacity 0 still has dims
+        
+        // Force a reflow or simply position it
+        // We set it fixed
+        
+        /* 
+           Position: Try Top Center. If clip, try Bottom.
+           Left/Right clipping logic included.
+        */
+        
+        const spacing = 12;
+        let top = rect.top - tooltip.offsetHeight - spacing;
+        let left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+        
+        // Vertical Bounds
+        if (top < 10) {
+            top = rect.bottom + spacing; // Flip to bottom
+            tooltip.style.transformOrigin = 'top center';
+        } else {
+             tooltip.style.transformOrigin = 'bottom center';
+        }
+        
+        // Horizontal Bounds
+        if (left < 10) left = 10;
+        if (left + tooltip.offsetWidth > window.innerWidth - 10) {
+            left = window.innerWidth - tooltip.offsetWidth - 10;
+        }
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.position = 'fixed';
+        
+        // Trigger Animation
+        requestAnimationFrame(() => {
+            tooltip.classList.add('visible');
+        });
     }
-    
-    function hideSkillTooltip() {
-        // Delay hiding to allow moving cursor to tooltip
-        tooltipTimeout = setTimeout(() => {
-            if (tooltip) {
-                tooltip.remove();
-                tooltip = null;
-            }
-            tooltipTimeout = null;
-        }, 300);
-    }
-    
-    // Prevent tooltip from hiding when hovering over it
-    document.addEventListener('mouseover', function(e) {
-        if (tooltip && tooltip.contains(e.target)) {
-            if (tooltipTimeout) {
-                clearTimeout(tooltipTimeout);
-                tooltipTimeout = null;
-            }
-        }
-    });
-    
-    // Close tooltip when clicking elsewhere
-    document.addEventListener('click', function(e) {
-        if (!e.target.classList.contains('skill-score') && 
-            !e.target.closest('.custom-tooltip') && 
-            tooltip) {
-            if (tooltip) {
-                tooltip.remove();
-                tooltip = null;
-            }
-        }
-    });
-    
-    // Close tooltip on escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && tooltip) {
-            tooltip.remove();
-            tooltip = null;
-        }
-    });
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
+
+    function hideTooltip() {
         if (tooltip) {
-            tooltip.remove();
-            tooltip = null;
+            tooltip.classList.remove('visible');
+            tooltipTimeout = setTimeout(() => {
+                if(tooltip && !tooltip.classList.contains('visible')) {
+                    tooltip.remove();
+                    tooltip = null;
+                }
+            }, 200); // Matches CSS transition duration
         }
+    }
+    
+    // existing gender/position badge standardizing
+    document.querySelectorAll('.gender-cell, .position-badge').forEach(el => {
+        const type = el.classList.contains('gender-cell') ? 'gender' : 'position';
+        const val = el.getAttribute(`data-${type}`);
+        if(val) el.setAttribute(`data-${type}`, val);
     });
 });
 
-// Delete confirmation with SweetAlert2
+// Delete confirmation with SweetAlert2 (Preserved)
 function confirmDelete(playerName) {
-    // Check if SweetAlert2 is available
     if (typeof Swal !== 'undefined') {
         return new Promise((resolve) => {
             Swal.fire({
@@ -1244,12 +1281,11 @@ function confirmDelete(playerName) {
             });
         });
     } else {
-        // Fallback to native confirm
         return confirm(`Are you sure you want to delete "${playerName}"?\nThis action cannot be undone.`);
     }
 }
 
-// Add SweetAlert2 styles
+// Add SweetAlert2 styles (Preserved)
 const style = document.createElement('style');
 style.textContent = `
 .swal-delete-btn {
@@ -1292,42 +1328,8 @@ style.textContent = `
     font-size: 24px !important;
     margin-bottom: 20px !important;
 }
-
-/* Debug photo paths */
-.photo-debug {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 12px;
-    z-index: 9999;
-}
 `;
 document.head.appendChild(style);
-
-// Debug function to check photo paths
-function debugPhotoPaths() {
-    const debugDiv = document.createElement('div');
-    debugDiv.className = 'photo-debug';
-    debugDiv.innerHTML = '<strong>Photo Debug:</strong><br>';
-    
-    document.querySelectorAll('.player-photo img').forEach((img, index) => {
-        debugDiv.innerHTML += `Player ${index + 1}: ${img.src}<br>`;
-    });
-    
-    document.body.appendChild(debugDiv);
-    
-    // Remove after 10 seconds
-    setTimeout(() => {
-        debugDiv.remove();
-    }, 10000);
-}
-
-// Uncomment to debug photo paths
-// debugPhotoPaths();
 </script>
 
 <!-- Add SweetAlert2 for better delete confirmation -->
