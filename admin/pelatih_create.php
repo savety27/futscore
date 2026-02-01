@@ -86,7 +86,7 @@ $form_data = [
     'password' => '',
     'confirm_password' => '',
     'full_name' => '',
-    'role' => 'admin',
+    'role' => 'pelatih',
     'team_id' => '',
     'is_active' => 1
 ];
@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Jika role bukan superadmin, validasi team_id
     if ($form_data['role'] !== 'superadmin' && empty($form_data['team_id'])) {
-        $errors['team_id'] = "Tim harus dipilih untuk role admin";
+        $errors['team_id'] = "Tim harus dipilih untuk role pelatih";
     }
     
     // If no errors, insert to database
@@ -1260,11 +1260,11 @@ body {
                                 Role <span class="required">*</span>
                             </label>
                             <select id="role" name="role" class="form-select" required>
-                                <option value="admin" <?php echo $form_data['role'] == 'admin' ? 'selected' : ''; ?>>Admin</option>
+                                <option value="pelatih" <?php echo $form_data['role'] == 'pelatih' ? 'selected' : ''; ?>>Pelatih</option>
                                 <option value="superadmin" <?php echo $form_data['role'] == 'superadmin' ? 'selected' : ''; ?>>Super Admin</option>
                             </select>
                             <small style="color: #666; display: block; margin-top: 5px;">
-                                Super Admin memiliki akses penuh, Admin memiliki akses terbatas
+                                Super Admin memiliki akses penuh, Pelatih memiliki akses terbatas pada tim
                             </small>
                         </div>
                         
@@ -1293,7 +1293,7 @@ body {
                                 <span class="error"><?php echo $errors['team_id']; ?></span>
                             <?php endif; ?>
                             <small style="color: #666; display: block; margin-top: 5px;">
-                                Pilih tim untuk admin. Super Admin tidak perlu memilih tim.
+                                Pilih tim untuk pelatih. Super Admin tidak perlu memilih tim.
                             </small>
                         </div>
                     </div>
@@ -1486,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (role !== 'superadmin' && !teamId) {
-            markError('team_id', 'Tim harus dipilih untuk role admin');
+            markError('team_id', 'Tim harus dipilih untuk role pelatih');
             hasError = true;
         }
 

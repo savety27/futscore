@@ -484,7 +484,7 @@ body {
     color: white;
 }
 
-.role-editor {
+.role-editor, .role-pelatih {
     background: linear-gradient(135deg, var(--warning), #FFD166);
     color: var(--dark);
 }
@@ -1096,10 +1096,8 @@ body {
                     <?php 
                     if ($pelatih_data['role'] === 'superadmin') {
                         echo 'Super Admin';
-                    } elseif ($pelatih_data['role'] === 'admin') {
-                        echo 'Admin';
                     } else {
-                        echo 'Editor';
+                        echo 'Pelatih';
                     }
                     ?>
                 </div>
@@ -1254,10 +1252,8 @@ body {
                             <?php 
                             if ($pelatih_data['role'] === 'superadmin') {
                                 echo 'Super Admin';
-                            } elseif ($pelatih_data['role'] === 'admin') {
-                                echo 'Admin';
                             } else {
-                                echo 'Editor';
+                                echo 'Pelatih';
                             }
                             ?>
                         </span>

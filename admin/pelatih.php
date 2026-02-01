@@ -604,7 +604,7 @@ body {
     color: white;
 }
 
-.role-editor {
+.role-editor, .role-pelatih {
     background: linear-gradient(135deg, var(--warning), #FFD166);
     color: var(--dark);
 }
@@ -1220,10 +1220,8 @@ body {
                             <td class="role-cell">
                                 <?php if ($p['role'] === 'superadmin'): ?>
                                     <span class="role-badge role-superadmin">Super Admin</span>
-                                <?php elseif ($p['role'] === 'admin'): ?>
-                                    <span class="role-badge role-admin">Admin</span>
                                 <?php else: ?>
-                                    <span class="role-badge role-editor">Editor</span>
+                                    <span class="role-badge role-pelatih">Pelatih</span>
                                 <?php endif; ?>
                             </td>
                             <td class="team-cell">
