@@ -82,16 +82,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $passing = (int)($_POST['passing'] ?? 5);
         $control = (int)($_POST['control'] ?? 5);
         
-        // Validate required fields
-        if (empty($name) || empty($jersey_number) || empty($position) || 
-            empty($birth_date) || empty($birth_place) || empty($gender) || 
-            empty($nik) || empty($sport_type)) {
-            throw new Exception('All required fields must be filled.');
-        }
-        
-        // Validate NIK
-        if (!preg_match('/^[0-9]{16}$/', $nik)) {
-            throw new Exception('NIK must be exactly 16 digits.');
+        // Validate required fields (ONLY for add/edit)
+        if ($action === 'add' || $action === 'edit') {
+            if (empty($name) || empty($jersey_number) || empty($position) || 
+                empty($birth_date) || empty($birth_place) || empty($gender) || 
+                empty($nik) || empty($sport_type)) {
+                throw new Exception('All required fields must be filled.');
+            }
+            
+            // Validate NIK
+            if (!preg_match('/^[0-9]{16}$/', $nik)) {
+                throw new Exception('NIK must be exactly 16 digits.');
+            }
         }
         
         // --- ADD PLAYER ---
@@ -287,12 +289,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             exit;
         }
-        
     } catch (Exception $e) {
         // Redirect back with error message
         $error_msg = urlencode($e->getMessage());
-        $redirect_url = ($action === 'add') ? 'player_form.php' : 'player_form.php?id=' . ($_POST['id'] ?? '');
-        header("Location: $redirect_url?error=$error_msg");
+        
+        if ($action === 'add') {
+            $redirect_url = 'player_form.php?error=' . $error_msg;
+        } elseif ($action === 'edit') {
+            $player_id = $_POST['id'] ?? '';
+            $redirect_url = "player_form.php?id=$player_id&error=$error_msg";
+        } else {
+            // Delete or unknown
+            $redirect_url = 'players.php?error=' . $error_msg;
+        }
+        
+        header("Location: $redirect_url");
         exit;
     }
 } else {

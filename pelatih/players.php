@@ -233,7 +233,7 @@ if ($team_id) {
                                     <button type="submit" 
                                             class="btn-delete" 
                                             title="Delete Player"
-                                            onclick="return confirmDelete('<?php echo addslashes($player['name']); ?>')">
+                                            data-name="<?php echo htmlspecialchars($player['name']); ?>">
                                         <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </form>
@@ -524,6 +524,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const type = el.classList.contains('gender-cell') ? 'gender' : 'position';
         const val = el.getAttribute(`data-${type}`);
         if(val) el.setAttribute(`data-${type}`, val);
+    });
+
+    // --- DELETE CONFIRMATION HANDLER ---
+    const deleteForms = document.querySelectorAll('.delete-form');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = form.querySelector('.btn-delete');
+            const playerName = btn.getAttribute('data-name');
+            
+            confirmDelete(playerName).then(confirmed => {
+                if (confirmed) {
+                    form.submit();
+                }
+            });
+        });
     });
 });
 
