@@ -74,6 +74,14 @@ if ($team_id) {
 }
 ?>
 
+
+<div class="card" style="margin-bottom: 30px;">
+    <div class="section-header">
+        <h2 class="section-title">Team Overview</h2>
+    </div>
+    <p>Welcome to the Coach Dashboard. Use the sidebar to manage your players and view schedules.</p>
+</div>
+
 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
     <!-- Team Card -->
     <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
@@ -224,13 +232,6 @@ if ($team_id) {
             <p style="color: var(--gray); opacity: 0.7;">Check back later or contact the admin for the latest schedule.</p>
         </div>
     <?php endif; ?>
-</div>
-
-<div class="card" style="margin-top: 30px;">
-    <div class="section-header">
-        <h2 class="section-title">Team Overview</h2>
-    </div>
-    <p>Welcome to the Coach Dashboard. Use the sidebar to manage your players and view schedules.</p>
 </div>
 
 <?php require_once 'includes/footer.php'; ?>
