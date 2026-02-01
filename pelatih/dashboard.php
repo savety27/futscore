@@ -75,163 +75,444 @@ if ($team_id) {
 ?>
 
 
-<div class="card" style="margin-bottom: 30px;">
-    <div class="section-header">
-        <h2 class="section-title">Team Overview</h2>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+        --premium-bg: #f8fafc;
+        --premium-card: #ffffff;
+        --premium-border: #e2e8f0;
+        --premium-text: #1e293b;
+        --premium-text-muted: #64748b;
+        --premium-accent: #0A2463;
+        --premium-gold: #FFD700;
+        --font-outfit: 'Outfit', sans-serif;
+        --soft-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .main {
+        background: var(--premium-bg) !important;
+        color: var(--premium-text);
+        font-family: var(--font-outfit);
+        padding: 40px !important;
+    }
+
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Refined Hero */
+    .dashboard-hero {
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .hero-label {
+        color: var(--premium-accent);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--premium-accent);
+        margin-bottom: 15px;
+        letter-spacing: -0.5px;
+    }
+
+    .hero-description {
+        color: var(--premium-text-muted);
+        font-size: 1.1rem;
+        max-width: 600px;
+        line-height: 1.6;
+    }
+
+    /* Stats Grid */
+    .premium-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 25px;
+        margin-bottom: 60px;
+    }
+
+    .premium-card {
+        background: var(--premium-card);
+        border: 1px solid var(--premium-border);
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: var(--soft-shadow);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .premium-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--hover-shadow);
+        border-color: var(--premium-accent);
+    }
+
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 25px;
+    }
+
+    .card-icon-box {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        background: #f1f5f9;
+        color: var(--premium-accent);
+        transition: var(--transition);
+    }
+
+    .premium-card:hover .card-icon-box {
+        background: var(--premium-accent);
+        color: white;
+    }
+
+    .card-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--premium-text);
+        margin-bottom: 4px;
+    }
+
+    .card-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--premium-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Match Spotlight */
+    .match-spotlight {
+        margin-top: 50px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--premium-accent);
+        white-space: nowrap;
+    }
+
+    .section-line {
+        height: 1px;
+        background: var(--premium-border);
+        flex: 1;
+    }
+
+    .editorial-match-card {
+        background: white;
+        border: 1px solid var(--premium-border);
+        border-radius: 32px;
+        overflow: hidden;
+        box-shadow: var(--soft-shadow);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .match-body {
+        padding: 60px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 80px;
+        background: radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%);
+        position: relative;
+    }
+
+    .team-block {
+        text-align: center;
+        flex: 1;
+        transition: var(--transition);
+    }
+
+    .team-logo-frame {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 20px;
+        background: white;
+        border-radius: 50%;
+        padding: 15px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid var(--premium-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .team-logo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .team-name-small {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--premium-accent);
+    }
+
+    .vs-capsule {
+        padding: 10px 25px;
+        background: var(--premium-accent);
+        color: white;
+        border-radius: 100px;
+        font-weight: 900;
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+        box-shadow: 0 10px 20px rgba(10, 36, 99, 0.2);
+    }
+
+    .match-footer {
+        padding: 30px 40px;
+        background: #f1f5f9;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        border-top: 1px solid var(--premium-border);
+    }
+
+    .info-group {
+        text-align: center;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--premium-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 5px;
+    }
+
+    .info-data {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--premium-text);
+    }
+
+    .empty-state-light {
+        padding: 100px 40px;
+        text-align: center;
+        background: white;
+        border: 2px dashed var(--premium-border);
+        border-radius: 32px;
+    }
+
+    .empty-state-light i {
+        font-size: 3rem;
+        color: var(--premium-border);
+        margin-bottom: 20px;
+    }
+
+    /* Animations */
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+        animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        opacity: 0;
+    }
+
+    .d-1 { animation-delay: 0.1s; }
+    .d-2 { animation-delay: 0.2s; }
+    .d-3 { animation-delay: 0.3s; }
+    .d-4 { animation-delay: 0.4s; }
+    .d-5 { animation-delay: 0.5s; }
+
+    @media (max-width: 992px) {
+        .match-body {
+            flex-direction: column;
+            gap: 40px;
+            padding: 40px 20px;
+        }
+        .match-footer {
+            grid-template-columns: 1fr;
+            padding: 30px 20px;
+        }
+        .hero-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-hero reveal">
+        <span class="hero-label">Tactical Dashboard</span>
+        <h1 class="hero-title">Team Management Center</h1>
+        <p class="hero-description">Oversee squad performance, upcoming fixtures, and management staff. Real-time updates for the current active season.</p>
     </div>
-    <p>Welcome to the Coach Dashboard. Use the sidebar to manage your players and view schedules.</p>
-</div>
 
-<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
-    <!-- Team Card -->
-    <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
-        <div class="stat-icon" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; background: linear-gradient(135deg, var(--primary), var(--accent)); overflow: hidden;">
-            <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team Logo" style="width: 100%; height: 100%; object-fit: cover;">
-            <?php else: ?>
-                🛡️
-            <?php endif; ?>
-        </div>
-        <div class="stat-content">
-            <h3 style="font-size: 18px; color: var(--dark); margin-bottom: 2px; font-weight: 700;"><?php echo htmlspecialchars($team_name); ?></h3>
-            <p style="color: var(--gray); font-size: 13px;">Your Team</p>
-        </div>
-    </div>
-
-    <!-- Players Card -->
-    <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
-        <div class="stat-icon" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; background: linear-gradient(135deg, var(--secondary), #FFEC8B);">
-            👥
-        </div>
-        <div class="stat-content">
-            <h3 style="font-size: 20px; color: var(--dark); margin-bottom: 2px; font-weight: 700;"><?php echo $player_count; ?></h3>
-            <p style="color: var(--gray); font-size: 13px;">Total Players</p>
-        </div>
-    </div>
-
-    <!-- Staff Card -->
-    <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
-        <div class="stat-icon" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; background: linear-gradient(135deg, #4facfe, #00f2fe);">
-            📋
-        </div>
-        <div class="stat-content">
-            <h3 style="font-size: 20px; color: var(--dark); margin-bottom: 2px; font-weight: 700;"><?php echo $staff_count; ?></h3>
-            <p style="color: var(--gray); font-size: 13px;">Coach & Staff</p>
-        </div>
-    </div>
-
-    <!-- Wins Card -->
-    <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
-        <div class="stat-icon" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; background: linear-gradient(135deg, #43e97b, #38f9d7);">
-            🏆
-        </div>
-        <div class="stat-content">
-            <h3 style="font-size: 20px; color: var(--dark); margin-bottom: 2px; font-weight: 700;"><?php echo $wins; ?></h3>
-            <p style="color: var(--gray); font-size: 13px;">Wins</p>
-        </div>
-    </div>
-
-    <!-- Losses Card -->
-    <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
-        <div class="stat-icon" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; background: linear-gradient(135deg, #fa709a, #fee140);">
-            ❌
-        </div>
-        <div class="stat-content">
-            <h3 style="font-size: 20px; color: var(--dark); margin-bottom: 2px; font-weight: 700;"><?php echo $losses; ?></h3>
-            <p style="color: var(--gray); font-size: 13px;">Losses</p>
-        </div>
-    </div>
-
-    <!-- Draws Card -->
-    <div class="stat-card" style="background: white; padding: 20px; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 15px;">
-        <div class="stat-icon" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; background: linear-gradient(135deg, #667eea, #764ba2);">
-            🤝
-        </div>
-        <div class="stat-content">
-            <h3 style="font-size: 20px; color: var(--dark); margin-bottom: 2px; font-weight: 700;"><?php echo $draws; ?></h3>
-            <p style="color: var(--gray); font-size: 13px;">Draws</p>
-        </div>
-    </div>
-</div>
-
-<div class="next-match-spotlight" style="margin-top: 30px;">
-    <div class="section-header" style="margin-bottom: 20px;">
-        <h2 class="section-title">Next Match Spotlight</h2>
-    </div>
-    
-    <?php if ($next_match): 
-        $is_team1 = ($next_match['team1_id'] == $team_id);
-        $opponent_name = $is_team1 ? $next_match['team2_name'] : $next_match['team1_name'];
-        $opponent_logo = $is_team1 ? $next_match['team2_logo'] : $next_match['team1_logo'];
-        $match_date = new DateTime($next_match['match_date']);
-    ?>
-        <div class="spotlight-card" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 30px;">
-                <!-- Team 1 -->
-                <div style="flex: 1; text-align: center; min-width: 150px;">
-                    <div style="width: 80px; height: 80px; margin: 0 auto 15px; background: white; border-radius: 20px; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center;">
-                        <?php if ($next_match['team1_logo'] && file_exists('../images/teams/' . $next_match['team1_logo'])): ?>
-                            <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo']); ?>" alt="Team 1" style="width: 100%; height: 100%; object-fit: contain;">
-                        <?php else: ?>
-                            <span style="font-size: 32px;">🛡️</span>
-                        <?php endif; ?>
-                    </div>
-                    <h4 style="font-size: 18px; font-weight: 700; color: var(--dark);"><?php echo htmlspecialchars($next_match['team1_name']); ?></h4>
-                </div>
-
-                <!-- VS -->
-                <div style="text-align: center;">
-                    <div style="font-size: 24px; font-weight: 900; color: #e0e0e0; margin-bottom: 15px; letter-spacing: 5px;">VS</div>
-                    <div style="background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block;">
-                        <?php echo htmlspecialchars($next_match['event_name'] ?: 'Friendly Match'); ?>
-                    </div>
-                </div>
-
-                <!-- Team 2 -->
-                <div style="flex: 1; text-align: center; min-width: 150px;">
-                    <div style="width: 80px; height: 80px; margin: 0 auto 15px; background: white; border-radius: 20px; padding: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center;">
-                        <?php if ($next_match['team2_logo'] && file_exists('../images/teams/' . $next_match['team2_logo'])): ?>
-                            <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo']); ?>" alt="Team 2" style="width: 100%; height: 100%; object-fit: contain;">
-                        <?php else: ?>
-                            <span style="font-size: 32px;">🛡️</span>
-                        <?php endif; ?>
-                    </div>
-                    <h4 style="font-size: 18px; font-weight: 700; color: var(--dark);"><?php echo htmlspecialchars($next_match['team2_name']); ?></h4>
-                </div>
-
-                <!-- Match Info -->
-                <div style="flex-basis: 100%; border-top: 1px dashed #e0e0e0; padding-top: 25px; margin-top: 5px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 20px;">📅</span>
-                        <div>
-                            <p style="font-size: 12px; color: var(--gray); margin: 0;">Date</p>
-                            <p style="font-size: 14px; font-weight: 600; color: var(--dark); margin: 0;"><?php echo $match_date->format('l, d M Y'); ?></p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 20px;">⏰</span>
-                        <div>
-                            <p style="font-size: 12px; color: var(--gray); margin: 0;">Time</p>
-                            <p style="font-size: 14px; font-weight: 600; color: var(--dark); margin: 0;"><?php echo $match_date->format('H:i'); ?> WIB</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 20px;">📍</span>
-                        <div>
-                            <p style="font-size: 12px; color: var(--gray); margin: 0;">Venue</p>
-                            <p style="font-size: 14px; font-weight: 600; color: var(--dark); margin: 0;"><?php echo htmlspecialchars($next_match['location'] ?: 'To be announced'); ?></p>
-                        </div>
-                    </div>
+    <!-- Quick Stats -->
+    <div class="premium-stats-grid">
+        <!-- Team Identity -->
+        <div class="premium-card reveal d-1">
+            <div class="card-top">
+                <div class="card-icon-box">
+                    <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
+                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team" style="width: 32px; height: 32px; object-fit: contain;">
+                    <?php else: ?>
+                        <i class="fas fa-shield"></i>
+                    <?php endif; ?>
                 </div>
             </div>
+            <div>
+                <div class="card-value" style="font-size: 1.5rem;"><?php echo htmlspecialchars($team_name); ?></div>
+                <div class="card-label">Primary Squad</div>
+            </div>
         </div>
-    <?php else: ?>
-        <div class="card" style="text-align: center; padding: 40px; background: #fafafa; border: 2px dashed #eee; box-shadow: none;">
-            <div style="font-size: 40px; margin-bottom: 15px;">🏐</div>
-            <h3 style="color: var(--gray); font-weight: 600;">No matches scheduled</h3>
-            <p style="color: var(--gray); opacity: 0.7;">Check back later or contact the admin for the latest schedule.</p>
+
+        <!-- Roster Count -->
+        <div class="premium-card reveal d-2">
+            <div class="card-top">
+                <div class="card-icon-box"><i class="fas fa-users"></i></div>
+            </div>
+            <div>
+                <div class="card-value"><?php echo $player_count; ?></div>
+                <div class="card-label">Total Players</div>
+            </div>
         </div>
-    <?php endif; ?>
+
+        <!-- Staff Count -->
+        <div class="premium-card reveal d-3">
+            <div class="card-top">
+                <div class="card-icon-box"><i class="fas fa-user-tie"></i></div>
+            </div>
+            <div>
+                <div class="card-value"><?php echo $staff_count; ?></div>
+                <div class="card-label">Team Officials</div>
+            </div>
+        </div>
+
+        <!-- Victory Stats -->
+        <div class="premium-card reveal d-4">
+            <div class="card-top">
+                <div class="card-icon-box" style="background: #ecfdf5; color: #059669;"><i class="fas fa-trophy"></i></div>
+            </div>
+            <div>
+                <div class="card-value"><?php echo $wins; ?></div>
+                <div class="card-label">Total Wins</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats in row -->
+    <div class="premium-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+         <!-- Losses -->
+         <div class="premium-card reveal d-5">
+            <div class="card-top">
+                <div class="card-icon-box" style="background: #fef2f2; color: #dc2626;"><i class="fas fa-times-circle"></i></div>
+            </div>
+            <div>
+                <div class="card-value"><?php echo $losses; ?></div>
+                <div class="card-label">Total Losses</div>
+            </div>
+        </div>
+
+        <!-- Draws -->
+        <div class="premium-card reveal d-5" style="animation-delay: 0.5s;">
+            <div class="card-top">
+                <div class="card-icon-box" style="background: #f8fafc; color: #64748b;"><i class="fas fa-handshake"></i></div>
+            </div>
+            <div>
+                <div class="card-value"><?php echo $draws; ?></div>
+                <div class="card-label">Matches Drawn</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Match Spotlight -->
+    <div class="match-spotlight reveal" style="animation-delay: 0.6s;">
+        <div class="section-header">
+            <h2 class="section-title">Upcoming Fixture</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <?php if ($next_match): 
+            $match_date = new DateTime($next_match['match_date']);
+        ?>
+            <div class="editorial-match-card">
+                <div class="match-body">
+                    <div class="team-block">
+                        <div class="team-logo-frame">
+                            <?php if ($next_match['team1_logo'] && file_exists('../images/teams/' . $next_match['team1_logo'])): ?>
+                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo']); ?>" alt="Team 1">
+                            <?php else: ?>
+                                <i class="fas fa-shield" style="font-size: 2rem; color: #cbd5e1;"></i>
+                            <?php endif; ?>
+                        </div>
+                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team1_name']); ?></h4>
+                    </div>
+
+                    <div class="vs-capsule">VS</div>
+
+                    <div class="team-block">
+                        <div class="team-logo-frame">
+                            <?php if ($next_match['team2_logo'] && file_exists('../images/teams/' . $next_match['team2_logo'])): ?>
+                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo']); ?>" alt="Team 2">
+                            <?php else: ?>
+                                <i class="fas fa-shield" style="font-size: 2rem; color: #cbd5e1;"></i>
+                            <?php endif; ?>
+                        </div>
+                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team2_name']); ?></h4>
+                    </div>
+                </div>
+
+                <div class="match-footer">
+                    <div class="info-group">
+                        <div class="info-label">Kickoff Date</div>
+                        <div class="info-data"><?php echo $match_date->format('l, d M Y'); ?></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Match Time</div>
+                        <div class="info-data"><?php echo $match_date->format('H:i'); ?> WIB</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Venue Location</div>
+                        <div class="info-data"><?php echo htmlspecialchars($next_match['location'] ?: 'To be announced'); ?></div>
+                    </div>
+                </div>
+                
+                <div style="padding: 15px; text-align: center; background: var(--premium-accent); color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
+                    <?php echo htmlspecialchars($next_match['event_name'] ?: 'Official League Match'); ?>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="empty-state-light">
+                <i class="far fa-calendar-times"></i>
+                <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">No Scheduled Matches</h3>
+                <p style="color: var(--premium-text-muted);">The team is currently in a rest period between match operations.</p>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php require_once 'includes/footer.php'; ?>
