@@ -141,7 +141,7 @@ if ($team_id) {
                         // Photo path - FIXED
                         $photo_url = '';
                         if (!empty($player['photo'])) {
-                            $photo_path = 'uploads/players/' . $player['photo'];
+                            $photo_path = 'images/players/' . $player['photo'];
                             // Check if file exists in multiple possible locations
                             $possible_paths = [
                                 $photo_path,
