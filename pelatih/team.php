@@ -13,7 +13,8 @@ $offset = ($page - 1) * $limit;
 // Base query (ReadOnly - lists all teams)
 $base_query = "SELECT t.*, 
               (SELECT COUNT(*) FROM players p WHERE p.team_id = t.id AND p.status = 'active') as player_count,
-              (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count
+              (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count,
+              (SELECT COUNT(*) FROM challenges c WHERE (c.challenger_id = t.id OR c.opponent_id = t.id) AND (c.status = 'accepted' OR c.status = 'completed')) as match_count
               FROM teams t WHERE 1=1";
 
 $count_query = "SELECT COUNT(*) as total FROM teams t WHERE 1=1";
@@ -93,6 +94,7 @@ try {
                         <th>Coach</th>
                         <th>Players</th>
                         <th>Staff</th>
+                        <th>Matches</th>
                         <th>Established</th>
                     </tr>
                 </thead>
@@ -113,6 +115,11 @@ try {
                         <td>
                             <a href="team_staff_view.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['staff_count']; ?> staff">
                                 <span class="count-cell staff"><?php echo $team['staff_count']; ?></span>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="team_matches.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['match_count']; ?> matches">
+                                <span class="count-cell matches"><?php echo $team['match_count']; ?></span>
                             </a>
                         </td>
                         <td class="established-cell"><?php echo htmlspecialchars($team['established_year'] ?? '-'); ?></td>
@@ -173,6 +180,11 @@ try {
     color: #6a1b9a;
 }
 
+.count-cell.matches {
+    background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+    color: #00897b;
+}
+
 .count-link:hover .count-cell.players {
     background: linear-gradient(135deg, #2196F3, #1976D2);
     color: white;
@@ -188,8 +200,16 @@ try {
     box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
 }
 
+.count-link:hover .count-cell.matches {
+    background: linear-gradient(135deg, #009688, #00796b);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.4);
+} 
+
 .count-link:active .count-cell.players,
-.count-link:active .count-cell.staff {
+.count-link:active .count-cell.staff,
+.count-link:active .count-cell.matches {
     transform: scale(0.95);
 }
 

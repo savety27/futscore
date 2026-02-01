@@ -13,21 +13,37 @@ if ($matchId <= 0) {
     exit();
 }
 
+$source = isset($_GET['source']) ? $_GET['source'] : 'match';
+
 // Sekarang baru require header
 require_once 'includes/header.php';
 
 $conn = $db->getConnection();
 
-// Get match details from database
-$sql = "SELECT m.*, 
-               t1.name as team1_name, t1.logo as team1_logo, 
-               t2.name as team2_name, t2.logo as team2_logo,
-               e.name as event_name
-        FROM matches m
-        LEFT JOIN teams t1 ON m.team1_id = t1.id
-        LEFT JOIN teams t2 ON m.team2_id = t2.id
-        LEFT JOIN events e ON m.event_id = e.id
-        WHERE m.id = ?";
+if ($source === 'challenge') {
+    // Get match details from challenges table
+    $sql = "SELECT c.id, c.challenge_code as match_code, c.challenge_date as match_date, 
+                   c.challenger_score as score1, c.opponent_score as score2,
+                   c.match_status as status, c.notes as location,
+                   t1.id as team1_id, t1.name as team1_name, t1.logo as team1_logo, 
+                   t2.id as team2_id, t2.name as team2_name, t2.logo as team2_logo,
+                   c.sport_type as event_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE c.id = ?";
+} else {
+    // Get match details from matches table
+    $sql = "SELECT m.*, 
+                   t1.name as team1_name, t1.logo as team1_logo, 
+                   t2.name as team2_name, t2.logo as team2_logo,
+                   e.name as event_name
+            FROM matches m
+            LEFT JOIN teams t1 ON m.team1_id = t1.id
+            LEFT JOIN teams t2 ON m.team2_id = t2.id
+            LEFT JOIN events e ON m.event_id = e.id
+            WHERE m.id = ?";
+}
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param('i', $matchId);
@@ -35,6 +51,27 @@ $stmt->execute();
 $result = $stmt->get_result();
 $match = $result->fetch_assoc();
 $stmt->close();
+
+// Fallback search in challenges if not found in matches and source not specified
+if (!$match && $source !== 'challenge') {
+    $sql = "SELECT c.id, c.challenge_code as match_code, c.challenge_date as match_date, 
+                   c.challenger_score as score1, c.opponent_score as score2,
+                   c.match_status as status, v.name as location,
+                   t1.id as team1_id, t1.name as team1_name, t1.logo as team1_logo, 
+                   t2.id as team2_id, t2.name as team2_name, t2.logo as team2_logo,
+                   c.sport_type as event_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $matchId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $match = $result->fetch_assoc();
+    $stmt->close();
+}
 
 if (!$match) {
     echo '<div class="container"><div class="alert alert-danger">Match not found</div></div>';
