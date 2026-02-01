@@ -117,6 +117,24 @@ if (!empty($search)) {
     $search_condition = $search_term;
 }
 
+// Handle team filter
+$team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+$filter_team_name = '';
+
+if ($team_id > 0) {
+    // Add alias for simpler referencing if needed, but here we just use t.id since we joined teams as t
+    $base_query .= " AND t.id = :team_id";
+    $count_query .= " AND t.id = :team_id_count";
+    
+    // Get team name for display
+    $stmt_team = $conn->prepare("SELECT name FROM teams WHERE id = ?");
+    $stmt_team->execute([$team_id]);
+    $team_data = $stmt_team->fetch(PDO::FETCH_ASSOC);
+    if ($team_data) {
+        $filter_team_name = $team_data['name'];
+    }
+}
+
 $base_query .= " GROUP BY ts.id ORDER BY ts.created_at DESC";
 
 // Get total data
@@ -138,6 +156,10 @@ try {
         $stmt->bindParam(':search6', $search_term);
     }
     
+    if ($team_id > 0) {
+        $stmt->bindParam(':team_id_count', $team_id, PDO::PARAM_INT);
+    }
+    
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $total_data = $result['total'];
@@ -156,6 +178,11 @@ try {
         $stmt->bindParam(':search4', $search_term);
         $stmt->bindParam(':search5', $search_term);
         $stmt->bindParam(':search6', $search_term);
+        $stmt->bindParam(':search6', $search_term);
+    }
+    
+    if ($team_id > 0) {
+        $stmt->bindParam(':team_id', $team_id, PDO::PARAM_INT);
     }
     
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -190,6 +217,29 @@ try {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
+.filter-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #bbdefb;
+    margin-left: 15px;
+}
+
+.filter-badge a {
+    color: #1976d2;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.filter-badge a:hover {
+    color: #0d47a1;
+}
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -846,6 +896,12 @@ body {
     gap: 10px;
 }
 
+.page-title span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .alert-danger {
     background: rgba(211, 47, 47, 0.1);
     border-left: 4px solid var(--danger);
@@ -1231,11 +1287,22 @@ body {
         <div class="page-header">
             <div class="page-title">
                 <i class="fas fa-user-tie"></i>
-                <span>Daftar Team Staff</span>
+                <span>
+                    Daftar Staff
+                    <?php if ($team_id > 0 && !empty($filter_team_name)): ?>
+                        <div class="filter-badge">
+                            <span><i class="fas fa-filter"></i> Team: <?php echo htmlspecialchars($filter_team_name); ?></span>
+                            <a href="team_staff.php" title="Clear Filter"><i class="fas fa-times-circle"></i></a>
+                        </div>
+                    <?php endif; ?>
+                </span>
             </div>
             
             <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari staff (nama, email, phone, jabatan)..." 
+                <?php if ($team_id > 0): ?>
+                    <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
+                <?php endif; ?>
+                <input type="text" name="search" placeholder="Cari staff (nama, email, posisi)..." 
                        value="<?php echo htmlspecialchars($search); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>

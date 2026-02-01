@@ -87,6 +87,23 @@ if (!empty($search)) {
     $count_query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ? OR p.email LIKE ?)";
 }
 
+// Handle team filter
+$team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
+$filter_team_name = '';
+
+if ($team_id > 0) {
+    $query .= " AND p.team_id = ?";
+    $count_query .= " AND p.team_id = ?";
+    
+    // Get team name for display
+    $stmt_team = $conn->prepare("SELECT name FROM teams WHERE id = ?");
+    $stmt_team->execute([$team_id]);
+    $team_data = $stmt_team->fetch(PDO::FETCH_ASSOC);
+    if ($team_data) {
+        $filter_team_name = $team_data['name'];
+    }
+}
+
 $query .= " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
 
 // Initialize variables
@@ -99,13 +116,21 @@ try {
     // Hitung total data
     if (!empty($search)) {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
+        $params = [$search_term, $search_term, $search_term, $search_term];
+        if ($team_id > 0) {
+            $params[] = $team_id;
+        }
+        $stmt->execute($params);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $total_data = $result['total'];
         $total_pages = ceil($total_data / $limit);
     } else {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute();
+        $params = [];
+        if ($team_id > 0) {
+            $params[] = $team_id;
+        }
+        $stmt->execute($params);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $total_data = $result['total'];
         $total_pages = ceil($total_data / $limit);
@@ -114,11 +139,23 @@ try {
     // Ambil data players
     if (!empty($search)) {
         $stmt = $conn->prepare($query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term, $limit, $offset]);
+        $params = [$search_term, $search_term, $search_term, $search_term];
+        if ($team_id > 0) {
+            $params[] = $team_id;
+        }
+        $params[] = $limit;
+        $params[] = $offset;
+        $stmt->execute($params);
         $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $stmt = $conn->prepare($query);
-        $stmt->execute([$limit, $offset]);
+        $params = [];
+        if ($team_id > 0) {
+            $params[] = $team_id;
+        }
+        $params[] = $limit;
+        $params[] = $offset;
+        $stmt->execute($params);
         $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (Exception $e) {
@@ -175,6 +212,29 @@ function formatGender($gender) {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 /* CSS sama seperti yang Anda miliki */
+.filter-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #bbdefb;
+    margin-left: 15px;
+}
+
+.filter-badge a {
+    color: #1976d2;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.filter-badge a:hover {
+    color: #0d47a1;
+}
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -462,9 +522,13 @@ body {
     gap: 15px;
 }
 
-.page-title i {
-    color: var(--secondary);
     font-size: 32px;
+}
+
+.page-title span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .search-bar {
@@ -1256,16 +1320,24 @@ body {
         <!-- PAGE HEADER -->
         <div class="page-header">
             <div class="page-title">
-                <i class="fas fa-users"></i>
-                <span>Daftar Player</span>
-            </div>
-            
-            <form method="GET" action="" class="search-bar">
-                <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
-                <button type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
+        <i class="fas fa-users"></i>
+        <span>
+            Daftar Player
+            <?php if ($team_id > 0 && !empty($filter_team_name)): ?>
+                <div class="filter-badge">
+                    <span><i class="fas fa-filter"></i> Team: <?php echo htmlspecialchars($filter_team_name); ?></span>
+                    <a href="player.php" title="Clear Filter"><i class="fas fa-times-circle"></i></a>
+                </div>
+            <?php endif; ?>
+        </span>
+    </div>
+    
+    <form method="GET" action="" class="search-bar">
+        <?php if ($team_id > 0): ?>
+            <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
+        <?php endif; ?>
+        <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." value="<?php echo htmlspecialchars($search); ?>">
+        <button type="submit"><i class="fas fa-search"></i></button>
             </form>
             
             <div class="action-buttons">

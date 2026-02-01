@@ -1079,6 +1079,67 @@ body {
         width: 100%;
     }
 }
+
+/* Clickable count styling */
+.count-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.count-cell.players {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    color: #1565c0;
+    border: 2px solid transparent;
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 40px;
+    text-align: center;
+}
+
+.count-cell.staff {
+    background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+    color: #6a1b9a;
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 40px;
+    text-align: center;
+}
+
+.count-link:hover .count-cell.players {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+    border-color: #1976D2;
+}
+
+.count-link:hover .count-cell.staff {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+.count-link:active .count-cell.players,
+.count-link:active .count-cell.staff {
+    transform: scale(0.95);
+}
+
+/* Make it clear it's clickable with cursor */
+.count-link {
+    cursor: pointer;
+}
+
 </style>
 </head>
 <body>
@@ -1266,11 +1327,15 @@ body {
                             <td class="uniform-cell">
                                 <?php echo !empty($team['uniform_color']) ? htmlspecialchars($team['uniform_color']) : '-'; ?>
                             </td>
-                            <td class="count-cell">
-                                <span class="badge badge-primary"><?php echo $team['player_count']; ?> Players</span>
+                            <td>
+                                <a href="player.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['player_count']; ?> players">
+                                    <span class="count-cell players"><?php echo $team['player_count']; ?></span>
+                                </a>
                             </td>
-                            <td class="count-cell">
-                                <span class="badge badge-secondary"><?php echo $team['staff_count']; ?> Staff</span>
+                            <td>
+                                <a href="team_staff.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['staff_count']; ?> staff">
+                                    <span class="count-cell staff"><?php echo $team['staff_count']; ?></span>
+                                </a>
                             </td>
                             <td class="basecamp-cell">
                                 <?php echo !empty($team['basecamp']) ? htmlspecialchars($team['basecamp']) : '-'; ?>
