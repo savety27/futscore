@@ -466,7 +466,7 @@ if (isset($_GET['id'])) {
                 </h2>
                 
                 <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Rate the player's skills on a scale of 0 to 10. Default value is 5.
+                    Rate the player's skills on a scale of 0 to 10.
                 </p>
                 
                 <div class="skill-grid">
