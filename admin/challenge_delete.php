@@ -29,15 +29,8 @@ try {
     // Start transaction
     $conn->beginTransaction();
     
-    // Check if challenge has results
-    $stmt = $conn->prepare("SELECT challenger_score, opponent_score FROM challenges WHERE id = ?");
-    $stmt->execute([$challenge_id]);
-    $challenge = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($challenge['challenger_score'] !== null || $challenge['opponent_score'] !== null) {
-        echo json_encode(['success' => false, 'message' => 'Tidak dapat menghapus challenge yang sudah memiliki hasil pertandingan.']);
-        exit;
-    }
+    // PERUBAHAN: Hapus validasi cek skor, semua challenge bisa dihapus
+    // Tidak perlu cek apakah sudah ada skor atau belum
     
     // Delete challenge
     $stmt = $conn->prepare("DELETE FROM challenges WHERE id = ?");

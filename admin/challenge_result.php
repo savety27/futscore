@@ -104,18 +104,8 @@ try {
         exit;
     }
     
-    // Check if challenge can have result input
-    if ($challenge_data['status'] !== 'accepted') {
-        $_SESSION['error_message'] = "Challenge belum diterima (status: " . $challenge_data['status'] . ")";
-        header("Location: challenge.php");
-        exit;
-    }
-    
-    if (!empty($challenge_data['challenger_score']) && !empty($challenge_data['opponent_score'])) {
-        $_SESSION['error_message'] = "Hasil pertandingan sudah diinput";
-        header("Location: challenge.php");
-        exit;
-    }
+    // PERUBAHAN: Hapus validasi status, semua challenge bisa input hasil
+    // Tidak perlu cek apakah status = 'accepted' atau sudah ada skor
     
 } catch (PDOException $e) {
     die("Error fetching challenge data: " . $e->getMessage());
@@ -162,12 +152,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If no errors, update database
     if (empty($errors)) {
         try {
+            // PERUBAHAN: Update status ke 'completed' hanya jika belum completed
+            $new_status = 'completed';
+            if ($challenge_data['status'] === 'completed') {
+                $new_status = 'completed'; // Tetap completed
+            }
+            
             $stmt = $conn->prepare("
                 UPDATE challenges SET 
                     challenger_score = ?, 
                     opponent_score = ?, 
                     winner_team_id = ?, 
-                    status = 'completed',
+                    status = ?,
                     match_status = ?, 
                     match_duration = ?, 
                     match_official = ?, 
@@ -181,6 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $form_data['challenger_score'],
                 $form_data['opponent_score'],
                 $winner_team_id,
+                $new_status,
                 $form_data['match_status'],
                 $form_data['match_duration'],
                 $form_data['match_official'],
@@ -1198,7 +1195,7 @@ body {
                                        id="challenger_score" 
                                        name="challenger_score" 
                                        class="score-input <?php echo isset($errors['challenger_score']) ? 'is-invalid' : ''; ?>" 
-                                       value="<?php echo isset($form_data['challenger_score']) ? $form_data['challenger_score'] : '0'; ?>"
+                                       value="<?php echo isset($form_data['challenger_score']) ? $form_data['challenger_score'] : ($challenge_data['challenger_score'] !== null ? $challenge_data['challenger_score'] : '0'); ?>"
                                        min="0" 
                                        max="50" 
                                        required>
@@ -1224,7 +1221,7 @@ body {
                                        id="opponent_score" 
                                        name="opponent_score" 
                                        class="score-input <?php echo isset($errors['opponent_score']) ? 'is-invalid' : ''; ?>" 
-                                       value="<?php echo isset($form_data['opponent_score']) ? $form_data['opponent_score'] : '0'; ?>"
+                                       value="<?php echo isset($form_data['opponent_score']) ? $form_data['opponent_score'] : ($challenge_data['opponent_score'] !== null ? $challenge_data['opponent_score'] : '0'); ?>"
                                        min="0" 
                                        max="50" 
                                        required>
@@ -1255,11 +1252,11 @@ body {
                             <select id="match_status" name="match_status" 
                                     class="form-select <?php echo isset($errors['match_status']) ? 'is-invalid' : ''; ?>" 
                                     required>
-                                <option value="completed" <?php echo isset($form_data['match_status']) && $form_data['match_status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
-                                <option value="ongoing" <?php echo isset($form_data['match_status']) && $form_data['match_status'] == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
-                                <option value="postponed" <?php echo isset($form_data['match_status']) && $form_data['match_status'] == 'postponed' ? 'selected' : ''; ?>>Postponed</option>
-                                <option value="cancelled" <?php echo isset($form_data['match_status']) && $form_data['match_status'] == 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
-                                <option value="abandoned" <?php echo isset($form_data['match_status']) && $form_data['match_status'] == 'abandoned' ? 'selected' : ''; ?>>Abandoned</option>
+                                <option value="completed" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'completed') || $challenge_data['match_status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                <option value="ongoing" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'ongoing') || $challenge_data['match_status'] == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
+                                <option value="postponed" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'postponed') || $challenge_data['match_status'] == 'postponed' ? 'selected' : ''; ?>>Postponed</option>
+                                <option value="cancelled" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'cancelled') || $challenge_data['match_status'] == 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                                <option value="abandoned" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'abandoned') || $challenge_data['match_status'] == 'abandoned' ? 'selected' : ''; ?>>Abandoned</option>
                             </select>
                             <?php if (isset($errors['match_status'])): ?>
                                 <span class="error"><?php echo $errors['match_status']; ?></span>
@@ -1274,7 +1271,7 @@ body {
                                    id="match_duration" 
                                    name="match_duration" 
                                    class="form-input <?php echo isset($errors['match_duration']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo isset($form_data['match_duration']) ? $form_data['match_duration'] : '90'; ?>"
+                                   value="<?php echo isset($form_data['match_duration']) ? $form_data['match_duration'] : ($challenge_data['match_duration'] ? $challenge_data['match_duration'] : '90'); ?>"
                                    min="1" 
                                    max="180" 
                                    required>
@@ -1293,7 +1290,7 @@ body {
                                    id="match_official" 
                                    name="match_official" 
                                    class="form-input" 
-                                   value="<?php echo isset($form_data['match_official']) ? htmlspecialchars($form_data['match_official']) : ''; ?>"
+                                   value="<?php echo isset($form_data['match_official']) ? htmlspecialchars($form_data['match_official']) : ($challenge_data['match_official'] ? htmlspecialchars($challenge_data['match_official']) : ''); ?>"
                                    placeholder="Masukkan nama wasit...">
                         </div>
                         
@@ -1302,7 +1299,7 @@ body {
                                 Catatan Pertandingan
                             </label>
                             <textarea id="match_notes" name="match_notes" class="form-textarea" 
-                                      placeholder="Masukkan catatan pertandingan (kondisi lapangan, kejadian penting, dll)..."><?php echo isset($form_data['match_notes']) ? htmlspecialchars($form_data['match_notes']) : ''; ?></textarea>
+                                      placeholder="Masukkan catatan pertandingan (kondisi lapangan, kejadian penting, dll)..."><?php echo isset($form_data['match_notes']) ? htmlspecialchars($form_data['match_notes']) : ($challenge_data['match_notes'] ? htmlspecialchars($challenge_data['match_notes']) : ''); ?></textarea>
                         </div>
                     </div>
                 </div>

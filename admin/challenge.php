@@ -1277,6 +1277,7 @@ body {
                             </td>
                             <td class="action-cell">
                                 <div class="action-buttons-inline">
+                                    <!-- TOMBOL VIEW SELALU TAMPIL -->
                                     <a href="challenge_view.php?id=<?php echo $challenge['id']; ?>" 
                                        class="action-btn btn-view">
                                         <i class="fas fa-eye"></i>
@@ -1286,12 +1287,12 @@ body {
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php if ($challenge['status'] == 'accepted' && ($challenge['challenger_score'] === null || $challenge['opponent_score'] === null)): ?>
+                                    <!-- TOMBOL RESULT/BOLA SELALU TAMPIL -->
                                     <a href="challenge_result.php?id=<?php echo $challenge['id']; ?>" 
                                        class="action-btn btn-result">
                                         <i class="fas fa-futbol"></i>
                                     </a>
-                                    <?php endif; ?>
+                                    <!-- TOMBOL DELETE SELALU TAMPIL -->
                                     <button class="action-btn btn-delete" 
                                             onclick="deleteChallenge(<?php echo $challenge['id']; ?>, '<?php echo htmlspecialchars(addslashes($challenge['challenge_code'])); ?>')">
                                         <i class="fas fa-trash"></i>
