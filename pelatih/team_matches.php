@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Team Match History';
+$page_title = 'Riwayat Pertandingan Tim';
 $current_page = 'team';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -15,13 +15,13 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team not found.</div><a href='team.php' class='btn-secondary'>Back to Teams</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Tim tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Tim</a></div>";
     require_once 'includes/footer.php';
     exit;
 }
 
 // Update page title
-$page_title = htmlspecialchars($team_info['name']) . ' - Matches';
+$page_title = htmlspecialchars($team_info['name']) . ' - Pertandingan';
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -84,30 +84,30 @@ try {
                 <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
             <?php endif; ?>
             <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Match History</span></h2>
+                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Riwayat Pertandingan</span></h2>
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Teams
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Tim
         </a>
     </div>
 
     <?php if (empty($matches)): ?>
         <div class="empty-state">
             <i class="fas fa-futbol"></i>
-            <p>No matches found for this team.</p>
+            <p>Tidak ada pertandingan ditemukan untuk tim ini.</p>
         </div>
     <?php else: ?>
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Event</th>
-                        <th>Opponent</th>
-                        <th style="text-align: center;">Result</th>
+                        <th>Tanggal</th>
+                        <th>Acara</th>
+                        <th>Lawan</th>
+                        <th style="text-align: center;">Hasil</th>
                         <th style="text-align: center;">Status</th>
-                        <th style="text-align: center;">Action</th>
+                        <th style="text-align: center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -151,12 +151,16 @@ try {
                         </td>
                         <td style="text-align: center;">
                             <span class="status-match <?php echo $match['match_status'] ?: strtolower($match['status']); ?>">
-                                <?php echo ucfirst($match['match_status'] ?: $match['status']); ?>
+                                <?php 
+                                    $m_status = $match['match_status'] ?: $match['status'];
+                                    $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'live' => 'Langsung', 'accepted' => 'Diterima'];
+                                    echo $m_status_map[$m_status] ?? ucfirst($m_status); 
+                                ?>
                             </span>
                         </td>
                         <td style="text-align: center;">
-                            <a href="../match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view" target="_blank" title="View Match Details & Lineups">
-                                <i class="fas fa-eye"></i> Details
+                            <a href="../match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view" target="_blank" title="Lihat Detail Pertandingan & Lineup">
+                                <i class="fas fa-eye"></i> Detail
                             </a>
                         </td>
                     </tr>
@@ -169,7 +173,7 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>" class="page-link">&laquo; Prev</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
@@ -177,7 +181,7 @@ try {
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>" class="page-link">Next &raquo;</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>

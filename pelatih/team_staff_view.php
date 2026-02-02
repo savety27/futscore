@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Team Staff';
+$page_title = 'Staf Tim';
 $current_page = 'team'; // Keep 'team' as current page for sidebar
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -15,13 +15,13 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team not found.</div><a href='team.php' class='btn-secondary'>Back to Teams</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Tim tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Tim</a></div>";
     require_once 'includes/footer.php';
     exit;
 }
 
 // Update page title
-$page_title = htmlspecialchars($team_info['name']) . ' - Staff';
+$page_title = htmlspecialchars($team_info['name']) . ' - Staf';
 
 // Search function
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -112,7 +112,7 @@ try {
 <div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
     <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; position: relative;">
         <span class="close-modal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: var(--danger);">&times;</span>
-        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Certificates</h3>
+        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Sertifikat</h3>
         <div id="certificatesList" style="max-height: 400px; overflow-y: auto;"></div>
     </div>
 </div>
@@ -124,11 +124,11 @@ try {
                 <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
             <?php endif; ?>
             <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Staff</span></h2>
+                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Staf</span></h2>
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Teams
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Tim
         </a>
     </div>
 
@@ -136,7 +136,7 @@ try {
     <div class="search-bar" style="margin-bottom: 20px;">
         <form action="" method="GET">
             <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
-            <input type="text" name="search" placeholder="Search staff..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Cari staf..." value="<?php echo htmlspecialchars($search); ?>">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
@@ -144,19 +144,19 @@ try {
     <?php if (empty($staff_list)): ?>
         <div class="empty-state">
             <i class="fas fa-user-tie"></i>
-            <p>No staff members found in this team.</p>
+            <p>Tidak ada staf ditemukan di tim ini.</p>
         </div>
     <?php else: ?>
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="photo-cell">Photo</th>
-                        <th>Name</th>
+                        <th class="photo-cell">Foto</th>
+                        <th>Nama</th>
                         <!-- Removed Team Column as we are in a single team view -->
-                        <th style="text-align: center;">Position</th>
-                        <th style="text-align: center;">Age</th>
-                        <th style="text-align: center;">Certificates</th>
+                        <th style="text-align: center;">Jabatan</th>
+                        <th style="text-align: center;">Umur</th>
+                        <th style="text-align: center;">Sertifikat</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -182,11 +182,11 @@ try {
                                 data-staff-name="<?php echo htmlspecialchars($staff['name']); ?>"
                                 style="text-decoration: none;">
                                     <span class="certificate-count clickable" style="cursor: pointer;">
-                                        <?php echo $staff['certificate_count']; ?> Certs ▶
+                                        <?php echo $staff['certificate_count']; ?> Sertifikat ▶
                                     </span>
                                 </a>
                             <?php else: ?>
-                                <span class="certificate-count" style="background: #eee; color: #999;">0 Certs</span>
+                                <span class="certificate-count" style="background: #eee; color: #999;">0 Sertifikat</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -199,7 +199,7 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Prev</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
@@ -207,7 +207,7 @@ try {
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Next &raquo;</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -241,8 +241,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const staffId = this.getAttribute('data-staff-id');
             const staffName = this.getAttribute('data-staff-name');
             
-            modalTitle.textContent = 'Certificates - ' + staffName;
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Loading certificates...</p></div>';
+            modalTitle.textContent = 'Sertifikat - ' + staffName;
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Memuat sertifikat...</p></div>';
             modal.style.display = 'block';
             
             loadCertificates(staffId);
@@ -257,12 +257,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (xhr.status === 200) {
                 certificatesList.innerHTML = xhr.responseText;
             } else {
-                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Error loading certificates</p></div>';
+                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat sertifikat</p></div>';
             }
         };
         
         xhr.onerror = function() {
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Network error</p></div>';
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Kesalahan jaringan</p></div>';
         };
         
         xhr.send();

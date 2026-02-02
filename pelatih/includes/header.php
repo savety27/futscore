@@ -11,7 +11,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_role'] !== 'pelatih
 
 $page_title = $page_title ?? 'Dashboard';
 $current_page = $current_page ?? 'dashboard';
-$pelatih_name = $_SESSION['admin_fullname'] ?? 'Coach';
+$pelatih_name = $_SESSION['admin_fullname'] ?? 'Pelatih';
 $team_id = $_SESSION['team_id'] ?? 0;
 $team_name = 'FutScore';
 
@@ -33,7 +33,7 @@ if ($team_id && isset($conn)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?> - Pelatih Area</title>
+    <title><?php echo $page_title; ?> - Area Pelatih</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -73,28 +73,28 @@ if ($team_id && isset($conn)) {
             <div class="menu-item">
                 <a href="players.php" class="menu-link <?php echo $current_page === 'players' ? 'active' : ''; ?>">
                     <span class="menu-icon">👥</span>
-                    <span class="menu-text">My Players</span>
+                    <span class="menu-text">Pemain Saya</span>
                 </a>
             </div>
 
             <div class="menu-item">
                 <a href="team.php" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">
                     <span class="menu-icon">🏆</span>
-                    <span class="menu-text">Teams</span>
+                    <span class="menu-text">Tim</span>
                 </a>
             </div>
 
             <div class="menu-item">
                 <a href="team_staff.php" class="menu-link <?php echo $current_page === 'team_staff' ? 'active' : ''; ?>">
                     <span class="menu-icon">👔</span>
-                    <span class="menu-text">Team Staff</span>
+                    <span class="menu-text">Staf Tim</span>
                 </a>
             </div>
 
              <div class="menu-item">
                 <a href="schedule.php" class="menu-link <?php echo $current_page === 'schedule' ? 'active' : ''; ?>">
                     <span class="menu-icon">📅</span>
-                    <span class="menu-text">Schedule</span>
+                    <span class="menu-text">Jadwal</span>
                 </a>
             </div>
         </div>
@@ -105,13 +105,13 @@ if ($team_id && isset($conn)) {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Hello, <?php echo htmlspecialchars($pelatih_name); ?>! 👋</h1>
+                <h1>Halo, <?php echo htmlspecialchars($pelatih_name); ?>! 👋</h1>
                 <p><?php echo $page_title; ?></p>
             </div>
             
             <div class="user-actions">
                 <a href="../admin/logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i> Keluar
                 </a>
             </div>
         </div>

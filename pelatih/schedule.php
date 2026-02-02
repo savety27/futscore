@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Match Schedule';
+$page_title = 'Jadwal Pertandingan';
 $current_page = 'schedule';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -154,32 +154,32 @@ try {
 
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Match Schedule</h2>
+        <h2 class="section-title">Jadwal Pertandingan</h2>
         <!-- Read Only: No Add Button -->
     </div>
 
     <div class="search-bar" style="margin-bottom: 20px;">
         <form action="" method="GET">
-            <input type="text" name="search" placeholder="Search matches..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Cari pertandingan..." value="<?php echo htmlspecialchars($search); ?>">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
 
     <?php if (empty($challenges)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">No matches found.</p>
+        <p style="text-align: center; color: var(--gray); padding: 20px;">Pertandingan tidak ditemukan.</p>
     <?php else: ?>
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Match Code</th>
-                        <th>Match Date</th>
-                        <th>Teams</th>
-                        <th>Sport</th>
+                        <th>Kode Pertandingan</th>
+                        <th>Tanggal</th>
+                        <th>Tim</th>
+                        <th>Olahraga</th>
                         <th>Venue</th>
-                        <th>Score</th>
+                        <th>Skor</th>
                         <th>Status</th>
-                        <th>Match Status</th>
+                        <th>Status Pertandingan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -224,7 +224,7 @@ try {
                             <?php if (!empty($challenge['venue_name'])): ?>
                                 <span><?php echo htmlspecialchars($challenge['venue_name']); ?></span>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">TBD</span>
+                                <span style="color: var(--gray); font-style: italic;">Akan ditentukan</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -243,7 +243,7 @@ try {
                                     </div>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">Not played</span>
+                                <span style="color: var(--gray); font-style: italic;">Belum dimainkan</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -258,10 +258,13 @@ try {
                                     default: $badge_class = 'background: #f5f5f5; color: var(--gray);';
                                 }
                                 ?>
-                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $badge_class; ?>">
-                                    <?php echo htmlspecialchars(ucfirst($challenge['status'])); ?>
-                                </span>
-                            <?php endif; ?>
+                                <?php 
+                                    $s_status = strtolower($challenge['status']);
+                                    $s_status_map = ['accepted' => 'Diterima', 'open' => 'Terbuka', 'rejected' => 'Ditolak', 'expired' => 'Kedaluwarsa'];
+                                    echo htmlspecialchars($s_status_map[$s_status] ?? ucfirst($challenge['status'])); 
+                                ?>
+                            </span>
+                        <?php endif; ?>
                         </td>
                         <td>
                             <?php if (!empty($challenge['match_status'])): ?>
@@ -276,10 +279,14 @@ try {
                                 }
                                 ?>
                                 <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $match_badge_class; ?>">
-                                    <?php echo htmlspecialchars(ucfirst($challenge['match_status'])); ?>
+                                    <?php 
+                                        $m_status = strtolower($challenge['match_status']);
+                                        $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'cancelled' => 'Dibatalkan', 'abandoned' => 'Dihentikan', 'postponed' => 'Ditunda'];
+                                        echo htmlspecialchars($m_status_map[$m_status] ?? ucfirst($challenge['match_status'])); 
+                                    ?>
                                 </span>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">N/A</span>
+                                <span style="color: var(--gray); font-style: italic;">-</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -292,7 +299,7 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Prev</a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
@@ -300,7 +307,7 @@ try {
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Next &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>

@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Team Staff List';
+$page_title = 'Daftar Staf Tim';
 $current_page = 'team_staff';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -96,7 +96,7 @@ try {
 <div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
     <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; position: relative;">
         <span class="close-modal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: var(--danger);">&times;</span>
-        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Certificates</h3>
+        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Sertifikat</h3>
         <div id="certificatesList" style="max-height: 400px; overflow-y: auto;">
             <!-- Daftar sertifikat akan dimuat di sini -->
         </div>
@@ -105,30 +105,30 @@ try {
 
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Team Staff</h2>
+        <h2 class="section-title">Staf Tim</h2>
          <!-- Read Only: No Add Button -->
     </div>
 
     <div class="search-bar" style="margin-bottom: 20px;">
         <form action="" method="GET">
-            <input type="text" name="search" placeholder="Search staff..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Cari staf..." value="<?php echo htmlspecialchars($search); ?>">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
 
     <?php if (empty($staff_list)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">No staff found.</p>
+        <p style="text-align: center; color: var(--gray); padding: 20px;">Staf tidak ditemukan.</p>
     <?php else: ?>
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="photo-cell">Photo</th>
-                        <th>Name</th>
-                        <th>Team</th>
-                        <th style="text-align: center;">Position</th>
-                        <th style="text-align: center;">Age</th>
-                        <th style="text-align: center;">Certificates</th>
+                        <th class="photo-cell">Foto</th>
+                        <th>Nama</th>
+                        <th>Tim</th>
+                        <th style="text-align: center;">Jabatan</th>
+                        <th style="text-align: center;">Umur</th>
+                        <th style="text-align: center;">Sertifikat</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -154,7 +154,7 @@ try {
                             data-staff-name="<?php echo htmlspecialchars($staff['name']); ?>"
                             style="text-decoration: none;">
                                 <span class="certificate-count clickable" style="cursor: pointer; position: relative; padding-right: 20px;">
-                        <?php echo $staff['certificate_count']; ?> Certs
+                        <?php echo $staff['certificate_count']; ?> Sertifikat
                                 <span style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%);">▶</span>
                             </span>
                             </a>
@@ -169,7 +169,7 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Prev</a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
@@ -177,7 +177,7 @@ try {
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Next &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -216,10 +216,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const staffName = this.getAttribute('data-staff-name');
             
             // Set judul modal
-            modalTitle.textContent = 'Certificates - ' + staffName;
+            modalTitle.textContent = 'Sertifikat - ' + staffName;
             
             // Tampilkan loading
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Loading certificates...</p></div>';
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Memuat sertifikat...</p></div>';
             
             // Tampilkan modal
             modal.style.display = 'block';
@@ -239,12 +239,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (xhr.status === 200) {
                 certificatesList.innerHTML = xhr.responseText;
             } else {
-                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Error loading certificates</p></div>';
+                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat sertifikat</p></div>';
             }
         };
         
         xhr.onerror = function() {
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Network error</p></div>';
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Kesalahan jaringan</p></div>';
         };
         
         xhr.send();

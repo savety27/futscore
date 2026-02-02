@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Team List';
+$page_title = 'Daftar Tim';
 $current_page = 'team';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -70,32 +70,32 @@ try {
 
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Teams</h2>
+        <h2 class="section-title">Tim</h2>
         <!-- Read Only: No Add Button -->
     </div>
 
     <div class="search-bar" style="margin-bottom: 20px;">
         <form action="" method="GET">
-            <input type="text" name="search" placeholder="Search teams..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Cari tim..." value="<?php echo htmlspecialchars($search); ?>">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
 
     <?php if (empty($teams)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">No teams found.</p>
+        <p style="text-align: center; color: var(--gray); padding: 20px;">Tim tidak ditemukan.</p>
     <?php else: ?>
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th class="logo-cell">Logo</th>
-                        <th>Team Name</th>
+                        <th>Nama Tim</th>
                         <th>Alias</th>
-                        <th>Coach</th>
-                        <th>Players</th>
-                        <th>Staff</th>
-                        <th>Matches</th>
-                        <th>Established</th>
+                        <th>Pelatih</th>
+                        <th>Pemain</th>
+                        <th>Staf</th>
+                        <th>Pertandingan</th>
+                        <th>Berdiri</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,17 +108,17 @@ try {
                         <td class="alias-cell"><?php echo htmlspecialchars($team['alias']); ?></td>
                         <td class="coach-cell"><?php echo htmlspecialchars($team['coach']); ?></td>
                         <td>
-                            <a href="team_players.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['player_count']; ?> players">
+                            <a href="team_players.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['player_count']; ?> pemain">
                                 <span class="count-cell players"><?php echo $team['player_count']; ?></span>
                             </a>
                         </td>
                         <td>
-                            <a href="team_staff_view.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['staff_count']; ?> staff">
+                            <a href="team_staff_view.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['staff_count']; ?> staf">
                                 <span class="count-cell staff"><?php echo $team['staff_count']; ?></span>
                             </a>
                         </td>
                         <td>
-                            <a href="team_matches.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="View <?php echo $team['match_count']; ?> matches">
+                            <a href="team_matches.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['match_count']; ?> pertandingan">
                                 <span class="count-cell matches"><?php echo $team['match_count']; ?></span>
                             </a>
                         </td>
@@ -133,7 +133,7 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Prev</a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
@@ -141,7 +141,7 @@ try {
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Next &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
