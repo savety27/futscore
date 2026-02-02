@@ -1281,12 +1281,11 @@ body {
                                        class="action-btn btn-view">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <?php if ($challenge['status'] == 'open'): ?>
+                                    <!-- TOMBOL EDIT SELALU TAMPIL -->
                                     <a href="challenge_edit.php?id=<?php echo $challenge['id']; ?>" 
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php endif; ?>
                                     <?php if ($challenge['status'] == 'accepted' && empty($challenge['challenger_score'])): ?>
                                     <a href="challenge_result.php?id=<?php echo $challenge['id']; ?>" 
                                        class="action-btn btn-result">

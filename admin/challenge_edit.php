@@ -106,9 +106,9 @@ try {
         exit;
     }
     
-    // Check if challenge can be edited
-    if ($challenge_data['status'] !== 'open') {
-        $_SESSION['error_message'] = "Challenge sudah tidak dapat diedit (status: " . $challenge_data['status'] . ")";
+    // PERUBAHAN: Check if challenge already has results
+    if ($challenge_data['challenger_score'] !== null || $challenge_data['opponent_score'] !== null) {
+        $_SESSION['error_message'] = "Challenge sudah memiliki hasil pertandingan dan tidak dapat diedit.";
         header("Location: challenge.php");
         exit;
     }
