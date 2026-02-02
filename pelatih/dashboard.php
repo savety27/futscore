@@ -28,34 +28,34 @@ if ($team_id) {
         $staff_count = $stmt->fetchColumn();
 
         // Get Wins
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM matches WHERE status = 'completed' AND ((team1_id = ? AND score1 > score2) OR (team2_id = ? AND score2 > score1))");
-        $stmt->execute([$team_id, $team_id]);
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND winner_team_id = ?");
+        $stmt->execute([$team_id]);
         $wins = $stmt->fetchColumn();
 
         // Get Losses
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM matches WHERE status = 'completed' AND ((team1_id = ? AND score1 < score2) OR (team2_id = ? AND score2 < score1))");
-        $stmt->execute([$team_id, $team_id]);
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND (challenger_id = ? OR opponent_id = ?) AND winner_team_id IS NOT NULL AND winner_team_id != ?");
+        $stmt->execute([$team_id, $team_id, $team_id]);
         $losses = $stmt->fetchColumn();
 
         // Get Draws
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM matches WHERE status = 'completed' AND (team1_id = ? OR team2_id = ?) AND score1 = score2");
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND (challenger_id = ? OR opponent_id = ?) AND winner_team_id IS NULL");
         $stmt->execute([$team_id, $team_id]);
         $draws = $stmt->fetchColumn();
 
         // Get Next Match Spotlight
         $stmt = $conn->prepare("
-            SELECT m.*, 
+            SELECT c.*, 
                    t1.name as team1_name, t1.logo as team1_logo,
                    t2.name as team2_name, t2.logo as team2_logo,
-                   e.name as event_name
-            FROM matches m
-            JOIN teams t1 ON m.team1_id = t1.id
-            JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'scheduled' 
-              AND (m.team1_id = ? OR m.team2_id = ?)
-              AND m.match_date >= NOW()
-            ORDER BY m.match_date ASC
+                   v.name as venue_name
+            FROM challenges c
+            JOIN teams t1 ON c.challenger_id = t1.id
+            JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.status = 'accepted' 
+              AND (c.challenger_id = ? OR c.opponent_id = ?)
+              AND c.challenge_date >= NOW()
+            ORDER BY c.challenge_date ASC
             LIMIT 1
         ");
         $stmt->execute([$team_id, $team_id]);
@@ -457,7 +457,7 @@ if ($team_id) {
         </div>
 
         <?php if ($next_match): 
-            $match_date = new DateTime($next_match['match_date']);
+            $match_date = new DateTime($next_match['challenge_date']);
         ?>
             <div class="editorial-match-card">
                 <div class="match-body">
@@ -497,12 +497,12 @@ if ($team_id) {
                     </div>
                     <div class="info-group">
                         <div class="info-label">Lokasi Stadion</div>
-                        <div class="info-data"><?php echo htmlspecialchars($next_match['location'] ?: 'Akan diumumkan'); ?></div>
+                        <div class="info-data"><?php echo htmlspecialchars($next_match['venue_name'] ?: 'Akan diumumkan'); ?></div>
                     </div>
                 </div>
                 
                 <div style="padding: 15px; text-align: center; background: var(--premium-accent); color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
-                    <?php echo htmlspecialchars($next_match['event_name'] ?: 'Pertandingan Liga Resmi'); ?>
+                    <?php echo htmlspecialchars($next_match['sport_type'] ?: 'Pertandingan Persahabatan'); ?>
                 </div>
             </div>
         <?php else: ?>
