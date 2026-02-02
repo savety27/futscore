@@ -1267,7 +1267,7 @@ body {
                                 <?php endif; ?>
                             </td>
                             <td class="score-cell">
-                                <?php if (!empty($challenge['challenger_score']) && !empty($challenge['opponent_score'])): ?>
+                                <?php if ($challenge['challenger_score'] !== null && $challenge['opponent_score'] !== null): ?>
                                     <span class="score-badge">
                                         <?php echo $challenge['challenger_score']; ?> - <?php echo $challenge['opponent_score']; ?>
                                     </span>
@@ -1286,7 +1286,7 @@ body {
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php if ($challenge['status'] == 'accepted' && empty($challenge['challenger_score'])): ?>
+                                    <?php if ($challenge['status'] == 'accepted' && ($challenge['challenger_score'] === null || $challenge['opponent_score'] === null)): ?>
                                     <a href="challenge_result.php?id=<?php echo $challenge['id']; ?>" 
                                        class="action-btn btn-result">
                                         <i class="fas fa-futbol"></i>

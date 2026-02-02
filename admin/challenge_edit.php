@@ -106,12 +106,8 @@ try {
         exit;
     }
     
-    // PERUBAHAN: Check if challenge already has results
-    if ($challenge_data['challenger_score'] !== null || $challenge_data['opponent_score'] !== null) {
-        $_SESSION['error_message'] = "Challenge sudah memiliki hasil pertandingan dan tidak dapat diedit.";
-        header("Location: challenge.php");
-        exit;
-    }
+    // PERUBAHAN: Challenge bisa diedit walaupun sudah ada skor
+    // Tidak ada validasi untuk cek apakah sudah ada skor
     
     // Split date and time
     $challenge_datetime = new DateTime($challenge_data['challenge_date']);
@@ -1277,6 +1273,9 @@ body {
                                 <option value="accepted" <?php echo $challenge_data['status'] == 'accepted' ? 'selected' : ''; ?>>Accepted</option>
                                 <option value="rejected" <?php echo $challenge_data['status'] == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                                 <option value="expired" <?php echo $challenge_data['status'] == 'expired' ? 'selected' : ''; ?>>Expired</option>
+                                <?php if ($challenge_data['challenger_score'] !== null && $challenge_data['opponent_score'] !== null): ?>
+                                <option value="completed" <?php echo $challenge_data['status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                <?php endif; ?>
                             </select>
                         </div>
                         
