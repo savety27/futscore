@@ -59,7 +59,7 @@ if ($team_id) {
 
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Player List</h2>
+        <h2 class="section-title">Daftar Player</h2>
         <a href="player_form.php" class="btn-primary">
             <i class="fas fa-plus"></i> Add Player
         </a>
@@ -88,12 +88,12 @@ if ($team_id) {
                 <thead>
                     <tr>
                         <th style="width: 70px;">Photo</th>
-                        <th>Name</th>
-                        <th style="width: 80px;">Number</th>
-                        <th>Position</th>
-                        <th>Age</th>
-                        <th>Gender</th>
-                        <th>Contact</th>
+                        <th>Nama</th>
+                        <th style="width: 80px;">Nomor</th>
+                        <th>Posisi</th>
+                        <th>Umur</th>
+                        <th>Jenis Kelamin</th>
+                        <th>Kontak</th>
                         <th style="width: 80px;">Skills</th>
                         <th>Status</th>
                         <th style="width: 150px;">Actions</th>

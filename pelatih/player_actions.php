@@ -53,7 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? '');
         $jersey_number = trim($_POST['jersey_number'] ?? '');
         $position = trim($_POST['position'] ?? '');
-        $position_detail = trim($_POST['position_detail'] ?? '');
         $birth_date = trim($_POST['birth_date'] ?? '');
         $birth_place = trim($_POST['birth_place'] ?? '');
         $gender = trim($_POST['gender'] ?? '');
@@ -130,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $diploma_image = uploadPlayerFile($_FILES['diploma_image'], '../images/players/', 'ijazah_');
             }
             
-            // Insert player data
+            // Insert player data - position_detail diisi dengan nilai position
             $stmt = $conn->prepare("
                 INSERT INTO players (
                     name, slug, team_id, jersey_number, position, position_detail, 
@@ -142,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ktp_image, kk_image, birth_cert_image, diploma_image,
                     created_at, updated_at, status
                 ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                     NOW(), NOW(), 'active'
@@ -150,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             
             $stmt->execute([
-                $name, $slug, $team_id, $jersey_number, $position, $position_detail,
+                $name, $slug, $team_id, $jersey_number, $position, $position, // position_detail = position
                 $birth_date, $birth_place, $gender, $height, $weight, $photo,
                 $dominant_foot, $nisn, $nik, $sport_type, $email, $phone,
                 $nationality, $street, $city, $province, $postal_code, $country,
@@ -183,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setplay_position = ?, passing = ?, control = ?, updated_at = NOW()";
             
             $params = [
-                $name, $jersey_number, $position, $position_detail,
+                $name, $jersey_number, $position, $position, // position_detail = position
                 $birth_date, $birth_place, $gender,
                 $height, $weight, $dominant_foot,
                 $nisn, $nik, $sport_type, $email, $phone,

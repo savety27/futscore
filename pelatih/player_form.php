@@ -8,7 +8,7 @@ $player = [
     'name' => '',
     'jersey_number' => '',
     'position' => 'Forward',
-    'position_detail' => '',
+    'position_detail' => '', // Tetap ada di array tapi tidak diisi manual
     'birth_date' => '',
     'birth_place' => '',
     'gender' => 'L',
@@ -101,37 +101,37 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-user-circle"></i>
-                    Basic Information
+                   Profile 
                 </h2>
                 
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Full Name</span>
+                            <span class="required-field">Nama</span>
                             <span class="note">Required</span>
                         </label>
                         <input type="text" name="name" class="form-control" 
-                               placeholder="Enter full name" required
+                               placeholder="Masukkan nama lengkap" required
                                value="<?php echo htmlspecialchars($player['name']); ?>">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Jersey Number</span>
+                            <span class="required-field">No Punggung</span>
                             <span class="note">Required</span>
                         </label>
                         <input type="number" name="jersey_number" class="form-control" 
-                               placeholder="Enter jersey number" required
+                               placeholder="Masukkan nomor punggung" required
                                value="<?php echo htmlspecialchars($player['jersey_number']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Sport Type</span>
+                            <span class="required-field">Cabor</span>
                             <span class="note">Required</span>
                         </label>
                         <select name="sport_type" class="form-control" required>
-                            <option value="">Select Sport</option>
+                            <option value="">Pilih Cabor</option>
                             <?php 
                             $sports = ['Futsal', 'Sepakbola', 'Panahan', 'Karate', 'Angkat Besi', 'Atletik', 'Dayung', 
                                       'Pencak Silat', 'Taekwondo', 'Sepak Takraw', 'Bola Voli', 'Cricket', 
@@ -146,11 +146,11 @@ if (isset($_GET['id'])) {
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Position</span>
+                            <span class="required-field">Posisi</span>
                             <span class="note">Required</span>
                         </label>
                         <select name="position" class="form-control" required>
-                            <option value="">Select Position</option>
+                            <option value="">Pilih Posisi</option>
                             <?php 
                             $positions = [
                                 'GK' => 'Goalkeeper (GK)',
@@ -165,20 +165,10 @@ if (isset($_GET['id'])) {
                             ?>
                         </select>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span>Position Detail</span>
-                            <span class="note">Optional</span>
-                        </label>
-                        <input type="text" name="position_detail" class="form-control" 
-                               placeholder="e.g., Center Forward, Sweeper, etc."
-                               value="<?php echo htmlspecialchars($player['position_detail']); ?>">
-                    </div>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Birth Date</span>
+                            <span class="required-field">Tanggal Lahir</span>
                             <span class="note">Required</span>
                         </label>
                         <input type="date" name="birth_date" class="form-control" 
@@ -188,57 +178,57 @@ if (isset($_GET['id'])) {
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Birth Place</span>
+                            <span class="required-field">Tempat Lahir</span>
                             <span class="note">Required</span>
                         </label>
                         <input type="text" name="birth_place" class="form-control" 
-                               placeholder="Enter birth place" required
+                               placeholder="Masukkan tempat lahir" required
                                value="<?php echo htmlspecialchars($player['birth_place']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Gender</span>
+                            <span class="required-field">Jenis Kelamin</span>
                             <span class="note">Required</span>
                         </label>
                         <div class="radio-group">
                             <label class="radio-option">
                                 <input type="radio" name="gender" value="L" required
                                     <?php echo ($player['gender'] == 'L') ? 'checked' : ''; ?>>
-                                <span>Male (L)</span>
+                                <span>Laki-laki</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="gender" value="P" required
                                     <?php echo ($player['gender'] == 'P') ? 'checked' : ''; ?>>
-                                <span>Female (P)</span>
+                                <span>Perempuan</span>
                             </label>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Dominant Foot</span>
+                            <span>Kaki Dominan</span>
                             <span class="note">Optional</span>
                         </label>
                         <select name="dominant_foot" class="form-control">
-                            <option value="">Select Dominant Foot</option>
-                            <option value="kanan" <?php echo ($player['dominant_foot'] == 'kanan') ? 'selected' : ''; ?>>Right</option>
-                            <option value="kiri" <?php echo ($player['dominant_foot'] == 'kiri') ? 'selected' : ''; ?>>Left</option>
-                            <option value="kedua" <?php echo ($player['dominant_foot'] == 'kedua') ? 'selected' : ''; ?>>Both</option>
+                            <option value="">Pilih Kaki Dominan</option>
+                            <option value="kanan" <?php echo ($player['dominant_foot'] == 'kanan') ? 'selected' : ''; ?>>Kanan</option>
+                            <option value="kiri" <?php echo ($player['dominant_foot'] == 'kiri') ? 'selected' : ''; ?>>Kiri</option>
+                            <option value="kedua" <?php echo ($player['dominant_foot'] == 'kedua') ? 'selected' : ''; ?>>Kedua</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Height & Weight</span>
+                            <span>Tinggi & Berat</span>
                             <span class="note">Optional</span>
                         </label>
                         <div class="date-input">
                             <input type="number" name="height" class="form-control" 
-                                   placeholder="Height (cm)"
+                                   placeholder="Tinggi (cm)"
                                    value="<?php echo htmlspecialchars($player['height']); ?>">
                             <input type="number" name="weight" class="form-control" 
-                                   placeholder="Weight (kg)"
+                                   placeholder="Berat (kg)"
                                    value="<?php echo htmlspecialchars($player['weight']); ?>">
                         </div>
                     </div>
@@ -249,7 +239,7 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-address-card"></i>
-                    Contact Information
+                    Informasi Kontak
                 </h2>
                 
                 <div class="form-grid">
@@ -259,77 +249,77 @@ if (isset($_GET['id'])) {
                             <span class="note">Optional</span>
                         </label>
                         <input type="email" name="email" class="form-control" 
-                               placeholder="Enter email address"
+                               placeholder="Masukkan email"
                                value="<?php echo htmlspecialchars($player['email']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Phone Number</span>
+                            <span>Telpon</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="tel" name="phone" class="form-control" 
-                               placeholder="Enter phone number"
+                               placeholder="Masukkan nomor telepon"
                                value="<?php echo htmlspecialchars($player['phone']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Address</span>
+                            <span>Alamat</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="street" class="form-control" 
-                               placeholder="Enter street address"
+                               placeholder="Masukkan alamat lengkap"
                                value="<?php echo htmlspecialchars($player['street']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>City</span>
+                            <span>Kota</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="city" class="form-control" 
-                               placeholder="Enter city"
+                               placeholder="Masukkan kota"
                                value="<?php echo htmlspecialchars($player['city']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Province</span>
+                            <span>Provinsi</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="province" class="form-control" 
-                               placeholder="Enter province"
+                               placeholder="Masukkan provinsi"
                                value="<?php echo htmlspecialchars($player['province']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Postal Code</span>
+                            <span>Kode Pos</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="postal_code" class="form-control" 
-                               placeholder="Enter postal code"
+                               placeholder="Masukkan kode pos"
                                value="<?php echo htmlspecialchars($player['postal_code']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Nationality</span>
+                            <span>Kewarganegaraan</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="nationality" class="form-control" 
-                               placeholder="Enter nationality"
+                               placeholder="Masukkan kewarganegaraan"
                                value="<?php echo htmlspecialchars($player['nationality']); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Country</span>
+                            <span>Negara</span>
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="country" class="form-control" 
-                               placeholder="Enter country"
+                               placeholder="Masukkan negara"
                                value="<?php echo htmlspecialchars($player['country']); ?>">
                     </div>
                 </div>
@@ -339,7 +329,7 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-id-card"></i>
-                    Identification
+                    Identifikasi
                 </h2>
                 
                 <div class="form-grid">
@@ -349,7 +339,7 @@ if (isset($_GET['id'])) {
                             <span class="note">Required (16 digits)</span>
                         </label>
                         <input type="text" name="nik" class="form-control" 
-                               placeholder="Enter 16-digit NIK" required
+                               placeholder="Masukkan 16-digit NIK" required
                                pattern="[0-9]{16}"
                                value="<?php echo htmlspecialchars($player['nik']); ?>">
                     </div>
@@ -360,7 +350,7 @@ if (isset($_GET['id'])) {
                             <span class="note">Optional</span>
                         </label>
                         <input type="text" name="nisn" class="form-control" 
-                               placeholder="Enter NISN"
+                               placeholder="Masukkan NISN"
                                value="<?php echo htmlspecialchars($player['nisn']); ?>">
                     </div>
                 </div>
@@ -370,27 +360,27 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-camera"></i>
-                    Player Photo
+                    Foto Profile
                 </h2>
                 
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Profile Photo</span>
+                            <span>Foto Profile</span>
                             <span class="note">Max 5MB (JPG, PNG, GIF)</span>
                         </label>
                         
                         <?php if (!empty($player['photo'])): ?>
                         <div class="current-photo" style="margin-bottom: 20px;">
                             <p style="font-size: 14px; color: var(--gray); margin-bottom: 10px;">
-                                <strong>Current Photo:</strong>
+                                <strong>Foto :</strong>
                             </p>
                             <div class="file-item">
                                 <img src="../images/players/<?php echo htmlspecialchars($player['photo']); ?>" 
                                      alt="Current Photo" style="width: 60px; height: 60px;">
                                 <div>
                                     <div><strong><?php echo htmlspecialchars($player['photo']); ?></strong></div>
-                                    <div style="font-size: 12px; color: var(--gray);">Click below to change</div>
+                                    <div style="font-size: 12px; color: var(--gray);">Klik untuk mengganti foto</div>
                                 </div>
                             </div>
                         </div>
@@ -399,8 +389,8 @@ if (isset($_GET['id'])) {
                         <div class="file-upload" id="photoUpload">
                             <div>
                                 <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                                <p style="margin: 0; color: var(--gray);">Click to upload or drag & drop</p>
-                                <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--gray);">Max 5MB</p>
+                                <p style="margin: 0; color: var(--gray);">Klik untuk upload atau drag & drop</p>
+                                <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--gray);">Maksimal 5MB</p>
                             </div>
                             <input type="file" name="photo" id="photoFile" accept="image/*">
                         </div>
@@ -413,20 +403,20 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-file-alt"></i>
-                    Documents
+                    Dokumen
                 </h2>
                 
                 <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Upload supporting documents (Optional). Max 5MB per file.
+                    Unggah Dokumen pendukung (Opsional). Maksimal 5MB per file.
                 </p>
                 
                 <div class="form-grid">
                     <?php
                     $documents = [
-                        'ktp_image' => ['label' => 'KTP / ID Card', 'current' => $player['ktp_image']],
+                        'ktp_image' => ['label' => 'KTP / KIA / Kartu Pelajar / Kartu Identitas', 'current' => $player['ktp_image']],
                         'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image']],
-                        'birth_cert_image' => ['label' => 'Birth Certificate', 'current' => $player['birth_cert_image']],
-                        'diploma_image' => ['label' => 'Diploma / Report Card', 'current' => $player['diploma_image']]
+                        'birth_cert_image' => ['label' => 'Akta Lahir / Surat Ket. Lahir', 'current' => $player['birth_cert_image']],
+                        'diploma_image' => ['label' => 'Ijazah / Biodata Raport / Kartu NISN', 'current' => $player['diploma_image']]
                     ];
                     
                     foreach ($documents as $key => $doc):
@@ -440,7 +430,7 @@ if (isset($_GET['id'])) {
                         <?php if (!empty($doc['current'])): ?>
                         <div class="current-photo" style="margin-bottom: 10px;">
                             <p style="font-size: 12px; color: var(--gray); margin-bottom: 5px;">
-                                <strong>Current:</strong> <?php echo htmlspecialchars($doc['current']); ?>
+                                <strong>Foto :</strong> <?php echo htmlspecialchars($doc['current']); ?>
                             </p>
                         </div>
                         <?php endif; ?>
@@ -462,11 +452,11 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-chart-line"></i>
-                    Skills (0-10 Scale)
+                    Skills (Range 0-10)
                 </h2>
                 
                 <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Rate the player's skills on a scale of 0 to 10. Default value is 5.
+                    Nilai Default: 5
                 </p>
                 
                 <div class="skill-grid">
@@ -479,7 +469,7 @@ if (isset($_GET['id'])) {
                         'shooting' => 'Shooting',
                         'setplay_position' => 'Setplay Position',
                         'passing' => 'Passing',
-                        'control' => 'Ball Control'
+                        'control' => 'Control'
                     ];
                     
                     foreach ($skills as $key => $label):
@@ -504,11 +494,11 @@ if (isset($_GET['id'])) {
             <div class="form-actions">
                 <a href="players.php" class="btn btn-secondary">
                     <i class="fas fa-times"></i>
-                    Cancel
+                    Batal
                 </a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i>
-                    <?php echo $action === 'add' ? 'Add Player' : 'Update Player'; ?>
+                    <?php echo $action === 'add' ? 'Simpan Player' : 'Update Player'; ?>
                 </button>
             </div>
         </form>
