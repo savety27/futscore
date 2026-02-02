@@ -136,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['match_status'] = "Status match harus diisi";
     }
     
-    if (empty($form_data['match_duration'])) {
-        $errors['match_duration'] = "Durasi match harus diisi";
+    if ($form_data['match_duration'] < 0) {  // Boleh 0, tapi tidak boleh negatif
+    $errors['match_duration'] = "Durasi tidak boleh negatif";
     }
     
     // Determine winner
@@ -1272,7 +1272,7 @@ body {
                                    name="match_duration" 
                                    class="form-input <?php echo isset($errors['match_duration']) ? 'is-invalid' : ''; ?>" 
                                    value="<?php echo isset($form_data['match_duration']) ? $form_data['match_duration'] : ($challenge_data['match_duration'] ? $challenge_data['match_duration'] : '90'); ?>"
-                                   min="1" 
+                                   min="0" 
                                    max="180" 
                                    required>
                             <?php if (isset($errors['match_duration'])): ?>
@@ -1280,6 +1280,7 @@ body {
                             <?php endif; ?>
                         </div>
                     </div>
+                    
                     
                     <div class="form-grid">
                         <div class="form-group">
@@ -1417,11 +1418,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (!matchDuration || matchDuration < 1) {
-            e.preventDefault();
-            toastr.error('Durasi match harus valid');
-            return;
-        }
+        if (matchDuration < 0) { 
+        e.preventDefault();
+        toastr.error('Durasi match tidak boleh negatif');
+        return;
+}
     });
 });
 </script>
