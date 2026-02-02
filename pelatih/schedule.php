@@ -4,11 +4,23 @@ $current_page = 'schedule';
 require_once 'config/database.php';
 require_once 'includes/header.php';
 
-// Handle search
+// Handle search dan filter
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
+
+// Ambil semua tipe olahraga yang tersedia untuk filter
+$sport_types = [];
+try {
+    $sport_query = "SELECT DISTINCT sport_type FROM challenges WHERE sport_type IS NOT NULL AND sport_type != '' ORDER BY sport_type";
+    $sport_stmt = $conn->prepare($sport_query);
+    $sport_stmt->execute();
+    $sport_types = $sport_stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    // Jika error, sport_types akan tetap array kosong
+}
 
 // Base query untuk challenges dengan join ke teams untuk nama tim
 $base_query = "SELECT 
@@ -26,6 +38,7 @@ $base_query = "SELECT
 
 $count_query = "SELECT COUNT(*) as total FROM challenges c WHERE 1=1";
 
+// Tambahkan kondisi untuk search
 if (!empty($search)) {
     $search_term = "%{$search}%";
     $base_query .= " AND (c.challenge_code LIKE ? 
@@ -42,6 +55,12 @@ if (!empty($search)) {
                 OR c.match_status LIKE ?)";
 }
 
+// Tambahkan kondisi untuk filter olahraga
+if (!empty($sport_filter)) {
+    $base_query .= " AND c.sport_type = ?";
+    $count_query .= " AND c.sport_type = ?";
+}
+
 $base_query .= " ORDER BY c.challenge_date DESC";
 
 $total_data = 0;
@@ -49,7 +68,19 @@ $total_pages = 1;
 $challenges = [];
 
 try {
-    if (!empty($search)) {
+    // Hitung total data dengan filter
+    if (!empty($search) && !empty($sport_filter)) {
+        // Keduanya: search dan filter olahraga
+        $stmt = $conn->prepare($count_query);
+        $stmt->execute([
+            $search_term, $search_term, $search_term, 
+            $search_term, $search_term, $search_term,
+            $sport_filter
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_data = $result['total'];
+    } elseif (!empty($search)) {
+        // Hanya search
         $stmt = $conn->prepare($count_query);
         $stmt->execute([
             $search_term, $search_term, $search_term, 
@@ -57,7 +88,14 @@ try {
         ]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $total_data = $result['total'];
+    } elseif (!empty($sport_filter)) {
+        // Hanya filter olahraga
+        $stmt = $conn->prepare($count_query);
+        $stmt->execute([$sport_filter]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_data = $result['total'];
     } else {
+        // Tidak ada filter
         $stmt = $conn->prepare($count_query);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -66,10 +104,23 @@ try {
     
     $total_pages = ceil($total_data / $limit);
     
+    // Query data dengan pagination
     $query = $base_query . " LIMIT ? OFFSET ?";
     $stmt = $conn->prepare($query);
     
-    if (!empty($search)) {
+    if (!empty($search) && !empty($sport_filter)) {
+        // Keduanya: search dan filter olahraga
+        $stmt->bindValue(1, $search_term);
+        $stmt->bindValue(2, $search_term);
+        $stmt->bindValue(3, $search_term);
+        $stmt->bindValue(4, $search_term);
+        $stmt->bindValue(5, $search_term);
+        $stmt->bindValue(6, $search_term);
+        $stmt->bindValue(7, $sport_filter);
+        $stmt->bindValue(8, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(9, $offset, PDO::PARAM_INT);
+    } elseif (!empty($search)) {
+        // Hanya search
         $stmt->bindValue(1, $search_term);
         $stmt->bindValue(2, $search_term);
         $stmt->bindValue(3, $search_term);
@@ -78,7 +129,13 @@ try {
         $stmt->bindValue(6, $search_term);
         $stmt->bindValue(7, $limit, PDO::PARAM_INT);
         $stmt->bindValue(8, $offset, PDO::PARAM_INT);
+    } elseif (!empty($sport_filter)) {
+        // Hanya filter olahraga
+        $stmt->bindValue(1, $sport_filter);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
     } else {
+        // Tidak ada filter
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
         $stmt->bindValue(2, $offset, PDO::PARAM_INT);
     }
@@ -152,17 +209,180 @@ try {
 }
 ?>
 
+<style>
+.filter-container {
+    margin-bottom: 25px;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-form {
+    width: 100%;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    color: var(--dark);
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+.search-btn {
+    position: absolute;
+    left: 12px;
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sport-filter-wrapper {
+    width: 200px;
+}
+
+.sport-select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    color: var(--dark);
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.sport-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.clear-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background-color: #f8f9fa;
+    color: var(--dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.clear-filter-btn:hover {
+    background-color: #e9ecef;
+    color: var(--dark);
+    text-decoration: none;
+}
+
+.clear-filter-btn i {
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group,
+    .sport-filter-wrapper {
+        min-width: 100%;
+        width: 100%;
+    }
+    
+    .clear-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Jadwal Pertandingan</h2>
         <!-- Read Only: No Add Button -->
     </div>
 
-    <div class="search-bar" style="margin-bottom: 20px;">
-        <form action="" method="GET">
-            <input type="text" name="search" placeholder="Cari pertandingan..." value="<?php echo htmlspecialchars($search); ?>">
-            <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
+    <div class="filter-container">
+        <div class="filter-row">
+            <!-- Search Bar -->
+            <div class="filter-group">
+                <form action="" method="GET" class="filter-form">
+                    <div class="search-wrapper">
+                        <input type="text" name="search" placeholder="Cari pertandingan..." 
+                               value="<?php echo htmlspecialchars($search); ?>"
+                               class="search-input">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Sport Filter -->
+            <div class="sport-filter-wrapper">
+                <form action="" method="GET" id="sportFilterForm" class="filter-form">
+                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                    <select name="sport" onchange="document.getElementById('sportFilterForm').submit()" 
+                            class="sport-select">
+                        <option value="">Semua Olahraga</option>
+                        <?php foreach ($sport_types as $sport): ?>
+                            <option value="<?php echo htmlspecialchars($sport); ?>" 
+                                <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars(ucwords($sport)); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+            </div>
+            
+            <!-- Clear Filter Button -->
+            <?php if (!empty($search) || !empty($sport_filter)): ?>
+            <div class="filter-group" style="flex: 0 0 auto;">
+                <a href="schedule.php" class="clear-filter-btn">
+                    <i class="fas fa-times"></i> Hapus Filter
+                </a>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
     </div>
 
     <?php if (empty($challenges)): ?>
@@ -258,6 +478,7 @@ try {
                                     default: $badge_class = 'background: #f5f5f5; color: var(--gray);';
                                 }
                                 ?>
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $badge_class; ?>">
                                 <?php 
                                     $s_status = strtolower($challenge['status']);
                                     $s_status_map = ['accepted' => 'Diterima', 'open' => 'Terbuka', 'rejected' => 'Ditolak', 'expired' => 'Kedaluwarsa'];
@@ -299,15 +520,15 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
