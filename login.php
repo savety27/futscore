@@ -81,8 +81,8 @@ $db_status = $db ? "connected" : "disconnected";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
-    <meta name="description" content="FutScore Admin Dashboard - Sistem manajemen pertandingan futsal">
-    <title>Login - FutScore</title>
+    <meta name="description" content="MGP Admin Dashboard - Sistem manajemen pertandingan futsal">
+    <title>Login - MGP</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -999,7 +999,7 @@ $db_status = $db ? "connected" : "disconnected";
                     <span class="status-dot <?php echo $db_status; ?>"></span>
                     <span>Database <?php echo strtoupper($db_status); ?></span>
                 </div>
-                <p class="copyright">&copy; <?php echo date('Y'); ?> FutScore. All rights reserved.</p>
+                <p class="copyright">&copy; <?php echo date('Y'); ?> MGP. All rights reserved.</p>
             </footer>
         </div>
     </main>
