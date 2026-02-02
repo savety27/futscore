@@ -72,7 +72,6 @@ $latestNews = getLatestNews(3);
                         <div class="dropdown-menu">
                             <a href="<?php echo SITE_URL; ?>/player.php">Player</a>
                             <a href="<?php echo SITE_URL; ?>/staff.php">Team Staff</a>
-                            <a href="<?php echo SITE_URL; ?>/official.php">Perangkat Pertandingan</a>
                         </div>
                     </li>
                     <li><a href="<?php echo SITE_URL; ?>/news.php" class="<?php echo basename($_SERVER['PHP_SELF']) == 'news.php' ? 'active' : ''; ?>">NEWS</a></li>

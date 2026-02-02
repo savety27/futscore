@@ -155,6 +155,7 @@ function getFileUrl($filename, $directory, $defaultIcon = 'fa-user') {
     ];
 }
 
+
 // Page Metadata
 $pageTitle = "Staff List";
 ?>
@@ -1050,10 +1051,7 @@ $pageTitle = "Staff List";
 <?php require_once 'includes/footer.php'; ?>
 
 <script>
-// Base URL
-const SITE_URL = '<?php echo SITE_URL; ?>';
-
-// Function to load certificates
+// Function to load certificates - FIXED VERSION
 function loadCertificates(staffId, staffName) {
     console.log('Loading certificates for:', staffName, 'ID:', staffId);
     
@@ -1071,72 +1069,62 @@ function loadCertificates(staffId, staffName) {
     
     modal.style.display = 'flex';
     
-    // Try multiple AJAX paths
-    const ajaxPaths = [
-        'includes/ajax_get_certificates.php',
-        './includes/ajax_get_certificates.php',
-        'ajax_get_certificates.php'
-    ];
+    // URL yang benar untuk AJAX request
+    const ajaxPath = 'includes/ajax_get_certificates.php';
+    const url = `${ajaxPath}?staff_id=${staffId}`;
     
-    let currentPathIndex = 0;
+    console.log('Fetching certificates from:', url);
     
-    function tryAjaxRequest() {
-        if (currentPathIndex >= ajaxPaths.length) {
+    fetch(url)
+        .then(response => {
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log('Certificates data:', data);
+            
+            if (data.success && data.certificates && data.certificates.length > 0) {
+                displayCertificates(data.certificates);
+            } else {
+                content.innerHTML = `
+                    <div class="no-certificates">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>Tidak Ada Lisensi</h3>
+                        <p>Staff ini belum memiliki lisensi.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading certificates:', error);
+            
+            // Debug: test with direct URL
+            const testUrl = ajaxPath + '?staff_id=' + staffId;
             content.innerHTML = `
                 <div class="no-certificates">
                     <i class="fas fa-exclamation-triangle"></i>
                     <h3>Gagal Memuat Data</h3>
-                    <p>Tidak dapat menghubungi server.</p>
+                    <p>${error.message}</p>
+                    <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <small>Debug info:</small><br>
+                        <small>URL: ${testUrl}</small><br>
+                        <small>Staff ID: ${staffId}</small>
+                    </div>
+                    <p style="font-size: 12px; color: #666;">
+                        Pastikan file <code>${ajaxPath}</code> ada di server.
+                    </p>
                     <button onclick="loadCertificates(${staffId}, '${staffName}')" 
-                            style="margin-top: 20px; padding: 10px 20px; background: #1a365d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            style="margin-top: 15px; padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer;">
                         <i class="fas fa-redo"></i> Coba Lagi
                     </button>
                 </div>
             `;
-            return;
-        }
-        
-        const ajaxPath = ajaxPaths[currentPathIndex];
-        const url = `${ajaxPath}?staff_id=${staffId}&_=${Date.now()}`;
-        
-        console.log('Trying AJAX path:', ajaxPath);
-        
-        fetch(url)
-            .then(response => {
-                console.log('Response status:', response.status);
-                
-                // Check if response is HTML instead of JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    console.warn('Response is not JSON, trying next path');
-                    currentPathIndex++;
-                    tryAjaxRequest();
-                    return Promise.reject('Not JSON response');
-                }
-                
-                return response.json();
-            })
-            .then(data => {
-                console.log('Received data:', data);
-                
-                if (data.success && data.certificates && data.certificates.length > 0) {
-                    displayCertificates(data.certificates);
-                } else {
-                    content.innerHTML = `
-                        <div class="no-certificates">
-                            <i class="fas fa-file-alt"></i>
-                            <h3>Tidak Ada Lisensi</h3>
-                            <p>Staff ini belum memiliki lisensi.</p>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading certificates:', error);
-                currentPathIndex++;
-                tryAjaxRequest();
-            });
-    }
+        });
     
     function displayCertificates(certificates) {
         let html = `
@@ -1154,8 +1142,8 @@ function loadCertificates(staffId, staffName) {
             const fileExt = fileName.split('.').pop().toLowerCase();
             const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExt);
             const isPDF = fileExt === 'pdf';
-            const isDoc = ['doc', 'docx', 'txt', 'pdf'].includes(fileExt);
             
+            // Build file URL - gunakan SITE_URL yang sudah didefinisikan
             const fileUrl = cert.certificate_file ? 
                 `${SITE_URL}/uploads/certificates/${fileName}` : '#';
             
@@ -1165,6 +1153,10 @@ function loadCertificates(staffId, staffName) {
                     month: 'long',
                     year: 'numeric'
                 }) : 'Tidak ada tanggal';
+            
+            // Escape quotes untuk onclick
+            const safeCertName = (cert.certificate_name || 'Lisensi ' + (index + 1)).replace(/'/g, "\\'");
+            const safeFileUrl = fileUrl.replace(/'/g, "\\'");
             
             html += `
             <div class="certificate-card">
@@ -1182,13 +1174,13 @@ function loadCertificates(staffId, staffName) {
                 <div class="certificate-preview">
             `;
             
-            if (cert.certificate_file) {
+            if (cert.certificate_file && fileName !== 'Tidak ada file') {
                 if (isImage) {
                     html += `
                         <img src="${fileUrl}" 
-                             alt="${cert.certificate_name}" 
+                             alt="${safeCertName}" 
                              class="certificate-image"
-                             onclick="viewImage('${fileUrl}', '${cert.certificate_name.replace(/'/g, "\\'")}')">
+                             onclick="viewImage('${safeFileUrl}', '${safeCertName}')">
                         <div class="file-actions" style="margin-top: 15px;">
                             <a href="${fileUrl}" target="_blank" class="btn-view">
                                 <i class="fas fa-external-link-alt"></i> Lihat
@@ -1253,9 +1245,6 @@ function loadCertificates(staffId, staffName) {
         html += `</div>`;
         content.innerHTML = html;
     }
-    
-    // Start trying
-    tryAjaxRequest();
 }
 
 // Function to view image in full screen
@@ -1305,23 +1294,31 @@ document.getElementById('imageViewer').addEventListener('click', function(e) {
     }
 });
 
-// Auto-submit search on Enter
-document.querySelector('.search-wrapper input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        this.form.submit();
-    }
-});
-
-// Image error handler for staff photos
+// Image error handler for certificate images
 document.addEventListener('DOMContentLoaded', function() {
-    const staffPhotos = document.querySelectorAll('.staff-img-sm');
-    staffPhotos.forEach(img => {
+    // Handler untuk gambar sertifikat (jika ada)
+    const certImages = document.querySelectorAll('.certificate-image');
+    certImages.forEach(img => {
         img.addEventListener('error', function() {
+            console.error('Certificate image failed to load:', this.src);
+            this.style.display = 'none';
             const parent = this.parentElement;
-            const placeholder = parent.querySelector('.photo-placeholder');
-            if (placeholder) {
-                this.style.display = 'none';
-                placeholder.style.display = 'flex';
+            if (parent) {
+                const fileUrl = this.src;
+                const fileName = fileUrl.split('/').pop();
+                parent.innerHTML = `
+                    <div class="file-preview">
+                        <div class="file-icon">
+                            <i class="fas fa-file-image" style="color: #a0aec0;"></i>
+                        </div>
+                        <div class="file-name">${fileName}</div>
+                        <div class="file-actions">
+                            <a href="${fileUrl}" target="_blank" class="btn-view">
+                                <i class="fas fa-external-link-alt"></i> Buka Link
+                            </a>
+                        </div>
+                    </div>
+                `;
             }
         });
     });
