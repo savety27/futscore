@@ -3,7 +3,7 @@ require_once 'config/database.php';
 
 // Pastikan staff_id dikirim
 if (!isset($_GET['staff_id']) || empty($_GET['staff_id'])) {
-    echo '<div style="text-align: center; padding: 20px; color: var(--danger);">No staff ID provided</div>';
+    echo '<div style="text-align: center; padding: 20px; color: var(--danger);">ID staf tidak ditemukan</div>';
     exit;
 }
 
@@ -21,14 +21,14 @@ try {
     $certificates = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($certificates)) {
-        echo '<div style="text-align: center; padding: 20px; color: var(--gray);">No certificates found for this staff</div>';
+        echo '<div style="text-align: center; padding: 20px; color: var(--gray);">Sertifikat tidak ditemukan untuk staf ini</div>';
     } else {
         foreach ($certificates as $cert) {
             echo '<div class="certificate-item">';
             echo '<div class="certificate-info">';
             echo '<h4>' . htmlspecialchars($cert['certificate_name']) . '</h4>';
-            echo '<p><strong>Issuing Authority:</strong> ' . htmlspecialchars($cert['issuing_authority']) . '</p>';
-            echo '<p><strong>Issue Date:</strong> ' . htmlspecialchars($cert['issue_date']) . '</p>';
+            echo '<p><strong>Lembaga Penerbit:</strong> ' . htmlspecialchars($cert['issuing_authority']) . '</p>';
+            echo '<p><strong>Tanggal Terbit:</strong> ' . htmlspecialchars($cert['issue_date']) . '</p>';
             echo '</div>';
             
             // Tampilkan gambar sertifikat

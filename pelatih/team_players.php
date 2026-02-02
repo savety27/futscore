@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Team Players';
+$page_title = 'Pemain Tim';
 $current_page = 'team'; // Keep 'team' as current page to highlight the sidebar correctly
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -15,13 +15,13 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team not found.</div><a href='team.php' class='btn-secondary'>Back to Teams</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Tim tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Tim</a></div>";
     require_once 'includes/footer.php';
     exit;
 }
 
 // Update page title with team name
-$page_title = htmlspecialchars($team_info['name']) . ' - Players';
+$page_title = htmlspecialchars($team_info['name']) . ' - Pemain';
 
 // Pagination settings
 $players_per_page = 10;
@@ -79,30 +79,30 @@ try {
                 <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
             <?php endif; ?>
             <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Players</span></h2>
+                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Pemain</span></h2>
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Teams
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Tim
         </a>
     </div>
 
     <?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
-            <p>No players found in this team.</p>
+            <p>Tidak ada pemain ditemukan di tim ini.</p>
         </div>
     <?php else: ?>
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">Photo</th>
-                        <th>Name</th>
-                        <th style="width: 80px;">Number</th>
-                        <th>Position</th>
-                        <th>Age</th>
-                        <th>Gender</th>
+                        <th style="width: 70px;">Foto</th>
+                        <th>Nama</th>
+                        <th style="width: 80px;">Nomor</th>
+                        <th>Posisi</th>
+                        <th>Umur</th>
+                        <th>Jenis Kelamin</th>
                         <th style="width: 80px;">Skills</th>
                         <th>Status</th>
                         <!-- Removed Actions Column -->
@@ -193,7 +193,7 @@ try {
                             </span>
                         </td>
                         <td class="age-cell">
-                            <?php echo htmlspecialchars($player['age'] ?? 'N/A'); ?> yrs
+                            <?php echo htmlspecialchars($player['age'] ?? 'N/A'); ?> thn
                         </td>
                         <td class="gender-cell" data-gender="<?php echo $player['gender']; ?>">
                             <?php echo $player['gender'] == 'L' ? '♂' : '♀'; ?>
@@ -213,7 +213,10 @@ try {
                         </td>
                         <td class="status-cell">
                             <span class="status-badge <?php echo $player['status']; ?>">
-                                <?php echo ucfirst($player['status']); ?>
+                                <?php 
+                                    $status_map = ['active' => 'Aktif', 'inactive' => 'Non-aktif', 'injured' => 'Cedera', 'suspended' => 'Skorsing'];
+                                    echo $status_map[$player['status']] ?? ucfirst($player['status']); 
+                                ?>
                             </span>
                         </td>
                     </tr>
@@ -225,11 +228,11 @@ try {
         <!-- Statistics Summary -->
         <div class="stats-summary">
             <div class="stat-item">
-                <span class="stat-label">Total</span>
+                <span class="stat-label">Total Pemain</span>
                 <span class="stat-value"><?php echo $total_players; ?></span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Active</span>
+                <span class="stat-label">Aktif</span>
                 <span class="stat-value">
                     <?php 
                         $active_count = array_filter($players, fn($p) => $p['status'] == 'active');
@@ -238,7 +241,7 @@ try {
                 </span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Avg Age</span>
+                <span class="stat-label">Rata-rata Umur</span>
                 <span class="stat-value">
                     <?php 
                         $ages = array_filter(array_column($players, 'age'), 'is_numeric');
@@ -252,10 +255,10 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($current_page_num > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=1" class="page-link" title="First Page">
+                <a href="?team_id=<?php echo $team_id; ?>&page=1" class="page-link" title="Halaman Pertama">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num - 1; ?>" class="page-link" title="Previous">
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num - 1; ?>" class="page-link" title="Sebelumnya">
                     <i class="fas fa-angle-left"></i>
                 </a>
             <?php endif; ?>
@@ -280,10 +283,10 @@ try {
             <?php endif; ?>
             
             <?php if ($current_page_num < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num + 1; ?>" class="page-link" title="Next">
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num + 1; ?>" class="page-link" title="Berikutnya">
                     <i class="fas fa-angle-right"></i>
                 </a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>" class="page-link" title="Last Page">
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>" class="page-link" title="Halaman Terakhir">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             <?php endif; ?>

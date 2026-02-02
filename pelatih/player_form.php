@@ -78,17 +78,17 @@ if (isset($_GET['id'])) {
 <div class="container">
     <div class="header">
         <h1><i class="fas fa-user-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
-            <?php echo ucfirst($action); ?> Player
+            <?php echo $action === 'add' ? 'Tambah' : 'Ubah'; ?> Pemain
         </h1>
         <a href="players.php" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to List
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar
         </a>
     </div>
 
     <?php if (isset($_GET['msg'])): ?>
         <div class="alert alert-success">
             <span class="alert-icon">✓</span>
-            <span>Player <?php echo htmlspecialchars($_GET['msg']); ?> successfully!</span>
+            <span>Pemain berhasil <?php echo $_GET['msg'] === 'added' ? 'ditambahkan' : 'diperbarui'; ?>!</span>
         </div>
     <?php endif; ?>
 
@@ -101,14 +101,14 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-user-circle"></i>
-                   Profile 
+                   Profil 
                 </h2>
                 
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">Nama</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <input type="text" name="name" class="form-control" 
                                placeholder="Masukkan nama lengkap" required
@@ -118,7 +118,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">No Punggung</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <input type="number" name="jersey_number" class="form-control" 
                                placeholder="Masukkan nomor punggung" required
@@ -128,7 +128,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">Cabor</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <select name="sport_type" class="form-control" required>
                             <option value="">Pilih Cabor</option>
@@ -147,7 +147,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">Posisi</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <select name="position" class="form-control" required>
                             <option value="">Pilih Posisi</option>
@@ -169,7 +169,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">Tanggal Lahir</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <input type="date" name="birth_date" class="form-control" 
                                value="<?php echo htmlspecialchars($player['birth_date']); ?>"
@@ -179,7 +179,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">Tempat Lahir</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <input type="text" name="birth_place" class="form-control" 
                                placeholder="Masukkan tempat lahir" required
@@ -189,7 +189,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">Jenis Kelamin</span>
-                            <span class="note">Required</span>
+                            <span class="note">Wajib</span>
                         </label>
                         <div class="radio-group">
                             <label class="radio-option">
@@ -208,7 +208,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Kaki Dominan</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <select name="dominant_foot" class="form-control">
                             <option value="">Pilih Kaki Dominan</option>
@@ -221,7 +221,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Tinggi & Berat</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <div class="date-input">
                             <input type="number" name="height" class="form-control" 
@@ -246,7 +246,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Email</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="email" name="email" class="form-control" 
                                placeholder="Masukkan email"
@@ -256,7 +256,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Telpon</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="tel" name="phone" class="form-control" 
                                placeholder="Masukkan nomor telepon"
@@ -266,7 +266,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Alamat</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="street" class="form-control" 
                                placeholder="Masukkan alamat lengkap"
@@ -276,7 +276,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Kota</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="city" class="form-control" 
                                placeholder="Masukkan kota"
@@ -286,7 +286,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Provinsi</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="province" class="form-control" 
                                placeholder="Masukkan provinsi"
@@ -296,7 +296,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Kode Pos</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="postal_code" class="form-control" 
                                placeholder="Masukkan kode pos"
@@ -306,7 +306,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Kewarganegaraan</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="nationality" class="form-control" 
                                placeholder="Masukkan kewarganegaraan"
@@ -316,7 +316,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>Negara</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="country" class="form-control" 
                                placeholder="Masukkan negara"
@@ -329,14 +329,14 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-id-card"></i>
-                    Identifikasi
+                    Identitas 
                 </h2>
                 
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">NIK</span>
-                            <span class="note">Required (16 digits)</span>
+                            <span class="note">Wajib (16 digit)</span>
                         </label>
                         <input type="text" name="nik" class="form-control" 
                                placeholder="Masukkan 16-digit NIK" required
@@ -347,7 +347,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span>NISN</span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         <input type="text" name="nisn" class="form-control" 
                                placeholder="Masukkan NISN"
@@ -360,14 +360,14 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-camera"></i>
-                    Foto Profile
+                    Foto Profil 
                 </h2>
                 
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Foto Profile</span>
-                            <span class="note">Max 5MB (JPG, PNG, GIF)</span>
+                            <span>Foto Profil</span>
+                            <span class="note">Maks 5MB (JPG, PNG, GIF)</span>
                         </label>
                         
                         <?php if (!empty($player['photo'])): ?>
@@ -389,7 +389,7 @@ if (isset($_GET['id'])) {
                         <div class="file-upload" id="photoUpload">
                             <div>
                                 <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                                <p style="margin: 0; color: var(--gray);">Klik untuk upload atau drag & drop</p>
+                                <p style="margin: 0; color: var(--gray);">Klik untuk unggah atau seret & lepas</p>
                                 <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--gray);">Maksimal 5MB</p>
                             </div>
                             <input type="file" name="photo" id="photoFile" accept="image/*">
@@ -424,7 +424,7 @@ if (isset($_GET['id'])) {
                     <div class="form-group">
                         <label class="form-label">
                             <span><?php echo $doc['label']; ?></span>
-                            <span class="note">Optional</span>
+                            <span class="note">Opsional</span>
                         </label>
                         
                         <?php if (!empty($doc['current'])): ?>
@@ -438,7 +438,7 @@ if (isset($_GET['id'])) {
                         <div class="file-upload" id="<?php echo $key; ?>Upload">
                             <div>
                                 <i class="fas fa-cloud-upload-alt" style="font-size: 20px; color: var(--primary); margin-bottom: 8px;"></i>
-                                <p style="margin: 0; color: var(--gray); font-size: 14px;">Upload <?php echo $doc['label']; ?></p>
+                                <p style="margin: 0; color: var(--gray); font-size: 14px;">Unggah <?php echo $doc['label']; ?></p>
                             </div>
                             <input type="file" name="<?php echo $key; ?>" id="<?php echo $key; ?>File" accept="image/*">
                         </div>
@@ -452,7 +452,7 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-chart-line"></i>
-                    Skills (Range 0-10)
+                    Keahlian (Rentang 0-10)
                 </h2>
                 
                 <p class="note" style="margin-bottom: 20px; color: var(--gray);">
@@ -498,7 +498,7 @@ if (isset($_GET['id'])) {
                 </a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i>
-                    <?php echo $action === 'add' ? 'Simpan Player' : 'Update Player'; ?>
+                    <?php echo $action === 'add' ? 'Simpan Pemain' : 'Perbarui Pemain'; ?>
                 </button>
             </div>
         </form>

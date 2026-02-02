@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Match Schedule';
+$page_title = 'Jadwal Pertandingan';
 $current_page = 'schedule';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -336,7 +336,7 @@ try {
 
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Match Schedule</h2>
+        <h2 class="section-title">Jadwal Pertandingan</h2>
         <!-- Read Only: No Add Button -->
     </div>
 
@@ -346,7 +346,7 @@ try {
             <div class="filter-group">
                 <form action="" method="GET" class="filter-form">
                     <div class="search-wrapper">
-                        <input type="text" name="search" placeholder="Search matches..." 
+                        <input type="text" name="search" placeholder="Cari pertandingan..." 
                                value="<?php echo htmlspecialchars($search); ?>"
                                class="search-input">
                         <button type="submit" class="search-btn">
@@ -362,7 +362,7 @@ try {
                     <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
                     <select name="sport" onchange="document.getElementById('sportFilterForm').submit()" 
                             class="sport-select">
-                        <option value="">All Sports</option>
+                        <option value="">Semua Olahraga</option>
                         <?php foreach ($sport_types as $sport): ?>
                             <option value="<?php echo htmlspecialchars($sport); ?>" 
                                 <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
@@ -377,28 +377,29 @@ try {
             <?php if (!empty($search) || !empty($sport_filter)): ?>
             <div class="filter-group" style="flex: 0 0 auto;">
                 <a href="schedule.php" class="clear-filter-btn">
-                    <i class="fas fa-times"></i> Clear Filters
+                    <i class="fas fa-times"></i> Hapus Filter
                 </a>
             </div>
             <?php endif; ?>
         </div>
     </div>
+    </div>
 
     <?php if (empty($challenges)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">No matches found.</p>
+        <p style="text-align: center; color: var(--gray); padding: 20px;">Pertandingan tidak ditemukan.</p>
     <?php else: ?>
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Match Code</th>
-                        <th>Match Date</th>
-                        <th>Teams</th>
-                        <th>Sport</th>
+                        <th>Kode Pertandingan</th>
+                        <th>Tanggal</th>
+                        <th>Tim</th>
+                        <th>Olahraga</th>
                         <th>Venue</th>
-                        <th>Score</th>
+                        <th>Skor</th>
                         <th>Status</th>
-                        <th>Match Status</th>
+                        <th>Status Pertandingan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -443,7 +444,7 @@ try {
                             <?php if (!empty($challenge['venue_name'])): ?>
                                 <span><?php echo htmlspecialchars($challenge['venue_name']); ?></span>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">TBD</span>
+                                <span style="color: var(--gray); font-style: italic;">Akan ditentukan</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -462,7 +463,7 @@ try {
                                     </div>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">Not played</span>
+                                <span style="color: var(--gray); font-style: italic;">Belum dimainkan</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -478,9 +479,13 @@ try {
                                 }
                                 ?>
                                 <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $badge_class; ?>">
-                                    <?php echo htmlspecialchars(ucfirst($challenge['status'])); ?>
-                                </span>
-                            <?php endif; ?>
+                                <?php 
+                                    $s_status = strtolower($challenge['status']);
+                                    $s_status_map = ['accepted' => 'Diterima', 'open' => 'Terbuka', 'rejected' => 'Ditolak', 'expired' => 'Kedaluwarsa'];
+                                    echo htmlspecialchars($s_status_map[$s_status] ?? ucfirst($challenge['status'])); 
+                                ?>
+                            </span>
+                        <?php endif; ?>
                         </td>
                         <td>
                             <?php if (!empty($challenge['match_status'])): ?>
@@ -495,10 +500,14 @@ try {
                                 }
                                 ?>
                                 <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $match_badge_class; ?>">
-                                    <?php echo htmlspecialchars(ucfirst($challenge['match_status'])); ?>
+                                    <?php 
+                                        $m_status = strtolower($challenge['match_status']);
+                                        $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'cancelled' => 'Dibatalkan', 'abandoned' => 'Dihentikan', 'postponed' => 'Ditunda'];
+                                        echo htmlspecialchars($m_status_map[$m_status] ?? ucfirst($challenge['match_status'])); 
+                                    ?>
                                 </span>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">N/A</span>
+                                <span style="color: var(--gray); font-style: italic;">-</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -511,7 +520,7 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">&laquo; Prev</a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
@@ -519,7 +528,7 @@ try {
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">Next &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>

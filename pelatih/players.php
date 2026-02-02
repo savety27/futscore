@@ -1,5 +1,5 @@
 <?php
-$page_title = 'My Players';
+$page_title = 'Pemain Saya';
 $current_page = 'players';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -61,17 +61,17 @@ if ($team_id) {
     <div class="section-header">
         <h2 class="section-title">Daftar Player</h2>
         <a href="player_form.php" class="btn-primary">
-            <i class="fas fa-plus"></i> Add Player
+            <i class="fas fa-plus"></i> Tambah Pemain
         </a>
     </div>
 
     <?php if (isset($_GET['msg'])): ?>
         <div class="message-alert">
             <?php 
-                if ($_GET['msg'] == 'added') echo "✅ Player added successfully!";
-                if ($_GET['msg'] == 'updated') echo "✅ Player updated successfully!";
-                if ($_GET['msg'] == 'deleted') echo "✅ Player deleted successfully!";
-                if ($_GET['msg'] == 'no_changes_or_unauthorized') echo "⚠️ No changes made or unauthorized action.";
+                if ($_GET['msg'] == 'added') echo "✅ Pemain berhasil ditambahkan!";
+                if ($_GET['msg'] == 'updated') echo "✅ Pemain berhasil diperbarui!";
+                if ($_GET['msg'] == 'deleted') echo "✅ Pemain berhasil dihapus!";
+                if ($_GET['msg'] == 'no_changes_or_unauthorized') echo "⚠️ Tidak ada perubahan yang dilakukan atau tindakan tidak berwenang.";
             ?>
         </div>
     <?php endif; ?>
@@ -79,15 +79,15 @@ if ($team_id) {
     <?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
-            <p>No players found in your team.</p>
-            <a href="player_form.php" class="btn-primary">Add Your First Player</a>
+            <p>Tidak ada pemain ditemukan di tim Anda.</p>
+            <a href="player_form.php" class="btn-primary">Tambah Pemain Pertama Anda</a>
         </div>
     <?php else: ?>
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">Photo</th>
+                        <th style="width: 70px;">Foto</th>
                         <th>Nama</th>
                         <th style="width: 80px;">Nomor</th>
                         <th>Posisi</th>
@@ -96,7 +96,7 @@ if ($team_id) {
                         <th>Kontak</th>
                         <th style="width: 80px;">Skills</th>
                         <th>Status</th>
-                        <th style="width: 150px;">Actions</th>
+                        <th style="width: 150px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -187,7 +187,7 @@ if ($team_id) {
                             </span>
                         </td>
                         <td class="age-cell">
-                            <?php echo htmlspecialchars($player['age'] ?? 'N/A'); ?> yrs
+                            <?php echo htmlspecialchars($player['age'] ?? 'N/A'); ?> thn
                         </td>
                         <td class="gender-cell" data-gender="<?php echo $player['gender']; ?>">
                             <?php echo $player['gender'] == 'L' ? '♂' : '♀'; ?>
@@ -217,14 +217,17 @@ if ($team_id) {
                         </td>
                         <td class="status-cell">
                             <span class="status-badge <?php echo $player['status']; ?>">
-                                <?php echo ucfirst($player['status']); ?>
+                                <?php 
+                                    $status_map = ['active' => 'Aktif', 'inactive' => 'Non-aktif', 'injured' => 'Cedera', 'suspended' => 'Skorsing'];
+                                    echo $status_map[$player['status']] ?? ucfirst($player['status']); 
+                                ?>
                             </span>
                         </td>
                         <td class="actions-cell">
                             <div class="action-buttons">
                                 <a href="player_form.php?id=<?php echo $player['id']; ?>" 
                                    class="btn-edit" 
-                                   title="Edit Player">
+                                   title="Ubah Pemain">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                                 <form action="player_actions.php" method="POST" class="delete-form">
@@ -232,9 +235,9 @@ if ($team_id) {
                                     <input type="hidden" name="id" value="<?php echo $player['id']; ?>">
                                     <button type="submit" 
                                             class="btn-delete" 
-                                            title="Delete Player"
+                                            title="Hapus Pemain"
                                             data-name="<?php echo htmlspecialchars($player['name']); ?>">
-                                        <i class="fas fa-trash"></i> Delete
+                                        <i class="fas fa-trash"></i> Hapus
                                     </button>
                                 </form>
                             </div>
@@ -248,11 +251,11 @@ if ($team_id) {
         <!-- Statistics Summary -->
         <div class="stats-summary">
             <div class="stat-item">
-                <span class="stat-label">Total Players:</span>
+                <span class="stat-label">Total Pemain:</span>
                 <span class="stat-value"><?php echo $total_players; ?></span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Active:</span>
+                <span class="stat-label">Aktif:</span>
                 <span class="stat-value">
                     <?php 
                         $active_count = array_filter($players, fn($p) => $p['status'] == 'active');
@@ -261,18 +264,18 @@ if ($team_id) {
                 </span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Avg Age:</span>
+                <span class="stat-label">Rata-rata Umur:</span>
                 <span class="stat-value">
                     <?php 
                         $ages = array_filter(array_column($players, 'age'), 'is_numeric');
                         echo !empty($ages) ? round(array_sum($ages) / count($ages), 1) : 'N/A';
-                    ?> yrs
+                    ?> thn
                 </span>
             </div>
             <div class="stat-item">
-                <span class="stat-label">Page:</span>
+                <span class="stat-label">Halaman:</span>
                 <span class="stat-value">
-                    <?php echo $current_page_num; ?> of <?php echo $total_pages; ?>
+                    <?php echo $current_page_num; ?> dari <?php echo $total_pages; ?>
                 </span>
             </div>
         </div>
@@ -281,10 +284,10 @@ if ($team_id) {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($current_page_num > 1): ?>
-                <a href="?page=1" class="page-link" title="First Page">
+                <a href="?page=1" class="page-link" title="Halaman Pertama">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?page=<?php echo $current_page_num - 1; ?>" class="page-link" title="Previous">
+                <a href="?page=<?php echo $current_page_num - 1; ?>" class="page-link" title="Sebelumnya">
                     <i class="fas fa-angle-left"></i>
                 </a>
             <?php endif; ?>
@@ -309,10 +312,10 @@ if ($team_id) {
             <?php endif; ?>
             
             <?php if ($current_page_num < $total_pages): ?>
-                <a href="?page=<?php echo $current_page_num + 1; ?>" class="page-link" title="Next">
+                <a href="?page=<?php echo $current_page_num + 1; ?>" class="page-link" title="Berikutnya">
                     <i class="fas fa-angle-right"></i>
                 </a>
-                <a href="?page=<?php echo $total_pages; ?>" class="page-link" title="Last Page">
+                <a href="?page=<?php echo $total_pages; ?>" class="page-link" title="Halaman Terakhir">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             <?php endif; ?>
@@ -428,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="tooltip-footer">
                 <div class="overall-text">
-                    OVERALL RATING <span class="overall-value" style="color: ${overallColor}">${skillValue.toFixed(1)}</span>
+                    PERINGKAT KESELURUHAN <span class="overall-value" style="color: ${overallColor}">${skillValue.toFixed(1)}</span>
                 </div>
             </div>
         `;
@@ -548,24 +551,24 @@ function confirmDelete(playerName) {
     if (typeof Swal !== 'undefined') {
         return new Promise((resolve) => {
             Swal.fire({
-                title: 'Delete Player?',
+                title: 'Hapus Pemain?',
                 html: `<div style="text-align: left;">
-                    <p>Are you sure you want to delete <strong>"${playerName}"</strong>?</p>
+                    <p>Apakah Anda yakin ingin menghapus <strong>"${playerName}"</strong>?</p>
                     <p style="color: #666; font-size: 14px; margin-top: 10px;">
                         <i class="fas fa-exclamation-triangle" style="color: #ff9800;"></i>
-                        This action cannot be undone. All player data including:
+                        Tindakan ini tidak dapat dibatalkan. Semua data pemain termasuk:
                     </p>
                     <ul style="text-align: left; margin: 10px 0 10px 20px; color: #666; font-size: 13px;">
-                        <li>Player profile</li>
-                        <li>Skills statistics</li>
-                        <li>Photos and documents</li>
-                        <li>Match history</li>
+                        <li>Profil pemain</li>
+                        <li>Statistik kemampuan</li>
+                        <li>Foto dan dokumen</li>
+                        <li>Riwayat pertandingan</li>
                     </ul>
                 </div>`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: '<i class="fas fa-trash"></i> Delete',
-                cancelButtonText: '<i class="fas fa-times"></i> Cancel',
+                confirmButtonText: '<i class="fas fa-trash"></i> Hapus',
+                cancelButtonText: '<i class="fas fa-times"></i> Batal',
                 confirmButtonColor: '#d32f2f',
                 cancelButtonColor: '#6c757d',
                 reverseButtons: true,
@@ -581,7 +584,7 @@ function confirmDelete(playerName) {
             });
         });
     } else {
-        return confirm(`Are you sure you want to delete "${playerName}"?\nThis action cannot be undone.`);
+        return confirm(`Apakah Anda yakin ingin menghapus "${playerName}"?\nTindakan ini tidak dapat dibatalkan.`);
     }
 }
 
