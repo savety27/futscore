@@ -893,7 +893,7 @@ $db_status = $db ? "connected" : "disconnected";
             <!-- Brand Header -->
             <header class="brand">
                 <div class="logo-mark">FS</div>
-                <h1>FUTSCORE</h1>
+                <h1>MGP</h1>
                 <p class="tagline">Admin Dashboard</p>
             </header>
             
