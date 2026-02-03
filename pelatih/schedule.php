@@ -4,6 +4,27 @@ $current_page = 'schedule';
 require_once 'config/database.php';
 require_once 'includes/header.php';
 
+// Get pelatih's team_id directly from session (like in dashboard.php)
+$my_team_id = $_SESSION['team_id'] ?? 0;
+
+// Fallback: If not in session, try to get from database using pelatih_id
+if ($my_team_id == 0) {
+    $pelatih_id = $_SESSION['pelatih_id'] ?? 0;
+    try {
+        $stmtTeam = $conn->prepare("SELECT team_id FROM team_staff WHERE id = ?");
+        $stmtTeam->execute([$pelatih_id]);
+        $staff = $stmtTeam->fetch(PDO::FETCH_ASSOC);
+        $my_team_id = $staff['team_id'] ?? 0;
+        
+        // Save to session for future use
+        if ($my_team_id > 0) {
+            $_SESSION['team_id'] = $my_team_id;
+        }
+    } catch (PDOException $e) {
+        // Ignore error
+    }
+}
+
 // Handle search dan filter
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
@@ -400,6 +421,7 @@ try {
                         <th>Skor</th>
                         <th>Status</th>
                         <th>Status Pertandingan</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -508,6 +530,13 @@ try {
                                 </span>
                             <?php else: ?>
                                 <span style="color: var(--gray); font-style: italic;">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($challenge['status'] === 'accepted' && ($my_team_id == $challenge['challenger_id'] || $my_team_id == $challenge['opponent_id'])): ?>
+                            <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-block;">
+                                <i class="fas fa-users-cog"></i> Atur Lineup
+                            </a>
                             <?php endif; ?>
                         </td>
                     </tr>

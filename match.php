@@ -117,6 +117,25 @@ while ($lineup = $resultLineups->fetch_assoc()) {
     }
 }
 $stmtLineups->close();
+
+// Get match statistics
+$stats = null;
+$sqlStats = "SELECT * FROM match_stats WHERE match_id = ?";
+$stmtStats = $conn->prepare($sqlStats);
+$stmtStats->bind_param('i', $matchId);
+$stmtStats->execute();
+$resultStats = $stmtStats->get_result();
+$stats = $resultStats->fetch_assoc();
+$stmtStats->close();
+
+// Set default stats if not available
+if (!$stats) {
+    $stats = [
+        'team1_possession' => 50, 'team2_possession' => 50,
+        'team1_shots_on_target' => 0, 'team2_shots_on_target' => 0,
+        'team1_fouls' => 0, 'team2_fouls' => 0
+    ];
+}
 ?>
 
 <div class="container match-detail-page">
@@ -269,11 +288,11 @@ $stmtLineups->close();
                 <div class="stat-item">
                     <div class="stat-label">Ball Possession</div>
                     <div class="stat-bar">
-                        <div class="stat-team1" style="width: <?php echo $match['status'] === 'completed' ? '60' : '50'; ?>%">
-                            <span><?php echo $match['status'] === 'completed' ? '60%' : '50%'; ?></span>
+                        <div class="stat-team1" style="width: <?php echo $stats['team1_possession']; ?>%">
+                            <span><?php echo $stats['team1_possession']; ?>%</span>
                         </div>
-                        <div class="stat-team2" style="width: <?php echo $match['status'] === 'completed' ? '40' : '50'; ?>%">
-                            <span><?php echo $match['status'] === 'completed' ? '40%' : '50%'; ?></span>
+                        <div class="stat-team2" style="width: <?php echo $stats['team2_possession']; ?>%">
+                            <span><?php echo $stats['team2_possession']; ?>%</span>
                         </div>
                     </div>
                 </div>
@@ -281,11 +300,11 @@ $stmtLineups->close();
                 <div class="stat-item">
                     <div class="stat-label">Shots on Target</div>
                     <div class="stat-bar">
-                        <div class="stat-team1" style="width: <?php echo $match['status'] === 'completed' ? '70' : '50'; ?>%">
-                            <span><?php echo $match['status'] === 'completed' ? '7' : 'N/A'; ?></span>
+                        <div class="stat-team1" style="width: <?php echo ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) > 0 ? ($stats['team1_shots_on_target'] / ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) * 100) : 50; ?>%">
+                            <span><?php echo $stats['team1_shots_on_target']; ?></span>
                         </div>
-                        <div class="stat-team2" style="width: <?php echo $match['status'] === 'completed' ? '30' : '50'; ?>%">
-                            <span><?php echo $match['status'] === 'completed' ? '3' : 'N/A'; ?></span>
+                        <div class="stat-team2" style="width: <?php echo ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) > 0 ? ($stats['team2_shots_on_target'] / ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) * 100) : 50; ?>%">
+                            <span><?php echo $stats['team2_shots_on_target']; ?></span>
                         </div>
                     </div>
                 </div>
@@ -293,11 +312,11 @@ $stmtLineups->close();
                 <div class="stat-item">
                     <div class="stat-label">Fouls</div>
                     <div class="stat-bar">
-                        <div class="stat-team1" style="width: <?php echo $match['status'] === 'completed' ? '40' : '50'; ?>%">
-                            <span><?php echo $match['status'] === 'completed' ? '4' : 'N/A'; ?></span>
+                        <div class="stat-team1" style="width: <?php echo ($stats['team1_fouls'] + $stats['team2_fouls']) > 0 ? ($stats['team1_fouls'] / ($stats['team1_fouls'] + $stats['team2_fouls']) * 100) : 50; ?>%">
+                            <span><?php echo $stats['team1_fouls']; ?></span>
                         </div>
-                        <div class="stat-team2" style="width: <?php echo $match['status'] === 'completed' ? '60' : '50'; ?>%">
-                            <span><?php echo $match['status'] === 'completed' ? '6' : 'N/A'; ?></span>
+                        <div class="stat-team2" style="width: <?php echo ($stats['team1_fouls'] + $stats['team2_fouls']) > 0 ? ($stats['team2_fouls'] / ($stats['team1_fouls'] + $stats['team2_fouls']) * 100) : 50; ?>%">
+                            <span><?php echo $stats['team2_fouls']; ?></span>
                         </div>
                     </div>
                 </div>
@@ -747,30 +766,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // If match is scheduled, show different content
+    // If match is scheduled, show specific UI adjustments if needed, 
+    // but DO NOT hide lineups/stats if data is available.
     const matchStatus = "<?php echo $match['status']; ?>";
     if (matchStatus === 'scheduled') {
-        // Hide goals tab if match is scheduled
-        document.querySelector('.match-tab[data-tab="goals"]').style.display = 'none';
-        document.querySelector('.match-tab[data-tab="stats"]').style.display = 'none';
+        // Hide goals tab if match is scheduled as there are no goals yet
+        const goalsTab = document.querySelector('.match-tab[data-tab="goals"]');
+        if(goalsTab) goalsTab.style.display = 'none';
         
-        // Show schedule info
-        const lineupsTab = document.getElementById('lineups');
-        lineupsTab.innerHTML = `
-            <h3>Match Schedule</h3>
-            <div class="schedule-info">
-                <p><strong>Date & Time:</strong> <?php echo formatDateTime($match['match_date']); ?></p>
-                <p><strong>Venue:</strong> <?php echo htmlspecialchars($match['location']); ?></p>
-                <p><strong>Status:</strong> Scheduled</p>
-                <?php if (!empty($match['event_name'])): ?>
-                <p><strong>Event:</strong> <?php echo htmlspecialchars($match['event_name']); ?></p>
-                <?php endif; ?>
-            </div>
-            <div class="jersey-info">
-                <h4>Jersey Information</h4>
-                <p><strong><?php echo htmlspecialchars($match['team1_name']); ?>:</strong> Home Jersey</p>
-                <p><strong><?php echo htmlspecialchars($match['team2_name']); ?>:</strong> Away Jersey</p>
-            </div>
-        `;
+        // Auto-select lineups tab if goals tab is hidden
+        const lineupsTabBtn = document.querySelector('.match-tab[data-tab="lineups"]');
+        if(lineupsTabBtn) lineupsTabBtn.click();
     }
 });
 </script>

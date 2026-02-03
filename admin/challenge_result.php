@@ -107,6 +107,12 @@ try {
     // PERUBAHAN: Hapus validasi status, semua challenge bisa input hasil
     // Tidak perlu cek apakah status = 'accepted' atau sudah ada skor
     
+    // Fetch match statistics
+    $match_stats = null;
+    $stmtStats = $conn->prepare("SELECT * FROM match_stats WHERE match_id = ?");
+    $stmtStats->execute([$challenge_id]);
+    $match_stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     die("Error fetching challenge data: " . $e->getMessage());
 }
@@ -120,24 +126,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'match_status' => trim($_POST['match_status'] ?? 'completed'),
         'match_duration' => trim($_POST['match_duration'] ?? '90'),
         'match_official' => trim($_POST['match_official'] ?? ''),
-        'match_notes' => trim($_POST['match_notes'] ?? '')
+        'match_notes' => trim($_POST['match_notes'] ?? ''),
+        
+        // Statistics
+        'team1_possession' => intval($_POST['team1_possession'] ?? 0),
+        'team2_possession' => intval($_POST['team2_possession'] ?? 0),
+        'team1_shots' => intval($_POST['team1_shots'] ?? 0),
+        'team2_shots' => intval($_POST['team2_shots'] ?? 0),
+        'team1_fouls' => intval($_POST['team1_fouls'] ?? 0),
+        'team2_fouls' => intval($_POST['team2_fouls'] ?? 0)
     ];
     
     // Validation
-    if ($form_data['challenger_score'] < 0) {
-        $errors['challenger_score'] = "Skor tidak boleh negatif";
-    }
+    if ($form_data['challenger_score'] < 0) $errors['challenger_score'] = "Skor tidak boleh negatif";
+    if ($form_data['opponent_score'] < 0) $errors['opponent_score'] = "Skor tidak boleh negatif";
+    if (empty($form_data['match_status'])) $errors['match_status'] = "Status match harus diisi";
+    if ($form_data['match_duration'] < 0) $errors['match_duration'] = "Durasi tidak boleh negatif";
     
-    if ($form_data['opponent_score'] < 0) {
-        $errors['opponent_score'] = "Skor tidak boleh negatif";
-    }
-    
-    if (empty($form_data['match_status'])) {
-        $errors['match_status'] = "Status match harus diisi";
-    }
-    
-    if ($form_data['match_duration'] < 0) {  // Boleh 0, tapi tidak boleh negatif
-    $errors['match_duration'] = "Durasi tidak boleh negatif";
+    // Validate possession sum (optional, but good UX)
+    if (($form_data['team1_possession'] + $form_data['team2_possession']) != 100 && 
+        ($form_data['team1_possession'] > 0 || $form_data['team2_possession'] > 0)) {
+        // Just warn or auto-adjust? Let's just accept it but maybe the UI should help.
+        // For now, allow it.
     }
     
     // Determine winner
@@ -147,15 +157,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif ($form_data['opponent_score'] > $form_data['challenger_score']) {
         $winner_team_id = $challenge_data['opponent_id'];
     }
-    // If scores are equal, it's a draw (winner_team_id remains null)
     
     // If no errors, update database
     if (empty($errors)) {
         try {
-            // PERUBAHAN: Update status ke 'completed' hanya jika belum completed
+            $conn->beginTransaction();
+
+            // 1. Update Challenge
             $new_status = 'completed';
             if ($challenge_data['status'] === 'completed') {
-                $new_status = 'completed'; // Tetap completed
+                $new_status = 'completed'; 
             }
             
             $stmt = $conn->prepare("
@@ -184,12 +195,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $form_data['match_notes'],
                 $challenge_id
             ]);
+
+            // 2. Update/Insert Match Stats
+            $stmtCheck = $conn->prepare("SELECT id FROM match_stats WHERE match_id = ?");
+            $stmtCheck->execute([$challenge_id]);
+            $exists = $stmtCheck->fetchColumn();
+
+            if ($exists) {
+                $stmtStats = $conn->prepare("
+                    UPDATE match_stats SET 
+                        team1_possession = ?, team2_possession = ?,
+                        team1_shots_on_target = ?, team2_shots_on_target = ?,
+                        team1_fouls = ?, team2_fouls = ?
+                    WHERE match_id = ?
+                ");
+                $stmtStats->execute([
+                    $form_data['team1_possession'], $form_data['team2_possession'],
+                    $form_data['team1_shots'], $form_data['team2_shots'],
+                    $form_data['team1_fouls'], $form_data['team2_fouls'],
+                    $challenge_id
+                ]);
+            } else {
+                $stmtStats = $conn->prepare("
+                    INSERT INTO match_stats (
+                        match_id, 
+                        team1_possession, team2_possession,
+                        team1_shots_on_target, team2_shots_on_target,
+                        team1_fouls, team2_fouls
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmtStats->execute([
+                    $challenge_id,
+                    $form_data['team1_possession'], $form_data['team2_possession'],
+                    $form_data['team1_shots'], $form_data['team2_shots'],
+                    $form_data['team1_fouls'], $form_data['team2_fouls']
+                ]);
+            }
+
+            $conn->commit();
             
-            $_SESSION['success_message'] = "Hasil pertandingan berhasil diinput!";
+            $_SESSION['success_message'] = "Hasil pertandingan dan statistik berhasil diinput!";
             header("Location: challenge.php");
             exit;
             
         } catch (PDOException $e) {
+            $conn->rollBack();
             $errors['database'] = "Gagal menyimpan hasil: " . $e->getMessage();
         }
     }
