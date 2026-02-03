@@ -138,649 +138,702 @@ if (!$stats) {
 }
 ?>
 
-<div class="container match-detail-page">
-    <div class="match-detail-header">
-        <h1><?php echo htmlspecialchars($match['team1_name']); ?> vs <?php echo htmlspecialchars($match['team2_name']); ?></h1>
-        
-        <?php if (!empty($match['event_name'])): ?>
-        <div class="match-event-badge">
-            <?php echo htmlspecialchars($match['event_name']); ?>
-        </div>
-        <?php endif; ?>
-    </div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+        --bg-dark: #0f172a;
+        --bg-card: #1e293b;
+        --bg-card-hover: #334155;
+        --accent: #00ff88;
+        --accent-glow: rgba(0, 255, 136, 0.4);
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+        --success: #10b981;
+        --danger: #ef4444;
+        --font-main: 'Outfit', sans-serif;
+    }
+
+    body {
+        background-color: var(--bg-dark) !important;
+        font-family: var(--font-main) !important;
+        color: var(--text-primary);
+    }
+
+    .match-detail-page {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    /* --- HERO SECTION --- */
+    .match-hero {
+        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 60px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 40px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+
+    .match-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(0,255,136,0.05) 0%, transparent 70%);
+        animation: pulse 10s infinite alternate;
+        z-index: 0;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.5; }
+        100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 60px;
+    }
+
+    .team-display {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .team-logo-wrapper {
+        width: 120px;
+        height: 120px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+        padding: 20px;
+        border: 2px solid var(--border-color);
+        box-shadow: 0 0 30px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+
+    .team-display:hover .team-logo-wrapper {
+        transform: scale(1.05);
+        border-color: var(--accent);
+        box-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    .team-logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .team-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .match-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .match-score {
+        font-size: 4rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        letter-spacing: -2px;
+        line-height: 1;
+    }
+
+    .match-vs {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-secondary);
+        background: var(--bg-card);
+        padding: 5px 15px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .match-meta-pill {
+        display: flex;
+        gap: 20px;
+        background: rgba(0,0,0,0.3);
+        padding: 10px 25px;
+        border-radius: 50px;
+        border: 1px solid var(--border-color);
+        margin-top: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .meta-item i {
+        color: var(--accent);
+    }
+
+    .event-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: var(--accent);
+        color: var(--bg-dark);
+        padding: 5px 15px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* --- TABS --- */
+    .tabs-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 40px;
+        gap: 10px;
+        background: var(--bg-card);
+        padding: 5px;
+        border-radius: 50px;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+        border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 10px 30px;
+        border-radius: 40px;
+        font-family: var(--font-main);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+        background: var(--accent);
+        color: var(--bg-dark);
+        box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .tab-btn:hover:not(.active) {
+        color: var(--text-primary);
+        background: rgba(255,255,255,0.05);
+    }
+
+    /* --- CONTENT SECTIONS --- */
+    .tab-content {
+        display: none;
+        animation: slideUp 0.4s ease forwards;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-secondary);
+        margin-bottom: 30px;
+        position: relative;
+        display: inline-block;
+        left: 50%;
+        transform: translateX(-50%);
+    }
     
-    <div class="match-info-summary">
-        <div class="match-teams-large">
-            <div class="team-large">
-                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                     alt="<?php echo htmlspecialchars($match['team1_name']); ?>" 
-                     class="team-logo-large"
-                     onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
-                <h3><?php echo htmlspecialchars($match['team1_name']); ?></h3>
-            </div>
-            
-            <div class="vs-large">
-                <span class="vs-text-large">VS</span>
-                <?php if ($match['status'] === 'completed'): ?>
-                <div class="score-large">
-                    <?php echo $match['score1']; ?> - <?php echo $match['score2']; ?>
+    .section-title::after {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 2px;
+        background: var(--accent);
+        margin: 10px auto 0;
+    }
+
+    /* --- LINEUPS GRID --- */
+    .lineups-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+    }
+
+    .team-column h3 {
+        text-align: center;
+        color: var(--accent);
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+    }
+
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .player-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .player-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .player-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--bg-dark);
+        border: 2px solid var(--border-color);
+    }
+
+    .player-info h4 {
+        font-size: 0.95rem;
+        margin: 0;
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .player-meta {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .player-number {
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    .starter-badge {
+        font-size: 0.65rem;
+        background: rgba(0,255,136,0.1);
+        color: var(--accent);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,255,136,0.2);
+    }
+
+    /* --- STATISTICS --- */
+    .stats-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .stat-row {
+        margin-bottom: 25px;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .stat-label-center {
+        color: var(--text-primary);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+    }
+
+    .stat-bar-container {
+        height: 8px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .bar-segment {
+        height: 100%;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bar-left {
+        background: linear-gradient(90deg, transparent, var(--accent));
+        margin-right: 2px;
+        border-right: 1px solid var(--bg-dark);
+    }
+
+    .bar-right {
+        background: linear-gradient(90deg, #f59e0b, transparent); /* Orange for team 2 */
+        margin-left: 2px;
+        border-left: 1px solid var(--bg-dark);
+        background: linear-gradient(-90deg, transparent, #38bdf8); /* Blue for team 2 actually looks better with Green */
+    }
+
+    /* Re-override bar colors for clarity */
+    .bar-left { background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .bar-right { background: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+
+    /* --- GOALS --- */
+    .timeline {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-color);
+        transform: translateX(-50%);
+    }
+
+    .timeline-event {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .event-left, .event-right {
+        width: 45%;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .event-left { justify-content: flex-end; text-align: right; }
+    .event-right { justify-content: flex-start; text-align: left; }
+
+    .event-minute {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-card);
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        z-index: 2;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px;
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .hero-content {
+            flex-direction: column;
+            gap: 30px;
+        }
+        .match-score { font-size: 3rem; }
+        .lineups-grid { grid-template-columns: 1fr; }
+        
+        .players-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="container match-detail-page">
+    
+    <!-- Hero Section -->
+    <div class="match-hero">
+        <?php if (!empty($match['event_name'])): ?>
+            <div class="event-badge"><?php echo htmlspecialchars($match['event_name']); ?></div>
+        <?php endif; ?>
+
+        <div class="hero-content">
+            <!-- Team 1 -->
+            <div class="team-display">
+                <div class="team-logo-wrapper">
+                    <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
+                         alt="<?php echo htmlspecialchars($match['team1_name']); ?>" 
+                         class="team-logo-img"
+                         onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                 </div>
+                <div class="team-name"><?php echo htmlspecialchars($match['team1_name']); ?></div>
+            </div>
+
+            <!-- Score -->
+            <div class="match-center">
+                <?php if ($match['status'] === 'completed'): ?>
+                    <div class="match-score">
+                        <?php echo $match['score1']; ?> - <?php echo $match['score2']; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="match-vs">VS</div>
+                <?php endif; ?>
+                
+                <div class="match-meta-pill">
+                    <div class="meta-item"><i class="far fa-calendar"></i> <?php echo formatDateTime($match['match_date']); ?></div>
+                    <div class="meta-item"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($match['location'] ?: 'TBA'); ?></div>
+                    <div class="meta-item"><i class="fas fa-circle-info"></i> <?php echo ucfirst($match['status']); ?></div>
+                </div>
+            </div>
+
+            <!-- Team 2 -->
+            <div class="team-display">
+                <div class="team-logo-wrapper">
+                    <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
+                         alt="<?php echo htmlspecialchars($match['team2_name']); ?>" 
+                         class="team-logo-img"
+                         onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                </div>
+                <div class="team-name"><?php echo htmlspecialchars($match['team2_name']); ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('lineups')">Squads</button>
+        <button class="tab-btn" onclick="switchTab('stats')">Stats</button>
+        <button class="tab-btn" onclick="switchTab('goals')">Timeline</button>
+    </div>
+
+    <!-- Lineups Content -->
+    <div id="lineups" class="tab-content active">
+        <div class="section-title">Team Lineups</div>
+        <div class="lineups-grid">
+            <!-- Team 1 Squad -->
+            <div class="team-column">
+                <h3><?php echo htmlspecialchars($match['team1_name']); ?></h3>
+                <?php if(empty($lineups['team1'])): ?>
+                    <div class="empty-state">No lineup submitted yet.</div>
+                <?php else: ?>
+                    <div class="players-grid">
+                        <?php foreach($lineups['team1'] as $player): ?>
+                        <div class="player-card">
+                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                 class="player-avatar"
+                                 onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                            <div class="player-info">
+                                <h4><?php echo htmlspecialchars($player['player_name']); ?></h4>
+                                <div class="player-meta">
+                                    <span class="player-number">#<?php echo $player['jersey_number']; ?></span>
+                                    <span><?php echo $player['position']; ?></span>
+                                    <?php if($player['is_starting']): ?>
+                                        <span class="starter-badge">Starter</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             </div>
-            
-            <div class="team-large">
-                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                     alt="<?php echo htmlspecialchars($match['team2_name']); ?>" 
-                     class="team-logo-large"
-                     onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+
+            <!-- Team 2 Squad -->
+            <div class="team-column">
                 <h3><?php echo htmlspecialchars($match['team2_name']); ?></h3>
-            </div>
-        </div>
-        
-        <div class="match-details-info">
-            <div class="detail-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span><?php echo formatDateTime($match['match_date']); ?></span>
-            </div>
-            
-            <?php if (!empty($match['location'])): ?>
-            <div class="detail-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span><?php echo htmlspecialchars($match['location']); ?></span>
-            </div>
-            <?php endif; ?>
-            
-            <div class="detail-item">
-                <i class="fas fa-flag"></i>
-                <span><?php echo ucfirst($match['status']); ?></span>
+                <?php if(empty($lineups['team2'])): ?>
+                    <div class="empty-state">No lineup submitted yet.</div>
+                <?php else: ?>
+                    <div class="players-grid">
+                        <?php foreach($lineups['team2'] as $player): ?>
+                        <div class="player-card">
+                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                 class="player-avatar"
+                                 onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                            <div class="player-info">
+                                <h4><?php echo htmlspecialchars($player['player_name']); ?></h4>
+                                <div class="player-meta">
+                                    <span class="player-number">#<?php echo $player['jersey_number']; ?></span>
+                                    <span><?php echo $player['position']; ?></span>
+                                    <?php if($player['is_starting']): ?>
+                                        <span class="starter-badge">Starter</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-    
-    <div class="match-tabs-section">
-        <div class="match-tabs">
-            <button class="match-tab active" data-tab="goals">Goals</button>
-            <button class="match-tab" data-tab="lineups">Lineups</button>
-            <button class="match-tab" data-tab="stats">Statistics</button>
-        </div>
-        
-        <div class="match-tab-content active" id="goals">
-            <h3>Goals</h3>
-            <?php if (empty($goals)): ?>
-            <div class="empty-state">
-                <i class="fas fa-futbol"></i>
-                <p>No goals recorded for this match</p>
+
+    <!-- Stats Content -->
+    <div id="stats" class="tab-content">
+        <div class="section-title">Match Statistics</div>
+        <div class="stats-card">
+            <!-- Possession -->
+            <div class="stat-row">
+                <div class="stat-header">
+                    <span><?php echo $stats['team1_possession']; ?>%</span>
+                    <span class="stat-label-center">Ball Possession</span>
+                    <span><?php echo $stats['team2_possession']; ?>%</span>
+                </div>
+                <div class="stat-bar-container">
+                    <div class="bar-segment bar-left" style="width: <?php echo $stats['team1_possession']; ?>%"></div>
+                    <div class="bar-segment bar-right" style="width: <?php echo $stats['team2_possession']; ?>%"></div>
+                </div>
             </div>
-            <?php else: ?>
-            <div class="goals-list">
-                <?php foreach ($goals as $goal): ?>
-                <div class="goal-item">
-                    <div class="goal-player">
-                        <span class="goal-player-number">#<?php echo $goal['jersey_number']; ?></span>
-                        <span class="goal-player-name"><?php echo htmlspecialchars($goal['player_name']); ?></span>
-                        <span class="goal-team">(<?php echo $goal['team_name']; ?>)</span>
+
+            <!-- Shots -->
+            <div class="stat-row">
+                <?php 
+                    $t1_shots = $stats['team1_shots_on_target'];
+                    $t2_shots = $stats['team2_shots_on_target'];
+                    $total_shots = $t1_shots + $t2_shots;
+                    $t1_width = $total_shots > 0 ? ($t1_shots / $total_shots * 100) : 50;
+                    $t2_width = $total_shots > 0 ? ($t2_shots / $total_shots * 100) : 50;
+                ?>
+                <div class="stat-header">
+                    <span><?php echo $t1_shots; ?></span>
+                    <span class="stat-label-center">Shots on Target</span>
+                    <span><?php echo $t2_shots; ?></span>
+                </div>
+                <div class="stat-bar-container">
+                    <div class="bar-segment bar-left" style="width: <?php echo $t1_width; ?>%"></div>
+                    <div class="bar-segment bar-right" style="width: <?php echo $t2_width; ?>%"></div>
+                </div>
+            </div>
+
+             <!-- Fouls -->
+             <div class="stat-row">
+                <?php 
+                    $t1_fouls = $stats['team1_fouls'];
+                    $t2_fouls = $stats['team2_fouls'];
+                    $total_fouls = $t1_fouls + $t2_fouls;
+                    $t1_f_width = $total_fouls > 0 ? ($t1_fouls / $total_fouls * 100) : 50;
+                    $t2_f_width = $total_fouls > 0 ? ($t2_fouls / $total_fouls * 100) : 50;
+                ?>
+                <div class="stat-header">
+                    <span><?php echo $t1_fouls; ?></span>
+                    <span class="stat-label-center">Fouls</span>
+                    <span><?php echo $t2_fouls; ?></span>
+                </div>
+                <div class="stat-bar-container">
+                    <div class="bar-segment bar-left" style="width: <?php echo $t1_f_width; ?>%"></div>
+                    <div class="bar-segment bar-right" style="width: <?php echo $t2_f_width; ?>%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals Content -->
+    <div id="goals" class="tab-content">
+        <div class="section-title">Match Timeline</div>
+        <?php if(empty($goals)): ?>
+            <div class="empty-state">No goals recorded available (0-0).</div>
+        <?php else: ?>
+            <div class="timeline">
+                <?php foreach($goals as $goal): 
+                    $isTeamm1 = ($goal['team_id'] == $match['team1_id']);
+                ?>
+                <div class="timeline-event">
+                    <div class="event-left">
+                        <?php if($isTeamm1): ?>
+                            <div class="player-info">
+                                <h4><?php echo htmlspecialchars($goal['player_name']); ?></h4>
+                                <span class="text-muted">Goal</span>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <span class="goal-minute"><?php echo $goal['minute']; ?>'</span>
+                    
+                    <div class="event-minute"><?php echo $goal['minute']; ?>'</div>
+                    
+                    <div class="event-right">
+                        <?php if(!$isTeamm1): ?>
+                            <div class="player-info">
+                                <h4><?php echo htmlspecialchars($goal['player_name']); ?></h4>
+                                <span class="text-muted">Goal</span>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <?php endforeach; ?>
             </div>
-            <?php endif; ?>
-        </div>
-        
-        <div class="match-tab-content" id="lineups">
-            <h3>Lineups</h3>
-            <div class="lineups-container">
-                <div class="team-lineup">
-                    <h4><?php echo htmlspecialchars($match['team1_name']); ?></h4>
-                    <?php if (empty($lineups['team1'])): ?>
-                    <p class="no-data">No lineup data available</p>
-                    <?php else: ?>
-                    <div class="players-list">
-                        <?php foreach ($lineups['team1'] as $player): ?>
-                        <div class="player-lineup-item">
-                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                                 alt="<?php echo htmlspecialchars($player['player_name']); ?>" 
-                                 class="player-photo-small"
-                                 onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                            <div class="player-info-lineup">
-                                <div class="player-name-lineup"><?php echo htmlspecialchars($player['player_name']); ?></div>
-                                <div class="player-number-lineup">#<?php echo $player['jersey_number']; ?></div>
-                                <?php if ($player['is_starting']): ?>
-                                <span class="starting-badge">Starting</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="team-lineup">
-                    <h4><?php echo htmlspecialchars($match['team2_name']); ?></h4>
-                    <?php if (empty($lineups['team2'])): ?>
-                    <p class="no-data">No lineup data available</p>
-                    <?php else: ?>
-                    <div class="players-list">
-                        <?php foreach ($lineups['team2'] as $player): ?>
-                        <div class="player-lineup-item">
-                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                                 alt="<?php echo htmlspecialchars($player['player_name']); ?>" 
-                                 class="player-photo-small"
-                                 onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                            <div class="player-info-lineup">
-                                <div class="player-name-lineup"><?php echo htmlspecialchars($player['player_name']); ?></div>
-                                <div class="player-number-lineup">#<?php echo $player['jersey_number']; ?></div>
-                                <?php if ($player['is_starting']): ?>
-                                <span class="starting-badge">Starting</span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        
-        <div class="match-tab-content" id="stats">
-            <h3>Statistics</h3>
-            <div class="stats-container">
-                <div class="stat-item">
-                    <div class="stat-label">Ball Possession</div>
-                    <div class="stat-bar">
-                        <div class="stat-team1" style="width: <?php echo $stats['team1_possession']; ?>%">
-                            <span><?php echo $stats['team1_possession']; ?>%</span>
-                        </div>
-                        <div class="stat-team2" style="width: <?php echo $stats['team2_possession']; ?>%">
-                            <span><?php echo $stats['team2_possession']; ?>%</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-item">
-                    <div class="stat-label">Shots on Target</div>
-                    <div class="stat-bar">
-                        <div class="stat-team1" style="width: <?php echo ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) > 0 ? ($stats['team1_shots_on_target'] / ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) * 100) : 50; ?>%">
-                            <span><?php echo $stats['team1_shots_on_target']; ?></span>
-                        </div>
-                        <div class="stat-team2" style="width: <?php echo ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) > 0 ? ($stats['team2_shots_on_target'] / ($stats['team1_shots_on_target'] + $stats['team2_shots_on_target']) * 100) : 50; ?>%">
-                            <span><?php echo $stats['team2_shots_on_target']; ?></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stat-item">
-                    <div class="stat-label">Fouls</div>
-                    <div class="stat-bar">
-                        <div class="stat-team1" style="width: <?php echo ($stats['team1_fouls'] + $stats['team2_fouls']) > 0 ? ($stats['team1_fouls'] / ($stats['team1_fouls'] + $stats['team2_fouls']) * 100) : 50; ?>%">
-                            <span><?php echo $stats['team1_fouls']; ?></span>
-                        </div>
-                        <div class="stat-team2" style="width: <?php echo ($stats['team1_fouls'] + $stats['team2_fouls']) > 0 ? ($stats['team2_fouls'] / ($stats['team1_fouls'] + $stats['team2_fouls']) * 100) : 50; ?>%">
-                            <span><?php echo $stats['team2_fouls']; ?></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php endif; ?>
     </div>
+
 </div>
 
-<style>
-/* Additional CSS for match.php */
-.match-detail-page {
-    margin-top: 30px;
-    margin-bottom: 50px;
-}
-
-.match-detail-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.match-detail-header h1 {
-    color: var(--primary-green);
-    font-size: 32px;
-    margin-bottom: 15px;
-}
-
-.match-event-badge {
-    display: inline-block;
-    background-color: rgba(0, 255, 136, 0.2);
-    color: var(--primary-green);
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.match-info-summary {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(26, 26, 26, 0.3));
-    border-radius: 15px;
-    padding: 30px;
-    margin-bottom: 30px;
-    border: 1px solid var(--dark-green);
-}
-
-.match-teams-large {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.team-large {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.team-logo-large {
-    width: 120px;
-    height: 120px;
-    object-fit: contain;
-    border-radius: 50%;
-    border: 4px solid var(--primary-green);
-    padding: 8px;
-    background-color: var(--black);
-    margin-bottom: 15px;
-}
-
-.team-large h3 {
-    color: var(--white);
-    font-size: 22px;
-    font-weight: 700;
-    max-width: 200px;
-    word-wrap: break-word;
-}
-
-.vs-large {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0 30px;
-}
-
-.vs-text-large {
-    color: var(--primary-green);
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 15px;
-}
-
-.score-large {
-    font-size: 48px;
-    font-weight: 900;
-    color: var(--white);
-    background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
-    padding: 15px 30px;
-    border-radius: 12px;
-    border: 3px solid var(--white);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.match-details-info {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    padding-top: 20px;
-    border-top: 1px solid var(--gray);
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--white);
-    font-size: 16px;
-}
-
-.detail-item i {
-    color: var(--primary-green);
-    font-size: 18px;
-}
-
-.match-tabs-section {
-    background-color: var(--gray-dark);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--dark-green);
-}
-
-.match-tabs {
-    display: flex;
-    background-color: var(--black);
-    border-bottom: 2px solid var(--primary-green);
-}
-
-.match-tab {
-    flex: 1;
-    padding: 15px 20px;
-    background: none;
-    border: none;
-    color: var(--gray-light);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.match-tab:hover {
-    color: var(--primary-green);
-    background-color: rgba(0, 255, 136, 0.1);
-}
-
-.match-tab.active {
-    color: var(--primary-green);
-    background-color: rgba(0, 255, 136, 0.2);
-    border-bottom: 3px solid var(--primary-green);
-}
-
-.match-tab-content {
-    padding: 30px;
-    display: none;
-}
-
-.match-tab-content.active {
-    display: block;
-}
-
-.match-tab-content h3 {
-    color: var(--primary-green);
-    font-size: 20px;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--gray);
-}
-
-.goals-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.goal-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    border-left: 4px solid var(--primary-green);
-}
-
-.goal-player {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.goal-player-number {
-    background-color: var(--primary-green);
-    color: var(--black);
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.goal-player-name {
-    color: var(--white);
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.goal-team {
-    color: var(--gray-light);
-    font-size: 14px;
-    margin-left: 10px;
-}
-
-.goal-minute {
-    background-color: var(--dark-green);
-    color: var(--white);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.lineups-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-}
-
-.team-lineup h4 {
-    color: var(--primary-green);
-    font-size: 18px;
-    margin-bottom: 20px;
-    text-align: center;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--gray);
-}
-
-.players-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.player-lineup-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    border-left: 3px solid transparent;
-}
-
-.player-lineup-item:hover {
-    background-color: rgba(0, 255, 136, 0.1);
-    border-left-color: var(--primary-green);
-    transform: translateX(5px);
-}
-
-.player-photo-small {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--dark-green);
-    background-color: var(--black);
-}
-
-.player-info-lineup {
-    flex: 1;
-}
-
-.player-name-lineup {
-    color: var(--white);
-    font-weight: 600;
-    font-size: 16px;
-    margin-bottom: 4px;
-}
-
-.player-number-lineup {
-    color: var(--primary-green);
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.starting-badge {
-    display: inline-block;
-    background-color: var(--dark-green);
-    color: var(--white);
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-left: 8px;
-    font-weight: 600;
-}
-
-.stats-container {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-.stat-item {
-    margin-bottom: 15px;
-}
-
-.stat-label {
-    color: var(--white);
-    font-weight: 600;
-    margin-bottom: 10px;
-    font-size: 16px;
-}
-
-.stat-bar {
-    display: flex;
-    height: 40px;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--gray);
-}
-
-.stat-team1 {
-    background: linear-gradient(90deg, var(--dark-green), var(--primary-green));
-    color: var(--black);
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 15px;
-    font-weight: 700;
-    font-size: 14px;
-    transition: width 0.5s ease;
-}
-
-.stat-team2 {
-    background: linear-gradient(90deg, #666666, #888888);
-    color: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 15px;
-    font-weight: 700;
-    font-size: 14px;
-    transition: width 0.5s ease;
-}
-
-.no-data {
-    text-align: center;
-    color: var(--gray-light);
-    font-style: italic;
-    padding: 40px 20px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    border: 2px dashed var(--gray);
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    border: 2px dashed var(--gray);
-}
-
-.empty-state i {
-    font-size: 48px;
-    color: var(--gray-light);
-    margin-bottom: 15px;
-}
-
-.empty-state p {
-    color: var(--gray-light);
-    font-size: 16px;
-}
-
-@media (max-width: 768px) {
-    .match-teams-large {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .vs-large {
-        padding: 20px 0;
-        flex-direction: row;
-        gap: 20px;
-    }
-    
-    .score-large {
-        font-size: 36px;
-        padding: 10px 20px;
-    }
-    
-    .lineups-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .match-details-info {
-        flex-direction: column;
-        gap: 15px;
-        align-items: center;
-    }
-    
-    .match-tabs {
-        flex-wrap: wrap;
-    }
-    
-    .match-tab {
-        min-width: 120px;
-        text-align: center;
-    }
-}
-</style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality for match detail page
-    const tabs = document.querySelectorAll('.match-tab');
-    const tabContents = document.querySelectorAll('.match-tab-content');
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
-            
-            // Remove active class from all tabs
-            tabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(tc => tc.classList.remove('active'));
-            
-            // Add active class to current tab
-            this.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+    function switchTab(tabId) {
+        // Update Buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
         });
-    });
-    
-    // If match is scheduled, show different content
-    // If match is scheduled, show specific UI adjustments if needed, 
-    // but DO NOT hide lineups/stats if data is available.
-    const matchStatus = "<?php echo $match['status']; ?>";
-    if (matchStatus === 'scheduled') {
-        // Hide goals tab if match is scheduled as there are no goals yet
-        const goalsTab = document.querySelector('.match-tab[data-tab="goals"]');
-        if(goalsTab) goalsTab.style.display = 'none';
-        
-        // Auto-select lineups tab if goals tab is hidden
-        const lineupsTabBtn = document.querySelector('.match-tab[data-tab="lineups"]');
-        if(lineupsTabBtn) lineupsTabBtn.click();
+        event.target.classList.add('active');
+
+        // Update Content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
     }
-});
+
+    // Auto-select tab logic if match is scheduled
+    document.addEventListener('DOMContentLoaded', () => {
+        const status = "<?php echo $match['status']; ?>";
+        if (status === 'scheduled') {
+           // Simply click the lineups tab to switch to it
+           const lineupsBtn = document.querySelector('button[onclick="switchTab(\'lineups\')"]');
+           if(lineupsBtn) lineupsBtn.click();
+        }
+    });
 </script>
 
-<?php 
-require_once 'includes/footer.php'; 
-?>
+<?php require_once 'includes/footer.php'; ?>
