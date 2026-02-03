@@ -34,7 +34,8 @@ $menu_items = [
         'items' => [
             'player' => 'player.php',
             'team' => 'team.php',
-            'team_staff' => 'team_staff.php'
+            'team_staff' => 'team_staff.php',
+            'transfer' => 'transfer.php',
         ]
     ],
     'Event' => [
