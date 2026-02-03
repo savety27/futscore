@@ -185,6 +185,23 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
 ?>
 
 <style>
+/* Hero Banner Styles */
+.event-hero {
+    background: linear-gradient(135deg, #1a1a1a 0%, #c00 100%);
+    padding: 60px 0;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 40px;
+}
+
+.event-hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
 /* CSS Reset and Base for the section */
 .event-list-section {
     padding: 40px 0;
@@ -692,16 +709,15 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
 }
 </style>
 
+<!-- Banner Hero Section DI LUAR container -->
+<div class="event-hero">
+    <div class="container">
+        <h1>EVENTS & MATCHES</h1>
+    </div>
+</div>
+
 <div class="container">
     <div class="event-list-section">
-        <!-- Page Header -->
-        <div style="margin-bottom: 30px;">
-            <h1 style="color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-trophy"></i>
-                Event & Pertandingan
-            </h1>
-            <p style="color: #ccc;">Daftar semua pertandingan yang telah dan akan berlangsung</p>
-        </div>
 
         <!-- Filter Section -->
         <div class="filter-section">
