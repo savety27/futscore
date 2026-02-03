@@ -651,7 +651,7 @@ if ($teamId > 0) {
         
         let html = '';
         staffData.forEach((staff, index) => {
-            const position = staff.position || 'staff';
+            const position = staff.position || 'staff';33
             const icon = positionIcons[position] || positionIcons.default;
             const positionText = positionTranslations[position] || position;
             
