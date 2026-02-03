@@ -165,9 +165,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $conn->beginTransaction();
 
             // 1. Update Challenge
-            $new_status = 'completed';
-            if ($challenge_data['status'] === 'completed') {
-                $new_status = 'completed'; 
+            // Keep current challenge status unless match is explicitly completed
+            $new_status = $challenge_data['status'];
+            if ($form_data['match_status'] === 'completed') {
+                $new_status = 'completed';
             }
             
             $stmt = $conn->prepare("
