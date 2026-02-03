@@ -24,13 +24,14 @@ if ($source === 'challenge') {
     // Get match details from challenges table
     $sql = "SELECT c.id, c.challenge_code as match_code, c.challenge_date as match_date, 
                    c.challenger_score as score1, c.opponent_score as score2,
-                   c.match_status as status, c.notes as location,
+                   c.match_status as status, v.name as location,
                    t1.id as team1_id, t1.name as team1_name, t1.logo as team1_logo, 
                    t2.id as team2_id, t2.name as team2_name, t2.logo as team2_logo,
                    c.sport_type as event_name
             FROM challenges c
             LEFT JOIN teams t1 ON c.challenger_id = t1.id
             LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
             WHERE c.id = ?";
 } else {
     // Get match details from matches table
