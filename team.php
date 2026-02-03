@@ -288,6 +288,14 @@ if ($teamId > 0) {
     background: #f39c12;
 }
 
+.position-badge.staff {
+    background: #28a745;
+}
+
+.position-badge i {
+    font-size: 14px;
+}
+
 .player-item-info {
     flex: 1;
 }
@@ -372,6 +380,12 @@ if ($teamId > 0) {
     opacity: 0.5;
 }
 
+.staff-position {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+}
+
 @media (max-width: 768px) {
     .player-content {
         grid-template-columns: 1fr;
@@ -453,113 +467,226 @@ if ($teamId > 0) {
                         <?php echo htmlspecialchars($event['name']); ?>
                     </button>
                 <?php endforeach; ?>
-                <button class="player-tab active" data-tab="all">Non Category</button>
+                <button class="player-tab active" data-tab="players">Players</button>
                 <button class="player-tab" data-tab="staff">Pelatih / Staff</button>
             </div>
             
             <div class="player-content">
+                <!-- Player List Container -->
                 <div class="player-list" id="playerList">
-                    <?php if (empty($players)): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-users"></i>
-                            <h4>Tidak ada pemain</h4>
-                            <p>Belum ada pemain yang terdaftar di tim ini</p>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($players as $index => $player): ?>
-                            <div class="player-item <?php echo $index === 0 ? 'active' : ''; ?>" 
-                                 data-player-id="<?php echo $player['id']; ?>"
-                                 onclick="showPlayerDetail(<?php echo htmlspecialchars(json_encode($player)); ?>)">
-                                <div class="position-badge <?php echo strtolower($player['position']) === 'gk' ? 'keeper' : ''; ?>">
-                                    <?php echo strtoupper(substr($player['position'] ?: 'P', 0, 1)); ?>
-                                </div>
-                                <div class="player-item-info">
-                                    <span class="player-number"><?php echo $player['jersey_number'] ?: '-'; ?>.</span>
-                                    <span class="player-name"><?php echo htmlspecialchars($player['name']); ?></span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <!-- Content will be loaded dynamically -->
                 </div>
                 
+                <!-- Player Detail Panel -->
                 <div class="player-detail-panel" id="playerDetailPanel">
-                    <?php if (!empty($players)): 
-                        $firstPlayer = $players[0];
-                    ?>
-                        <div class="player-photo-container">
-                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $firstPlayer['photo']; ?>" 
-                                 alt="<?php echo htmlspecialchars($firstPlayer['name']); ?>" 
-                                 class="player-photo-large"
-                                 id="playerPhoto"
-                                 onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                        </div>
-                        
-                        <div class="player-detail-info" id="playerDetailInfo">
-                            <div class="info-row">
-                                <span class="info-label">KEBANGSAAN:</span>
-                                <span class="info-value"><?php echo htmlspecialchars($firstPlayer['nationality'] ?: 'Indonesia'); ?></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">NISN:</span>
-                                <span class="info-value"><?php echo htmlspecialchars($firstPlayer['nisn'] ?: '-'); ?></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">TMP/TGL LAHIR:</span>
-                                <span class="info-value">
-                                    <?php 
-                                    $birthInfo = [];
-                                    if (!empty($firstPlayer['birth_place'])) $birthInfo[] = $firstPlayer['birth_place'];
-                                    if (!empty($firstPlayer['birth_date']) && $firstPlayer['birth_date'] != '0000-00-00') {
-                                        $birthInfo[] = date('d M Y', strtotime($firstPlayer['birth_date']));
-                                    }
-                                    echo htmlspecialchars(implode(', ', $birthInfo) ?: '-');
-                                    ?>
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">USIA:</span>
-                                <span class="info-value"><?php echo $firstPlayer['age']; ?> Tahun <?php 
-                                    if (!empty($firstPlayer['birth_date']) && $firstPlayer['birth_date'] != '0000-00-00') {
-                                        $birth = new DateTime($firstPlayer['birth_date']);
-                                        $today = new DateTime();
-                                        echo $today->diff($birth)->m;
-                                    } else {
-                                        echo '0';
-                                    }
-                                ?> Bulan</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">POSISI:</span>
-                                <span class="info-value"><?php echo htmlspecialchars($firstPlayer['position'] ?: '-'); ?></span>
-                            </div>
-                        </div>
-                        
-                        <button class="detail-button" onclick="window.location.href='<?php echo SITE_URL; ?>/player_view.php?id=<?php echo $firstPlayer['id']; ?>'">
-                            <i class="fas fa-info-circle"></i> Detail
-                        </button>
-                    <?php else: ?>
-                        <div class="empty-state">
-                            <p>Pilih pemain untuk melihat detail</p>
-                        </div>
-                    <?php endif; ?>
+                    <div class="empty-state">
+                        <i class="fas fa-user"></i>
+                        <p>Pilih pemain atau staff untuk melihat detail</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <script>
-    function showPlayerDetail(player) {
+  <script>
+    // Data from PHP
+    const playersData = <?php echo json_encode($players); ?>;
+    const staffData = <?php echo json_encode($staff); ?>;
+    
+    // Current active tab
+    let currentTab = 'players';
+    let currentType = 'player'; // 'player' or 'staff'
+    
+    // Tab translations for staff positions
+    const positionTranslations = {
+        'manager': 'Manager',
+        'headcoach': 'Pelatih Kepala',
+        'coach': 'Pelatih',
+        'goalkeeper_coach': 'Pelatih Kiper',
+        'medic': 'Medis',
+        'official': 'Official'
+    };
+    
+    // Position icons
+    const positionIcons = {
+        'manager': 'fa-user-tie',
+        'headcoach': 'fa-clipboard-list',
+        'coach': 'fa-whistle',
+        'goalkeeper_coach': 'fa-hands',
+        'medic': 'fa-stethoscope',
+        'official': 'fa-id-card',
+        'default': 'fa-user'
+    };
+    
+    // Function to get correct photo URL for staff
+    function getStaffPhotoUrl(photo) {
+        if (!photo) {
+            return '<?php echo SITE_URL; ?>/images/staff/default-staff.jpg';
+        }
+        
+        // Check if photo is already a full path or contains uploads/
+        if (photo.includes('http://') || photo.includes('https://')) {
+            return photo;
+        } else if (photo.startsWith('uploads/')) {
+            return '<?php echo SITE_URL; ?>/' + photo;
+        } else if (photo.startsWith('/')) {
+            return '<?php echo SITE_URL; ?>' + photo;
+        } else {
+            return '<?php echo SITE_URL; ?>/images/staff/' + photo;
+        }
+    }
+    
+    // Function to get correct photo URL for players
+    function getPlayerPhotoUrl(photo) {
+        if (!photo) {
+            return '<?php echo SITE_URL; ?>/images/players/default-player.jpg';
+        }
+        
+        // Check if photo is already a full path or contains uploads/
+        if (photo.includes('http://') || photo.includes('https://')) {
+            return photo;
+        } else if (photo.startsWith('uploads/')) {
+            return '<?php echo SITE_URL; ?>/' + photo;
+        } else if (photo.startsWith('/')) {
+            return '<?php echo SITE_URL; ?>' + photo;
+        } else {
+            return '<?php echo SITE_URL; ?>/images/players/' + photo;
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load players by default
+        loadPlayers();
+        
+        // Set up tab click handlers
+        document.querySelectorAll('.player-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.player-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Get tab type
+                const tabType = this.getAttribute('data-tab');
+                const eventId = this.getAttribute('data-event');
+                
+                if (eventId) {
+                    // Event-specific players (you can implement this later)
+                    loadEventPlayers(eventId);
+                } else if (tabType === 'staff') {
+                    currentTab = 'staff';
+                    loadStaff();
+                } else {
+                    currentTab = 'players';
+                    loadPlayers();
+                }
+            });
+        });
+    });
+    
+    function loadPlayers() {
+        currentType = 'player';
+        const playerList = document.getElementById('playerList');
+        const detailPanel = document.getElementById('playerDetailPanel');
+        
+        if (playersData.length === 0) {
+            playerList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h4>Tidak ada pemain</h4>
+                    <p>Belum ada pemain yang terdaftar di tim ini</p>
+                </div>
+            `;
+            showEmptyDetailPanel();
+            return;
+        }
+        
+        let html = '';
+        playersData.forEach((player, index) => {
+            const position = player.position || 'P';
+            const isGoalkeeper = player.position === 'GK' || player.position === 'Goalkeeper';
+            
+            html += `
+                <div class="player-item ${index === 0 ? 'active' : ''}" 
+                     onclick="showPlayerDetail(${JSON.stringify(player).replace(/"/g, '&quot;')}, this)">
+                    <div class="position-badge ${isGoalkeeper ? 'keeper' : ''}">
+                        ${position.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="player-item-info">
+                        <span class="player-number">${player.jersey_number || '-'}.</span>
+                        <span class="player-name">${escapeHtml(player.name)}</span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        playerList.innerHTML = html;
+        
+        // Show first player's detail
+        if (playersData.length > 0) {
+            showPlayerDetail(playersData[0]);
+        }
+    }
+    
+    function loadStaff() {
+        currentType = 'staff';
+        const playerList = document.getElementById('playerList');
+        const detailPanel = document.getElementById('playerDetailPanel');
+        
+        if (staffData.length === 0) {
+            playerList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users-cog"></i>
+                    <h4>Tidak ada staff</h4>
+                    <p>Belum ada staff yang terdaftar di tim ini</p>
+                </div>
+            `;
+            showEmptyDetailPanel();
+            return;
+        }
+        
+        let html = '';
+        staffData.forEach((staff, index) => {
+            const position = staff.position || 'staff';
+            const icon = positionIcons[position] || positionIcons.default;
+            const positionText = positionTranslations[position] || position;
+            
+            html += `
+                <div class="player-item ${index === 0 ? 'active' : ''}" 
+                     onclick="showStaffDetail(${JSON.stringify(staff).replace(/"/g, '&quot;')}, this)">
+                    <div class="position-badge staff">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="player-item-info">
+                        <span class="player-name">${escapeHtml(staff.name)}</span>
+                        <div class="staff-position">${positionText}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        playerList.innerHTML = html;
+        
+        // Show first staff's detail
+        if (staffData.length > 0) {
+            showStaffDetail(staffData[0]);
+        }
+    }
+    
+    function showPlayerDetail(player, element = null) {
         // Update active state
         document.querySelectorAll('.player-item').forEach(item => {
             item.classList.remove('active');
         });
-        event.currentTarget.classList.add('active');
+        if (element) {
+            element.classList.add('active');
+        }
         
-        // Update player photo
-        const photo = document.getElementById('playerPhoto');
-        photo.src = '<?php echo SITE_URL; ?>/images/players/' + (player.photo || 'default-player.jpg');
-        
-        // Calculate months
+        // Calculate months for age
         let months = 0;
         if (player.birth_date && player.birth_date !== '0000-00-00') {
             const birth = new Date(player.birth_date);
@@ -568,40 +695,142 @@ if ($teamId > 0) {
             if (months < 0) months += 12;
         }
         
-        // Update player info
+        // Format birth info
         const birthInfo = [];
-        if (player.birth_place) birthInfo.push(player.birth_place);
+        if (player.birth_place) birthInfo.push(escapeHtml(player.birth_place));
         if (player.birth_date && player.birth_date !== '0000-00-00') {
             const date = new Date(player.birth_date);
             birthInfo.push(date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }));
         }
         
-        document.getElementById('playerDetailInfo').innerHTML = `
-            <div class="info-row">
-                <span class="info-label">KEBANGSAAN:</span>
-                <span class="info-value">${player.nationality || 'Indonesia'}</span>
+        // Get correct photo URL
+        const photoUrl = getPlayerPhotoUrl(player.photo);
+        
+        const detailPanel = document.getElementById('playerDetailPanel');
+        detailPanel.innerHTML = `
+            <div class="player-photo-container">
+                <img src="${photoUrl}" 
+                     alt="${escapeHtml(player.name)}" 
+                     class="player-photo-large"
+                     onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
             </div>
-            <div class="info-row">
-                <span class="info-label">NISN:</span>
-                <span class="info-value">${player.nisn || '-'}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">TMP/TGL LAHIR:</span>
-                <span class="info-value">${birthInfo.join(', ') || '-'}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">USIA:</span>
-                <span class="info-value">${player.age} Tahun ${months} Bulan</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">POSISI:</span>
-                <span class="info-value">${player.position || '-'}</span>
+            
+            <div class="player-detail-info">
+                <div class="info-row">
+                    <span class="info-label">KEBANGSAAN:</span>
+                    <span class="info-value">${player.nationality || 'Indonesia'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">NISN:</span>
+                    <span class="info-value">${player.nisn || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">TMP/TGL LAHIR:</span>
+                    <span class="info-value">${birthInfo.join(', ') || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">USIA:</span>
+                    <span class="info-value">${player.age || '0'} Tahun ${months} Bulan</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">POSISI:</span>
+                    <span class="info-value">${player.position || '-'}</span>
+                </div>
             </div>
         `;
+    }
+    
+    function showStaffDetail(staff, element = null) {
+        // Update active state
+        document.querySelectorAll('.player-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        if (element) {
+            element.classList.add('active');
+        }
         
-        // Update detail button
-        const detailBtn = document.querySelector('.detail-button');
-        detailBtn.onclick = () => window.location.href = '<?php echo SITE_URL; ?>/player_view.php?id=' + player.id;
+        // Format staff info
+        const position = staff.position || 'staff';
+        const icon = positionIcons[position] || positionIcons.default;
+        const positionText = positionTranslations[position] || position;
+        
+        // Format birth info
+        let birthDateFormatted = '-';
+        let age = '-';
+        if (staff.birth_date && staff.birth_date !== '0000-00-00') {
+            const date = new Date(staff.birth_date);
+            birthDateFormatted = date.toLocaleDateString('id-ID', { 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Calculate age
+            const today = new Date();
+            const birth = new Date(staff.birth_date);
+            let ageYears = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                ageYears--;
+            }
+            age = ageYears + ' Tahun';
+        }
+        
+        // Get correct photo URL
+        const photoUrl = getStaffPhotoUrl(staff.photo);
+        
+        const detailPanel = document.getElementById('playerDetailPanel');
+        detailPanel.innerHTML = `
+            <div class="player-photo-container">
+                <img src="${photoUrl}" 
+                     alt="${escapeHtml(staff.name)}" 
+                     class="player-photo-large"
+                     onerror="this.src='<?php echo SITE_URL; ?>/images/staff/default-staff.jpg'">
+                <h3 style="margin-bottom: 5px;">${escapeHtml(staff.name)}</h3>
+                <p style="color: #666; margin-bottom: 20px;">${positionText}</p>
+            </div>
+            
+            <div class="player-detail-info">
+                <div class="info-row">
+                    <span class="info-label">POSISI:</span>
+                    <span class="info-value">${positionText}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">EMAIL:</span>
+                    <span class="info-value">${staff.email || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">TELEPON:</span>
+                    <span class="info-value">${staff.phone || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">TEMPAT LAHIR:</span>
+                    <span class="info-value">${staff.birth_place || '-'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">TANGGAL LAHIR:</span>
+                    <span class="info-value">${birthDateFormatted}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">USIA:</span>
+                    <span class="info-value">${age}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">KOTA:</span>
+                    <span class="info-value">${staff.city || '-'}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    function showEmptyDetailPanel() {
+        const detailPanel = document.getElementById('playerDetailPanel');
+        detailPanel.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-user"></i>
+                <p>Pilih pemain atau staff untuk melihat detail</p>
+            </div>
+        `;
     }
     
     function shareTeam() {
@@ -617,7 +846,20 @@ if ($teamId > 0) {
             alert('Link copied to clipboard!');
         }
     }
-    </script>
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // For event players (placeholder function)
+    function loadEventPlayers(eventId) {
+        // Implement this if you want to show players filtered by event
+        console.log('Loading players for event:', eventId);
+        loadPlayers(); // Fallback to all players for now
+    }
+</script>
 
 <?php else: ?>
     <!-- TEAM LISTING VIEW -->
