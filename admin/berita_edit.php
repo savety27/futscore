@@ -1619,25 +1619,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // File Upload Logic
+    // File Upload Logic - PERBAIKAN DI SINI
     const gambarUpload = document.getElementById('gambarUpload');
     const gambarInput = document.getElementById('gambar');
     const gambarPreview = document.getElementById('gambarPreview');
     const gambarPreviewImg = document.getElementById('gambarPreviewImg');
     const gambarFileInfo = document.getElementById('gambarFileInfo');
 
+    // PERBAIKAN 1: Tambah style pointer-events untuk container
+    gambarUpload.style.cursor = 'pointer';
+    gambarUpload.style.pointerEvents = 'auto';
+
+    // PERBAIKAN 2: Input file harus lebih tinggi z-index dan menutupi container
+    gambarInput.style.position = 'absolute';
+    gambarInput.style.width = '100%';
+    gambarInput.style.height = '100%';
+    gambarInput.style.opacity = '0';
+    gambarInput.style.cursor = 'pointer';
+    gambarInput.style.zIndex = '10';
+    gambarInput.style.top = '0';
+    gambarInput.style.left = '0';
+
     // Drag and Drop
     gambarUpload.addEventListener('dragover', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         gambarUpload.classList.add('drag-over');
     });
 
-    gambarUpload.addEventListener('dragleave', function() {
+    gambarUpload.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         gambarUpload.classList.remove('drag-over');
     });
 
     gambarUpload.addEventListener('drop', function(e) {
         e.preventDefault();
+        e.stopPropagation();
         gambarUpload.classList.remove('drag-over');
         const files = e.dataTransfer.files;
         if (files.length) {
@@ -1646,14 +1664,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Click to Upload
-    gambarUpload.addEventListener('click', function() {
-        gambarInput.click();
+    // PERBAIKAN 3: Hanya gunakan change event pada input file
+    gambarInput.addEventListener('change', function(e) {
+        if (this.files && this.files.length) {
+            handleFileSelect(this.files[0]);
+        }
     });
 
-    gambarInput.addEventListener('change', function() {
-        if (this.files.length) {
-            handleFileSelect(this.files[0]);
+    // PERBAIKAN 4: Tambah event click langsung pada container untuk mobile
+    gambarUpload.addEventListener('click', function(e) {
+        // Cegah bubbling hanya untuk elemen dalam container kecuali input
+        if (e.target !== gambarInput) {
+            gambarInput.click();
+            e.stopPropagation();
         }
     });
 
@@ -1663,11 +1686,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!allowedTypes.includes(file.type)) {
             toastr.error('Format file harus berupa gambar (JPEG, PNG, GIF, atau WebP)');
+            gambarInput.value = ''; // Reset input
             return;
         }
 
         if (file.size > maxSize) {
             toastr.error('Ukuran file maksimal 5MB');
+            gambarInput.value = ''; // Reset input
             return;
         }
 
