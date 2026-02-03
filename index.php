@@ -6,7 +6,7 @@ $latestChallenges = getLatestChallenges(5);
 $scheduledMatches = getScheduledChallenges(5);
 $completedMatches = getCompletedChallenges(5);
 $newPlayers = getPlayers(5);
-$recentTransfers = [];
+$recentTransfers = getPlayerTransfers(5);
 $birthdayPlayers = [];
 $recentWinners = [];
 $newTeams = getTeams(5);
@@ -509,11 +509,222 @@ $pageTitle = "Home";
     </div>
     
     <div class="tab-content" id="transfer">
+        <style>
+            .transfers-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 25px;
+                margin: 30px 0;
+            }
+            .transfer-card {
+                background: linear-gradient(145deg, #131313, #0a0a0a);
+                border: 1px solid rgba(0, 255, 136, 0.2);
+                border-radius: 20px;
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            }
+            .transfer-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, transparent, var(--primary-green), transparent);
+                opacity: 0.5;
+            }
+            .transfer-card:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(0, 255, 136, 0.15);
+                border-color: var(--primary-green);
+            }
+            .transfer-header {
+                display: flex;
+                gap: 18px;
+                align-items: center;
+            }
+            .transfer-player-photo {
+                width: 70px;
+                height: 70px;
+                border-radius: 18px;
+                overflow: hidden;
+                background: #1a1a1a;
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                flex: 0 0 70px;
+                position: relative;
+            }
+            .transfer-player-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+            .transfer-player-details {
+                flex: 1;
+                min-width: 0;
+            }
+            .transfer-player-name {
+                font-size: 18px;
+                font-weight: 800;
+                margin: 0 0 4px;
+                color: #fff;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .transfer-date-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                background: rgba(0, 255, 136, 0.1);
+                border-radius: 6px;
+                color: #00ff88;
+                font-size: 11px;
+                font-weight: 700;
+            }
+            .transfer-flow {
+                display: flex;
+                align-items: center;
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 15px;
+                padding: 15px;
+                gap: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .transfer-team {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                text-align: center;
+                min-width: 0;
+            }
+            .transfer-team-label {
+                font-size: 9px;
+                text-transform: uppercase;
+                color: #888;
+                letter-spacing: 1px;
+                margin-bottom: -4px;
+            }
+            .transfer-team-logo {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                object-fit: contain;
+                background: #000;
+                border: 2px solid rgba(255, 255, 255, 0.05);
+                padding: 4px;
+            }
+            .transfer-team-name {
+                font-size: 12px;
+                color: #fff;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                width: 100%;
+            }
+            .transfer-arrow-container {
+                display: flex;
+                align-items: center;
+                color: #00ff88;
+                font-size: 18px;
+            }
+            .transfer-footer {
+                display: flex;
+                justify-content: center;
+            }
+            .transfer-status {
+                font-size: 10px;
+                font-weight: 800;
+                text-transform: uppercase;
+                color: #000;
+                background: #00ff88;
+                padding: 4px 12px;
+                border-radius: 99px;
+                letter-spacing: 1px;
+            }
+        </style>
+        <?php if (empty($recentTransfers)): ?>
         <div class="empty-state">
             <i class="fas fa-exchange-alt"></i>
             <h4>Tidak ada transfer</h4>
-            <p>Belum ada data transfer pemain</p>
+            <p>Belum ada data transfer pemain baru-baru ini</p>
         </div>
+        <?php else: ?>
+        <div class="transfers-grid">
+            <?php foreach ($recentTransfers as $transfer): ?>
+                <?php
+                $playerPhoto = !empty($transfer['player_photo']) ? $transfer['player_photo'] : 'default-player.jpg';
+                $fromLogo = !empty($transfer['from_team_logo']) ? $transfer['from_team_logo'] : null;
+                $toLogo = !empty($transfer['to_team_logo']) ? $transfer['to_team_logo'] : null;
+                $fromTeam = $transfer['from_team_name'] ?? 'Free Agent';
+                $toTeam = $transfer['to_team_name'] ?? 'Free Agent';
+                $transferDate = $transfer['transfer_date'] ?? ($transfer['created_at'] ?? null);
+                
+                $playerPhotoPath = SITE_URL . '/images/players/' . $playerPhoto;
+                $fromLogoPath = $fromLogo ? SITE_URL . '/images/teams/' . $fromLogo : SITE_URL . '/images/MGP FC.jpeg';
+                $toLogoPath = $toLogo ? SITE_URL . '/images/teams/' . $toLogo : SITE_URL . '/images/MGP FC.jpeg';
+                ?>
+                <div class="transfer-card">
+                    <div class="transfer-header">
+                        <div class="transfer-player-photo">
+                            <img src="<?php echo $playerPhotoPath; ?>" 
+                                 alt="<?php echo htmlspecialchars($transfer['player_name'] ?? 'Player'); ?>"
+                                 class="transfer-player-img"
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                        </div>
+                        <div class="transfer-player-details">
+                            <h3 class="transfer-player-name"><?php echo htmlspecialchars($transfer['player_name'] ?? 'Unknown Player'); ?></h3>
+                            <?php if (!empty($transferDate)): ?>
+                                <div class="transfer-date-badge">
+                                    <i class="far fa-calendar-alt"></i> <?php echo formatDate($transferDate); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="transfer-flow">
+                        <div class="transfer-team">
+                            <span class="transfer-team-label">From</span>
+                            <img src="<?php echo $fromLogoPath; ?>" 
+                                 alt="<?php echo htmlspecialchars($fromTeam); ?>" 
+                                 class="transfer-team-logo"
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                            <span class="transfer-team-name"><?php echo htmlspecialchars($fromTeam); ?></span>
+                        </div>
+                        
+                        <div class="transfer-arrow-container">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="transfer-team">
+                            <span class="transfer-team-label">To</span>
+                            <img src="<?php echo $toLogoPath; ?>" 
+                                 alt="<?php echo htmlspecialchars($toTeam); ?>" 
+                                 class="transfer-team-logo"
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                            <span class="transfer-team-name"><?php echo htmlspecialchars($toTeam); ?></span>
+                        </div>
+                    </div>
+                    
+                    <div class="transfer-footer">
+                        <span class="transfer-status">Confirmed</span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
     
     <div class="tab-content" id="birthday">
