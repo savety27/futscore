@@ -171,6 +171,23 @@ $pageTitle = "Staff List";
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
    <style>
+    /* Hero Banner Styles */
+.staff-hero {
+    background: linear-gradient(135deg, #1a1a1a 0%, #c00 100%);
+    padding: 60px 0;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 40px;
+}
+
+.staff-hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
 /* CSS Reset and Base for the section */
 .staff-list-section {
     padding: 40px 0;
@@ -837,6 +854,13 @@ $pageTitle = "Staff List";
     <button class="close-btn" onclick="closeImageViewer()">&times;</button>
     <img id="fullSizeImage" src="" alt="">
     <div class="image-title" id="imageTitle"></div>
+</div>
+
+<!-- Banner Hero Section DI LUAR container -->
+<div class="staff-hero">
+    <div class="container">
+        <h1>STAFF</h1>
+    </div>
 </div>
 
 <div class="container">
