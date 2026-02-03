@@ -872,7 +872,7 @@ function getQueryString($exclude = []) {
 }
 
 .filter-select {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgb(0, 0, 0);
     color: var(--white);
     border: 1px solid var(--gray);
     padding: 10px 15px;
