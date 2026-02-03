@@ -143,7 +143,8 @@ $pageTitle = "Home";
                         </h3>
                         <p class="news-excerpt">
                             <?php 
-                            $excerpt = strip_tags($news['content']);
+                            $content = $news['konten'] ?? ($news['content'] ?? '');
+                            $excerpt = strip_tags($content);
                             echo htmlspecialchars(mb_substr($excerpt, 0, 100)) . '...'; 
                             ?>
                         </p>
