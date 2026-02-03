@@ -18,7 +18,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
 $staff_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($staff_id <= 0) {
-    header("Location: team_staff.php");
+    header("Location: team_staff.php");,
     exit;
 }
 
@@ -37,7 +37,8 @@ $menu_items = [
         'items' => [
             'player' => 'player.php',
             'team' => 'team.php',
-            'team_staff' => 'team_staff.php'
+            'team_staff' => 'team_staff.php',
+            'transfer' => 'transfer.php',
         ]
     ],
     'Event' => [
