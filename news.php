@@ -1,10 +1,9 @@
 <?php
 require_once 'includes/header.php';
-require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
-// Inisialisasi koneksi database
-$db = new Database();
+// Gunakan koneksi database dari functions.php
+global $db;
 $conn = $db->getConnection();
 
 // Cek apakah ini single news atau news list
@@ -13,95 +12,156 @@ $isSingleNews = !empty($slug);
 
 if ($isSingleNews) {
     // ============================
-    // SINGLE NEWS DETAIL
+    // DETAIL BERITA TUNGGAL
     // ============================
     
-    // Get news from database
-    $news = getNewsBySlug($slug);
-
-    if (!$news) {
-        header('Location: index.php');
+    // Ambil berita dari tabel berita
+    $sql = "SELECT * FROM berita WHERE slug = ? AND status = 'published'";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $slug);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        header('Location: news.php');
         exit;
     }
+    
+    $news = $result->fetch_assoc();
 
-    // Increment view count for this news
-    incrementNewsViews($news['id']);
+    // Tambah jumlah view
+    $update_sql = "UPDATE berita SET views = views + 1 WHERE id = ?";
+    $update_stmt = $conn->prepare($update_sql);
+    $update_stmt->bind_param("i", $news['id']);
+    $update_stmt->execute();
+    
+    // Ambil data terbaru setelah ditambah view
+    $sql = "SELECT * FROM berita WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $news['id']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $news = $result->fetch_assoc();
 
-    // Get fresh news data after increment
-    $news = getNewsBySlug($slug);
+    $pageTitle = $news['judul'];
 
-    $pageTitle = $news['title'];
-
-    // Get related news
-    $relatedNews = getRelatedNews($news['id'], 3);
+    // Ambil berita terkait (tag sama atau yang terbaru)
+    $relatedNews = [];
+    if (!empty($news['tag'])) {
+        $tags = explode(',', $news['tag']);
+        $firstTag = trim($tags[0]);
+        
+        $sql = "SELECT * FROM berita 
+               WHERE id != ? 
+               AND status = 'published' 
+               AND tag LIKE ? 
+               ORDER BY created_at DESC 
+               LIMIT 3";
+        $stmt = $conn->prepare($sql);
+        $searchTag = "%{$firstTag}%";
+        $stmt->bind_param("is", $news['id'], $searchTag);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            $relatedNews[] = $row;
+        }
+    }
+    
+    // Jika tidak ada berita terkait, ambil berita terbaru
+    if (empty($relatedNews)) {
+        $sql = "SELECT * FROM berita 
+               WHERE id != ? 
+               AND status = 'published' 
+               ORDER BY created_at DESC 
+               LIMIT 3";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $news['id']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            $relatedNews[] = $row;
+        }
+    }
     
     // Tampilkan single news
     ?>
     <div class="container">
         <!-- Breadcrumb -->
         <div class="breadcrumb">
+            <a href="index.php">Home</a> › 
+            <a href="news.php">Berita</a> › 
+            <span><?php echo htmlspecialchars($news['judul']); ?></span>
         </div>
         
-        <!-- News Detail -->
+        <!-- Detail Berita -->
         <div class="news-detail">
-            <div class="news-header">
-                <h1><?php echo htmlspecialchars($news['title']); ?></h1>
+            <div class="news-header-detail">
+                <h1><?php echo htmlspecialchars($news['judul']); ?></h1>
                 <div class="news-meta-detail">
-                    <span class="news-date"><i class="fas fa-calendar"></i> <?php echo formatDate($news['created_at']); ?></span>
-                    <span class="news-views"><i class="fas fa-eye"></i> <span id="news-detail-views"><?php echo $news['views']; ?></span>x dilihat</span>
-                    <?php if (!empty($news['author'])): ?>
-                    <span class="news-author"><i class="fas fa-user"></i> <?php echo htmlspecialchars($news['author']); ?></span>
+                    <span class="news-date">
+                        <i class="fas fa-calendar"></i> 
+                        <?php echo date('d F Y', strtotime($news['created_at'])); ?>
+                    </span>
+                    <span class="news-views">
+                        <i class="fas fa-eye"></i> 
+                        <span id="news-detail-views"><?php echo number_format($news['views']); ?></span> dilihat
+                    </span>
+                    <?php if (!empty($news['penulis'])): ?>
+                    <span class="news-author">
+                        <i class="fas fa-user"></i> 
+                        <?php echo htmlspecialchars($news['penulis']); ?>
+                    </span>
                     <?php endif; ?>
                 </div>
             </div>
             
-            <div class="news-image-detail">
+            <div class="news-image-detail-container">
                 <?php
-                $image = !empty($news['image']) ? $news['image'] : 'default-news.jpg';
-                $imagePath = SITE_URL . '/images/news/' . $image;
-                $defaultImage = SITE_URL . '/images/news/default-news.jpg';
+                $image = !empty($news['gambar']) ? $news['gambar'] : 'default-news.jpg';
+                $imagePath = SITE_URL . '/images/berita/' . $image;
+                $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
                 <img src="<?php echo $imagePath; ?>" 
-                     alt="<?php echo htmlspecialchars($news['title']); ?>"
-                     class="news-image-full"
+                     alt="<?php echo htmlspecialchars($news['judul']); ?>"
+                     class="news-image-detail-main"
                      onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
             </div>
             
-            <div class="news-content-detail">
+            <div class="news-content-detail-wrapper">
                 <?php 
-                // Pisahkan konten berdasarkan baris baru
-                $content = htmlspecialchars_decode($news['content']);
-                $lines = explode("\n", $content);
+                // Tampilkan konten - handle HTML dan plain text
+                $content = $news['konten'];
                 
-                foreach ($lines as $line):
-                    $line = trim($line);
-                    if (!empty($line)):
-                        // Deteksi apakah ini heading (mengandung "By" di awal)
-                        if (preg_match('/^By\s+/i', $line) || preg_match('/^\d{1,2}\s+[A-Za-z]+\s+\d{4}/', $line)):
-                            echo '<p class="news-meta-line"><strong>' . nl2br(htmlspecialchars($line)) . '</strong></p>';
-                        // Deteksi apakah ini subjudul (semua huruf besar atau mengandung titik)
-                        elseif (preg_match('/^[A-Z\s.,:!?]+$/', $line) && strlen($line) > 10):
-                            echo '<h3 class="news-subtitle">' . nl2br(htmlspecialchars($line)) . '</h3>';
-                        else:
+                // Jika konten punya tag HTML, tampilkan apa adanya
+                if (strip_tags($content) != $content) {
+                    echo $content;
+                } else {
+                    // Plain text - format dengan paragraf
+                    $lines = explode("\n", $content);
+                    foreach ($lines as $line):
+                        $line = trim($line);
+                        if (!empty($line)):
                             echo '<p>' . nl2br(htmlspecialchars($line)) . '</p>';
+                        else:
+                            echo '<br>';
                         endif;
-                    else:
-                        echo '<br>';
-                    endif;
-                endforeach;
+                    endforeach;
+                }
                 ?>
             </div>
             
-            <?php if (!empty($news['tags'])): ?>
-            <div class="news-tags">
+            <?php if (!empty($news['tag'])): ?>
+            <div class="news-tags-container">
                 <i class="fas fa-tags"></i>
                 <?php
-                $tags = explode(',', $news['tags']);
+                $tags = explode(',', $news['tag']);
                 foreach ($tags as $tag):
                     $tag = trim($tag);
                     if (!empty($tag)):
                 ?>
-                <a href="news.php?tag=<?php echo urlencode($tag); ?>" class="tag"><?php echo htmlspecialchars($tag); ?></a>
+                <a href="news.php?tag=<?php echo urlencode($tag); ?>" class="tag-item"><?php echo htmlspecialchars($tag); ?></a>
                 <?php 
                     endif;
                 endforeach; 
@@ -109,47 +169,53 @@ if ($isSingleNews) {
             </div>
             <?php endif; ?>
             
-            <!-- Social Share -->
-            <div class="news-social-share">
-                <span class="share-label">Share this article:</span>
+            <!-- Share Sosial Media -->
+            <div class="news-social-share-container">
+                <span class="share-label">Bagikan artikel ini:</span>
                 <div class="share-buttons">
                     <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode(SITE_URL . '/news.php?slug=' . $news['slug']); ?>" 
                        target="_blank" class="share-btn facebook">
-                        <i class="fab fa-facebook-f"></i> Facebook
+                        <i class="fab fa-facebook-f"></i>
                     </a>
-                    <a href="https://twitter.com/intent/tweet?url=<?php echo urlencode(SITE_URL . '/news.php?slug=' . $news['slug']); ?>&text=<?php echo urlencode($news['title']); ?>" 
+                    <a href="https://twitter.com/intent/tweet?url=<?php echo urlencode(SITE_URL . '/news.php?slug=' . $news['slug']); ?>&text=<?php echo urlencode($news['judul']); ?>" 
                        target="_blank" class="share-btn twitter">
-                        <i class="fab fa-twitter"></i> Twitter
+                        <i class="fab fa-twitter"></i>
                     </a>
-                    <a href="https://wa.me/?text=<?php echo urlencode($news['title'] . ' - ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>" 
+                    <a href="https://wa.me/?text=<?php echo urlencode($news['judul'] . ' - ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>" 
                        target="_blank" class="share-btn whatsapp">
-                        <i class="fab fa-whatsapp"></i> WhatsApp
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a href="mailto:?subject=<?php echo urlencode($news['judul']); ?>&body=<?php echo urlencode('Baca artikel ini: ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>" 
+                       class="share-btn email">
+                        <i class="fas fa-envelope"></i>
                     </a>
                 </div>
             </div>
         </div>
         
-        <!-- Related News -->
+        <!-- Berita Terkait -->
         <?php if (!empty($relatedNews)): ?>
-        <div class="related-news">
-            <h3>Berita Terkait</h3>
+        <div class="related-news-section">
+            <h3 class="related-news-title">Berita Terkait</h3>
             <div class="related-grid">
                 <?php foreach ($relatedNews as $related): 
-                    $image = !empty($related['image']) ? $related['image'] : 'default-news.jpg';
-                    $imagePath = SITE_URL . '/images/news/' . $image;
-                    $defaultImage = SITE_URL . '/images/news/default-news.jpg';
+                    $image = !empty($related['gambar']) ? $related['gambar'] : 'default-news.jpg';
+                    $imagePath = SITE_URL . '/images/berita/' . $image;
+                    $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
-                <div class="related-item">
-                    <a href="news.php?slug=<?php echo $related['slug']; ?>">
-                        <img src="<?php echo $imagePath; ?>" 
-                             alt="<?php echo htmlspecialchars($related['title']); ?>"
-                             class="related-image"
-                             onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                <div class="related-item-card">
+                    <a href="news.php?slug=<?php echo $related['slug']; ?>" class="related-link">
+                        <div class="related-image-container">
+                            <img src="<?php echo $imagePath; ?>" 
+                                 alt="<?php echo htmlspecialchars($related['judul']); ?>"
+                                 class="related-image"
+                                 onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                        </div>
                         <div class="related-content">
-                            <h4><?php echo htmlspecialchars($related['title']); ?></h4>
+                            <h4 class="related-title"><?php echo htmlspecialchars($related['judul']); ?></h4>
                             <div class="related-meta">
-                                <span><?php echo formatDate($related['created_at']); ?></span>
-                                <span><i class="fas fa-eye"></i> <?php echo $related['views']; ?>x</span>
+                                <span class="related-date"><?php echo date('d M Y', strtotime($related['created_at'])); ?></span>
+                                <span class="related-views"><i class="fas fa-eye"></i> <?php echo number_format($related['views']); ?></span>
                             </div>
                         </div>
                     </a>
@@ -159,41 +225,11 @@ if ($isSingleNews) {
         </div>
         <?php endif; ?>
     </div>
-
-    <script>
-    // AJAX untuk update views real-time
-    document.addEventListener('DOMContentLoaded', function() {
-        const newsId = <?php echo $news['id']; ?>;
-        
-        // Cek jika view sudah dihitung dalam sesi ini
-        const viewedKey = 'viewed_news_' + newsId;
-        if (!sessionStorage.getItem(viewedKey)) {
-            // Kirim request untuk update views
-            fetch('update_views.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'news_id=' + newsId + '&action=increment'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.new_count) {
-                    // Update tampilan views
-                    document.getElementById('news-detail-views').textContent = data.new_count;
-                    // Set flag bahwa view sudah dihitung
-                    sessionStorage.setItem(viewedKey, 'true');
-                }
-            })
-            .catch(error => console.error('Error updating views:', error));
-        }
-    });
-    </script>
     <?php
     
 } else {
     // ============================
-    // NEWS LIST (ALL NEWS)
+    // LIST BERITA (SEMUA BERITA)
     // ============================
     
     // Setup pagination
@@ -208,48 +244,28 @@ if ($isSingleNews) {
     $tagFilter = isset($_GET['tag']) ? trim($_GET['tag']) : '';
     $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
 
-    // Build query dengan kondisi yang benar
+    // Build query
     $whereConditions = ["status = 'published'"];
     $params = [];
-    $types = '';
-
+    $paramTypes = '';
+    
     if (!empty($searchKeyword)) {
-        $whereConditions[] = "(title LIKE ? OR content LIKE ?)";
+        $whereConditions[] = "(judul LIKE ? OR konten LIKE ? OR penulis LIKE ? OR tag LIKE ?)";
         $searchTerm = "%{$searchKeyword}%";
         $params[] = $searchTerm;
         $params[] = $searchTerm;
-        $types .= 'ss';
-        
-        // Cek jika kolom tags ada, tambahkan ke search
-        try {
-            $checkTags = $conn->query("SHOW COLUMNS FROM news LIKE 'tags'");
-            if ($checkTags->num_rows > 0) {
-                array_pop($whereConditions); // Hapus kondisi sebelumnya
-                $whereConditions[] = "(title LIKE ? OR content LIKE ? OR tags LIKE ?)";
-                $params[] = $searchTerm;
-                $types .= 's';
-            }
-        } catch (Exception $e) {
-            // Kolom tags tidak ada, lanjutkan tanpa tags
-        }
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+        $paramTypes .= 'ssss';
     }
 
     if (!empty($tagFilter)) {
-        // Cek apakah kolom tags ada
-        try {
-            $checkTags = $conn->query("SHOW COLUMNS FROM news LIKE 'tags'");
-            if ($checkTags->num_rows > 0) {
-                $whereConditions[] = "FIND_IN_SET(?, tags) > 0";
-                $params[] = $tagFilter;
-                $types .= 's';
-            }
-        } catch (Exception $e) {
-            // Kolom tags tidak ada, abaikan filter tag
-            $tagFilter = '';
-        }
+        $whereConditions[] = "tag LIKE ?";
+        $params[] = "%{$tagFilter}%";
+        $paramTypes .= 's';
     }
 
-    $whereClause = count($whereConditions) > 0 ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+    $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
 
     // Order by
     $orderBy = '';
@@ -266,27 +282,17 @@ if ($isSingleNews) {
     }
 
     // Get total count
-    $countSql = "SELECT COUNT(*) as total FROM news {$whereClause}";
+    $countSql = "SELECT COUNT(*) as total FROM berita {$whereClause}";
+    $countStmt = $conn->prepare($countSql);
     
-    if (empty($params)) {
-        $countResult = $conn->query($countSql);
-        if ($countResult) {
-            $totalNews = $countResult->fetch_assoc()['total'];
-        } else {
-            $totalNews = 0;
-        }
-    } else {
-        $countStmt = $conn->prepare($countSql);
-        if ($countStmt) {
-            $countStmt->bind_param($types, ...$params);
-            $countStmt->execute();
-            $countResult = $countStmt->get_result();
-            $totalNews = $countResult->fetch_assoc()['total'];
-            $countStmt->close();
-        } else {
-            $totalNews = 0;
-        }
+    if (!empty($params)) {
+        $countStmt->bind_param($paramTypes, ...$params);
     }
+    
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+    $totalRow = $countResult->fetch_assoc();
+    $totalNews = $totalRow['total'];
     
     $totalPages = ceil($totalNews / $perPage);
     if ($totalPages < 1) $totalPages = 1;
@@ -294,218 +300,253 @@ if ($isSingleNews) {
 
     // Get news for current page
     $newsList = [];
-    $limitParam = $perPage;
-    $offsetParam = $offset;
-    
-    $listSql = "SELECT * FROM news {$whereClause} ORDER BY {$orderBy} LIMIT ? OFFSET ?";
+    $listSql = "SELECT * FROM berita {$whereClause} ORDER BY {$orderBy} LIMIT ? OFFSET ?";
     $listStmt = $conn->prepare($listSql);
     
-    if ($listStmt) {
-        if (!empty($params)) {
-            // Gabungkan semua parameter
-            $allParams = array_merge($params, [$limitParam, $offsetParam]);
-            $allTypes = $types . 'ii';
-            $listStmt->bind_param($allTypes, ...$allParams);
-        } else {
-            $listStmt->bind_param("ii", $limitParam, $offsetParam);
-        }
-        
-        $listStmt->execute();
-        $listResult = $listStmt->get_result();
-        
-        while ($row = $listResult->fetch_assoc()) {
-            $newsList[] = $row;
-        }
-        $listStmt->close();
+    // Add LIMIT and OFFSET to params
+    $params[] = $perPage;
+    $params[] = $offset;
+    $paramTypes .= 'ii';
+    
+    $listStmt->bind_param($paramTypes, ...$params);
+    $listStmt->execute();
+    $listResult = $listStmt->get_result();
+    
+    while ($row = $listResult->fetch_assoc()) {
+        $newsList[] = $row;
     }
 
-    // Jangan tutup koneksi di sini! Kita masih butuh untuk sidebar
-    // Simpan data yang dibutuhkan untuk sidebar sebelum koneksi ditutup nanti
-    $popularNews = getPopularNews(5);
+    // Get popular news for sidebar
+    $popularNews = [];
+    $popularSql = "SELECT * FROM berita WHERE status = 'published' ORDER BY views DESC LIMIT 5";
+    $popularStmt = $conn->prepare($popularSql);
+    $popularStmt->execute();
+    $popularResult = $popularStmt->get_result();
+    
+    while ($row = $popularResult->fetch_assoc()) {
+        $popularNews[] = $row;
+    }
 
-    // Get all unique tags (jika kolom tags ada)
+    // Get all unique tags
     $allTags = [];
-    try {
-        $checkColumn = $conn->query("SHOW COLUMNS FROM news LIKE 'tags'");
-        if ($checkColumn->num_rows > 0) {
-            $tagsSql = "SELECT tags FROM news WHERE status = 'published' AND tags IS NOT NULL AND tags != ''";
-            $tagsResult = $conn->query($tagsSql);
-            if ($tagsResult) {
-                while ($row = $tagsResult->fetch_assoc()) {
-                    if (!empty($row['tags'])) {
-                        $tagArray = explode(',', $row['tags']);
-                        foreach ($tagArray as $tag) {
-                            $tag = trim($tag);
-                            if (!empty($tag) && !in_array($tag, $allTags)) {
-                                $allTags[] = $tag;
-                            }
-                        }
-                    }
+    $tagsSql = "SELECT DISTINCT tag FROM berita WHERE status = 'published' AND tag IS NOT NULL AND tag != ''";
+    $tagsStmt = $conn->prepare($tagsSql);
+    $tagsStmt->execute();
+    $tagsResult = $tagsStmt->get_result();
+    
+    while ($row = $tagsResult->fetch_assoc()) {
+        if (!empty($row['tag'])) {
+            $tagArray = explode(',', $row['tag']);
+            foreach ($tagArray as $tag) {
+                $tag = trim($tag);
+                if (!empty($tag) && !in_array($tag, $allTags)) {
+                    $allTags[] = $tag;
                 }
             }
-            sort($allTags);
         }
-    } catch (Exception $e) {
-        // Kolom tags tidak ada, array tetap kosong
     }
+    sort($allTags);
 
-    // JANGAN tutup koneksi di sini - footer masih butuh
-    $pageTitle = "News";
+    $pageTitle = "Berita";
     ?>
     
     <div class="container">
         <!-- Header Section -->
-        <div class="news-header">
-            <h1 class="news-title">Latest News</h1>
-            <p class="news-subtitle">Stay updated with the latest futsal news, match reports, and player updates</p>
+        <div class="news-page-header">
+            <h1 class="page-title">Berita Terbaru</h1>
+            <p class="page-subtitle">Ikuti berita terbaru futsal, laporan pertandingan, dan update pemain</p>
         </div>
         
         <!-- Search and Filter Section -->
-        <div class="news-controls">
-            <div class="search-box">
+        <div class="news-controls-section">
+            <div class="search-container">
                 <form method="GET" action="news.php" class="search-form">
-                    <div class="search-input-group">
-                        <i class="fas fa-search"></i>
+                    <div class="search-wrapper">
+                        <div class="search-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
                         <input type="text" 
                                name="search" 
-                               placeholder="Search news by title or content..." 
+                               placeholder="Cari berita..." 
                                value="<?php echo htmlspecialchars($searchKeyword); ?>"
                                class="search-input">
-                        <button type="submit" class="search-btn">Search</button>
+                        <button type="submit" class="search-button">Cari</button>
+                        <?php if (!empty($searchKeyword)): ?>
+                        <a href="news.php" class="clear-search-button">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($searchKeyword)): ?>
-                    <a href="news.php" class="clear-search">Clear search</a>
-                    <?php endif; ?>
                 </form>
             </div>
             
-            <div class="filter-controls">
-                <?php if (!empty($allTags)): ?>
-                <div class="filter-group">
-                    <label for="tag"><i class="fas fa-tag"></i> Filter by Tag:</label>
-                    <form method="GET" action="news.php" class="filter-form" id="tagForm">
-                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword); ?>">
-                        <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy); ?>">
-                        <select name="tag" id="tag" class="filter-select" onchange="document.getElementById('tagForm').submit()">
-                            <option value="">All Tags</option>
-                            <?php foreach ($allTags as $tag): ?>
-                            <option value="<?php echo htmlspecialchars($tag); ?>" 
-                                <?php echo ($tagFilter === $tag) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($tag); ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </form>
-                </div>
-                <?php endif; ?>
-                
-                <div class="filter-group">
-                    <label for="sort"><i class="fas fa-sort"></i> Sort by:</label>
-                    <form method="GET" action="news.php" class="filter-form" id="sortForm">
-                        <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword); ?>">
-                        <input type="hidden" name="tag" value="<?php echo htmlspecialchars($tagFilter); ?>">
-                        <select name="sort" id="sort" class="filter-select" onchange="document.getElementById('sortForm').submit()">
-                            <option value="newest" <?php echo ($sortBy === 'newest') ? 'selected' : ''; ?>>Newest First</option>
-                            <option value="popular" <?php echo ($sortBy === 'popular') ? 'selected' : ''; ?>>Most Popular</option>
-                            <option value="oldest" <?php echo ($sortBy === 'oldest') ? 'selected' : ''; ?>>Oldest First</option>
-                        </select>
-                    </form>
+            <div class="filter-container">
+                <div class="filter-row">
+                    <?php if (!empty($allTags)): ?>
+                    <div class="filter-group">
+                        <div class="filter-label">
+                            <i class="fas fa-tag"></i> Tag:
+                        </div>
+                        <form method="GET" action="news.php" class="filter-form" id="tagForm">
+                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword); ?>">
+                            <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy); ?>">
+                            <select name="tag" id="tag" class="filter-select" onchange="document.getElementById('tagForm').submit()">
+                                <option value="">Semua Tag</option>
+                                <?php foreach ($allTags as $tag): ?>
+                                <option value="<?php echo htmlspecialchars($tag); ?>" 
+                                    <?php echo ($tagFilter === $tag) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($tag); ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="filter-group">
+                        <div class="filter-label">
+                            <i class="fas fa-sort-amount-down"></i> Urutkan:
+                        </div>
+                        <form method="GET" action="news.php" class="filter-form" id="sortForm">
+                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword); ?>">
+                            <input type="hidden" name="tag" value="<?php echo htmlspecialchars($tagFilter); ?>">
+                            <select name="sort" id="sort" class="filter-select" onchange="document.getElementById('sortForm').submit()">
+                                <option value="newest" <?php echo ($sortBy === 'newest') ? 'selected' : ''; ?>>Terbaru</option>
+                                <option value="popular" <?php echo ($sortBy === 'popular') ? 'selected' : ''; ?>>Terpopuler</option>
+                                <option value="oldest" <?php echo ($sortBy === 'oldest') ? 'selected' : ''; ?>>Terlama</option>
+                            </select>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <?php if (!empty($searchKeyword)): ?>
-        <div class="search-results-info">
-            <p>Search results for: <strong>"<?php echo htmlspecialchars($searchKeyword); ?>"</strong> 
-            (<?php echo $totalNews; ?> results found)</p>
+        <?php if (!empty($searchKeyword) || !empty($tagFilter)): ?>
+        <div class="results-info">
+            <?php if (!empty($searchKeyword)): ?>
+            <div class="search-results">
+                <span class="results-label">Hasil pencarian:</span>
+                <span class="results-keyword">"<?php echo htmlspecialchars($searchKeyword); ?>"</span>
+                <span class="results-count">(<?php echo $totalNews; ?> hasil)</span>
+                <a href="news.php" class="clear-results">
+                    <i class="fas fa-times"></i> Hapus filter
+                </a>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($tagFilter)): ?>
+                <div class="tag-results">
+                <span class="results-label">Filter tag:</span>
+                <span class="tag-badge"><?php echo htmlspecialchars($tagFilter); ?></span>
+                    <a href="news.php" class="clear-tag">  <!-- PERUBAHAN DISINI -->
+                <i class="fas fa-times"></i> Hapus
+                </a>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
         
-        <?php if (!empty($tagFilter)): ?>
-        <div class="tag-filter-info">
-            <p>Showing news with tag: <span class="tag-badge"><?php echo htmlspecialchars($tagFilter); ?></span>
-            <a href="news.php<?php echo getQueryString(['tag', 'page']); ?>" class="clear-filter">Clear filter</a></p>
-        </div>
-        <?php endif; ?>
-        
-        <div class="news-page-layout">
+        <div class="news-content-layout">
             <!-- Main News Grid -->
-            <div class="news-main-content">
+            <div class="news-grid-container">
                 <?php if (empty($newsList)): ?>
-                <div class="no-results">
-                    <i class="fas fa-newspaper"></i>
-                    <h3>No news found</h3>
-                    <p><?php 
+                <div class="no-news-found">
+                    <div class="no-results-icon">
+                        <i class="far fa-newspaper"></i>
+                    </div>
+                    <h3 class="no-results-title">Tidak ada berita ditemukan</h3>
+                    <p class="no-results-message">
+                        <?php 
                         if (!empty($searchKeyword)) {
-                            echo "No results for '" . htmlspecialchars($searchKeyword) . "'";
+                            echo "Tidak ada hasil untuk '" . htmlspecialchars($searchKeyword) . "'";
                         } elseif (!empty($tagFilter)) {
-                            echo "No news with tag '" . htmlspecialchars($tagFilter) . "'";
+                            echo "Tidak ada berita dengan tag '" . htmlspecialchars($tagFilter) . "'";
                         } else {
-                            echo "No news articles available";
+                            echo "Belum ada artikel berita tersedia";
                         }
-                    ?></p>
+                        ?>
+                    </p>
                     <?php if (!empty($searchKeyword) || !empty($tagFilter)): ?>
-                    <a href="news.php" class="btn-view-all">View All News</a>
+                    <a href="news.php" class="view-all-button">
+                        <i class="fas fa-list"></i> Lihat Semua Berita
+                    </a>
                     <?php endif; ?>
                 </div>
                 <?php else: ?>
-                <div class="news-grid-large">
+                <div class="news-grid">
                     <?php foreach ($newsList as $news): 
-                        $image = !empty($news['image']) ? $news['image'] : 'default-news.jpg';
-                        $imagePath = SITE_URL . '/images/news/' . $image;
-                        $defaultImage = SITE_URL . '/images/news/default-news.jpg';
+                        $image = !empty($news['gambar']) ? $news['gambar'] : 'default-news.jpg';
+                        $imagePath = SITE_URL . '/images/berita/' . $image;
+                        $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                     ?>
-                    <div class="news-card">
-                        <div class="news-card-image">
-                            <a href="news.php?slug=<?php echo $news['slug']; ?>">
+                    <div class="news-item">
+                        <div class="news-item-image">
+                            <a href="news.php?slug=<?php echo $news['slug']; ?>" class="news-image-link">
                                 <img src="<?php echo $imagePath; ?>" 
-                                     alt="<?php echo htmlspecialchars($news['title']); ?>"
+                                     alt="<?php echo htmlspecialchars($news['judul']); ?>"
+                                     class="news-image"
                                      onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                                <div class="news-image-overlay"></div>
+                                <?php if ($news['views'] > 100): ?>
+                                <span class="news-trending">
+                                    <i class="fas fa-fire"></i> Trending
+                                </span>
+                                <?php endif; ?>
                             </a>
-                            <?php if ($news['views'] > 100): ?>
-                            <span class="trending-badge"><i class="fas fa-fire"></i> TRENDING</span>
-                            <?php endif; ?>
                         </div>
                         
-                        <div class="news-card-content">
-                            <h3 class="news-card-title">
+                        <div class="news-item-content">
+                            <div class="news-category">
+                                <?php if (!empty($news['tag'])): 
+                                    $tagsArray = explode(',', $news['tag']);
+                                    $firstTag = trim($tagsArray[0]);
+                                    if (!empty($firstTag)):
+                                ?>
+                                <a href="news.php?tag=<?php echo urlencode($firstTag); ?>" class="category-tag">
+                                    <?php echo htmlspecialchars($firstTag); ?>
+                                </a>
+                                <?php endif; endif; ?>
+                            </div>
+                            
+                            <h3 class="news-item-title">
                                 <a href="news.php?slug=<?php echo $news['slug']; ?>">
-                                    <?php echo htmlspecialchars($news['title']); ?>
+                                    <?php echo htmlspecialchars($news['judul']); ?>
                                 </a>
                             </h3>
                             
-                            <div class="news-card-meta">
-                                <span class="news-date"><i class="far fa-calendar"></i> <?php echo formatDate($news['created_at']); ?></span>
-                                <span class="news-views"><i class="far fa-eye"></i> <?php echo $news['views']; ?></span>
-                                <?php if (!empty($news['author'])): ?>
-                                <span class="news-author"><i class="far fa-user"></i> <?php echo htmlspecialchars($news['author']); ?></span>
+                            <div class="news-item-meta">
+                                <div class="meta-item">
+                                    <i class="far fa-calendar"></i>
+                                    <span><?php echo date('d M Y', strtotime($news['created_at'])); ?></span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="far fa-eye"></i>
+                                    <span><?php echo number_format($news['views']); ?></span>
+                                </div>
+                                <?php if (!empty($news['penulis'])): ?>
+                                <div class="meta-item">
+                                    <i class="far fa-user"></i>
+                                    <span><?php echo htmlspecialchars($news['penulis']); ?></span>
+                                </div>
                                 <?php endif; ?>
                             </div>
                             
-                            <p class="news-card-excerpt">
+                            <p class="news-item-excerpt">
                                 <?php 
-                                $excerpt = strip_tags($news['content']);
+                                $excerpt = strip_tags($news['konten']);
+                                $excerpt = htmlspecialchars($excerpt);
                                 if (strlen($excerpt) > 120) {
-                                    echo htmlspecialchars(substr($excerpt, 0, 120)) . '...';
+                                    echo substr($excerpt, 0, 120) . '...';
                                 } else {
-                                    echo htmlspecialchars($excerpt);
+                                    echo $excerpt;
                                 }
                                 ?>
                             </p>
                             
-                            <div class="news-card-footer">
-                                <a href="news.php?slug=<?php echo $news['slug']; ?>" class="read-more">
-                                    Read More <i class="fas fa-arrow-right"></i>
+                            <div class="news-item-footer">
+                                <a href="news.php?slug=<?php echo $news['slug']; ?>" class="read-more-button">
+                                    Baca Selengkapnya
+                                    <i class="fas fa-arrow-right"></i>
                                 </a>
-                                <?php if (!empty($news['tags'])): 
-                                    $tagsArray = explode(',', $news['tags']);
-                                    $firstTag = trim($tagsArray[0]);
-                                    if (!empty($firstTag)):
-                                ?>
-                                <a href="news.php?tag=<?php echo urlencode($firstTag); ?>" class="news-tag">
-                                    #<?php echo htmlspecialchars($firstTag); ?>
-                                </a>
-                                <?php endif; endif; ?>
                             </div>
                         </div>
                     </div>
@@ -514,47 +555,49 @@ if ($isSingleNews) {
                 
                 <!-- Pagination -->
                 <?php if ($totalPages > 1): ?>
-                <div class="pagination-wrapper">
-                    <nav class="pagination-nav">
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Menampilkan <strong><?php echo ($offset + 1); ?>-<?php echo min($offset + $perPage, $totalNews); ?></strong> dari <strong><?php echo $totalNews; ?></strong> berita
+                    </div>
+                    
+                    <nav class="pagination">
                         <?php if ($currentPage > 1): ?>
-                        <a href="?page=1<?php echo getQueryString(['page']); ?>" class="pagination-link" title="First Page">
+                        <a href="?page=1<?php echo getQueryString(['page']); ?>" class="pagination-button first" title="Halaman Pertama">
                             <i class="fas fa-angle-double-left"></i>
                         </a>
-                        <a href="?page=<?php echo $currentPage - 1; ?><?php echo getQueryString(['page']); ?>" class="pagination-link">
-                            <i class="fas fa-chevron-left"></i> Previous
+                        <a href="?page=<?php echo $currentPage - 1; ?><?php echo getQueryString(['page']); ?>" class="pagination-button prev">
+                            <i class="fas fa-chevron-left"></i>
                         </a>
                         <?php endif; ?>
                         
                         <?php 
                         $startPage = max(1, $currentPage - 2);
                         $endPage = min($totalPages, $startPage + 4);
-                        if ($startPage > 1) echo '<span class="pagination-ellipsis">...</span>';
+                        if ($startPage > 1): ?>
+                        <span class="pagination-dots">...</span>
+                        <?php endif;
                         
                         for ($i = $startPage; $i <= $endPage; $i++):
                         ?>
                         <a href="?page=<?php echo $i; ?><?php echo getQueryString(['page']); ?>" 
-                           class="pagination-link <?php echo ($i == $currentPage) ? 'active' : ''; ?>">
+                           class="pagination-button <?php echo ($i == $currentPage) ? 'active' : ''; ?>">
                             <?php echo $i; ?>
                         </a>
                         <?php endfor; 
                         
-                        if ($endPage < $totalPages) echo '<span class="pagination-ellipsis">...</span>';
-                        ?>
+                        if ($endPage < $totalPages): ?>
+                        <span class="pagination-dots">...</span>
+                        <?php endif; ?>
                         
                         <?php if ($currentPage < $totalPages): ?>
-                        <a href="?page=<?php echo $currentPage + 1; ?><?php echo getQueryString(['page']); ?>" class="pagination-link">
-                            Next <i class="fas fa-chevron-right"></i>
+                        <a href="?page=<?php echo $currentPage + 1; ?><?php echo getQueryString(['page']); ?>" class="pagination-button next">
+                            <i class="fas fa-chevron-right"></i>
                         </a>
-                        <a href="?page=<?php echo $totalPages; ?><?php echo getQueryString(['page']); ?>" class="pagination-link" title="Last Page">
+                        <a href="?page=<?php echo $totalPages; ?><?php echo getQueryString(['page']); ?>" class="pagination-button last" title="Halaman Terakhir">
                             <i class="fas fa-angle-double-right"></i>
                         </a>
                         <?php endif; ?>
                     </nav>
-                    
-                    <div class="pagination-info">
-                        Page <?php echo $currentPage; ?> of <?php echo $totalPages; ?> 
-                        (Showing <?php echo ($offset + 1); ?>-<?php echo min($offset + $perPage, $totalNews); ?> of <?php echo $totalNews; ?> news)
-                    </div>
                 </div>
                 <?php endif; ?>
                 <?php endif; ?>
@@ -563,10 +606,11 @@ if ($isSingleNews) {
             <!-- Sidebar -->
             <div class="news-sidebar">
                 <!-- Popular News -->
-                <div class="sidebar-widget">
-                    <h3 class="widget-title">
-                        <i class="fas fa-fire"></i> Popular News
-                    </h3>
+                <div class="sidebar-section">
+                    <div class="sidebar-header">
+                        <i class="fas fa-fire"></i>
+                        <h3 class="sidebar-title">Berita Populer</h3>
+                    </div>
                     <div class="popular-news-list">
                         <?php if (!empty($popularNews)): ?>
                             <?php foreach ($popularNews as $index => $news): ?>
@@ -575,42 +619,50 @@ if ($isSingleNews) {
                                     <span class="rank-number"><?php echo $index + 1; ?></span>
                                 </div>
                                 <div class="popular-content">
-                                    <h4>
+                                    <h4 class="popular-title">
                                         <a href="news.php?slug=<?php echo $news['slug']; ?>">
-                                            <?php echo htmlspecialchars($news['title']); ?>
+                                            <?php echo htmlspecialchars($news['judul']); ?>
                                         </a>
                                     </h4>
                                     <div class="popular-meta">
-                                        <span><i class="far fa-eye"></i> <?php echo $news['views']; ?></span>
-                                        <span><?php echo formatDate($news['created_at']); ?></span>
+                                        <div class="popular-views">
+                                            <i class="far fa-eye"></i> <?php echo number_format($news['views']); ?>
+                                        </div>
+                                        <div class="popular-date">
+                                            <?php echo date('d M Y', strtotime($news['created_at'])); ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <p class="no-data">No popular news yet</p>
+                            <div class="no-popular-news">
+                                <i class="far fa-newspaper"></i>
+                                <p>Belum ada berita populer</p>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
                 
-                <!-- Tags Cloud (hanya jika ada tags) -->
+                <!-- Tags Cloud -->
                 <?php if (!empty($allTags)): ?>
-                <div class="sidebar-widget">
-                    <h3 class="widget-title">
-                        <i class="fas fa-tags"></i> Popular Tags
-                    </h3>
+                <div class="sidebar-section">
+                    <div class="sidebar-header">
+                        <i class="fas fa-tags"></i>
+                        <h3 class="sidebar-title">Tag Populer</h3>
+                    </div>
                     <div class="tags-cloud">
                         <?php 
-                        $tagLimit = min(15, count($allTags));
+                        $tagLimit = min(20, count($allTags));
                         for ($i = 0; $i < $tagLimit; $i++): 
                             $tag = $allTags[$i];
-                            $tagClass = '';
-                            if ($i < 5) $tagClass = 'tag-large';
-                            elseif ($i < 10) $tagClass = 'tag-medium';
-                            else $tagClass = 'tag-small';
+                            $tagSize = '';
+                            if ($i < 5) $tagSize = 'large';
+                            elseif ($i < 10) $tagSize = 'medium';
+                            else $tagSize = 'small';
                         ?>
                         <a href="news.php?tag=<?php echo urlencode($tag); ?>" 
-                           class="tag-cloud-item <?php echo $tagClass; ?>">
+                           class="tag-item <?php echo $tagSize; ?>">
                             #<?php echo htmlspecialchars($tag); ?>
                         </a>
                         <?php endfor; ?>
@@ -633,164 +685,181 @@ function getQueryString($exclude = []) {
     }
     return $query ? '&' . implode('&', $query) : '';
 }
-
-// JANGAN tutup koneksi di sini
 ?>
 
 <style>
-/* Tambahan CSS untuk Header News */
-.news-header {
-    text-align: center;
-    margin: 30px 0 40px;
-    padding: 30px;
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--gray-dark) 100%);
-    border-radius: 10px;
-    color: var(--white);
+/* ===== VARIABLES ===== */
+:root {
+    --primary-color: #00ff88;
+    --primary-dark: #00cc6a;
+    --primary-light: #33ffa0;
+    --secondary-color: #1a1a2e;
+    --dark-color: #0f0f1a;
+    --light-color: #f8f9fa;
+    --gray-color: #6c757d;
+    --gray-dark: #343a40;
+    --gray-light: #adb5bd;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
 }
 
-.news-title {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    color: var(--white);
-}
-
-.news-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-    max-width: 800px;
+/* ===== GENERAL STYLES ===== */
+.container {
+    max-width: 1200px;
     margin: 0 auto;
-    line-height: 1.6;
+    padding: 0 15px;
 }
 
-/* Styles for SINGLE NEWS */
+/* ===== BREADCRUMB ===== */
 .breadcrumb {
-    margin: 20px 0;
+    margin: 20px 0 30px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-dark);
     color: var(--gray-light);
     font-size: 14px;
 }
 
 .breadcrumb a {
-    color: var(--primary-green);
+    color: var(--primary-color);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: var(--transition);
 }
 
 .breadcrumb a:hover {
-    color: var(--white);
+    color: var(--primary-light);
+    text-decoration: underline;
 }
 
 .breadcrumb span {
-    color: var(--white);
-    font-weight: 600;
+    color: var(--light-color);
+    font-weight: 500;
 }
 
+/* ===== SINGLE NEWS DETAIL ===== */
 .news-detail {
-    background-color: var(--gray-dark);
-    border-radius: 10px;
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
     padding: 30px;
-    margin: 20px 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-bottom: 40px;
+    box-shadow: var(--box-shadow);
 }
 
-.news-header h1 {
-    color: var(--white);
-    font-size: 28px;
+.news-header-detail {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--gray-dark);
+}
+
+.news-header-detail h1 {
+    color: var(--light-color);
+    font-size: 32px;
+    line-height: 1.3;
     margin-bottom: 15px;
-    line-height: 1.4;
+    font-weight: 700;
 }
 
 .news-meta-detail {
     display: flex;
     gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
     color: var(--gray-light);
     font-size: 14px;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--gray);
+}
+
+.news-meta-detail span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .news-meta-detail i {
-    color: var(--primary-green);
-    margin-right: 5px;
+    color: var(--primary-color);
+    font-size: 12px;
 }
 
-.news-image-detail {
+/* News Image */
+.news-image-detail-container {
     margin-bottom: 30px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     overflow: hidden;
+    position: relative;
+    background: var(--dark-color);
 }
 
-.news-image-full {
+.news-image-detail-main {
     width: 100%;
     height: auto;
     max-height: 500px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    transition: transform 0.5s ease;
 }
 
-.news-image-full:hover {
-    transform: scale(1.02);
+.news-image-detail-main:hover {
+    transform: scale(1.01);
 }
 
-.news-content-detail {
-    color: var(--white);
+/* Content */
+.news-content-detail-wrapper {
+    color: var(--light-color);
     font-size: 16px;
     line-height: 1.8;
     margin-bottom: 30px;
 }
 
-.news-content-detail p {
-    margin-bottom: 15px;
+.news-content-detail-wrapper p {
+    margin-bottom: 20px;
 }
 
-.news-content-detail .news-meta-line {
-    color: var(--gray-light);
-    font-size: 14px;
-    font-style: italic;
-    margin-bottom: 10px;
+.news-content-detail-wrapper h2,
+.news-content-detail-wrapper h3,
+.news-content-detail-wrapper h4 {
+    color: var(--primary-color);
+    margin: 25px 0 15px;
 }
 
-.news-content-detail .news-subtitle {
-    color: var(--primary-green);
-    font-size: 20px;
-    margin: 25px 0 15px 0;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--gray);
-}
-
-.news-tags {
-    margin-top: 30px;
+/* Tags */
+.news-tags-container {
+    margin: 30px 0;
     padding-top: 20px;
-    border-top: 1px solid var(--gray);
+    border-top: 1px solid var(--gray-dark);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-.news-tags i {
-    color: var(--primary-green);
-    margin-right: 10px;
+.news-tags-container i {
+    color: var(--primary-color);
+    margin-right: 5px;
 }
 
-.tag {
+.tag-item {
     display: inline-block;
-    background-color: var(--gray);
-    color: var(--white);
-    padding: 5px 15px;
+    background: var(--dark-color);
+    color: var(--light-color);
+    padding: 6px 15px;
     border-radius: 20px;
-    margin: 5px;
     font-size: 14px;
-    transition: all 0.3s ease;
     text-decoration: none;
+    transition: var(--transition);
+    border: 1px solid var(--gray-dark);
 }
 
-.tag:hover {
-    background-color: var(--primary-green);
-    color: var(--gray-dark);
+.tag-item:hover {
+    background: var(--primary-color);
+    color: var(--dark-color);
     transform: translateY(-2px);
 }
 
-.news-social-share {
-    margin-top: 30px;
+/* Social Share */
+.news-social-share-container {
+    margin-top: 40px;
     padding-top: 20px;
-    border-top: 1px solid var(--gray);
+    border-top: 1px solid var(--gray-dark);
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -800,90 +869,101 @@ function getQueryString($exclude = []) {
 .share-label {
     color: var(--gray-light);
     font-size: 14px;
+    font-weight: 500;
 }
 
 .share-buttons {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
 .share-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 15px;
-    border-radius: 5px;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: white;
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    transition: var(--transition);
+    font-size: 16px;
 }
 
 .share-btn.facebook {
-    background-color: #1877f2;
-    color: white;
+    background: #1877f2;
 }
 
 .share-btn.twitter {
-    background-color: #1da1f2;
-    color: white;
+    background: #1da1f2;
 }
 
 .share-btn.whatsapp {
-    background-color: #25d366;
-    color: white;
+    background: #25d366;
+}
+
+.share-btn.email {
+    background: #ea4335;
 }
 
 .share-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.related-news {
+/* Related News */
+.related-news-section {
     margin-top: 50px;
 }
 
-.related-news h3 {
-    color: var(--primary-green);
-    font-size: 22px;
-    margin-bottom: 20px;
+.related-news-title {
+    color: var(--primary-color);
+    font-size: 24px;
+    margin-bottom: 25px;
     padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary-green);
+    border-bottom: 2px solid var(--primary-color);
 }
 
 .related-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
 }
 
-.related-item {
-    background-color: var(--gray-dark);
-    border-radius: 8px;
+.related-item-card {
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: var(--transition);
+    border: 1px solid var(--gray-dark);
 }
 
-.related-item:hover {
+.related-item-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 255, 136, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 255, 136, 0.1);
+    border-color: var(--primary-color);
 }
 
-.related-item a {
+.related-link {
     text-decoration: none;
     color: inherit;
     display: block;
 }
 
-.related-image {
-    width: 100%;
+.related-image-container {
     height: 180px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
+    overflow: hidden;
+    position: relative;
 }
 
-.related-item:hover .related-image {
+.related-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.related-item-card:hover .related-image {
     transform: scale(1.05);
 }
 
@@ -891,14 +971,12 @@ function getQueryString($exclude = []) {
     padding: 15px;
 }
 
-.related-content h4 {
-    color: var(--white);
+.related-title {
+    color: var(--light-color);
     font-size: 16px;
-    margin-bottom: 10px;
     line-height: 1.4;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .related-meta {
@@ -909,79 +987,127 @@ function getQueryString($exclude = []) {
 }
 
 .related-meta i {
-    color: var(--primary-green);
+    color: var(--primary-color);
     margin-right: 3px;
 }
 
-/* Styles for NEWS LIST */
-.news-controls {
-    background: var(--gray-dark);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 30px;
+/* ===== NEWS LIST PAGE ===== */
+.news-page-header {
+    text-align: center;
+    margin: 30px 0 40px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--dark-color) 100%);
+    border-radius: var(--border-radius);
+    color: var(--light-color);
+    border: 1px solid var(--gray-dark);
 }
 
-.search-box {
+.page-title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Search and Filter */
+.news-controls-section {
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--gray-dark);
+}
+
+.search-container {
     margin-bottom: 20px;
 }
 
-.search-form {
-    position: relative;
-}
-
-.search-input-group {
+.search-wrapper {
     display: flex;
     align-items: center;
-    background: var(--black);
-    border-radius: 8px;
-    padding: 5px 15px;
-    border: 1px solid var(--gray);
+    background: var(--dark-color);
+    border-radius: var(--border-radius);
+    padding: 5px;
+    border: 1px solid var(--gray-dark);
+    transition: var(--transition);
 }
 
-.search-input-group i {
+.search-wrapper:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.1);
+}
+
+.search-icon {
+    padding: 0 15px;
     color: var(--gray-light);
-    margin-right: 10px;
+    font-size: 16px;
 }
 
 .search-input {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--white);
+    color: var(--light-color);
     padding: 12px 0;
-    font-size: 1rem;
+    font-size: 16px;
     outline: none;
 }
 
-.search-input:focus {
-    background: transparent;
+.search-input::placeholder {
+    color: var(--gray-light);
 }
 
-.search-btn {
-    background: var(--primary-green);
-    color: var(--black);
+.search-button {
+    background: var(--primary-color);
+    color: var(--dark-color);
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    padding: 12px 25px;
+    border-radius: calc(var(--border-radius) - 2px);
     cursor: pointer;
     font-weight: 600;
-    transition: all 0.3s ease;
-    outline: none;
+    transition: var(--transition);
+    margin-left: 10px;
 }
 
-.search-btn:hover {
-    background: var(--white);
+.search-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
 }
 
-.clear-search {
-    display: inline-block;
-    margin-top: 10px;
-    color: var(--primary-green);
+.clear-search-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--gray-dark);
+    color: var(--gray-light);
+    border-radius: 50%;
     text-decoration: none;
-    font-size: 0.9rem;
+    margin-left: 10px;
+    transition: var(--transition);
 }
 
-.filter-controls {
+.clear-search-button:hover {
+    background: var(--primary-color);
+    color: var(--dark-color);
+}
+
+/* Filter Controls */
+.filter-container {
+    margin-top: 20px;
+}
+
+.filter-row {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
@@ -991,280 +1117,372 @@ function getQueryString($exclude = []) {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
 }
 
-.filter-group label {
-    color: var(--white);
+.filter-label {
+    color: var(--light-color);
     font-weight: 500;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.filter-form {
-    display: inline;
+.filter-label i {
+    color: var(--primary-color);
 }
 
 .filter-select {
-    background: var(--black);
-    color: var(--white);
-    border: 1px solid var(--gray);
-    padding: 8px 15px;
-    border-radius: 6px;
+    background: var(--dark-color);
+    color: var(--light-color);
+    border: 1px solid var(--gray-dark);
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
     min-width: 150px;
     cursor: pointer;
     outline: none;
     font-size: 14px;
+    transition: var(--transition);
 }
 
 .filter-select:focus {
-    border-color: var(--primary-green);
+    border-color: var(--primary-color);
 }
 
-.news-page-layout {
+/* Results Info */
+.results-info {
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.search-results,
+.tag-results {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.results-label {
+    color: var(--gray-light);
+    font-size: 14px;
+}
+
+.results-keyword {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.results-count {
+    color: var(--light-color);
+    background: var(--gray-dark);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.clear-results,
+.clear-tag {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+}
+
+.clear-results:hover,
+.clear-tag:hover {
+    color: var(--primary-light);
+    text-decoration: underline;
+}
+
+.tag-badge {
+    background: var(--primary-color);
+    color: var(--dark-color);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Layout */
+.news-content-layout {
     display: grid;
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr 320px;
     gap: 30px;
     margin-bottom: 50px;
 }
 
-.news-main-content {
+.news-grid-container {
     min-height: 500px;
 }
 
-.no-results {
-    text-align: center;
-    padding: 50px 20px;
-    color: var(--gray-light);
-}
-
-.no-results i {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    color: var(--gray);
-}
-
-.no-results h3 {
-    color: var(--white);
-    margin-bottom: 10px;
-}
-
-.btn-view-all {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: var(--primary-green);
-    color: var(--black);
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-view-all:hover {
-    background: var(--white);
-}
-
-.news-grid-large {
+/* News Grid */
+.news-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 25px;
     margin-bottom: 40px;
 }
 
-.news-card {
-    background: var(--gray-dark);
-    border-radius: 10px;
+.news-item {
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
     overflow: hidden;
-    transition: all 0.3s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    transition: var(--transition);
+    border: 1px solid var(--gray-dark);
 }
 
-.news-card:hover {
+.news-item:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 255, 136, 0.1);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    border-color: var(--primary-color);
 }
 
-.news-card-image {
+.news-item-image {
     position: relative;
     height: 200px;
     overflow: hidden;
-    flex-shrink: 0;
 }
 
-.news-card-image img {
+.news-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
 }
 
-.news-card:hover .news-card-image img {
+.news-item:hover .news-image {
     transform: scale(1.05);
 }
 
-.trending-badge {
+.news-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.news-item:hover .news-image-overlay {
+    opacity: 1;
+}
+
+.news-trending {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: #ff4757;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
     color: white;
-    padding: 5px 10px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 12px;
     font-weight: 600;
-    z-index: 1;
-}
-
-.news-card-content {
-    padding: 20px;
-    flex-grow: 1;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
 }
 
-.news-card-title {
-    font-size: 1.2rem;
-    color: var(--white);
+.news-item-content {
+    padding: 20px;
+}
+
+.news-category {
     margin-bottom: 10px;
+}
+
+.category-tag {
+    display: inline-block;
+    background: var(--dark-color);
+    color: var(--primary-color);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--primary-color);
+    transition: var(--transition);
+}
+
+.category-tag:hover {
+    background: var(--primary-color);
+    color: var(--dark-color);
+}
+
+.news-item-title {
+    margin: 0 0 15px;
+    font-size: 18px;
     line-height: 1.4;
 }
 
-.news-card-title a {
-    color: inherit;
+.news-item-title a {
+    color: var(--light-color);
     text-decoration: none;
-    transition: color 0.3s ease;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    transition: var(--transition);
 }
 
-.news-card-title a:hover {
-    color: var(--primary-green);
+.news-item-title a:hover {
+    color: var(--primary-color);
 }
 
-.news-card-meta {
+.news-item-meta {
     display: flex;
     gap: 15px;
-    color: var(--gray-light);
-    font-size: 0.85rem;
     margin-bottom: 15px;
     flex-wrap: wrap;
 }
 
-.news-card-meta i {
-    margin-right: 5px;
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--gray-light);
+    font-size: 13px;
 }
 
-.news-card-excerpt {
+.meta-item i {
+    color: var(--primary-color);
+    font-size: 12px;
+}
+
+.news-item-excerpt {
     color: var(--gray-light);
     line-height: 1.6;
     margin-bottom: 20px;
-    flex-grow: 1;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 14px;
 }
 
-.news-card-footer {
+.news-item-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto;
-    flex-wrap: wrap;
-    gap: 10px;
 }
 
-.read-more {
-    color: var(--primary-green);
+.read-more-button {
+    color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
 }
 
-.read-more:hover {
-    color: var(--white);
+.read-more-button:hover {
+    color: var(--primary-light);
+    gap: 12px;
 }
 
-.read-more i {
-    margin-left: 5px;
-    transition: transform 0.3s ease;
+.read-more-button i {
+    font-size: 12px;
+    transition: var(--transition);
 }
 
-.read-more:hover i {
-    transform: translateX(5px);
+/* No Results */
+.no-news-found {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-light);
 }
 
-.news-tag {
-    background: var(--gray);
-    color: var(--white);
-    padding: 4px 12px;
-    border-radius: 15px;
-    font-size: 0.8rem;
+.no-results-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: var(--gray-dark);
+}
+
+.no-results-title {
+    color: var(--light-color);
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.no-results-message {
+    font-size: 16px;
+    margin-bottom: 25px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.view-all-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--primary-color);
+    color: var(--dark-color);
+    padding: 12px 25px;
+    border-radius: var(--border-radius);
     text-decoration: none;
-    transition: all 0.3s ease;
+    font-weight: 600;
+    transition: var(--transition);
 }
 
-.news-tag:hover {
-    background: var(--primary-green);
-    color: var(--black);
+.view-all-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
 }
 
 /* Pagination */
-.pagination-wrapper {
+.pagination-container {
     margin-top: 40px;
-}
-
-.pagination-nav {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
 }
 
-.pagination-link {
-    display: inline-flex;
+.pagination-info {
+    color: var(--gray-light);
+    font-size: 14px;
+}
+
+.pagination {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.pagination-button {
+    display: flex;
     align-items: center;
     justify-content: center;
     min-width: 40px;
     height: 40px;
     padding: 0 15px;
-    background: var(--gray-dark);
-    color: var(--white);
-    border-radius: 6px;
+    background: var(--dark-color);
+    color: var(--light-color);
+    border-radius: var(--border-radius);
     text-decoration: none;
     font-weight: 500;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
+    border: 1px solid var(--gray-dark);
+    transition: var(--transition);
 }
 
-.pagination-link:hover {
-    background: var(--primary-green);
-    color: var(--black);
+.pagination-button:hover {
+    background: var(--primary-color);
+    color: var(--dark-color);
+    border-color: var(--primary-color);
 }
 
-.pagination-link.active {
-    background: var(--primary-green);
-    color: var(--black);
+.pagination-button.active {
+    background: var(--primary-color);
+    color: var(--dark-color);
     font-weight: 700;
+    border-color: var(--primary-color);
 }
 
-.pagination-link i {
-    font-size: 0.9rem;
-}
-
-.pagination-info {
-    text-align: center;
-    color: var(--gray-light);
-    margin-top: 15px;
-    font-size: 0.9rem;
-}
-
-.pagination-ellipsis {
+.pagination-dots {
     color: var(--gray-light);
     padding: 0 10px;
 }
@@ -1276,26 +1494,35 @@ function getQueryString($exclude = []) {
     height: fit-content;
 }
 
-.sidebar-widget {
-    background: var(--gray-dark);
-    border-radius: 10px;
+.sidebar-section {
+    background: var(--secondary-color);
+    border-radius: var(--border-radius);
     padding: 20px;
     margin-bottom: 25px;
+    border: 1px solid var(--gray-dark);
 }
 
-.widget-title {
-    color: var(--white);
-    font-size: 1.1rem;
-    margin-bottom: 20px;
+.sidebar-header {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--gray-dark);
 }
 
-.widget-title i {
-    color: var(--primary-green);
+.sidebar-header i {
+    color: var(--primary-color);
+    font-size: 18px;
 }
 
+.sidebar-title {
+    color: var(--light-color);
+    font-size: 18px;
+    margin: 0;
+}
+
+/* Popular News */
 .popular-news-list {
     display: flex;
     flex-direction: column;
@@ -1305,9 +1532,8 @@ function getQueryString($exclude = []) {
 .popular-news-item {
     display: flex;
     gap: 15px;
-    align-items: flex-start;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--gray);
+    border-bottom: 1px solid var(--gray-dark);
 }
 
 .popular-news-item:last-child {
@@ -1315,131 +1541,112 @@ function getQueryString($exclude = []) {
     padding-bottom: 0;
 }
 
-.popular-rank .rank-number {
+.popular-rank {
+    flex-shrink: 0;
+}
+
+.rank-number {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 30px;
     height: 30px;
-    background: var(--primary-green);
-    color: var(--black);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: var(--dark-color);
     border-radius: 50%;
     font-weight: 700;
-    font-size: 0.9rem;
-    flex-shrink: 0;
+    font-size: 14px;
 }
 
 .popular-content {
     flex: 1;
-    min-width: 0;
 }
 
-.popular-content h4 {
-    margin-bottom: 5px;
+.popular-title {
+    margin: 0 0 5px;
     line-height: 1.4;
 }
 
-.popular-content h4 a {
-    color: var(--white);
+.popular-title a {
+    color: var(--light-color);
     text-decoration: none;
-    font-size: 0.95rem;
-    transition: color 0.3s ease;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 14px;
+    transition: var(--transition);
 }
 
-.popular-content h4 a:hover {
-    color: var(--primary-green);
+.popular-title a:hover {
+    color: var(--primary-color);
 }
 
 .popular-meta {
     display: flex;
     gap: 15px;
     color: var(--gray-light);
-    font-size: 0.8rem;
-    flex-wrap: wrap;
+    font-size: 12px;
 }
 
-.popular-meta i {
-    margin-right: 3px;
+.no-popular-news {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray-light);
 }
 
+.no-popular-news i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Tags Cloud */
 .tags-cloud {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.tag-cloud-item {
+.tag-item {
     display: inline-block;
     padding: 6px 12px;
-    background: var(--gray);
-    color: var(--white);
+    background: var(--dark-color);
+    color: var(--light-color);
     border-radius: 20px;
     text-decoration: none;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+    font-size: 13px;
+    transition: var(--transition);
+    border: 1px solid var(--gray-dark);
 }
 
-.tag-cloud-item:hover {
-    background: var(--primary-green);
-    color: var(--black);
+.tag-item:hover {
+    background: var(--primary-color);
+    color: var(--dark-color);
     transform: translateY(-2px);
+    border-color: var(--primary-color);
 }
 
-.tag-large { font-size: 1rem; padding: 8px 15px; }
-.tag-medium { font-size: 0.9rem; padding: 6px 12px; }
-.tag-small { font-size: 0.8rem; padding: 5px 10px; }
-
-/* Additional styles */
-.search-results-info, .tag-filter-info {
-    background: var(--gray-dark);
-    padding: 15px;
-    border-radius: 8px;
-    margin: 15px 0;
-    color: var(--white);
+.tag-item.large {
+    font-size: 14px;
+    padding: 8px 15px;
 }
 
-.tag-badge {
-    background: var(--primary-green);
-    color: var(--black);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    margin: 0 5px;
-    display: inline-block;
+.tag-item.medium {
+    font-size: 13px;
+    padding: 6px 12px;
 }
 
-.clear-filter {
-    color: var(--primary-green);
-    text-decoration: none;
-    margin-left: 15px;
-    font-size: 0.9rem;
-    white-space: nowrap;
+.tag-item.small {
+    font-size: 12px;
+    padding: 5px 10px;
 }
 
-.clear-filter:hover {
-    text-decoration: underline;
-}
-
-.no-data {
-    color: var(--gray-light);
-    font-size: 0.9rem;
-    text-align: center;
-    padding: 10px 0;
-}
-
-/* Mobile Responsive */
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1200px) {
-    .news-grid-large {
+    .news-grid {
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 }
 
 @media (max-width: 992px) {
-    .news-page-layout {
+    .news-content-layout {
         grid-template-columns: 1fr;
     }
     
@@ -1448,59 +1655,58 @@ function getQueryString($exclude = []) {
         margin-top: 30px;
     }
     
-    .news-grid-large {
+    .news-grid {
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    .news-title {
+    .page-title {
         font-size: 2rem;
     }
     
-    .news-subtitle {
+    .page-subtitle {
         font-size: 1rem;
     }
     
-    .news-header {
-        padding: 20px;
-    }
-    
-    .news-header h1 {
-        font-size: 22px;
-    }
-    
-    .news-meta-detail {
-        flex-direction: column;
-        gap: 10px;
+    .news-page-header {
+        padding: 30px 15px;
     }
     
     .news-detail {
         padding: 20px;
     }
     
+    .news-header-detail h1 {
+        font-size: 24px;
+    }
+    
     .related-grid {
         grid-template-columns: 1fr;
     }
     
-    .tag {
-        font-size: 12px;
-        padding: 4px 12px;
+    .search-wrapper {
+        flex-wrap: wrap;
     }
     
-    .share-buttons {
-        flex-direction: column;
+    .search-input {
+        order: 1;
         width: 100%;
+        margin-top: 10px;
     }
     
-    .share-btn {
-        justify-content: center;
-        width: 100%;
+    .search-button {
+        order: 2;
+        margin-left: 0;
+        margin-right: 10px;
     }
     
-    .filter-controls {
+    .clear-search-button {
+        order: 3;
+    }
+    
+    .filter-row {
         flex-direction: column;
-        align-items: flex-start;
         gap: 15px;
     }
     
@@ -1510,114 +1716,53 @@ function getQueryString($exclude = []) {
     
     .filter-select {
         width: 100%;
-        min-width: auto;
     }
     
-    .news-grid-large {
+    .news-grid {
         grid-template-columns: 1fr;
         gap: 20px;
     }
     
-    .pagination-nav {
-        gap: 5px;
+    .news-item-image {
+        height: 180px;
     }
     
-    .pagination-link {
-        min-width: 35px;
-        height: 35px;
-        padding: 0 10px;
-        font-size: 0.9rem;
-    }
-    
-    .pagination-info {
-        font-size: 0.8rem;
-    }
-    
-    .search-input-group {
+    .pagination {
         flex-wrap: wrap;
+        justify-content: center;
     }
     
-    .search-input {
-        order: 1;
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    
-    .search-btn {
-        order: 2;
-        width: 100%;
-    }
-    
-    .news-card-footer {
+    .news-meta-detail {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
-    }
-    
-    .read-more {
-        align-self: flex-start;
     }
 }
 
 @media (max-width: 480px) {
-    .news-title {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .page-title {
         font-size: 1.8rem;
     }
     
-    .news-subtitle {
-        font-size: 0.9rem;
+    .news-controls-section {
+        padding: 15px;
     }
     
-    .news-card-meta {
+    .news-grid {
+        gap: 15px;
+    }
+    
+    .news-item-content {
+        padding: 15px;
+    }
+    
+    .news-item-meta {
         flex-direction: column;
         gap: 8px;
-    }
-    
-    .popular-news-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .popular-rank {
-        align-self: flex-start;
-    }
-    
-    .pagination-link {
-        min-width: 30px;
-        height: 30px;
-        padding: 0 8px;
-        font-size: 0.8rem;
-    }
-    
-    .pagination-link i {
-        font-size: 0.8rem;
-    }
-}
-
-/* Tambahan untuk form filter */
-.filter-form {
-    display: block;
-}
-
-.filter-select {
-    width: 100%;
-}
-
-/* Fix untuk mobile touch */
-@media (hover: none) and (pointer: coarse) {
-    .tag:hover,
-    .share-btn:hover,
-    .pagination-link:hover,
-    .news-card:hover,
-    .related-item:hover {
-        transform: none;
-    }
-    
-    .tag:active,
-    .share-btn:active,
-    .pagination-link:active {
-        transform: scale(0.95);
     }
 }
 </style>
