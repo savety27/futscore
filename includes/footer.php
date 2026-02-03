@@ -16,7 +16,7 @@
                         <?php foreach ($latestNewsFooter as $news): ?>
                         <li>
                             <a href="<?php echo SITE_URL; ?>/news/<?php echo $news['slug']; ?>">
-                                <?php echo $news['title']; ?>
+                                <?php echo $news['judul']; ?>
                             </a>
                             <span><?php echo formatDate($news['created_at']); ?></span>
                         </li>

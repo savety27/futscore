@@ -38,7 +38,7 @@ if (isset($_SESSION[$viewKey])) {
 $db = new Database();
 $conn = $db->getConnection();
 
-$sql = "UPDATE news SET views = views + 1 WHERE id = ?";
+$sql = "UPDATE berita SET views = views + 1 WHERE id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $newsId);
 
@@ -47,7 +47,7 @@ if ($stmt->execute()) {
     $_SESSION[$viewKey] = time();
     
     // Ambil view count terbaru
-    $countSql = "SELECT views FROM news WHERE id = ?";
+    $countSql = "SELECT views FROM berita WHERE id = ?";
     $countStmt = $conn->prepare($countSql);
     $countStmt->bind_param("i", $newsId);
     $countStmt->execute();

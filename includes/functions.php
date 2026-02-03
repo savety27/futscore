@@ -81,7 +81,7 @@ function getNewsBySlug($slug) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM news WHERE slug = ? AND status = 'published'";
+    $sql = "SELECT * FROM berita WHERE slug = ? AND status = 'published'";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $slug);
     $stmt->execute();
@@ -100,7 +100,7 @@ function getRelatedNews($currentNewsId, $limit = 3) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM news WHERE id != ? AND status = 'published' ORDER BY created_at DESC LIMIT ?";
+    $sql = "SELECT * FROM berita WHERE id != ? AND status = 'published' ORDER BY created_at DESC LIMIT ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $currentNewsId, $limit);
     $stmt->execute();
@@ -120,7 +120,7 @@ function incrementNewsViews($id) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "UPDATE news SET views = views + 1 WHERE id = ?";
+    $sql = "UPDATE berita SET views = views + 1 WHERE id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     return $stmt->execute();
@@ -133,7 +133,7 @@ function getLatestNews($limit = 5) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM news WHERE status = 'published' ORDER BY created_at DESC LIMIT ?";
+    $sql = "SELECT * FROM berita WHERE status = 'published' ORDER BY created_at DESC LIMIT ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $limit);
     $stmt->execute();
@@ -157,7 +157,7 @@ function getPopularNews($limit = 5) {
         return [];
     }
     
-    $sql = "SELECT * FROM news WHERE status = 'published' ORDER BY views DESC, created_at DESC LIMIT ?";
+    $sql = "SELECT * FROM berita WHERE status = 'published' ORDER BY views DESC, created_at DESC LIMIT ?";
     
     try {
         $stmt = $conn->prepare($sql);
@@ -177,7 +177,7 @@ function getPopularNews($limit = 5) {
     }
     
     // Fallback
-    $fallbackSql = "SELECT * FROM news WHERE status = 'published' ORDER BY views DESC, created_at DESC LIMIT {$limit}";
+    $fallbackSql = "SELECT * FROM berita WHERE status = 'published' ORDER BY views DESC, created_at DESC LIMIT {$limit}";
     $result = $conn->query($fallbackSql);
     
     $news = [];
@@ -197,7 +197,7 @@ function resetNewsViewsToZero() {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "UPDATE news SET views = 0 WHERE status = 'published'";
+    $sql = "UPDATE berita SET views = 0 WHERE status = 'published'";
     return $conn->query($sql);
 }
 
@@ -208,7 +208,7 @@ function getTotalNewsCount() {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT COUNT(*) as total FROM news WHERE status = 'published'";
+    $sql = "SELECT COUNT(*) as total FROM berita WHERE status = 'published'";
     $result = $conn->query($sql);
     $row = $result->fetch_assoc();
     return $row['total'];
@@ -221,9 +221,10 @@ function getNewsByCategory($category, $limit = 10) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM news WHERE category = ? AND status = 'published' ORDER BY created_at DESC LIMIT ?";
+    $sql = "SELECT * FROM berita WHERE tag LIKE ? AND status = 'published' ORDER BY created_at DESC LIMIT ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $category, $limit);
+    $searchTag = "%$category%";
+    $stmt->bind_param("si", $searchTag, $limit);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -241,7 +242,7 @@ function searchNews($keyword, $limit = 10) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM news WHERE (title LIKE ? OR content LIKE ? OR tags LIKE ?) AND status = 'published' ORDER BY created_at DESC LIMIT ?";
+    $sql = "SELECT * FROM berita WHERE (judul LIKE ? OR konten LIKE ? OR tag LIKE ?) AND status = 'published' ORDER BY created_at DESC LIMIT ?";
     $searchTerm = "%$keyword%";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sssi", $searchTerm, $searchTerm, $searchTerm, $limit);
@@ -2027,7 +2028,7 @@ function getWebsiteStats() {
     $stats = [];
     
     // Total news
-    $sql = "SELECT COUNT(*) as total FROM news WHERE status = 'published'";
+    $sql = "SELECT COUNT(*) as total FROM berita WHERE status = 'published'";
     $result = $conn->query($sql);
     $stats['total_news'] = $result->fetch_assoc()['total'];
     
@@ -2068,7 +2069,7 @@ function getTrendingNews($limit = 5) {
     
     $sql = "SELECT n.*, 
                    (n.views / NULLIF(DATEDIFF(NOW(), n.created_at), 0)) as trend_score
-            FROM news n
+            FROM berita n
             WHERE n.status = 'published'
             AND n.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
             ORDER BY trend_score DESC, n.views DESC

@@ -26,7 +26,7 @@ $latestNews = getLatestNews(3);
                         <?php foreach ($latestNews as $index => $news): ?>
                         <div class="ticker-item <?php echo $index === 0 ? 'active' : ''; ?>">
                            <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>">
-                                <?php echo $news['title']; ?>
+                                <?php echo $news['judul']; ?>
                             </a>
                         </div>
                         <?php endforeach; ?>
