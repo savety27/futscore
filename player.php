@@ -64,6 +64,23 @@ $pageTitle = "Player List";
 ?>
 
 <style>
+/* Hero Banner Styles */
+.player-hero {
+    background: linear-gradient(135deg, #1a1a1a 0%, #c00 100%);
+    padding: 60px 0;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 40px;
+}
+
+.player-hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
 /* CSS Reset and Base for the section */
 .player-list-section {
     padding: 40px 0;
@@ -221,6 +238,13 @@ $pageTitle = "Player List";
     background: #555;
 }
 </style>
+
+<!-- Banner Hero Section DI LUAR container -->
+<div class="player-hero">
+    <div class="container">
+        <h1>PLAYERS</h1>
+    </div>
+</div>
 
 <div class="container">
     <div class="player-list-section">
