@@ -85,6 +85,13 @@ if (isset($_GET['id'])) {
         </a>
     </div>
 
+    <?php if (isset($_GET['error'])): ?>
+        <div class="alert alert-danger">
+            <span class="alert-icon">!</span>
+            <span><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></span>
+        </div>
+    <?php endif; ?>
+
     <?php if (isset($_GET['msg'])): ?>
         <div class="alert alert-success">
             <span class="alert-icon">✓</span>

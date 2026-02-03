@@ -3,12 +3,22 @@ require_once 'config/database.php';
 session_start();
 
 // Ensure user is logged in and is a pelatih
-if (!isset($_SESSION['team_id']) || $_SESSION['admin_role'] !== 'pelatih') {
-    header('HTTP/1.1 401 Unauthorized');
-    die(json_encode(['error' => 'Unauthorized access']));
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'pelatih') {
+    header('Location: ../login.php');
+    exit;
 }
 
-$team_id = $_SESSION['team_id'];
+$team_id = $_SESSION['team_id'] ?? 0;
+
+// Fallback: load team_id from admin_users if missing
+if (!$team_id && isset($_SESSION['admin_id'])) {
+    $stmtTeam = $conn->prepare("SELECT team_id FROM admin_users WHERE id = ?");
+    $stmtTeam->execute([$_SESSION['admin_id']]);
+    $team_id = (int)($stmtTeam->fetchColumn() ?? 0);
+    if ($team_id > 0) {
+        $_SESSION['team_id'] = $team_id;
+    }
+}
 $action = $_POST['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -49,6 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
+        if (!$team_id) {
+            throw new Exception('Tim belum terhubung ke akun pelatih. Silakan set tim terlebih dulu.');
+        }
         // Get form data
         $name = trim($_POST['name'] ?? '');
         $jersey_number = trim($_POST['jersey_number'] ?? '');
@@ -138,13 +151,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     nationality, street, city, province, postal_code, country,
                     dribbling, technique, speed, juggling, shooting, 
                     setplay_position, passing, control, 
-                    ktp_image, kk_image, birth_cert_image, diploma_image,
-                    created_at, updated_at, status
+                    ktp_image, kk_image, birth_cert_image, diploma_image
                 ) VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    NOW(), NOW(), 'active'
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
             ");
             
