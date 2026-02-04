@@ -802,7 +802,6 @@ $pageTitle = "Home";
         <div class="match-modal-body">
             <div class="match-tabs">
                 <button class="match-tab active" data-tab="goals">Goals</button>
-                <button class="match-tab" data-tab="timeline">Timeline</button>
                 <button class="match-tab" data-tab="lineups">Lineups</button>
             </div>
             
@@ -835,18 +834,6 @@ $pageTitle = "Home";
                 <div class="goals-list" id="goalsList"></div>
             </div>
             
-            <div class="match-tab-content" id="timelineContent">
-                <h4>Timeline</h4>
-                <div class="timeline-filter">
-                    <select id="timelineFilter">
-                        <option value="all">All Events</option>
-                        <option value="goal">Goals</option>
-                        <option value="foul">Fouls</option>
-                        <option value="substitution">Substitutions</option>
-                    </select>
-                </div>
-                <div class="timeline-list" id="timelineList"></div>
-            </div>
             
             <div class="match-tab-content" id="lineupsContent">
                 <h4>Lineups</h4>

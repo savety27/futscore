@@ -58,7 +58,6 @@ function openMatchModal(matchId) {
 
             // Populate content
             populateGoals(matchDetail.goals);
-            populateTimeline(matchDetail.timeline);
             populateLineups(matchDetail.lineups);
 
             // Show modal
@@ -123,41 +122,6 @@ function populateGoals(goals) {
     });
 }
 
-function populateTimeline(timeline) {
-    const timelineList = document.getElementById('timelineList');
-    timelineList.innerHTML = '';
-
-    if (!timeline || Object.keys(timeline).length === 0) {
-        timelineList.innerHTML = '<div class="no-data">No timeline data available</div>';
-        return;
-    }
-
-    for (const [half, events] of Object.entries(timeline)) {
-        const halfDiv = document.createElement('div');
-        halfDiv.className = 'timeline-half';
-
-        halfDiv.innerHTML = `<div class="timeline-half-title">${half}</div>`;
-
-        events.forEach(event => {
-            const eventDiv = document.createElement('div');
-            eventDiv.className = 'timeline-event';
-            eventDiv.dataset.type = event.type;
-
-            eventDiv.innerHTML = `
-                <span class="timeline-time">${event.time}</span>
-                <div class="timeline-player">
-                    <span class="timeline-player-number">${event.number}</span>
-                    <span class="timeline-player-name">${event.player}</span>
-                </div>
-                <span class="timeline-event-type">${event.type}</span>
-            `;
-
-            halfDiv.appendChild(eventDiv);
-        });
-
-        timelineList.appendChild(halfDiv);
-    }
-}
 
 function populateLineups(lineups) {
     const team1Players = document.getElementById('team1Players');
@@ -219,18 +183,6 @@ function createPlayerLineupItem(player) {
     return playerDiv;
 }
 
-function filterTimeline() {
-    const filterType = document.getElementById('timelineFilter').value;
-    const events = document.querySelectorAll('.timeline-event');
-
-    events.forEach(event => {
-        if (filterType === 'all' || event.dataset.type === filterType) {
-            event.style.display = 'flex';
-        } else {
-            event.style.display = 'none';
-        }
-    });
-}
 
 function searchPlayers() {
     const searchTerm = document.getElementById('playerSearch').value.toLowerCase().trim();
@@ -752,11 +704,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Timeline filter
-    const timelineFilter = document.getElementById('timelineFilter');
-    if (timelineFilter) {
-        timelineFilter.addEventListener('change', filterTimeline);
-    }
 
     // Player search
     const searchPlayerBtn = document.getElementById('searchPlayerBtn');
