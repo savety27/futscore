@@ -163,45 +163,56 @@ function populateLineups(lineups) {
     const team1Players = document.getElementById('team1Players');
     const team2Players = document.getElementById('team2Players');
 
+    if (!team1Players || !team2Players) return;
+
     team1Players.innerHTML = '';
     team2Players.innerHTML = '';
 
     // Team 1 players
-    if (lineups.team1 && lineups.team1.length > 0) {
+    if (lineups && lineups.team1 && lineups.team1.length > 0) {
         lineups.team1.forEach(player => {
             const playerDiv = createPlayerLineupItem(player);
-            team1Players.appendChild(playerDiv);
+            if (playerDiv) team1Players.appendChild(playerDiv);
         });
     } else {
-        team1Players.innerHTML = '<div class="no-data">No lineup data available</div>';
+        team1Players.innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> No lineup data submitted for this team</div>';
     }
 
     // Team 2 players
-    if (lineups.team2 && lineups.team2.length > 0) {
+    if (lineups && lineups.team2 && lineups.team2.length > 0) {
         lineups.team2.forEach(player => {
             const playerDiv = createPlayerLineupItem(player);
-            team2Players.appendChild(playerDiv);
+            if (playerDiv) team2Players.appendChild(playerDiv);
         });
     } else {
-        team2Players.innerHTML = '<div class="no-data">No lineup data available</div>';
+        team2Players.innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> No lineup data submitted for this team</div>';
     }
 }
 
 function createPlayerLineupItem(player) {
+    if (!player) return null;
+
     const playerDiv = document.createElement('div');
     playerDiv.className = 'player-lineup-item';
-    playerDiv.dataset.playerId = player.id;
-    playerDiv.dataset.playerName = player.name.toLowerCase();
-    playerDiv.dataset.playerNumber = player.number;
+
+    // Safety checks for player properties
+    const playerName = player.name || 'Unknown Player';
+    const playerNumber = player.number !== undefined && player.number !== null ? player.number : '?';
+    const playerPhoto = player.photo || 'default-player.jpg';
+    const playerId = player.id || '';
+
+    playerDiv.dataset.playerId = playerId;
+    playerDiv.dataset.playerName = playerName.toLowerCase();
+    playerDiv.dataset.playerNumber = playerNumber;
 
     playerDiv.innerHTML = `
-        <img src="${SITE_URL}/images/players/${player.photo}" 
-             alt="${player.name}" 
+        <img src="${SITE_URL}/images/players/${playerPhoto}" 
+             alt="${playerName}" 
              class="player-photo-small"
              onerror="this.src='${SITE_URL}/images/players/default-player.jpg'">
         <div class="player-info-lineup">
-            <div class="player-name-lineup">${player.name}</div>
-            <div class="player-number-lineup">#${player.number}</div>
+            <div class="player-name-lineup">${playerName}</div>
+            <div class="player-number-lineup">#${playerNumber}</div>
         </div>
     `;
 

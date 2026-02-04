@@ -313,7 +313,7 @@ $pageTitle = "Home";
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($scheduleMatches as $index => $match): ?>
+                        <?php foreach ($scheduledMatches as $index => $match): ?>
                         <tr class="match-row schedule-row" data-match-id="<?php echo $match['id']; ?>">
                             <td class="match-number"><?php echo $index + 1; ?></td>
                             <td class="match-teams-cell">
