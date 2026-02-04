@@ -100,22 +100,46 @@ function switchMatchTab(tabName) {
 function populateGoals(goals) {
     const goalsList = document.getElementById('goalsList');
     goalsList.innerHTML = '';
+    goalsList.classList.add('pro-goals-container');
 
     if (!goals || goals.length === 0) {
-        goalsList.innerHTML = '<div class="no-data">No goals data available</div>';
+        goalsList.innerHTML = '<div class="no-data">Belum ada gol tercipta</div>';
         return;
     }
 
     goals.forEach(goal => {
         const goalItem = document.createElement('div');
-        goalItem.className = 'goal-item';
+        goalItem.className = 'goal-row';
+
+        const isTeam1 = goal.team === 'team1';
+
+        // Structure: [Team 1 Content] [Time] [Team 2 Content]
+
+        let team1Content = '';
+        let team2Content = '';
+
+        const playerHtml = `
+            <div class="goal-details">
+                <span class="goal-player-name">${goal.player}</span>
+                <span class="goal-icon">⚽</span>
+                ${goal.number ? `<span class="goal-player-number">(${goal.number})</span>` : ''}
+            </div>
+        `;
+
+        if (isTeam1) {
+            team1Content = playerHtml;
+        } else {
+            team2Content = playerHtml;
+        }
 
         goalItem.innerHTML = `
-            <div class="goal-player">
-                <span class="goal-player-number">${goal.number}</span>
-                <span class="goal-player-name">${goal.player}</span>
+            <div class="goal-side team-1-side ${isTeam1 ? 'active' : ''}">
+                ${team1Content}
             </div>
-            <span class="goal-time">${goal.time}</span>
+            <div class="goal-time-pill">${goal.time}</div>
+            <div class="goal-side team-2-side ${!isTeam1 ? 'active' : ''}">
+                ${team2Content}
+            </div>
         `;
 
         goalsList.appendChild(goalItem);

@@ -2539,3 +2539,129 @@ body {
         color: #000 !important;
     }
 }
+
+/* =========================================
+   PRO GOAL DISPLAY STYLES
+   ========================================= */
+.pro-goals-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px 0;
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.pro-goals-container::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    bottom: 20px;
+    left: 50%;
+    width: 2px;
+    background: #e0e0e0;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.goal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.goal-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    opacity: 0.3; /* Faded for non-scoring side */
+    transition: all 0.3s ease;
+}
+
+.goal-side.active {
+    opacity: 1;
+    transform: scale(1.02);
+}
+
+.team-1-side {
+    justify-content: flex-end;
+    padding-right: 25px;
+    text-align: right;
+}
+
+.team-2-side {
+    justify-content: flex-start;
+    padding-left: 25px;
+    text-align: left;
+}
+
+.goal-time-pill {
+    background: #fff;
+    color: #0A2463; /* Primary Color */
+    font-weight: 800;
+    font-size: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border: 3px solid #f5f7fa;
+}
+
+.goal-details {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    padding: 8px 15px;
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.team-1-side .goal-details {
+    flex-direction: row;
+}
+
+.team-2-side .goal-details {
+    flex-direction: row-reverse;
+}
+
+.goal-player-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #1a1a2e;
+}
+
+.goal-player-number {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+}
+
+.goal-icon {
+    font-size: 16px;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-5px);}
+    60% {transform: translateY(-3px);}
+}
+
+.no-data {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+    background: #f9f9f9;
+    border-radius: 12px;
+}
+

@@ -114,6 +114,23 @@ try {
     $stmtStats->execute([$challenge_id]);
     $match_stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
+    // Get players for both teams
+    $team1_players = [];
+    $stmtP1 = $conn->prepare("SELECT id, name, jersey_number FROM players WHERE team_id = ? AND status = 'active' ORDER BY name ASC");
+    $stmtP1->execute([$challenge_data['challenger_id']]);
+    $team1_players = $stmtP1->fetchAll(PDO::FETCH_ASSOC);
+
+    $team2_players = [];
+    $stmtP2 = $conn->prepare("SELECT id, name, jersey_number FROM players WHERE team_id = ? AND status = 'active' ORDER BY name ASC");
+    $stmtP2->execute([$challenge_data['opponent_id']]);
+    $team2_players = $stmtP2->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get existing goals
+    $existing_goals = [];
+    $stmtG = $conn->prepare("SELECT * FROM goals WHERE match_id = ? ORDER BY minute ASC");
+    $stmtG->execute([$challenge_id]);
+    $existing_goals = $stmtG->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     die("Error fetching challenge data: " . $e->getMessage());
 }
@@ -232,6 +249,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $form_data['team1_shots'], $form_data['team2_shots'],
                     $form_data['team1_fouls'], $form_data['team2_fouls']
                 ]);
+            }
+
+            // 3. Update Goals (Delete then Insert)
+            $stmtDelGoals = $conn->prepare("DELETE FROM goals WHERE match_id = ?");
+            $stmtDelGoals->execute([$challenge_id]);
+
+            if (isset($_POST['goal_player_id']) && is_array($_POST['goal_player_id'])) {
+                $stmtInsGoal = $conn->prepare("INSERT INTO goals (match_id, player_id, team_id, minute) VALUES (?, ?, ?, ?)");
+                foreach ($_POST['goal_player_id'] as $index => $player_id) {
+                    if (empty($player_id)) continue;
+                    
+                    $minute = intval($_POST['goal_minute'][$index] ?? 0);
+                    $team_id = intval($_POST['goal_team_id'][$index] ?? 0);
+                    
+                    $stmtInsGoal->execute([$challenge_id, $player_id, $team_id, $minute]);
+                }
             }
 
             $conn->commit();
@@ -1104,6 +1137,66 @@ body {
         font-size: 16px;
     }
 }
+
+/* Goal Entry Styles */
+.goal-entry-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 2fr 50px;
+    gap: 15px;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    transition: var(--transition);
+}
+
+.goal-entry-row:hover {
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.btn-add-goal {
+    margin-top: 10px;
+    background: rgba(10, 36, 99, 0.1);
+    color: var(--primary);
+    border: 2px dashed var(--primary);
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-add-goal:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-remove-goal {
+    color: var(--danger);
+    background: rgba(211, 47, 47, 0.1);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-remove-goal:hover {
+    background: var(--danger);
+    color: white;
+}
 </style>
 </head>
 <body>
@@ -1292,6 +1385,21 @@ body {
 
                 <div class="form-section">
                     <div class="section-title">
+                        <i class="fas fa-futbol"></i>
+                        Pencetak Gol
+                    </div>
+                    
+                    <div id="goal-entries">
+                        <!-- Goal rows will be added here -->
+                    </div>
+                    
+                    <div class="btn-add-goal" id="btnAddGoal">
+                        <i class="fas fa-plus-circle"></i> Tambah Pencetak Gol
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
                         <i class="fas fa-info-circle"></i>
                         Detail Pertandingan
                     </div>
@@ -1449,6 +1557,103 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial update
     updateResultPreview();
+
+    // --- GOAL ENTRY LOGIC ---
+    
+    // Data from PHP
+    const team1Id = <?php echo $challenge_data['challenger_id']; ?>;
+    const team2Id = <?php echo $challenge_data['opponent_id']; ?>;
+    const team1Name = "<?php echo addslashes($challenge_data['challenger_name']); ?>";
+    const team2Name = "<?php echo addslashes($challenge_data['opponent_name']); ?>";
+    
+    const team1Players = <?php echo json_encode($team1_players); ?>;
+    const team2Players = <?php echo json_encode($team2_players); ?>;
+    const existingGoals = <?php echo json_encode($existing_goals); ?>;
+    
+    const goalEntries = document.getElementById('goal-entries');
+    const btnAddGoal = document.getElementById('btnAddGoal');
+    
+    // Function to create player options based on team
+    function getPlayerOptions(teamId) {
+        let players = [];
+        if (teamId == team1Id) players = team1Players;
+        else if (teamId == team2Id) players = team2Players;
+        
+        let html = '<option value="">-- Pilih Pemain --</option>';
+        players.forEach(p => {
+            html += `<option value="${p.id}">${p.jersey_number ? p.jersey_number + '. ' : ''}${p.name}</option>`;
+        });
+        return html;
+    }
+    
+    // Function to add a goal row
+    function addGoalRow(data = null) {
+        const row = document.createElement('div');
+        row.className = 'goal-entry-row';
+        
+        // Determine initial values
+        const goalTeamId = data ? data.team_id : '';
+        const goalPlayerId = data ? data.player_id : '';
+        const goalMinute = data ? data.minute : '';
+        
+        row.innerHTML = `
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="goal_team_id[]" class="form-select goal-team-select" required>
+                    <option value="">-- Pilih Tim --</option>
+                    <option value="${team1Id}" ${goalTeamId == team1Id ? 'selected' : ''}>${team1Name}</option>
+                    <option value="${team2Id}" ${goalTeamId == team2Id ? 'selected' : ''}>${team2Name}</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <input type="number" name="goal_minute[]" class="form-input" placeholder="Menit" min="1" max="150" value="${goalMinute}" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <select name="goal_player_id[]" class="form-select goal-player-select" required>
+                    <option value="">-- Pilih Pemain --</option>
+                    ${goalTeamId ? getPlayerOptions(goalTeamId) : ''}
+                </select>
+            </div>
+            
+            <button type="button" class="btn-remove-goal" onclick="this.parentElement.remove()">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        
+        goalEntries.appendChild(row);
+        
+        // Set selected player if data exists
+        if (goalPlayerId) {
+            const playerSelect = row.querySelector('.goal-player-select');
+            playerSelect.value = goalPlayerId;
+        }
+        
+        // Add event listener to team select to update players
+        const teamSelect = row.querySelector('.goal-team-select');
+        const playerSelect = row.querySelector('.goal-player-select');
+        
+        teamSelect.addEventListener('change', function() {
+            const selectedTeamId = this.value;
+            playerSelect.innerHTML = getPlayerOptions(selectedTeamId);
+        });
+    }
+    
+    // Add event listener for adding new row
+    btnAddGoal.addEventListener('click', function() {
+        addGoalRow();
+    });
+    
+    // Populate existing goals
+    if (existingGoals && existingGoals.length > 0) {
+        existingGoals.forEach(goal => {
+            addGoalRow(goal);
+        });
+    } else {
+        // Add one empty row by default if no goals
+        // addGoalRow(); // Optional: Don't add default row, let user add it
+    }
+
     
     // Form Validation
     const form = document.getElementById('resultForm');

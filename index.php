@@ -369,7 +369,7 @@ $pageTitle = "Home";
         <?php endif; ?>
         
         <div class="see-more-section">
-            <a href="all.php?status=schedule" class="btn-see-more">
+            <a href="event.php" class="btn-see-more">
                 <i class="fas fa-arrow-right"></i> See All Schedule
             </a>
         </div>
