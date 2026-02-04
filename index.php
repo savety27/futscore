@@ -51,7 +51,7 @@ $pageTitle = "Home";
                                 <img src="<?php echo $logo1Path; ?>" 
                                      alt="<?php echo $match['challenger_name']; ?>" 
                                      class="team-logo"
-                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                             </div>
                             <span class="team-name"><?php echo $match['challenger_name']; ?></span>
                         </div>
@@ -68,7 +68,7 @@ $pageTitle = "Home";
                                 <img src="<?php echo $logo2Path; ?>" 
                                      alt="<?php echo $match['opponent_name']; ?>" 
                                      class="team-logo"
-                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                             </div>
                             <span class="team-name"><?php echo $match['opponent_name']; ?></span>
                         </div>
@@ -323,7 +323,7 @@ $pageTitle = "Home";
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
                                                  alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
                                                  class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
                                         <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
                                     </div>
@@ -333,7 +333,7 @@ $pageTitle = "Home";
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
                                                  alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
                                                  class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
                                         <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
                                     </div>
@@ -410,7 +410,7 @@ $pageTitle = "Home";
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
                                                  alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
                                                  class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
                                         <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
                                     </div>
@@ -420,7 +420,7 @@ $pageTitle = "Home";
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
                                                  alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
                                                  class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
                                         <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
                                     </div>
@@ -790,16 +790,19 @@ $pageTitle = "Home";
         <?php else: ?>
         <div class="teams-grid">
             <?php foreach ($newTeams as $team): ?>
-            <div class="team-card" data-team-id="<?php echo $team['id']; ?>">
+            <a href="team.php?id=<?php echo $team['id']; ?>" class="team-card" data-team-id="<?php echo $team['id']; ?>">
                 <div class="team-logo-container">
-                    <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
-                         alt="<?php echo $team['name']; ?>" 
+                    <?php 
+                    $tLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/MGP FC.jpeg';
+                    ?>
+                    <img src="<?php echo $tLogo; ?>" 
+                         alt="<?php echo htmlspecialchars($team['name']); ?>" 
                          class="team-logo-lg"
-                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                 </div>
-                <h3 class="team-name"><?php echo $team['name']; ?></h3>
+                <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
                 <p class="team-label">New Team</p>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
