@@ -665,15 +665,13 @@ function getRecentWinners($limit = 5) {
     global $db;
     $conn = $db->getConnection();
     
-    // Karena tabel event_winners tidak ada di database, kita akan mengembalikan array kosong
-    // Atau bisa kita ubah untuk mendapatkan tim yang memiliki kemenangan terbanyak
+    // Mengambil data pemenang dari tabel challenges yang berisi hasil pertandingan
     $sql = "SELECT t.*, 
-                   COUNT(CASE WHEN m.status = 'completed' AND (
-                       (m.team1_id = t.id AND m.score1 > m.score2) OR 
-                       (m.team2_id = t.id AND m.score2 > m.score1)
-                   ) THEN 1 END) as total_wins
+                   COUNT(c.id) as total_wins,
+                   CONCAT(COUNT(c.id), ' Wins') as achievement
             FROM teams t
-            LEFT JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
+            JOIN challenges c ON t.id = c.winner_team_id
+            WHERE c.status = 'completed'
             GROUP BY t.id
             ORDER BY total_wins DESC, t.name
             LIMIT ?";

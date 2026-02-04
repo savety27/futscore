@@ -8,7 +8,7 @@ $completedMatches = getCompletedChallenges(5);
 $newPlayers = getPlayers(5);
 $recentTransfers = getPlayerTransfers(5);
 
-$recentWinners = [];
+$recentWinners = getRecentWinners(5);
 $newTeams = getTeams(5);
 
 $pageTitle = "Home";
