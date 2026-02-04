@@ -7,7 +7,7 @@ $scheduledMatches = getScheduledChallenges(5);
 $completedMatches = getCompletedChallenges(5);
 $newPlayers = getPlayers(5);
 $recentTransfers = getPlayerTransfers(5);
-$birthdayPlayers = [];
+
 $recentWinners = [];
 $newTeams = getTeams(5);
 
@@ -474,7 +474,7 @@ $pageTitle = "Home";
         <div class="section-tabs">
             <button class="tab-button active" data-tab="new-added">New Added</button>
             <button class="tab-button" data-tab="transfer">Transfer</button>
-            <button class="tab-button" data-tab="birthday">Birthday</button>
+
         </div>
     </div>
     
@@ -727,13 +727,7 @@ $pageTitle = "Home";
         <?php endif; ?>
     </div>
     
-    <div class="tab-content" id="birthday">
-        <div class="empty-state">
-            <i class="fas fa-birthday-cake"></i>
-            <h4>Tidak ada ulang tahun</h4>
-            <p>Belum ada pemain yang berulang tahun</p>
-        </div>
-    </div>
+
 </div>
 
 <!-- Team Section -->
