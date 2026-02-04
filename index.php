@@ -748,18 +748,33 @@ $pageTitle = "Home";
             <p>Belum ada tim yang memenangkan kompetisi</p>
         </div>
         <?php else: ?>
-        <div class="teams-grid">
+        <div class="winners-grid">
             <?php foreach ($recentWinners as $team): ?>
-            <div class="team-card" data-team-id="<?php echo $team['id']; ?>">
-                <div class="team-logo-container">
-                    <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
-                         alt="<?php echo $team['name']; ?>" 
-                         class="team-logo-lg"
-                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+            <a href="team.php?id=<?php echo $team['id']; ?>" class="winner-premium-card">
+                <div class="winner-bg-glow"></div>
+                <div class="winner-trophy-icon">
+                    <i class="fas fa-crown"></i>
                 </div>
-                <h3 class="team-name"><?php echo $team['name']; ?></h3>
-                <p class="team-achievement"><?php echo $team['achievement']; ?></p>
-            </div>
+                <div class="team-logo-container">
+                    <?php 
+                    $teamLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/MGP FC.jpeg';
+                    ?>
+                    <img src="<?php echo $teamLogo; ?>" 
+                         alt="<?php echo htmlspecialchars($team['name']); ?>" 
+                         class="team-logo-premium"
+                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                </div>
+                <div class="winner-info">
+                    <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
+                    <div class="achievement-badge">
+                        <i class="fas fa-trophy"></i>
+                        <span><?php echo htmlspecialchars($team['achievement']); ?></span>
+                    </div>
+                </div>
+                <div class="winner-footer">
+                    <span class="view-profile">View Profile <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
             <?php endforeach; ?>
         </div>
         <?php endif; ?>

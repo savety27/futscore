@@ -844,6 +844,7 @@ body {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1229,7 +1230,8 @@ body {
 .transfer-player-photo {
     width: 70px;
     height: 70px;
-    border-radius: 18px; /* Square with rounded corners for a modern look */
+    border-radius: 18px;
+    /* Square with rounded corners for a modern look */
     overflow: hidden;
     background: var(--black);
     border: 2px solid rgba(255, 255, 255, 0.1);
@@ -1337,9 +1339,20 @@ body {
 }
 
 @keyframes pulseArrow {
-    0% { transform: translateX(0); opacity: 0.5; }
-    50% { transform: translateX(5px); opacity: 1; }
-    100% { transform: translateX(0); opacity: 0.5; }
+    0% {
+        transform: translateX(0);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translateX(5px);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 0.5;
+    }
 }
 
 .transfer-footer {
@@ -1443,6 +1456,7 @@ body {
         opacity: 0;
         transform: translateY(-50px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2269,7 +2283,7 @@ body {
         max-width: 100%;
         padding: 0 15px;
     }
-    
+
     .match-table {
         min-width: 900px;
     }
@@ -2280,30 +2294,31 @@ body {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .players-grid {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
-    
+
     .teams-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
+
     /* Top Navbar */
     .top-navbar-content {
         flex-direction: column;
         gap: 10px;
         text-align: center;
     }
-    
+
     .news-ticker {
         margin: 10px 0;
         order: 3;
         width: 100%;
     }
-    
+
     /* Main Navbar */
     .nav-menu {
         display: none;
@@ -2318,54 +2333,54 @@ body {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         z-index: 999;
     }
-    
+
     .nav-menu.active {
         display: flex;
     }
-    
+
     .hamburger {
         display: flex;
     }
-    
+
     .hamburger.active span:nth-child(1) {
         transform: rotate(45deg) translate(6px, 6px);
     }
-    
+
     .hamburger.active span:nth-child(2) {
         opacity: 0;
     }
-    
+
     .hamburger.active span:nth-child(3) {
         transform: rotate(-45deg) translate(6px, -6px);
     }
-    
+
     /* Match Cards */
     .match-card-wrapper {
         width: 260px;
     }
-    
+
     /* Section Headers */
     .section-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 15px;
     }
-    
+
     .section-tabs {
         align-self: stretch;
         overflow-x: auto;
         padding-bottom: 5px;
         scrollbar-width: none;
     }
-    
+
     .section-tabs::-webkit-scrollbar {
         display: none;
     }
-    
+
     .tab-button {
         flex-shrink: 0;
     }
-    
+
     /* Match Table */
     .match-table-container {
         margin: 15px -15px;
@@ -2373,74 +2388,74 @@ body {
         border-left: none;
         border-right: none;
     }
-    
+
     .match-table th,
     .match-table td {
         padding: 12px 8px;
         font-size: 13px;
     }
-    
+
     .team-logo-wrapper {
         width: 30px;
         height: 30px;
     }
-    
+
     .team-name-sm {
         font-size: 13px;
         max-width: 100px;
     }
-    
+
     .score-info {
         font-size: 18px;
     }
-    
+
     .event-badge,
     .round-info {
         max-width: 140px;
     }
-    
+
     /* Players Grid */
     .players-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 15px;
     }
-    
+
     .player-card {
         padding: 15px;
     }
-    
+
     .player-photo {
         width: 80px;
         height: 80px;
     }
-    
+
     /* Teams Grid */
     .teams-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 15px;
     }
-    
+
     .team-card {
         padding: 20px;
     }
-    
+
     .team-logo-lg {
         width: 100px;
         height: 100px;
     }
-    
+
     /* Footer */
     .footer-content {
         grid-template-columns: 1fr;
         gap: 30px;
     }
-    
+
     .footer-bottom {
         flex-direction: column;
         gap: 20px;
         text-align: center;
     }
-    
+
     /* Scroll Controls */
     .scroll-controls {
         display: none;
@@ -2451,70 +2466,70 @@ body {
     .match-card-wrapper {
         width: 240px;
     }
-    
+
     .news-image {
         height: 180px;
     }
-    
+
     .news-content {
         padding: 15px;
     }
-    
+
     .news-title {
         font-size: 16px;
     }
-    
+
     .match-table th,
     .match-table td {
         padding: 10px 6px;
         font-size: 12px;
     }
-    
+
     .team-name-sm {
         max-width: 80px;
         font-size: 12px;
     }
-    
+
     .vs-sm {
         font-size: 11px;
         padding: 0 5px;
     }
-    
+
     .score-info {
         font-size: 16px;
         gap: 8px;
     }
-    
+
     .date-info {
         font-size: 12px;
     }
-    
+
     .time-info {
         font-size: 11px;
     }
-    
+
     .btn-view {
         padding: 6px 12px;
         font-size: 11px;
     }
-    
+
     .players-grid {
         grid-template-columns: 1fr 1fr;
     }
-    
+
     .teams-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .section-title {
         font-size: 20px;
     }
-    
+
     .tab-button {
         padding: 6px 12px;
         font-size: 12px;
     }
-    
+
     .share-buttons-grid {
         grid-template-columns: 1fr;
     }
@@ -2522,6 +2537,7 @@ body {
 
 /* Print Styles */
 @media print {
+
     .chat-button,
     .scroll-controls,
     .section-tabs,
@@ -2529,11 +2545,11 @@ body {
     .btn-see-more {
         display: none !important;
     }
-    
+
     .match-table {
         border: 1px solid #000;
     }
-    
+
     .match-table th {
         background-color: #f0f0f0 !important;
         color: #000 !important;
@@ -2578,7 +2594,8 @@ body {
     flex: 1;
     display: flex;
     align-items: center;
-    opacity: 0.3; /* Faded for non-scoring side */
+    opacity: 0.3;
+    /* Faded for non-scoring side */
     transition: all 0.3s ease;
 }
 
@@ -2601,7 +2618,8 @@ body {
 
 .goal-time-pill {
     background: #fff;
-    color: #0A2463; /* Primary Color */
+    color: #0A2463;
+    /* Primary Color */
     font-weight: 800;
     font-size: 14px;
     width: 40px;
@@ -2611,7 +2629,7 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 5;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     border: 3px solid #f5f7fa;
 }
 
@@ -2622,7 +2640,7 @@ body {
     background: white;
     padding: 8px 15px;
     border-radius: 50px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .team-1-side .goal-details {
@@ -2651,9 +2669,22 @@ body {
 }
 
 @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-    40% {transform: translateY(-5px);}
-    60% {transform: translateY(-3px);}
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-5px);
+    }
+
+    60% {
+        transform: translateY(-3px);
+    }
 }
 
 .no-data {
@@ -2665,3 +2696,172 @@ body {
     border-radius: 12px;
 }
 
+/* ==============================
+   RECENT WINNERS PREMIUM STYLES
+   ============================== */
+
+.winners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    margin: 40px 0;
+}
+
+.winner-premium-card {
+    position: relative;
+    background: linear-gradient(145deg, #131313, #0a0a0a);
+    border: 1px solid rgba(0, 255, 136, 0.1);
+    border-radius: 20px;
+    padding: 40px 25px 30px;
+    text-align: center;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    text-decoration: none;
+}
+
+.winner-bg-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 255, 136, 0.05) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.winner-premium-card:hover .winner-bg-glow {
+    opacity: 1;
+}
+
+.winner-premium-card:hover {
+    transform: translateY(-12px);
+    border-color: var(--primary-green);
+    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+    box-shadow: 0 25px 50px rgba(0, 255, 136, 0.15);
+}
+
+.winner-trophy-icon {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    color: #ffd700;
+    /* Gold */
+    opacity: 0.2;
+    transform: rotate(15deg);
+    transition: all 0.5s ease;
+}
+
+.winner-premium-card:hover .winner-trophy-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1.2);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+.winner-premium-card .team-logo-container {
+    width: 130px;
+    height: 130px;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
+    padding: 5px;
+}
+
+.team-logo-premium {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+    background: #000;
+    border: 3px solid #1a1a1a;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.winner-premium-card:hover .team-logo-premium {
+    border-color: var(--primary-green);
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
+}
+
+.winner-info {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 25px;
+}
+
+.winner-info .team-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.achievement-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 255, 136, 0.05);
+    color: var(--primary-green);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1px solid rgba(0, 255, 136, 0.15);
+    transition: all 0.4s ease;
+}
+
+.winner-premium-card:hover .achievement-badge {
+    background: var(--primary-green);
+    color: #000;
+    border-color: var(--primary-green);
+}
+
+.winner-footer {
+    margin-top: auto;
+    width: 100%;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.winner-premium-card:hover .winner-footer {
+    opacity: 1;
+}
+
+.view-profile {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.view-profile i {
+    transition: transform 0.3s ease;
+}
+
+.winner-premium-card:hover .view-profile i {
+    transform: translateX(5px);
+}
+
+@media (max-width: 768px) {
+    .winners-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}

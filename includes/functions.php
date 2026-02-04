@@ -666,14 +666,16 @@ function getRecentWinners($limit = 5) {
     $conn = $db->getConnection();
     
     // Mengambil data pemenang dari tabel challenges yang berisi hasil pertandingan
+    // Diurutkan berdasarkan tanggal kemenangan terbaru (bukan jumlah kemenangan terbanyak)
     $sql = "SELECT t.*, 
                    COUNT(c.id) as total_wins,
-                   CONCAT(COUNT(c.id), ' Wins') as achievement
+                   CONCAT(COUNT(c.id), ' Wins') as achievement,
+                   MAX(c.challenge_date) as latest_win_date
             FROM teams t
             JOIN challenges c ON t.id = c.winner_team_id
             WHERE c.status = 'completed'
             GROUP BY t.id
-            ORDER BY total_wins DESC, t.name
+            ORDER BY latest_win_date DESC
             LIMIT ?";
     
     $stmt = $conn->prepare($sql);
