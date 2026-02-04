@@ -341,8 +341,8 @@ $pageTitle = "Home";
                             </td>
                             <td class="match-datetime-cell">
                                 <div class="datetime-info">
-                                    <span class="date-info"><?php echo htmlspecialchars($match['date']); ?></span>
-                                    <span class="time-info"><?php echo htmlspecialchars($match['time']); ?></span>
+                                    <span class="date-info"><?php echo formatDate($match['challenge_date']); ?></span>
+                                    <span class="time-info"><?php echo date('H:i', strtotime($match['challenge_date'])); ?></span>
                                 </div>
                             </td>
                             <td class="match-venue-cell">
