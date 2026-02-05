@@ -520,17 +520,18 @@ function getCompletedChallenges($limit = 10) {
  * Mendapatkan tantangan terbaru (untuk card section)
  */
   function getLatestChallenges($limit = 5) {
-    global $db;
-    $conn = $db->getConnection();
-    
-    $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
-                   t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
-            FROM challenges c
-            LEFT JOIN teams t1 ON c.challenger_id = t1.id
-            LEFT JOIN teams t2 ON c.opponent_id = t2.id
-            LEFT JOIN venues v ON c.venue_id = v.id
-            ORDER BY c.challenge_date DESC 
-            LIMIT ?";
+      global $db;
+      $conn = $db->getConnection();
+      
+      $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                     t2.name as opponent_name, t2.logo as opponent_logo, v.name as venue_name
+              FROM challenges c
+              LEFT JOIN teams t1 ON c.challenger_id = t1.id
+              LEFT JOIN teams t2 ON c.opponent_id = t2.id
+              LEFT JOIN venues v ON c.venue_id = v.id
+              WHERE DATE(c.challenge_date) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+              ORDER BY c.challenge_date DESC 
+              LIMIT ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $limit);
     $stmt->execute();
