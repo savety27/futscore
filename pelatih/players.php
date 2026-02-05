@@ -163,7 +163,7 @@ if ($team_id) {
                             <div class="player-photo">
                                 <?php if (!empty($photo_url)): ?>
                                     <img src="<?php echo $photo_url; ?>" 
-                                         alt="<?php echo htmlspecialchars($player['name']); ?>"
+                                         alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>"
                                          onerror="this.onerror=null; this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22100%22%20height%3D%22100%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2230%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3E⚽%3C%2Ftext%3E%3C%2Fsvg%3E'">
                                 <?php else: ?>
                                     <div class="default-photo">
@@ -173,17 +173,17 @@ if ($team_id) {
                             </div>
                         </td>
                         <td class="name-cell">
-                            <strong><?php echo htmlspecialchars($player['name']); ?></strong>
+                            <strong><?php echo htmlspecialchars($player['name'] ?? ''); ?></strong>
                             <div class="player-info">
                                 <small><?php echo htmlspecialchars($player['height'] ?? '0'); ?> cm • <?php echo htmlspecialchars($player['weight'] ?? '0'); ?> kg</small>
                             </div>
                         </td>
                         <td class="number-cell">
-                            <span class="jersey-number">#<?php echo htmlspecialchars($player['jersey_number']); ?></span>
+                            <span class="jersey-number">#<?php echo htmlspecialchars($player['jersey_number'] ?? ''); ?></span>
                         </td>
                         <td class="position-cell">
-                            <span class="position-badge" data-position="<?php echo htmlspecialchars($player['position']); ?>">
-                                <?php echo htmlspecialchars($player['position']); ?>
+                            <span class="position-badge" data-position="<?php echo htmlspecialchars($player['position'] ?? ''); ?>">
+                                <?php echo htmlspecialchars($player['position'] ?? ''); ?>
                             </span>
                         </td>
                         <td class="age-cell">
@@ -195,10 +195,10 @@ if ($team_id) {
                         <td class="contact-cell">
                             <div class="contact-info">
                                 <?php if (!empty($player['phone'])): ?>
-                                    <small><i class="fas fa-phone"></i> <?php echo htmlspecialchars($player['phone']); ?></small><br>
+                                    <small><i class="fas fa-phone"></i> <?php echo htmlspecialchars($player['phone'] ?? ''); ?></small><br>
                                 <?php endif; ?>
                                 <?php if (!empty($player['email'])): ?>
-                                    <small><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($player['email']); ?></small>
+                                    <small><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($player['email'] ?? ''); ?></small>
                                 <?php endif; ?>
                             </div>
                         </td>
@@ -236,7 +236,7 @@ if ($team_id) {
                                     <button type="submit" 
                                             class="btn-delete" 
                                             title="Hapus Pemain"
-                                            data-name="<?php echo htmlspecialchars($player['name']); ?>">
+                                            data-name="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
                                         <i class="fas fa-trash"></i> Hapus
                                     </button>
                                 </form>
