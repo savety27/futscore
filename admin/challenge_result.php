@@ -1414,6 +1414,7 @@ body {
                                     required>
                                 <option value="completed" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'completed') || $challenge_data['match_status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
                                 <option value="ongoing" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'ongoing') || $challenge_data['match_status'] == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
+                                <option value="coming_soon" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'coming_soon') || $challenge_data['match_status'] == 'coming_soon' ? 'selected' : ''; ?>>Coming Soon</option>
                                 <option value="postponed" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'postponed') || $challenge_data['match_status'] == 'postponed' ? 'selected' : ''; ?>>Postponed</option>
                                 <option value="cancelled" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'cancelled') || $challenge_data['match_status'] == 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
                                 <option value="abandoned" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'abandoned') || $challenge_data['match_status'] == 'abandoned' ? 'selected' : ''; ?>>Abandoned</option>
