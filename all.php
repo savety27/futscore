@@ -6,9 +6,11 @@ $pageTitle = "All Matches";
 
 // Get filter parameters
 $status = isset($_GET['status']) ? $_GET['status'] : 'result';
-$eventId = isset($_GET['event']) ? (int)$_GET['event'] : 0;
+$eventId = isset($_GET['event']) ? trim($_GET['event']) : '';
+if ($eventId === '0') {
+    $eventId = '';
+}
 $teamId = isset($_GET['team']) ? (int)$_GET['team'] : 0;
-$week = isset($_GET['week']) ? (int)$_GET['week'] : 0;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 40;
 
@@ -23,12 +25,12 @@ require_once 'includes/header.php';
 
 $conn = $db->getConnection();
 
-// Get events for filter dropdown
+// Get events for filter dropdown from challenges
 $events = [];
-$eventsSql = "SELECT * FROM events ORDER BY name";
+$eventsSql = "SELECT DISTINCT sport_type FROM challenges WHERE sport_type IS NOT NULL AND sport_type != '' ORDER BY sport_type";
 $eventsResult = $conn->query($eventsSql);
 while ($event = $eventsResult->fetch_assoc()) {
-    $events[] = $event;
+    $events[] = $event['sport_type'];
 }
 
 // Get teams for filter dropdown
@@ -39,116 +41,21 @@ while ($team = $teamsResult->fetch_assoc()) {
     $teams[] = $team;
 }
 
-// Data hardcoded untuk contoh (gantikan dengan query database nanti)
-$matches = [
-    [
-        'id' => 1,
-        'team1_name' => 'PAFCA',
-        'team1_logo' => 'PAFCA.png',
-        'team2_name' => '014 BUFC',
-        'team2_logo' => '014-bufc.png',
-        'score1' => 5,
-        'score2' => 1,
-        'match_date' => '2026-01-25 16:40:00',
-        'location' => 'LAP SEPINGGAN PRATAMA',
-        'event_name' => 'PL AAFI 2026',
-        'status' => 'completed'
-    ],
-    [
-        'id' => 2,
-        'team1_name' => 'GENERASI FAB',
-        'team1_logo' => 'generasi-fab.png',
-        'team2_name' => 'FAMILY FUTSAL BALIKPAPAN',
-        'team2_logo' => 'famili-balikpapan.png',
-        'score1' => 0,
-        'score2' => 4,
-        'match_date' => '2026-01-25 15:50:00',
-        'location' => 'LAP SEPINGGAN PRATAMA',
-        'event_name' => 'PL AAFI 2026',
-        'status' => 'completed'
-    ],
-    [
-        'id' => 3,
-        'team1_name' => 'KUDA LAUT NUSANTARA',
-        'team1_logo' => 'kuda-laut-nusantara.png',
-        'team2_name' => 'ANTRI FUTSAL SCHOOL GNR',
-        'team2_logo' => 'antri-futsal.png',
-        'score1' => 3,
-        'score2' => 2,
-        'match_date' => '2026-01-25 15:50:00',
-        'location' => 'LAP SEPINGGAN PRATAMA',
-        'event_name' => 'JTFL',
-        'status' => 'completed'
-    ],
-    [
-        'id' => 101,
-        'team1_name' => 'PAFCA',
-        'team1_logo' => 'PAFCA.png',
-        'team2_name' => '014 BUFC',
-        'team2_logo' => '014-bufc.png',
-        'match_date' => '2026-02-01 10:15:00',
-        'location' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-        'event_name' => 'PL AAFI 2026',
-        'status' => 'scheduled'
-    ],
-    [
-        'id' => 102,
-        'team1_name' => 'GENERASI FAB',
-        'team1_logo' => 'generasi-fab.png',
-        'team2_name' => 'FAMILY FUTSAL BALIKPAPAN',
-        'team2_logo' => 'famili-balikpapan.png',
-        'match_date' => '2026-02-01 10:45:00',
-        'location' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-        'event_name' => 'PL AAFI 2026',
-        'status' => 'scheduled'
-    ],
-    [
-        'id' => 103,
-        'team1_name' => 'KUDA LAUT NUSANTARA',
-        'team1_logo' => 'kuda-laut-nusantara.png',
-        'team2_name' => 'ANTRI FUTSAL SCHOOL GNR',
-        'team2_logo' => 'antri-futsal.png',
-        'match_date' => '2026-02-01 10:45:00',
-        'location' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-        'event_name' => 'JTFL',
-        'status' => 'scheduled'
-    ],
-    [
-        'id' => 104,
-        'team1_name' => 'APOLLO FUTSAL ACADEMY',
-        'team1_logo' => 'apollo futsal.png',
-        'team2_name' => 'TWO IN ONE FA',
-        'team2_logo' => 'two in one.png',
-        'match_date' => '2026-02-01 10:45:00',
-        'location' => 'LAP SEPINGGAN PRATAMA - Lap 2',
-        'event_name' => 'AAFI TANGGERANG 1',
-        'status' => 'scheduled'
-    ],
-    [
-        'id' => 105,
-        'team1_name' => 'MESS FUTSAL',
-        'team1_logo' => 'mess-futsal.png',
-        'team2_name' => 'BAHATI FUTSAL',
-        'team2_logo' => 'bahati-futsal.png',
-        'match_date' => '2026-02-01 11:15:00',
-        'location' => 'Golden Sport Center - Lap 2',
-        'event_name' => 'JFTL',
-        'status' => 'scheduled'
-    ]
-];
+// Get matches from database
+$result = getAllChallenges([
+    'status' => $status,
+    'event' => $eventId,
+    'team_id' => $teamId,
+    'page' => $page,
+    'per_page' => $perPage,
+    'order_by' => 'challenge_date',
+    'order_dir' => $status === 'schedule' ? 'ASC' : 'DESC'
+]);
 
-// Filter matches based on status
-$filteredMatches = array_filter($matches, function($match) use ($status) {
-    return $match['status'] === ($status === 'schedule' ? 'scheduled' : 'completed');
-});
-
-// Pagination
-$totalMatches = count($filteredMatches);
-$totalPages = ceil($totalMatches / $perPage);
-if ($totalPages < 1) $totalPages = 1;
-if ($page > $totalPages) $page = $totalPages;
+$paginatedMatches = $result['matches'];
+$totalMatches = $result['total'];
+$totalPages = $result['total_pages'];
 $offset = ($page - 1) * $perPage;
-$paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
 ?>
 
 <div class="container">
@@ -169,8 +76,8 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
                     <select id="eventFilter" class="filter-select">
                         <option value="0">All Events</option>
                         <?php foreach ($events as $event): ?>
-                        <option value="<?php echo $event['id']; ?>" <?php echo $eventId == $event['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($event['name']); ?>
+                        <option value="<?php echo htmlspecialchars($event); ?>" <?php echo $eventId === $event ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($event); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
@@ -185,18 +92,6 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
                             <?php echo htmlspecialchars($team['name']); ?>
                         </option>
                         <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="weekFilter">Week:</label>
-                    <select id="weekFilter" class="filter-select">
-                        <option value="0">All Weeks</option>
-                        <?php for ($i = 1; $i <= 52; $i++): ?>
-                        <option value="<?php echo $i; ?>" <?php echo $week == $i ? 'selected' : ''; ?>>
-                            Week <?php echo $i; ?>
-                        </option>
-                        <?php endfor; ?>
                     </select>
                 </div>
                 
@@ -230,7 +125,7 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
                 <tbody>
                     <?php foreach ($paginatedMatches as $index => $match): 
                         $matchNumber = $offset + $index + 1;
-                        $isScheduled = $match['status'] === 'scheduled';
+                        $isScheduled = $status === 'schedule';
                     ?>
                     <tr class="match-row" data-match-id="<?php echo $match['id']; ?>">
                         <td class="match-number"><?php echo $matchNumber; ?></td>
@@ -238,22 +133,22 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
                             <div class="match-teams-info">
                                 <div class="team-info">
                                     <div class="team-logo-wrapper">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                                             alt="<?php echo htmlspecialchars($match['team1_name']); ?>" 
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
+                                             alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
                                              class="team-logo-sm"
                                              onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                     </div>
-                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['team1_name']); ?></span>
+                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
                                 </div>
                                 <div class="vs-sm">VS</div>
                                 <div class="team-info">
                                     <div class="team-logo-wrapper">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                                             alt="<?php echo htmlspecialchars($match['team2_name']); ?>" 
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
+                                             alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
                                              class="team-logo-sm"
                                              onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                     </div>
-                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['team2_name']); ?></span>
+                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
                                 </div>
                             </div>
                         </td>
@@ -262,26 +157,26 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
                             <div class="match-status-badge scheduled">SCHEDULE</div>
                             <?php else: ?>
                             <div class="score-info">
-                                <span class="score-team"><?php echo $match['score1']; ?></span>
+                                <span class="score-team"><?php echo $match['challenger_score']; ?></span>
                                 <span class="score-separator">-</span>
-                                <span class="score-team"><?php echo $match['score2']; ?></span>
+                                <span class="score-team"><?php echo $match['opponent_score']; ?></span>
                             </div>
                             <div class="match-status-badge completed">FT</div>
                             <?php endif; ?>
                         </td>
                         <td class="match-datetime-cell">
                             <div class="datetime-info">
-                                <span class="date-info"><?php echo formatDateTime($match['match_date']); ?></span>
+                                <span class="date-info"><?php echo formatDateTime($match['challenge_date']); ?></span>
                             </div>
                         </td>
                         <td class="match-venue-cell">
                             <div class="venue-info">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span class="venue-text"><?php echo htmlspecialchars($match['location']); ?></span>
+                                <span class="venue-text"><?php echo htmlspecialchars($match['venue_name']); ?></span>
                             </div>
                         </td>
                         <td class="match-event-cell">
-                            <span class="event-badge"><?php echo htmlspecialchars($match['event_name']); ?></span>
+                            <span class="event-badge"><?php echo htmlspecialchars($match['sport_type']); ?></span>
                         </td>
                         <td class="match-actions-cell">
                             <?php if ($isScheduled): ?>
@@ -310,10 +205,10 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
         
         <nav class="pagination-nav">
             <?php if ($page > 1): ?>
-            <a href="?page=1&status=<?php echo $status; ?>&event=<?php echo $eventId; ?>&team=<?php echo $teamId; ?>&week=<?php echo $week; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="First Page">
+            <a href="?page=1&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="First Page">
                 <i class="fas fa-angle-double-left"></i>
             </a>
-            <a href="?page=<?php echo $page - 1; ?>&status=<?php echo $status; ?>&event=<?php echo $eventId; ?>&team=<?php echo $teamId; ?>&week=<?php echo $week; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link">
+            <a href="?page=<?php echo $page - 1; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link">
                 <i class="fas fa-chevron-left"></i> Previous
             </a>
             <?php endif; ?>
@@ -324,17 +219,17 @@ $paginatedMatches = array_slice($filteredMatches, $offset, $perPage);
             
             for ($i = $startPage; $i <= $endPage; $i++):
             ?>
-            <a href="?page=<?php echo $i; ?>&status=<?php echo $status; ?>&event=<?php echo $eventId; ?>&team=<?php echo $teamId; ?>&week=<?php echo $week; ?>&per_page=<?php echo $perPage; ?>" 
+            <a href="?page=<?php echo $i; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" 
                class="pagination-link <?php echo ($i == $page) ? 'active' : ''; ?>">
                 <?php echo $i; ?>
             </a>
             <?php endfor; ?>
             
             <?php if ($page < $totalPages): ?>
-            <a href="?page=<?php echo $page + 1; ?>&status=<?php echo $status; ?>&event=<?php echo $eventId; ?>&team=<?php echo $teamId; ?>&week=<?php echo $week; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link">
+            <a href="?page=<?php echo $page + 1; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link">
                 Next <i class="fas fa-chevron-right"></i>
             </a>
-            <a href="?page=<?php echo $totalPages; ?>&status=<?php echo $status; ?>&event=<?php echo $eventId; ?>&team=<?php echo $teamId; ?>&week=<?php echo $week; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="Last Page">
+            <a href="?page=<?php echo $totalPages; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="Last Page">
                 <i class="fas fa-angle-double-right"></i>
             </a>
             <?php endif; ?>
@@ -798,13 +693,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const status = document.getElementById('statusFilter').value;
         const eventId = document.getElementById('eventFilter').value;
         const teamId = document.getElementById('teamFilter').value;
-        const week = document.getElementById('weekFilter').value;
-        const perPage = document.getElementById('entriesPerPage').value;
+        const perPageEl = document.getElementById('entriesPerPage');
+        const perPage = perPageEl ? perPageEl.value : '';
         
         let url = '?status=' + status;
-        if (eventId > 0) url += '&event=' + eventId;
+        if (eventId && eventId !== '0') url += '&event=' + encodeURIComponent(eventId);
         if (teamId > 0) url += '&team=' + teamId;
-        if (week > 0) url += '&week=' + week;
         if (perPage > 0) url += '&per_page=' + perPage;
         
         window.location.href = url;
@@ -815,13 +709,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Entries per page change
-    document.getElementById('entriesPerPage').addEventListener('change', function() {
-        const perPage = this.value;
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('per_page', perPage);
-        currentUrl.searchParams.set('page', 1);
-        window.location.href = currentUrl.toString();
-    });
+    const entriesPerPageSelect = document.getElementById('entriesPerPage');
+    if (entriesPerPageSelect) {
+        entriesPerPageSelect.addEventListener('change', function() {
+            const perPage = this.value;
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('per_page', perPage);
+            currentUrl.searchParams.set('page', 1);
+            window.location.href = currentUrl.toString();
+        });
+    }
     
     // Row click functionality
     document.querySelectorAll('.match-row').forEach(row => {

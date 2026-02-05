@@ -471,7 +471,8 @@ function getScheduledChallenges($limit = 10) {
             LEFT JOIN teams t1 ON c.challenger_id = t1.id
             LEFT JOIN teams t2 ON c.opponent_id = t2.id
             LEFT JOIN venues v ON c.venue_id = v.id
-            WHERE c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL)
+            WHERE (c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL))
+              AND (c.challenger_score IS NULL AND c.opponent_score IS NULL)
             ORDER BY c.challenge_date ASC 
             LIMIT ?";
     $stmt = $conn->prepare($sql);
@@ -500,6 +501,7 @@ function getCompletedChallenges($limit = 10) {
             LEFT JOIN teams t2 ON c.opponent_id = t2.id
             LEFT JOIN venues v ON c.venue_id = v.id
             WHERE c.match_status = 'completed'
+               OR (c.challenger_score IS NOT NULL OR c.opponent_score IS NOT NULL)
             ORDER BY c.challenge_date DESC 
             LIMIT ?";
     $stmt = $conn->prepare($sql);
@@ -517,7 +519,7 @@ function getCompletedChallenges($limit = 10) {
 /**
  * Mendapatkan tantangan terbaru (untuk card section)
  */
-function getLatestChallenges($limit = 5) {
+  function getLatestChallenges($limit = 5) {
     global $db;
     $conn = $db->getConnection();
     
@@ -539,7 +541,125 @@ function getLatestChallenges($limit = 5) {
         $challenges[] = $row;
     }
     return $challenges;
-}
+  }
+  
+  /**
+   * Mendapatkan semua challenge dengan filter dan pagination
+   */
+  function getAllChallenges($params = []) {
+      global $db;
+      $conn = $db->getConnection();
+      
+      // Default parameters
+      $defaults = [
+          'status' => 'result', // 'schedule' or 'result'
+          'event' => '',
+          'team_id' => 0,
+          'week' => 0,
+          'page' => 1,
+          'per_page' => 40,
+          'order_by' => 'challenge_date',
+          'order_dir' => 'DESC'
+      ];
+      
+      $params = array_merge($defaults, $params);
+      
+      // Build WHERE clause
+      $whereConditions = [];
+      $bindParams = [];
+      $bindTypes = '';
+      
+      // Status filter
+      if ($params['status'] === 'schedule') {
+          $whereConditions[] = "(c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL))";
+          $whereConditions[] = "(c.challenger_score IS NULL AND c.opponent_score IS NULL)";
+      } else {
+          $whereConditions[] = "(c.match_status = 'completed' OR (c.challenger_score IS NOT NULL OR c.opponent_score IS NOT NULL))";
+      }
+      
+      // Event filter (sport_type)
+      if (!empty($params['event'])) {
+          $whereConditions[] = "c.sport_type = ?";
+          $bindParams[] = $params['event'];
+          $bindTypes .= 's';
+      }
+      
+      // Team filter
+      if ($params['team_id'] > 0) {
+          $whereConditions[] = "(c.challenger_id = ? OR c.opponent_id = ?)";
+          $bindParams[] = $params['team_id'];
+          $bindParams[] = $params['team_id'];
+          $bindTypes .= 'ii';
+      }
+      
+      // Week filter
+      if ($params['week'] > 0) {
+          $whereConditions[] = "WEEK(c.challenge_date) = ?";
+          $bindParams[] = $params['week'];
+          $bindTypes .= 'i';
+      }
+      
+      $whereClause = count($whereConditions) > 0 ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
+      
+      // Calculate pagination
+      $offset = ($params['page'] - 1) * $params['per_page'];
+      
+      // Build main query
+      $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
+                     t2.name as opponent_name, t2.logo as opponent_logo, 
+                     v.name as venue_name
+              FROM challenges c
+              LEFT JOIN teams t1 ON c.challenger_id = t1.id
+              LEFT JOIN teams t2 ON c.opponent_id = t2.id
+              LEFT JOIN venues v ON c.venue_id = v.id
+              $whereClause
+              ORDER BY c.{$params['order_by']} {$params['order_dir']}
+              LIMIT ? OFFSET ?";
+      
+      $bindParams[] = $params['per_page'];
+      $bindParams[] = $offset;
+      $bindTypes .= 'ii';
+      
+      $stmt = $conn->prepare($sql);
+      if ($bindTypes) {
+          $stmt->bind_param($bindTypes, ...$bindParams);
+      }
+      $stmt->execute();
+      $result = $stmt->get_result();
+      
+      $matches = [];
+      while ($row = $result->fetch_assoc()) {
+          $matches[] = $row;
+      }
+      $stmt->close();
+      
+      // Get total count for pagination
+      $countSql = "SELECT COUNT(*) as total FROM challenges c $whereClause";
+      $countStmt = $conn->prepare($countSql);
+      
+      if ($bindTypes && !empty($bindParams)) {
+          // Remove LIMIT and OFFSET params for count query
+          $countParams = array_slice($bindParams, 0, count($bindParams) - 2);
+          $countTypes = substr($bindTypes, 0, -2);
+          
+          if (!empty($countTypes)) {
+              $countStmt->bind_param($countTypes, ...$countParams);
+          }
+      }
+      
+      $countStmt->execute();
+      $countResult = $countStmt->get_result();
+      $total = $countResult->fetch_assoc()['total'];
+      $countStmt->close();
+      
+      return [
+          'matches' => $matches,
+          'total' => $total,
+          'page' => $params['page'],
+          'per_page' => $params['per_page'],
+          'total_pages' => ceil($total / $params['per_page'])
+      ];
+  }
 
 /**
  * Mendapatkan match goals
