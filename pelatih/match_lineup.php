@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="card">
     <div class="section-header">
         <div>
-            <h2 class="section-title">Atur Lineup: <?php echo htmlspecialchars($challenge['challenger_name']); ?> vs <?php echo htmlspecialchars($challenge['opponent_name']); ?></h2>
+            <h2 class="section-title">Atur Lineup: <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?> vs <?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?></h2>
             <p class="text-muted">Pilih pemain yang akan bertanding.</p>
         </div>
         <a href="schedule.php" class="btn-secondary">
@@ -160,8 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    <?php echo !$is_selected ? 'disabled' : ''; ?>>
                         </td>
                         <td><span class="badge badge-primary"><?php echo $player['jersey_number']; ?></span></td>
-                        <td><?php echo htmlspecialchars($player['name']); ?></td>
-                        <td><?php echo htmlspecialchars($player['position']); ?></td>
+                        <td><?php echo htmlspecialchars($player['name'] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

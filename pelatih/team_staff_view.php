@@ -21,7 +21,7 @@ if (!$team_info) {
 }
 
 // Update page title
-$page_title = htmlspecialchars($team_info['name']) . ' - Staf';
+$page_title = htmlspecialchars($team_info['name'] ?? '') . ' - Staf';
 
 // Search function
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -124,7 +124,7 @@ try {
                 <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
             <?php endif; ?>
             <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Staf</span></h2>
+                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Staf</span></h2>
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
@@ -136,7 +136,7 @@ try {
     <div class="search-bar" style="margin-bottom: 20px;">
         <form action="" method="GET">
             <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
-            <input type="text" name="search" placeholder="Cari staf..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Cari staf..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
@@ -164,14 +164,14 @@ try {
                     <tr>
                          <td>
                             <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
-                            alt="<?php echo htmlspecialchars($staff['name']); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
+                            alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
                         </td>
                         <td class="name-cell">
-                            <?php echo htmlspecialchars($staff['name']); ?>
-                            <div style="font-size: 11px; color: var(--gray); font-weight: normal;"><?php echo htmlspecialchars($staff['email']); ?></div>
+                            <?php echo htmlspecialchars($staff['name'] ?? ''); ?>
+                            <div style="font-size: 11px; color: var(--gray); font-weight: normal;"><?php echo htmlspecialchars($staff['email'] ?? ''); ?></div>
                         </td>
                         <td class="position-cell">
-                            <span class="position-badge"><?php echo htmlspecialchars($staff['position']); ?></span>
+                            <span class="position-badge"><?php echo htmlspecialchars($staff['position'] ?? ''); ?></span>
                         </td>
                         <td class="age-cell"><?php echo $staff['age']; ?></td>
                         <td class="certificate-cell">
@@ -179,7 +179,7 @@ try {
                                 <a href="javascript:void(0);" 
                                 class="view-certificates" 
                                 data-staff-id="<?php echo $staff['id']; ?>"
-                                data-staff-name="<?php echo htmlspecialchars($staff['name']); ?>"
+                                data-staff-name="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>"
                                 style="text-decoration: none;">
                                     <span class="certificate-count clickable" style="cursor: pointer;">
                                         <?php echo $staff['certificate_count']; ?> Sertifikat ▶

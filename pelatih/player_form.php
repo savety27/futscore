@@ -89,7 +89,7 @@ if (isset($_GET['id'])) {
 
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-danger">
-            <span class="alert-icon">!</span>
+            <i class="fas fa-exclamation-circle"></i>
             <span><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></span>
         </div>
     <?php endif; ?>
@@ -121,7 +121,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="name" class="form-control" 
                                placeholder="Masukkan nama lengkap" required
-                               value="<?php echo htmlspecialchars($player['name']); ?>">
+                               value="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
                     </div>
                     
                     <div class="form-group">
@@ -131,7 +131,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="number" name="jersey_number" class="form-control" 
                                placeholder="Masukkan nomor punggung" required
-                               value="<?php echo htmlspecialchars($player['jersey_number']); ?>">
+                               value="<?php echo htmlspecialchars($player['jersey_number'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -181,7 +181,7 @@ if (isset($_GET['id'])) {
                             <span class="note">Wajib</span>
                         </label>
                         <input type="date" name="birth_date" class="form-control" 
-                               value="<?php echo htmlspecialchars($player['birth_date']); ?>"
+                               value="<?php echo htmlspecialchars($player['birth_date'] ?? ''); ?>"
                                max="<?php echo date('Y-m-d'); ?>">
                     </div>
 
@@ -192,7 +192,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="birth_place" class="form-control" 
                                placeholder="Masukkan tempat lahir" required
-                               value="<?php echo htmlspecialchars($player['birth_place']); ?>">
+                               value="<?php echo htmlspecialchars($player['birth_place'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -235,10 +235,10 @@ if (isset($_GET['id'])) {
                         <div class="date-input">
                             <input type="number" name="height" class="form-control" 
                                    placeholder="Tinggi (cm)"
-                                   value="<?php echo htmlspecialchars($player['height']); ?>">
+                                   value="<?php echo htmlspecialchars($player['height'] ?? ''); ?>">
                             <input type="number" name="weight" class="form-control" 
                                    placeholder="Berat (kg)"
-                                   value="<?php echo htmlspecialchars($player['weight']); ?>">
+                                   value="<?php echo htmlspecialchars($player['weight'] ?? ''); ?>">
                         </div>
                     </div>
                 </div>
@@ -259,7 +259,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="email" name="email" class="form-control" 
                                placeholder="Masukkan email"
-                               value="<?php echo htmlspecialchars($player['email']); ?>">
+                               value="<?php echo htmlspecialchars($player['email'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -269,7 +269,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="tel" name="phone" class="form-control" 
                                placeholder="Masukkan nomor telepon"
-                               value="<?php echo htmlspecialchars($player['phone']); ?>">
+                               value="<?php echo htmlspecialchars($player['phone'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -279,7 +279,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="street" class="form-control" 
                                placeholder="Masukkan alamat lengkap"
-                               value="<?php echo htmlspecialchars($player['street']); ?>">
+                               value="<?php echo htmlspecialchars($player['street'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -289,7 +289,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="city" class="form-control" 
                                placeholder="Masukkan kota"
-                               value="<?php echo htmlspecialchars($player['city']); ?>">
+                               value="<?php echo htmlspecialchars($player['city'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -299,7 +299,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="province" class="form-control" 
                                placeholder="Masukkan provinsi"
-                               value="<?php echo htmlspecialchars($player['province']); ?>">
+                               value="<?php echo htmlspecialchars($player['province'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -309,7 +309,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="postal_code" class="form-control" 
                                placeholder="Masukkan kode pos"
-                               value="<?php echo htmlspecialchars($player['postal_code']); ?>">
+                               value="<?php echo htmlspecialchars($player['postal_code'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -319,7 +319,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="nationality" class="form-control" 
                                placeholder="Masukkan kewarganegaraan"
-                               value="<?php echo htmlspecialchars($player['nationality']); ?>">
+                               value="<?php echo htmlspecialchars($player['nationality'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -329,7 +329,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="country" class="form-control" 
                                placeholder="Masukkan negara"
-                               value="<?php echo htmlspecialchars($player['country']); ?>">
+                               value="<?php echo htmlspecialchars($player['country'] ?? ''); ?>">
                     </div>
                 </div>
             </div>
@@ -350,7 +350,7 @@ if (isset($_GET['id'])) {
                         <input type="text" name="nik" class="form-control" 
                                placeholder="Masukkan 16-digit NIK" required
                                pattern="[0-9]{16}"
-                               value="<?php echo htmlspecialchars($player['nik']); ?>">
+                               value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -360,7 +360,7 @@ if (isset($_GET['id'])) {
                         </label>
                         <input type="text" name="nisn" class="form-control" 
                                placeholder="Masukkan NISN"
-                               value="<?php echo htmlspecialchars($player['nisn']); ?>">
+                               value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>">
                     </div>
                 </div>
             </div>
@@ -385,10 +385,10 @@ if (isset($_GET['id'])) {
                                 <strong>Foto :</strong>
                             </p>
                             <div class="file-item">
-                                <img src="../images/players/<?php echo htmlspecialchars($player['photo']); ?>" 
+                                <img src="../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
                                      alt="Current Photo" style="width: 60px; height: 60px;">
                                 <div>
-                                    <div><strong><?php echo htmlspecialchars($player['photo']); ?></strong></div>
+                                    <div><strong><?php echo htmlspecialchars($player['photo'] ?? ''); ?></strong></div>
                                     <div style="font-size: 12px; color: var(--gray);">Klik untuk mengganti foto</div>
                                 </div>
                             </div>
@@ -439,7 +439,7 @@ if (isset($_GET['id'])) {
                         <?php if (!empty($doc['current'])): ?>
                         <div class="current-photo" style="margin-bottom: 10px;">
                             <p style="font-size: 12px; color: var(--gray); margin-bottom: 5px;">
-                                <strong>Foto :</strong> <?php echo htmlspecialchars($doc['current']); ?>
+                                <strong>Foto :</strong> <?php echo htmlspecialchars($doc['current'] ?? ''); ?>
                             </p>
                         </div>
                         <?php endif; ?>
