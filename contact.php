@@ -10,7 +10,7 @@ $pageTitle = "Contact";
     <!-- Header Section -->
     <div class="contact-header">
         <h1 class="contact-title">Hubungi Kami</h1>
-        <p class="contact-subtitle">Tim Futscore siap membantu operasional dan informasi event di seluruh Indonesia</p>
+        <p class="contact-subtitle">Tim MGP siap membantu operasional dan informasi event di seluruh Indonesia</p>
     </div>
     
     <div class="contact-layout">
@@ -60,7 +60,7 @@ $pageTitle = "Contact";
             <div class="contact-section">
                 <div class="section-card">
                     <h2><i class="fas fa-map-marker-alt"></i> Daftar DC Wilayah</h2>
-                    <p class="section-description">Tim Data Center (DC) Futscore siap membantu operasional dan informasi event di area masing-masing. Waktu respons rata-rata: 1x24 jam kerja. Untuk kebutuhan mendesak, hubungi DC mana pun yang tersedia.</p>
+                    <p class="section-description">Tim Data Center (DC) MGP siap membantu operasional dan informasi event di area masing-masing. Waktu respons rata-rata: 1x24 jam kerja. Untuk kebutuhan mendesak, hubungi DC mana pun yang tersedia.</p>
                     
                     <div class="dc-grid">
                         <!-- DC Batam -->
@@ -310,7 +310,7 @@ $pageTitle = "Contact";
 // Function to open WhatsApp with predefined message
 function openWhatsApp(phoneNumber, personName, region) {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
-    const message = `Halo ${personName} (${region}),\n\nSaya ingin bertanya tentang Futscore untuk wilayah ${region}.\n\nTerima kasih.`;
+    const message = `Halo ${personName} (${region}),\n\nSaya ingin bertanya terkait informasi yang ada di wilayah ${region}.\n\nTerima kasih.`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
     window.open(whatsappURL, '_blank');
