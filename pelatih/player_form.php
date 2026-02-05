@@ -89,14 +89,14 @@ if (isset($_GET['id'])) {
 
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
+            <span class="alert-icon">!</span>
             <span><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></span>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['msg'])): ?>
         <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
+            <span class="alert-icon">✓</span>
             <span>Pemain berhasil <?php echo $_GET['msg'] === 'added' ? 'ditambahkan' : 'diperbarui'; ?>!</span>
         </div>
     <?php endif; ?>
@@ -931,15 +931,6 @@ if (isset($_GET['id'])) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Remove flash message query params after first load
-    const url = new URL(window.location.href);
-    if (url.searchParams.has('msg') || url.searchParams.has('error')) {
-        url.searchParams.delete('msg');
-        url.searchParams.delete('error');
-        const query = url.searchParams.toString();
-        window.history.replaceState({}, document.title, url.pathname + (query ? '?' + query : ''));
-    }
-
     // File upload functionality
     function setupFileUpload(uploadElement, fileInput, previewElement) {
         const uploadArea = uploadElement;

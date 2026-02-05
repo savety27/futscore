@@ -89,11 +89,7 @@ $response = [
         'status' => $challenge['match_status'],
         'goals' => $goals,
         'timeline' => $timeline,
-        'lineups' => $lineups,
-        'jerseyInfo' => [
-            'team1' => 'Jersey Home',
-            'team2' => 'Jersey Away'
-        ]
+        'lineups' => $lineups
     ]
 ];
 

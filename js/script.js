@@ -286,17 +286,6 @@ function openScheduleMatchModal(matchId) {
                         </div>
                     </div>
                     
-                    <div class="jersey-info">
-                        <div class="jersey-input">
-                            <label>${scheduleData.team1}:</label>
-                            <span class="jersey-info-text">${scheduleData.jerseyInfo.team1}</span>
-                        </div>
-                        <div class="jersey-input">
-                            <label>${scheduleData.team2}:</label>
-                            <span class="jersey-info-text">${scheduleData.jerseyInfo.team2}</span>
-                        </div>
-                    </div>
-                    
                     <div class="schedule-share">
                         <h4>Share This Match</h4>
                         <div class="share-buttons-grid">
