@@ -553,6 +553,56 @@ body {
     box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.08);
 }
 
+.player-search {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e8edf3;
+    box-shadow: 0 10px 25px rgba(10, 36, 99, 0.12);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+}
+
+.search-results.active {
+    display: block;
+}
+
+.search-item {
+    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid #f1f4f8;
+}
+
+.search-item:last-child {
+    border-bottom: none;
+}
+
+.search-item:hover,
+.search-item.active {
+    background: rgba(10, 36, 99, 0.08);
+}
+
+.search-item-title {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.search-item-sub {
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 4px;
+}
+
 .from-team-chip {
     display: inline-flex;
     align-items: center;
@@ -590,6 +640,30 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+.transfer-search {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
+.transfer-search input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.transfer-search input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.08);
 }
 
 .transfer-item {
@@ -859,14 +933,11 @@ body {
                 <form method="POST" class="transfer-form" id="transferForm">
                     <div class="form-row">
                         <label for="player_id">Pilih Pemain</label>
-                        <select name="player_id" id="player_id" required>
-                            <option value="">-- Pilih Pemain --</option>
-                            <?php foreach ($players as $player): ?>
-                                <option value="<?php echo (int)$player['id']; ?>" data-team="<?php echo htmlspecialchars($player['team_name'] ?? 'Free Agent'); ?>">
-                                    <?php echo htmlspecialchars($player['name']); ?> <?php echo !empty($player['team_name']) ? ' - ' . htmlspecialchars($player['team_name']) : ''; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="player-search">
+                            <input type="text" id="player_search" placeholder="Cari nama pemain atau tim..." autocomplete="off">
+                            <input type="hidden" name="player_id" id="player_id">
+                            <div class="search-results" id="playerResults"></div>
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -902,6 +973,9 @@ body {
                 <h2 style="color: var(--primary); display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-history"></i> Riwayat Transfer
                 </h2>
+                <div class="transfer-search">
+                    <input type="text" id="transfer_search" placeholder="Cari pemain atau tim..." autocomplete="off">
+                </div>
                 <div class="transfer-list" style="margin-top: 10px;">
                     <?php if (!empty($recent_transfers)): ?>
                         <?php foreach ($recent_transfers as $tr): ?>
@@ -936,17 +1010,143 @@ body {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const playerSelect = document.getElementById('player_id');
+    const playerSearch = document.getElementById('player_search');
+    const playerIdInput = document.getElementById('player_id');
+    const playerResults = document.getElementById('playerResults');
     const fromTeamLabel = document.getElementById('fromTeamLabel');
+    const transferSearch = document.getElementById('transfer_search');
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.querySelector('.menu-overlay');
 
-    if (playerSelect && fromTeamLabel) {
-        playerSelect.addEventListener('change', function() {
-            const option = this.options[this.selectedIndex];
-            const team = option ? option.getAttribute('data-team') : '';
-            fromTeamLabel.textContent = team ? team : 'Free Agent';
+    const players = <?php echo json_encode(array_map(function($player) {
+        return [
+            'id' => (int)($player['id'] ?? 0),
+            'name' => $player['name'] ?? '',
+            'team' => $player['team_name'] ?? 'Free Agent'
+        ];
+    }, $players), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+
+    const buildLabel = (player) => {
+        return player.team ? `${player.name} - ${player.team}` : player.name;
+    };
+
+    const renderResults = (items) => {
+        if (!playerResults) return;
+        if (!items.length) {
+            playerResults.classList.remove('active');
+            playerResults.innerHTML = '';
+            return;
+        }
+
+        playerResults.innerHTML = items.map((player) => {
+            const safeName = player.name.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeTeam = player.team.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return `
+                <div class="search-item" data-id="${player.id}" data-name="${safeName}" data-team="${safeTeam}">
+                    <div class="search-item-title">${safeName}</div>
+                    <div class="search-item-sub">${safeTeam}</div>
+                </div>
+            `;
+        }).join('');
+        playerResults.classList.add('active');
+    };
+
+    const clearSelection = () => {
+        if (playerIdInput) {
+            playerIdInput.value = '';
+        }
+        if (fromTeamLabel) {
+            fromTeamLabel.textContent = 'Pilih pemain untuk melihat tim asal';
+        }
+    };
+
+    const setSelection = (player) => {
+        if (playerIdInput) {
+            playerIdInput.value = player.id;
+        }
+        if (playerSearch) {
+            playerSearch.value = buildLabel(player);
+        }
+        if (fromTeamLabel) {
+            fromTeamLabel.textContent = player.team || 'Free Agent';
+        }
+        if (playerResults) {
+            playerResults.classList.remove('active');
+        }
+    };
+
+    if (playerSearch) {
+        playerSearch.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            if (!query) {
+                renderResults([]);
+                clearSelection();
+                return;
+            }
+
+            const matches = players.filter((player) => {
+                const name = (player.name || '').toLowerCase();
+                const team = (player.team || '').toLowerCase();
+                return name.includes(query) || team.includes(query);
+            }).slice(0, 15);
+
+            renderResults(matches);
+
+            const exact = matches.find((player) => buildLabel(player).toLowerCase() === query);
+            if (exact) {
+                setSelection(exact);
+            } else {
+                if (playerIdInput) {
+                    playerIdInput.value = '';
+                }
+            }
+        });
+
+        playerSearch.addEventListener('focus', function() {
+            const query = this.value.trim().toLowerCase();
+            if (query) {
+                const matches = players.filter((player) => {
+                    const name = (player.name || '').toLowerCase();
+                    const team = (player.team || '').toLowerCase();
+                    return name.includes(query) || team.includes(query);
+                }).slice(0, 15);
+                renderResults(matches);
+            }
+        });
+    }
+
+    if (playerResults) {
+        playerResults.addEventListener('click', function(event) {
+            const item = event.target.closest('.search-item');
+            if (!item) return;
+
+            const playerId = parseInt(item.getAttribute('data-id'), 10);
+            const team = item.getAttribute('data-team') || 'Free Agent';
+            const name = item.getAttribute('data-name') || '';
+            const player = { id: playerId, name: name, team: team };
+            setSelection(player);
+        });
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!playerResults || !playerSearch) return;
+        if (!playerResults.contains(event.target) && event.target !== playerSearch) {
+            playerResults.classList.remove('active');
+        }
+    });
+
+    if (transferSearch) {
+        transferSearch.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            document.querySelectorAll('.transfer-item').forEach((item) => {
+                const text = item.textContent.toLowerCase();
+                if (!query || text.includes(query)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
         });
     }
 
