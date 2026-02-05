@@ -38,7 +38,8 @@ $player = [
     'ktp_image' => '',
     'kk_image' => '',
     'birth_cert_image' => '',
-    'diploma_image' => ''
+    'diploma_image' => '',
+    'status' => 'active'
 ];
 
 // Check if editing
@@ -64,6 +65,7 @@ if (isset($_GET['id'])) {
             if (empty($player['country'])) $player['country'] = 'Indonesia';
             if (empty($player['sport_type'])) $player['sport_type'] = 'Futsal';
             if (empty($player['dominant_foot'])) $player['dominant_foot'] = 'kanan';
+            if (empty($player['status'])) $player['status'] = 'active';
         } else {
             echo "<div class='alert alert-danger'>Player not found or unauthorized.</div>";
             require_once 'includes/footer.php';
@@ -87,14 +89,14 @@ if (isset($_GET['id'])) {
 
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-danger">
-            <span class="alert-icon">!</span>
+            <i class="fas fa-exclamation-circle"></i>
             <span><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></span>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['msg'])): ?>
         <div class="alert alert-success">
-            <span class="alert-icon">✓</span>
+            <i class="fas fa-check-circle"></i>
             <span>Pemain berhasil <?php echo $_GET['msg'] === 'added' ? 'ditambahkan' : 'diperbarui'; ?>!</span>
         </div>
     <?php endif; ?>
@@ -497,6 +499,21 @@ if (isset($_GET['id'])) {
                 </div>
             </div>
 
+            <!-- Status Section -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    <i class="fas fa-check-circle"></i>
+                    Status Pemain
+                </h2>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?>>
+                        <label for="status_active" style="font-weight: normal;">Pemain Aktif</label>
+                    </div>
+                    <small style="color: #666;">Pemain aktif akan tampil dalam sistem</small>
+                </div>
+            </div>
+
             <!-- Form Actions -->
             <div class="form-actions">
                 <a href="players.php" class="btn btn-secondary">
@@ -616,6 +633,13 @@ if (isset($_GET['id'])) {
     gap: 10px;
     margin-top: 10px;
     flex-wrap: wrap;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .radio-option {
@@ -907,6 +931,15 @@ if (isset($_GET['id'])) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Remove flash message query params after first load
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('msg') || url.searchParams.has('error')) {
+        url.searchParams.delete('msg');
+        url.searchParams.delete('error');
+        const query = url.searchParams.toString();
+        window.history.replaceState({}, document.title, url.pathname + (query ? '?' + query : ''));
+    }
+
     // File upload functionality
     function setupFileUpload(uploadElement, fileInput, previewElement) {
         const uploadArea = uploadElement;

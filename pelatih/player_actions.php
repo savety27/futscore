@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $province = trim($_POST['province'] ?? '');
         $postal_code = trim($_POST['postal_code'] ?? '');
         $country = trim($_POST['country'] ?? 'Indonesia');
+        $status = isset($_POST['status']) ? 'active' : 'inactive';
         
         // Skills data
         $dribbling = (int)($_POST['dribbling'] ?? 5);
@@ -150,12 +151,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     dominant_foot, nisn, nik, sport_type, email, phone, 
                     nationality, street, city, province, postal_code, country,
                     dribbling, technique, speed, juggling, shooting, 
-                    setplay_position, passing, control, 
+                    setplay_position, passing, control, status,
                     ktp_image, kk_image, birth_cert_image, diploma_image
                 ) VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
             ");
             
@@ -165,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dominant_foot, $nisn, $nik, $sport_type, $email, $phone,
                 $nationality, $street, $city, $province, $postal_code, $country,
                 $dribbling, $technique, $speed, $juggling, $shooting,
-                $setplay_position, $passing, $control,
+                $setplay_position, $passing, $control, $status,
                 $ktp_image, $kk_image, $birth_cert_image, $diploma_image
             ]);
             
@@ -190,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     nationality = ?, street = ?, city = ?, province = ?, 
                     postal_code = ?, country = ?,
                     dribbling = ?, technique = ?, speed = ?, juggling = ?, shooting = ?,
-                    setplay_position = ?, passing = ?, control = ?, updated_at = NOW()";
+                    setplay_position = ?, passing = ?, control = ?, status = ?, updated_at = NOW()";
             
             $params = [
                 $name, $jersey_number, $position, $position, // position_detail = position
@@ -200,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $nationality, $street, $city, $province,
                 $postal_code, $country,
                 $dribbling, $technique, $speed, $juggling, $shooting,
-                $setplay_position, $passing, $control
+                $setplay_position, $passing, $control, $status
             ];
             
             // Handle file uploads and delete old files

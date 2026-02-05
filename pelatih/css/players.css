@@ -9,6 +9,10 @@
     animation: slideIn 0.3s ease-out;
 }
 
+.message-alert i {
+    margin-right: 8px;
+}
+
 .empty-state {
     text-align: center;
     padding: 50px 20px;

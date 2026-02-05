@@ -65,13 +65,13 @@ if ($team_id) {
         </a>
     </div>
 
-    <?php if (isset($_GET['msg'])): ?>
+<?php if (isset($_GET['msg'])): ?>
         <div class="message-alert">
             <?php 
-                if ($_GET['msg'] == 'added') echo "✅ Pemain berhasil ditambahkan!";
-                if ($_GET['msg'] == 'updated') echo "✅ Pemain berhasil diperbarui!";
-                if ($_GET['msg'] == 'deleted') echo "✅ Pemain berhasil dihapus!";
-                if ($_GET['msg'] == 'no_changes_or_unauthorized') echo "⚠️ Tidak ada perubahan yang dilakukan atau tindakan tidak berwenang.";
+                if ($_GET['msg'] == 'added') echo "<i class='fas fa-check-circle'></i> Pemain berhasil ditambahkan!";
+                if ($_GET['msg'] == 'updated') echo "<i class='fas fa-check-circle'></i> Pemain berhasil diperbarui!";
+                if ($_GET['msg'] == 'deleted') echo "<i class='fas fa-check-circle'></i> Pemain berhasil dihapus!";
+                if ($_GET['msg'] == 'no_changes_or_unauthorized') echo "<i class='fas fa-exclamation-triangle'></i> Tidak ada perubahan yang dilakukan atau tindakan tidak berwenang.";
             ?>
         </div>
     <?php endif; ?>
@@ -329,6 +329,15 @@ if ($team_id) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Remove flash message query params after first load
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('msg') || url.searchParams.has('error')) {
+        url.searchParams.delete('msg');
+        url.searchParams.delete('error');
+        const query = url.searchParams.toString();
+        window.history.replaceState({}, document.title, url.pathname + (query ? '?' + query : ''));
+    }
+
     // Initialize skill scores
     document.querySelectorAll('.skill-score').forEach(score => {
         const skillValue = parseFloat(score.textContent);
