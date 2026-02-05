@@ -363,7 +363,7 @@ body {
 }
 
 .submenu-link::before {
-    content: "*";
+    content: "•";
     position: absolute;
     left: 0;
     color: var(--secondary);
@@ -858,7 +858,7 @@ body {
                         <span class="menu-icon"><?php echo $item['icon']; ?></span>
                         <span class="menu-text"><?php echo $item['name']; ?></span>
                         <?php if ($item['submenu']): ?>
-                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">></span>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
                         <?php endif; ?>
                 </a>
                 
