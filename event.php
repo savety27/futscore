@@ -1,5 +1,9 @@
 <?php
+$hideNavbars = true;
 require_once 'includes/header.php';
+?>
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/event_redesign.css?v=<?php echo time(); ?>">
+<?php
 
 // Page Metadata
 $pageTitle = "Event & Pertandingan";
@@ -136,667 +140,168 @@ while ($row = $match_status_result->fetch_assoc()) {
 function getStatusBadge($status) {
     $status = strtolower($status);
     $badges = [
-        'open' => '<span class="status-badge status-open">Open</span>',
-        'accepted' => '<span class="status-badge status-accepted">Accepted</span>',
-        'completed' => '<span class="status-badge status-completed">Completed</span>',
-        'rejected' => '<span class="status-badge status-rejected">Rejected</span>',
-        'expired' => '<span class="status-badge status-expired">Expired</span>',
-        'cancelled' => '<span class="status-badge status-cancelled">Cancelled</span>'
+        'open' => '<span class="badge-new" style="background-color: #3498db;">Open</span>',
+        'accepted' => '<span class="badge-new badge-completed">Accepted</span>',
+        'completed' => '<span class="badge-new badge-completed">Completed</span>',
+        'rejected' => '<span class="badge-new" style="background-color: #e74c3c;">Rejected</span>',
+        'expired' => '<span class="badge-new badge-warning">Expired</span>',
+        'cancelled' => '<span class="badge-new badge-warning">Cancelled</span>'
     ];
-    return $badges[$status] ?? '<span class="status-badge status-default">' . ucfirst($status) . '</span>';
+    return $badges[$status] ?? '<span class="badge-new" style="background-color: #bdc3c7;">' . ucfirst($status) . '</span>';
 }
 
 function getMatchStatusBadge($match_status) {
     $match_status = strtolower($match_status);
     $badges = [
-        'scheduled' => '<span class="status-badge match-scheduled">Scheduled</span>',
-        'ongoing' => '<span class="status-badge match-ongoing">Ongoing</span>',
-        'completed' => '<span class="status-badge match-completed">Completed</span>',
-        'postponed' => '<span class="status-badge match-postponed">Postponed</span>',
-        'cancelled' => '<span class="status-badge match-cancelled">Cancelled</span>',
-        'abandoned' => '<span class="status-badge match-abandoned">Abandoned</span>'
+        'scheduled' => '<span class="badge-new badge-warning">Scheduled</span>',
+        'ongoing' => '<span class="badge-new badge-pending">Ongoing</span>',
+        'completed' => '<span class="badge-new badge-completed">Completed</span>',
+        'postponed' => '<span class="badge-new badge-warning">Postponed</span>',
+        'cancelled' => '<span class="badge-new" style="background-color: #e74c3c;">Cancelled</span>',
+        'abandoned' => '<span class="badge-new" style="background-color: #95a5a6;">Abandoned</span>'
     ];
-    return $badges[$match_status] ?? '<span class="status-badge match-default">' . ucfirst($match_status ?? 'Not Set') . '</span>';
+    return $badges[$match_status] ?? '<span class="badge-new badge-pending">' . ucfirst($match_status ?? 'Not Set') . '</span>';
 }
 
 function formatScore($challenger_score, $opponent_score) {
     if ($challenger_score === null || $opponent_score === null) {
         return '<span class="score-pending">—</span>';
     }
-    return '<span class="score-display">' . $challenger_score . ' : ' . $opponent_score . '</span>';
+    return '<span class="score-display" style="font-weight: 800; color: #002d62;">' . $challenger_score . ' : ' . $opponent_score . '</span>';
 }
 
 function getWinner($challenger_name, $opponent_name, $challenger_score, $opponent_score, $winner_team_id, $challenger_id, $opponent_id) {
     if ($winner_team_id == $challenger_id) {
-        return '<span class="winner-badge">' . htmlspecialchars($challenger_name) . ' <i class="fas fa-trophy"></i></span>';
+        return '<span class="btn-winner-new">' . htmlspecialchars($challenger_name) . ' <i class="fas fa-trophy"></i></span>';
     } elseif ($winner_team_id == $opponent_id) {
-        return '<span class="winner-badge">' . htmlspecialchars($opponent_name) . ' <i class="fas fa-trophy"></i></span>';
+        return '<span class="btn-winner-new">' . htmlspecialchars($opponent_name) . ' <i class="fas fa-trophy"></i></span>';
     } elseif ($challenger_score !== null && $opponent_score !== null) {
         if ($challenger_score > $opponent_score) {
-            return '<span class="winner-badge">' . htmlspecialchars($challenger_name) . ' <i class="fas fa-trophy"></i></span>';
+            return '<span class="btn-winner-new">' . htmlspecialchars($challenger_name) . ' <i class="fas fa-trophy"></i></span>';
         } elseif ($challenger_score < $opponent_score) {
-            return '<span class="winner-badge">' . htmlspecialchars($opponent_name) . ' <i class="fas fa-trophy"></i></span>';
+            return '<span class="btn-winner-new">' . htmlspecialchars($opponent_name) . ' <i class="fas fa-trophy"></i></span>';
         } else {
-            return '<span class="draw-badge"><i class="fas fa-equals"></i> DRAW</span>';
+            return '<span class="badge-new badge-pending">DRAW</span>';
         }
     }
     return '<span class="no-winner">—</span>';
 }
 ?>
 
-<style>
-/* Hero Banner Styles */
-.event-hero {
-    background: linear-gradient(135deg, #1a1a1a 0%, #c00 100%);
-    padding: 60px 0;
-    text-align: center;
-    color: #fff;
-    margin-bottom: 40px;
-}
 
-.event-hero h1 {
-    font-size: 48px;
-    font-weight: 800;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-}
-
-/* CSS Reset and Base for the section */
-.event-list-section {
-    padding: 40px 0;
-    color: #fff;
-}
-
-/* Filter Section */
-.filter-section {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    align-items: end;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.filter-group label {
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #fff;
-    font-size: 14px;
-}
-
-.filter-group select,
-.filter-group input {
-    padding: 10px 15px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    color: #333;
-    font-size: 14px;
-    transition: all 0.3s ease;
-}
-
-.filter-group select:focus,
-.filter-group input:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
-}
-
-.filter-actions {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-.filter-btn {
-    padding: 10px 25px;
-    background: linear-gradient(135deg, #0066cc, #004d99);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.filter-btn:hover {
-    background: linear-gradient(135deg, #0052a3, #003366);
-    transform: translateY(-2px);
-}
-
-.reset-btn {
-    padding: 10px 25px;
-    background: linear-gradient(135deg, #6c757d, #545b62);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-}
-
-.reset-btn:hover {
-    background: linear-gradient(135deg, #545b62, #3d4348);
-    transform: translateY(-2px);
-}
-
-/* Event Table */
-.event-table-container {
-    background: #fff;
-    border-radius: 8px;
-    overflow-x: auto;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    border: 1px solid #ddd;
-    margin-bottom: 30px;
-}
-
-.event-table {
-    width: 100%;
-    border-collapse: collapse;
-    color: #333;
-    font-size: 13px;
-    min-width: 1600px;
-}
-
-.event-table thead tr {
-    background: linear-gradient(to right, #000, #c00) !important;
-    color: #fff;
-}
-
-.event-table th {
-    padding: 14px 12px;
-    text-align: left;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    border-right: 1px solid rgba(255,255,255,0.15);
-    white-space: nowrap;
-    color: #fff !important;
-    background: transparent !important;
-}
-
-.event-table th:last-child {
-    border-right: none;
-}
-
-.event-table td {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    border-right: 1px solid #f5f5f5;
-    vertical-align: middle;
-}
-
-.event-table td:last-child {
-    border-right: none;
-}
-
-.event-table tbody tr {
-    transition: all 0.2s ease;
-}
-
-.event-table tbody tr:hover {
-    background-color: #f8f9fa;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.event-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-/* Column Specific Styles */
-.col-no { 
-    width: 50px; 
-    text-align: center;
-    font-weight: 600;
-    color: #666;
-    background: #f9f9f9;
-}
-
-.col-code { 
-    width: 140px;
-    font-weight: 600;
-    color: #333;
-}
-
-.col-teams { 
-    width: 320px;
-    min-width: 320px;
-}
-
-.col-score { 
-    width: 110px; 
-    text-align: center;
-    font-weight: 600;
-}
-
-.col-winner { 
-    width: 180px;
-    text-align: center;
-}
-
-.col-status { 
-    width: 120px;
-    text-align: center;
-    padding: 8px !important;
-}
-
-.col-sport { 
-    width: 110px;
-    text-align: center;
-}
-
-.col-venue { 
-    width: 160px;
-}
-
-.col-date { 
-    width: 140px;
-    font-size: 12px;
-    color: #555;
-}
-
-.col-action { 
-    width: 90px; 
-    text-align: center;
-}
-
-/* Team Display */
-.team-display {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.team-section {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.team-section.left {
-    justify-content: flex-end;
-}
-
-.team-section.right {
-    justify-content: flex-start;
-}
-
-.team-logo-small {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: contain;
-    background: #f5f5f5;
-    border: 2px solid #e0e0e0;
-    padding: 2px;
-}
-
-.team-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: #333;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.vs-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-}
-
-.vs-text {
-    font-weight: 700;
-    color: #c00;
-    font-size: 13px;
-    padding: 4px 8px;
-    background: #fff3f3;
-    border-radius: 4px;
-    border: 1px solid #ffe0e0;
-}
-
-/* Score Display */
-.score-display {
-    font-weight: 700;
-    font-size: 18px;
-    color: #333;
-    font-family: 'Arial', sans-serif;
-    letter-spacing: 2px;
-}
-
-.score-pending {
-    color: #aaa;
-    font-style: italic;
-    font-size: 20px;
-}
-
-/* Winner Badge */
-.winner-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    color: white;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    box-shadow: 0 2px 4px rgba(46, 204, 113, 0.3);
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.winner-badge i {
-    font-size: 12px;
-    color: #ffd700;
-}
-
-.draw-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    color: white;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-}
-
-.no-winner {
-    color: #aaa;
-    font-style: italic;
-}
-
-/* Status Badges */
-.status-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    color: white;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    text-align: center;
-    min-width: 85px;
-    white-space: nowrap;
-}
-
-/* Challenge Status Colors */
-.status-open { background: linear-gradient(135deg, #3498db, #2980b9); }
-.status-accepted { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-.status-completed { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-.status-rejected { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-.status-expired { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
-.status-cancelled { background: linear-gradient(135deg, #34495e, #2c3e50); }
-.status-default { background: linear-gradient(135deg, #bdc3c7, #95a5a6); }
-
-/* Match Status Colors */
-.match-scheduled { background: linear-gradient(135deg, #3498db, #2980b9); }
-.match-ongoing { background: linear-gradient(135deg, #f39c12, #e67e22); }
-.match-completed { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-.match-postponed { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-.match-cancelled { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-.match-abandoned { background: linear-gradient(135deg, #7f8c8d, #95a5a6); }
-.match-default { background: linear-gradient(135deg, #ecf0f1, #bdc3c7); color: #666; }
-
-/* Sport Badge */
-.sport-badge {
-    font-size: 11px;
-    padding: 5px 10px;
-    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-    color: #333;
-    border-radius: 12px;
-    font-weight: 600;
-    display: inline-block;
-    border: 1px solid #d0d0d0;
-}
-
-/* View button */
-.view-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
-    background: linear-gradient(135deg, #0066cc, #004d99);
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 102, 204, 0.2);
-}
-
-.view-btn:hover {
-    background: linear-gradient(135deg, #0052a3, #003366);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
-}
-
-/* Pagination */
-.pagination-info {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #ccc;
-    font-size: 14px;
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 0;
-    border-radius: 4px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-}
-
-.pagination-controls a, 
-.pagination-controls span {
-    padding: 8px 16px;
-    background: #fff;
-    color: #333;
-    text-decoration: none;
-    border-right: 1px solid #ddd;
-    transition: all 0.3s ease;
-}
-
-.pagination-controls a:last-child { 
-    border-right: none; 
-}
-
-.pagination-controls a:hover {
-    background: #eee;
-}
-
-.pagination-controls .active {
-    background: linear-gradient(135deg, #0066cc, #004d99);
-    color: #fff;
-    border-color: #0066cc;
-}
-
-.pagination-controls .disabled {
-    color: #ccc;
-    cursor: default;
-    background: #f8f9fa;
-}
-
-/* Empty State */
-.empty-state {
-    background: white;
-    border-radius: 8px;
-    padding: 60px 40px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    text-align: center;
-    grid-column: 1 / -1;
-}
-
-.empty-icon {
-    font-size: 60px;
-    color: #ccc;
-    margin-bottom: 20px;
-}
-
-.empty-state h3 {
-    font-size: 20px;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.empty-state p {
-    color: #666;
-    max-width: 500px;
-    margin: 0 auto 20px;
-    line-height: 1.6;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .filter-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .filter-actions {
-        flex-direction: column;
-    }
-    
-    .filter-btn,
-    .reset-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .pagination-info {
-        flex-direction: column;
-        gap: 15px;
-        align-items: stretch;
-    }
-    
-    .pagination-controls {
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-}
-</style>
-
-<!-- Banner Hero Section DI LUAR container -->
-<div class="event-hero">
-    <div class="container">
-        <h1>EVENTS & MATCHES</h1>
-    </div>
-</div>
-
-<div class="container">
-    <div class="event-list-section">
-
-        <!-- Filter Section -->
-        <div class="filter-section">
-            <form method="GET" action="" class="filter-grid">
-                <!-- Search -->
-                <div class="filter-group">
-                    <label for="search">Pencarian</label>
-                    <input type="text" name="search" class="form-control bg-dark text-light border-0" placeholder="Cari event..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
-                </div>
-                
-                <!-- Status Filter -->
-                <div class="filter-group">
-                    <label for="status">Status Challenge</label>
-                    <select name="status" id="status">
-                        <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
-                        <?php foreach ($statuses as $status): ?>
-                            <option value="<?php echo htmlspecialchars($status ?? ''); ?>" <?php echo $filter_status == $status ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($status ?? '')); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <!-- Sport Filter -->
-                <div class="filter-group">
-                    <label for="sport">Cabang Olahraga</label>
-                    <select name="sport" id="sport">
-                        <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Cabor</option>
-                        <?php foreach ($sports as $sport): ?>
-                            <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" <?php echo $filter_sport == $sport ? 'selected' : ''; ?>><?php echo htmlspecialchars($sport ?? ''); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <!-- Match Status Filter -->
-                <div class="filter-group">
-                    <label for="match_status">Status Pertandingan</label>
-                    <select name="match_status" id="match_status">
-                        <option value="all" <?php echo $filter_match_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
-                        <?php foreach ($match_statuses as $ms): ?>
-                            <option value="<?php echo htmlspecialchars($ms ?? ''); ?>" <?php echo $filter_match_status == $ms ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($ms ?? '')); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="filter-group filter-actions">
-                    <button type="submit" class="filter-btn">
-                        <i class="fas fa-filter"></i> Terapkan Filter
-                    </button>
-                    <a href="event.php" class="reset-btn">
-                        <i class="fas fa-redo"></i> Reset
-                    </a>
-                </div>
-                
-                <!-- Hidden inputs for pagination -->
-                <?php if ($page > 1): ?>
-                    <input type="hidden" name="page" value="<?php echo $page; ?>">
-                <?php endif; ?>
-            </form>
+<div class="dashboard-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <a href="<?php echo SITE_URL; ?>">
+                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            </a>
         </div>
+        <nav class="sidebar-nav">
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="event.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
+                    <div class="nav-link-content">
+                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div id="playerDropdown" class="sidebar-dropdown">
+                    <a href="player.php">Player</a>
+                    <a href="staff.php">Team Staff</a>
+                </div>
+            </div>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+        </nav>
+    </aside>
 
-        <!-- Table -->
-        <div class="event-table-container">
-            <table class="event-table">
-                <thead>
-                    <tr>
-                        <th class="col-no">No</th>
-                        <th class="col-code">Kode</th>
-                        <th class="col-teams">Pertandingan</th>
-                        <th class="col-score">Skor</th>
-                        <th class="col-winner">Pemenang</th>
-                        <th class="col-status">Status</th>
-                        <th class="col-status">Match Status</th>
-                        <th class="col-sport">Cabor</th>
-                        <th class="col-venue">Venue</th>
-                        <th class="col-date">Tanggal</th>
-                        <th class="col-action">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <!-- Main Content -->
+    <main class="main-content-dashboard">
+        <header class="dashboard-header">
+            <h1>EVENTS & MATCHES</h1>
+        </header>
+
+        <div class="dashboard-body">
+            <!-- Filter Section -->
+            <div class="filter-card">
+                <form method="GET" action="" class="filter-row">
+                    <!-- Search -->
+                    <div class="filter-group">
+                        <label for="search">Pencarian</label>
+                        <input type="text" name="search" id="search" placeholder="Cari event..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div class="filter-group">
+                        <label for="status">Status Challenge</label>
+                        <select name="status" id="status">
+                            <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
+                            <?php foreach ($statuses as $status): ?>
+                                <option value="<?php echo htmlspecialchars($status ?? ''); ?>" <?php echo $filter_status == $status ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($status ?? '')); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <!-- Sport Filter -->
+                    <div class="filter-group">
+                        <label for="sport">Cabang Olahraga</label>
+                        <select name="sport" id="sport">
+                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Cabor</option>
+                            <?php foreach ($sports as $sport): ?>
+                                <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" <?php echo $filter_sport == $sport ? 'selected' : ''; ?>><?php echo htmlspecialchars($sport ?? ''); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <!-- Match Status Filter -->
+                    <div class="filter-group">
+                        <label for="match_status">Status Pertandingan</label>
+                        <select name="match_status" id="match_status">
+                            <option value="all" <?php echo $filter_match_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
+                            <?php foreach ($match_statuses as $ms): ?>
+                                <option value="<?php echo htmlspecialchars($ms ?? ''); ?>" <?php echo $filter_match_status == $ms ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($ms ?? '')); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="filter-actions-new">
+                        <button type="submit" class="btn-filter-apply">
+                            <i class="fas fa-filter"></i> Terapkan Filter
+                        </button>
+                        <a href="event.php" class="btn-filter-reset">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                    </div>
+                    
+                    <!-- Hidden inputs for pagination -->
+                    <?php if ($page > 1): ?>
+                        <input type="hidden" name="page" value="<?php echo $page; ?>">
+                    <?php endif; ?>
+                </form>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container-new">
+                <table class="event-table-new">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px; text-align: center;">No</th>
+                            <th style="width: 150px;">Kode</th>
+                            <th style="width: 300px;">Pertandingan</th>
+                            <th style="width: 100px; text-align: center;">Skor</th>
+                            <th style="width: 180px; text-align: center;">Pemenang</th>
+                            <th style="width: 120px; text-align: center;">Status</th>
+                            <th style="width: 140px; text-align: center;">Match Status</th>
+                            <th style="width: 110px; text-align: center;">Cabor</th>
+                            <th style="width: 100px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     <?php if (empty($events)): ?>
                         <tr>
                             <td colspan="11" style="text-align: center; padding: 40px;">
@@ -816,51 +321,42 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                         $no = $offset + 1;
                         foreach ($events as $e): 
                         ?>
-                        <tr>
-                            <td class="col-no"><?php echo $no++; ?></td>
-                            <td class="col-code">
+                        <tr class="match-row-new">
+                            <td style="text-align: center; font-weight: 700; color: #666;"><?php echo $no++; ?></td>
+                            <td style="font-weight: 700; color: #002d62;">
                                 <?php echo htmlspecialchars($e['challenge_code']); ?>
                             </td>
-                            <td class="col-teams">
-                                <div class="team-display">
-                                    <!-- Challenger -->
-                                    <div class="team-section left">
-                                        <span class="team-name"><?php echo htmlspecialchars($e['challenger_name']); ?></span>
+                            <td>
+                                <div class="match-cell-new">
+                                    <div class="team-info-new">
+                                        <span style="font-weight: 600;"><?php echo htmlspecialchars($e['challenger_name']); ?></span>
                                         <?php if (!empty($e['challenger_logo'])): ?>
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($e['challenger_logo']); ?>" 
-                                                 class="team-logo-small" 
+                                                 class="team-logo-tiny" 
                                                  alt="<?php echo htmlspecialchars($e['challenger_name']); ?>">
                                         <?php else: ?>
-                                            <div class="team-logo-small" style="display: flex; align-items: center; justify-content: center; background: #eee;">
-                                                <i class="fas fa-shield-alt" style="font-size: 12px; color: #999;"></i>
-                                            </div>
+                                            <i class="fas fa-shield-alt" style="font-size: 14px; color: #ccc;"></i>
                                         <?php endif; ?>
                                     </div>
                                     
-                                    <!-- VS -->
-                                    <div class="vs-divider">
-                                        <span class="vs-text">VS</span>
-                                    </div>
+                                    <div style="font-weight: 800; color: #e74c3c; font-size: 12px; padding: 0 5px;">VS</div>
                                     
-                                    <!-- Opponent -->
-                                    <div class="team-section right">
+                                    <div class="team-info-new">
                                         <?php if (!empty($e['opponent_logo'])): ?>
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($e['opponent_logo']); ?>" 
-                                                 class="team-logo-small" 
+                                                 class="team-logo-tiny" 
                                                  alt="<?php echo htmlspecialchars($e['opponent_name']); ?>">
                                         <?php else: ?>
-                                            <div class="team-logo-small" style="display: flex; align-items: center; justify-content: center; background: #eee;">
-                                                <i class="fas fa-shield-alt" style="font-size: 12px; color: #999;"></i>
-                                            </div>
+                                            <i class="fas fa-shield-alt" style="font-size: 14px; color: #ccc;"></i>
                                         <?php endif; ?>
-                                        <span class="team-name"><?php echo htmlspecialchars($e['opponent_name'] ?? 'TBD'); ?></span>
+                                        <span style="font-weight: 600;"><?php echo htmlspecialchars($e['opponent_name'] ?? 'TBD'); ?></span>
                                     </div>
                                 </div>
                             </td>
-                            <td class="col-score">
+                            <td style="text-align: center;">
                                 <?php echo formatScore($e['challenger_score'], $e['opponent_score']); ?>
                             </td>
-                            <td class="col-winner">
+                            <td style="text-align: center;">
                                 <?php echo getWinner(
                                     $e['challenger_name'], 
                                     $e['opponent_name'], 
@@ -871,27 +367,19 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                                     $e['opponent_id']
                                 ); ?>
                             </td>
-                            <td class="col-status">
+                            <td style="text-align: center;">
                                 <?php echo getStatusBadge($e['status']); ?>
                             </td>
-                            <td class="col-status">
+                            <td style="text-align: center;">
                                 <?php echo getMatchStatusBadge($e['match_status']); ?>
                             </td>
-                            <td class="col-sport">
-                                <span class="sport-badge">
+                            <td style="text-align: center;">
+                                <span class="badge-new badge-cabor">
                                     <?php echo htmlspecialchars($e['sport_type']); ?>
                                 </span>
                             </td>
-                            <td class="col-venue">
-                                <i class="fas fa-map-marker-alt" style="color: #c00; margin-right: 4px;"></i>
-                                <?php echo htmlspecialchars($e['venue_name'] ?? '-'); ?>
-                            </td>
-                            <td class="col-date">
-                                <i class="fas fa-calendar-alt" style="color: #666; margin-right: 4px;"></i>
-                                <?php echo formatDateTime($e['challenge_date']); ?>
-                            </td>
-                            <td class="col-action">
-                                <a href="event_detail.php?id=<?php echo $e['id']; ?>" class="view-btn">
+                            <td style="text-align: center;">
+                                <a href="event_detail.php?id=<?php echo $e['id']; ?>" class="btn-filter-reset" style="padding: 5px 12px; border-color: #002d62; color: #002d62;">
                                     <i class="fas fa-eye"></i> View
                                 </a>
                             </td>
@@ -951,7 +439,15 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                 </div>
             <?php endif; ?>
         </div>
-    </div>
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>
+                <a href="<?php echo SITE_URL; ?>">Home</a> | 
+                <a href="contact.php">Contact</a> | 
+                <a href="privacy.php">Privacy Policy</a>
+            </p>
+        </footer>
+    </main>
 </div>
 
 <script>
@@ -974,6 +470,20 @@ document.getElementById('search')?.addEventListener('keypress', function(e) {
         this.form.submit();
     }
 });
+
+// Sidebar Dropdown Toggle
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    // Toggle dropdown visibility
+    dropdown.classList.toggle('show');
+    
+    // Rotate icon
+    element.classList.toggle('open');
+}
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+</body>
+</html>

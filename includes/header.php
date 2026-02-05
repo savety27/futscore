@@ -15,6 +15,7 @@ $latestNews = getLatestNews(3);
 </head>
 <body>
     <!-- Top Navbar -->
+    <?php if (!isset($hideNavbars) || !$hideNavbars): ?>
     <div class="top-navbar">
         <div class="container">
             <div class="top-navbar-content">
@@ -47,8 +48,10 @@ $latestNews = getLatestNews(3);
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Main Navbar -->
+    <?php if (!isset($hideNavbars) || !$hideNavbars): ?>
     <nav class="main-navbar">
         <div class="container">
             <div class="navbar-content">
@@ -87,6 +90,7 @@ $latestNews = getLatestNews(3);
             </div>
         </div>
     </nav>
+    <?php endif; ?>
 
     <!-- BPJS Banner -->
     <?php if (basename($_SERVER['PHP_SELF']) == 'index.php'): ?>
