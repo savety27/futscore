@@ -190,8 +190,21 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
 
 
 <div class="dashboard-wrapper">
+    <!-- Mobile Header -->
+    <header class="mobile-dashboard-header">
+        <div class="mobile-logo">
+            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
             <a href="<?php echo SITE_URL; ?>">
                 <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
@@ -322,11 +335,11 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                         foreach ($events as $e): 
                         ?>
                         <tr class="match-row-new">
-                            <td style="text-align: center; font-weight: 700; color: #666;"><?php echo $no++; ?></td>
-                            <td style="font-weight: 700; color: #002d62;">
+                            <td data-label="No" style="text-align: center; font-weight: 700; color: #666;"><?php echo $no++; ?></td>
+                            <td data-label="Kode" style="font-weight: 700; color: #002d62;">
                                 <?php echo htmlspecialchars($e['challenge_code']); ?>
                             </td>
-                            <td>
+                            <td data-label="Pertandingan">
                                 <div class="match-cell-new">
                                     <div class="team-info-new">
                                         <span style="font-weight: 600;"><?php echo htmlspecialchars($e['challenger_name']); ?></span>
@@ -353,10 +366,10 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                                     </div>
                                 </div>
                             </td>
-                            <td style="text-align: center;">
+                            <td data-label="Skor" style="text-align: center;">
                                 <?php echo formatScore($e['challenger_score'], $e['opponent_score']); ?>
                             </td>
-                            <td style="text-align: center;">
+                            <td data-label="Pemenang" style="text-align: center;">
                                 <?php echo getWinner(
                                     $e['challenger_name'], 
                                     $e['opponent_name'], 
@@ -367,18 +380,18 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                                     $e['opponent_id']
                                 ); ?>
                             </td>
-                            <td style="text-align: center;">
+                            <td data-label="Status" style="text-align: center;">
                                 <?php echo getStatusBadge($e['status']); ?>
                             </td>
-                            <td style="text-align: center;">
+                            <td data-label="Match Status" style="text-align: center;">
                                 <?php echo getMatchStatusBadge($e['match_status']); ?>
                             </td>
-                            <td style="text-align: center;">
+                            <td data-label="Cabor" style="text-align: center;">
                                 <span class="badge-new badge-cabor">
                                     <?php echo htmlspecialchars($e['sport_type']); ?>
                                 </span>
                             </td>
-                            <td style="text-align: center;">
+                            <td data-label="Action" style="text-align: center;">
                                 <a href="event_detail.php?id=<?php echo $e['id']; ?>" class="btn-filter-reset" style="padding: 5px 12px; border-color: #002d62; color: #002d62;">
                                     <i class="fas fa-eye"></i> View
                                 </a>
@@ -481,6 +494,25 @@ function toggleDropdown(element, dropdownId) {
     
     // Rotate icon
     element.classList.toggle('open');
+}
+
+// Sidebar Toggle Strategy for Mobile
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
 }
 </script>
 
