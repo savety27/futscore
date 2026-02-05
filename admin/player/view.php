@@ -980,8 +980,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1042,7 +1042,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
                 <p>Player Profile - Sistem manajemen pemain futsal</p>
             </div>
             
@@ -1086,7 +1086,7 @@ body {
                             $photo_displayed = true;
                     ?>
                         <img src="<?php echo $photo_path; ?>" 
-                             alt="<?php echo htmlspecialchars($player['name']); ?>" 
+                             alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>" 
                              class="player-photo">
                     <?php 
                         endif;
@@ -1099,12 +1099,12 @@ body {
                         </div>
                     <?php endif; ?>
                     
-                    <h2 class="player-name"><?php echo htmlspecialchars($player['name']); ?></h2>
+                    <h2 class="player-name"><?php echo htmlspecialchars($player['name'] ?? ''); ?></h2>
                     
                     <?php if (!empty($player['team_name'])): ?>
                         <div class="player-team">
                             <i class="fas fa-users"></i>
-                            <?php echo htmlspecialchars($player['team_name']); ?>
+                            <?php echo htmlspecialchars($player['team_name'] ?? ''); ?>
                         </div>
                     <?php endif; ?>
                     

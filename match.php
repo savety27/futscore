@@ -397,7 +397,7 @@ $stmtLineups->close();
     <!-- Hero Section -->
     <div class="match-hero">
         <?php if (!empty($match['event_name'])): ?>
-            <div class="event-badge"><?php echo htmlspecialchars($match['event_name']); ?></div>
+            <div class="event-badge"><?php echo htmlspecialchars($match['event_name'] ?? ''); ?></div>
         <?php endif; ?>
 
         <div class="hero-content">
@@ -405,11 +405,11 @@ $stmtLineups->close();
             <div class="team-display">
                 <div class="team-logo-wrapper">
                     <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                         alt="<?php echo htmlspecialchars($match['team1_name']); ?>" 
+                         alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>" 
                          class="team-logo-img"
                          onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                 </div>
-                <div class="team-name"><?php echo htmlspecialchars($match['team1_name']); ?></div>
+                <div class="team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></div>
             </div>
 
             <!-- Score -->
@@ -424,7 +424,7 @@ $stmtLineups->close();
                 
                 <div class="match-meta-pill">
                     <div class="meta-item"><i class="far fa-calendar"></i> <?php echo formatDateTime($match['match_date']); ?></div>
-                    <div class="meta-item"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($match['location'] ?: 'TBA'); ?></div>
+                    <div class="meta-item"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($match['location'] ?? 'TBA'); ?></div>
                     <div class="meta-item"><i class="fas fa-circle-info"></i> <?php echo ucfirst($match['status']); ?></div>
                 </div>
             </div>
@@ -433,11 +433,11 @@ $stmtLineups->close();
             <div class="team-display">
                 <div class="team-logo-wrapper">
                     <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                         alt="<?php echo htmlspecialchars($match['team2_name']); ?>" 
+                         alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>" 
                          class="team-logo-img"
                          onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                 </div>
-                <div class="team-name"><?php echo htmlspecialchars($match['team2_name']); ?></div>
+                <div class="team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></div>
             </div>
         </div>
     </div>
@@ -446,7 +446,7 @@ $stmtLineups->close();
     <div class="lineups-grid">
         <!-- Team 1 Squad -->
         <div class="team-column">
-            <h3><?php echo htmlspecialchars($match['team1_name']); ?></h3>
+            <h3><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
             <?php if(empty($lineups['team1'])): ?>
                 <div class="empty-state">No lineup submitted yet.</div>
             <?php else: ?>
@@ -457,7 +457,7 @@ $stmtLineups->close();
                              class="player-avatar"
                              onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                         <div class="player-info">
-                            <h4><?php echo htmlspecialchars($player['player_name']); ?></h4>
+                            <h4><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></h4>
                             <div class="player-meta">
                                 <span class="player-number">#<?php echo $player['jersey_number']; ?></span>
                                 <span><?php echo $player['position']; ?></span>
@@ -474,7 +474,7 @@ $stmtLineups->close();
 
         <!-- Team 2 Squad -->
         <div class="team-column">
-            <h3><?php echo htmlspecialchars($match['team2_name']); ?></h3>
+            <h3><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
             <?php if(empty($lineups['team2'])): ?>
                 <div class="empty-state">No lineup submitted yet.</div>
             <?php else: ?>
@@ -485,7 +485,7 @@ $stmtLineups->close();
                              class="player-avatar"
                              onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                         <div class="player-info">
-                            <h4><?php echo htmlspecialchars($player['player_name']); ?></h4>
+                            <h4><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></h4>
                             <div class="player-meta">
                                 <span class="player-number">#<?php echo $player['jersey_number']; ?></span>
                                 <span><?php echo $player['position']; ?></span>

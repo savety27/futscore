@@ -63,15 +63,15 @@ try {
     foreach ($berita as $b) {
         echo "<tr>";
         echo "<td>" . $no++ . "</td>";
-        echo "<td>" . htmlspecialchars($b['id']) . "</td>";
-        echo "<td>" . htmlspecialchars($b['judul']) . "</td>";
-        echo "<td>" . htmlspecialchars($b['slug']) . "</td>";
-        echo "<td>" . htmlspecialchars($b['penulis']) . "</td>";
-        echo "<td>" . htmlspecialchars($b['status']) . "</td>";
+        echo "<td>" . htmlspecialchars($b['id'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($b['judul'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($b['slug'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($b['penulis'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($b['status'] ?? '') . "</td>";
         echo "<td>" . htmlspecialchars($b['tag'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($b['views']) . "</td>";
-        echo "<td>" . htmlspecialchars($b['created_at']) . "</td>";
-        echo "<td>" . htmlspecialchars($b['updated_at']) . "</td>";
+        echo "<td>" . htmlspecialchars($b['views'] ?? 0) . "</td>";
+        echo "<td>" . htmlspecialchars($b['created_at'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($b['updated_at'] ?? '') . "</td>";
         echo "</tr>";
     }
     

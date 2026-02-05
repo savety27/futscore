@@ -1118,8 +1118,8 @@ try {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1180,7 +1180,7 @@ try {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
                 <p>Tambah Player Baru - Sistem manajemen pemain futsal</p>
             </div>
             
@@ -1202,14 +1202,14 @@ try {
             <?php if (isset($error)): ?>
                 <div class="alert alert-error">
                     <span class="alert-icon">⚠</span>
-                    <span><?php echo htmlspecialchars($error); ?></span>
+                    <span><?php echo htmlspecialchars($error ?? ''); ?></span>
                 </div>
             <?php endif; ?>
 
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="alert alert-success">
                     <span class="alert-icon">✓</span>
-                    <span><?php echo htmlspecialchars($_SESSION['success_message']); 
+                    <span><?php echo htmlspecialchars($_SESSION['success_message'] ?? ''); 
                     unset($_SESSION['success_message']); ?></span>
                 </div>
             <?php endif; ?>
@@ -1505,7 +1505,7 @@ try {
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo $team['id']; ?>"
                                             <?php echo (isset($_POST['team_id']) && $_POST['team_id'] == $team['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($team['name']); ?>
+                                            <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>

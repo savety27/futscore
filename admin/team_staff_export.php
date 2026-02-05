@@ -130,9 +130,9 @@ $no = 1;
 foreach ($staff_list as $staff) {
     echo '<tr>';
     echo '<td>' . $no++ . '</td>';
-    echo '<td>' . htmlspecialchars($staff['name']) . '</td>';
+    echo '<td>' . htmlspecialchars($staff['name'] ?? '') . '</td>';
     echo '<td>' . $staff['position_formatted'] . '</td>';
-    echo '<td>' . htmlspecialchars($staff['team_name']) . '</td>';
+    echo '<td>' . htmlspecialchars($staff['team_name'] ?? '') . '</td>';
     echo '<td>' . (!empty($staff['email']) ? htmlspecialchars($staff['email']) : '-') . '</td>';
     echo '<td>' . (!empty($staff['phone']) ? htmlspecialchars($staff['phone']) : '-') . '</td>';
     echo '<td>' . (!empty($staff['birth_place']) ? htmlspecialchars($staff['birth_place']) : '-') . '</td>';

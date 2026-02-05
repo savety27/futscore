@@ -1127,8 +1127,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1190,7 +1190,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Edit Team ⚽</h1>
-                <p>Perbarui data team: <?php echo htmlspecialchars($team_data['name']); ?></p>
+                <p>Perbarui data team: <?php echo htmlspecialchars($team_data['name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1241,7 +1241,7 @@ body {
                                    id="name" 
                                    name="name" 
                                    class="form-input <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($team_data['name']); ?>"
+                                   value="<?php echo htmlspecialchars($team_data['name'] ?? ''); ?>"
                                    required>
                             <?php if (isset($errors['name'])): ?>
                                 <span class="error"><?php echo $errors['name']; ?></span>
@@ -1268,7 +1268,7 @@ body {
                                    id="coach" 
                                    name="coach" 
                                    class="form-input <?php echo isset($errors['coach']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($team_data['coach']); ?>"
+                                   value="<?php echo htmlspecialchars($team_data['coach'] ?? ''); ?>"
                                    placeholder="Masukkan nama manager/coach"
                                    required>
                             <?php if (isset($errors['coach'])): ?>
@@ -1284,7 +1284,7 @@ body {
                                    id="established_year" 
                                    name="established_year" 
                                    class="form-input <?php echo isset($errors['established_year']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($team_data['established_year']); ?>"
+                                   value="<?php echo htmlspecialchars($team_data['established_year'] ?? ''); ?>"
                                    placeholder="Contoh: 2020"
                                    min="1900" 
                                    max="<?php echo date('Y'); ?>"

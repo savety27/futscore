@@ -684,7 +684,7 @@ usort($timeline_events, function($a, $b) {
             </div>
             
             <div class="event-code">
-                <i class="fas fa-hashtag"></i> <?php echo htmlspecialchars($event['challenge_code']); ?>
+                <i class="fas fa-hashtag"></i> <?php echo htmlspecialchars($event['challenge_code'] ?? ''); ?>
             </div>
             
             <div class="badge-container">
@@ -702,14 +702,14 @@ usort($timeline_events, function($a, $b) {
                         <?php if (!empty($event['challenger_logo'])): ?>
                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($event['challenger_logo']); ?>" 
                                  class="team-logo-large"
-                                 alt="<?php echo htmlspecialchars($event['challenger_name']); ?>">
+                                 alt="<?php echo htmlspecialchars($event['challenger_name'] ?? ''); ?>">
                         <?php else: ?>
                             <div class="team-logo-placeholder">
                                 <i class="fas fa-shield-alt" style="font-size: 56px; color: #95a5a6;"></i>
                             </div>
                         <?php endif; ?>
                     </div>
-                    <div class="team-name"><?php echo htmlspecialchars($event['challenger_name']); ?></div>
+                    <div class="team-name"><?php echo htmlspecialchars($event['challenger_name'] ?? ''); ?></div>
                 </div>
                 
                 <div class="vs-center">
@@ -730,7 +730,7 @@ usort($timeline_events, function($a, $b) {
                         <?php if (!empty($event['opponent_logo'])): ?>
                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($event['opponent_logo']); ?>" 
                                  class="team-logo-large"
-                                 alt="<?php echo htmlspecialchars($event['opponent_name']); ?>">
+                                 alt="<?php echo htmlspecialchars($event['opponent_name'] ?? ''); ?>">
                         <?php else: ?>
                             <div class="team-logo-placeholder">
                                 <i class="fas fa-shield-alt" style="font-size: 56px; color: #95a5a6;"></i>
@@ -747,7 +747,7 @@ usort($timeline_events, function($a, $b) {
                     <div class="winner-title">🏆 Pemenang Pertandingan 🏆</div>
                     <div class="winner-name">
                         <i class="fas fa-trophy"></i>
-                        <?php echo htmlspecialchars($event['winner_team_name']); ?>
+                        <?php echo htmlspecialchars($event['winner_team_name'] ?? ''); ?>
                         <i class="fas fa-trophy"></i>
                     </div>
                 </div>
@@ -771,7 +771,7 @@ usort($timeline_events, function($a, $b) {
                     </div>
                     <div class="info-item">
                         <span class="info-label"><i class="fas fa-running"></i> Cabang Olahraga</span>
-                        <div class="info-value"><?php echo htmlspecialchars($event['sport_type']); ?></div>
+                        <div class="info-value"><?php echo htmlspecialchars($event['sport_type'] ?? ''); ?></div>
                     </div>
                     <div class="info-item">
                         <span class="info-label"><i class="fas fa-calendar-alt"></i> Tanggal & Waktu</span>
@@ -791,11 +791,11 @@ usort($timeline_events, function($a, $b) {
                     <?php if ($event['venue_name']): ?>
                         <div class="info-item">
                             <span class="info-label"><i class="fas fa-building"></i> Nama Venue</span>
-                            <div class="info-value"><?php echo htmlspecialchars($event['venue_name']); ?></div>
+                            <div class="info-value"><?php echo htmlspecialchars($event['venue_name'] ?? ''); ?></div>
                         </div>
                         <div class="info-item">
                             <span class="info-label"><i class="fas fa-location-arrow"></i> Lokasi</span>
-                            <div class="info-value"><?php echo htmlspecialchars($event['venue_location']); ?></div>
+                            <div class="info-value"><?php echo htmlspecialchars($event['venue_location'] ?? ''); ?></div>
                         </div>
                         <?php if ($event['venue_capacity']): ?>
                         <div class="info-item">

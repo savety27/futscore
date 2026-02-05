@@ -1043,8 +1043,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1157,9 +1157,9 @@ body {
                                 <option value="">Pilih Challenger Team</option>
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>" 
-                                            data-sport="<?php echo htmlspecialchars($team['sport_type']); ?>"
+                                            data-sport="<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>"
                                             <?php echo $form_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name']); ?> (<?php echo htmlspecialchars($team['sport_type']); ?>)
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1179,7 +1179,7 @@ body {
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>"
                                             <?php echo $form_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name']); ?> (<?php echo htmlspecialchars($team['sport_type']); ?>)
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1222,7 +1222,7 @@ body {
                                 <?php foreach ($venues as $venue): ?>
                                     <option value="<?php echo $venue['id']; ?>"
                                             <?php echo $form_data['venue_id'] == $venue['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($venue['name']); ?> (<?php echo htmlspecialchars($venue['location']); ?>)
+                                        <?php echo htmlspecialchars($venue['name'] ?? ''); ?> (<?php echo htmlspecialchars($venue['location'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1270,7 +1270,7 @@ body {
                                    id="challenge_date" 
                                    name="challenge_date" 
                                    class="form-input <?php echo isset($errors['challenge_date']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['challenge_date']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['challenge_date'] ?? ''); ?>"
                                    min="<?php echo date('Y-m-d'); ?>"
                                    required>
                             <?php if (isset($errors['challenge_date'])): ?>
@@ -1286,7 +1286,7 @@ body {
                                    id="challenge_time" 
                                    name="challenge_time" 
                                    class="form-input <?php echo isset($errors['challenge_time']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['challenge_time']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['challenge_time'] ?? ''); ?>"
                                    required>
                             <?php if (isset($errors['challenge_time'])): ?>
                                 <span class="error"><?php echo $errors['challenge_time']; ?></span>
@@ -1315,7 +1315,7 @@ body {
                                 Catatan Tambahan
                             </label>
                             <textarea id="notes" name="notes" class="form-textarea" 
-                                      placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($form_data['notes']); ?></textarea>
+                                      placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($form_data['notes'] ?? ''); ?></textarea>
                         </div>
                     </div>
                 </div>

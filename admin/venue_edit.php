@@ -960,8 +960,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1023,7 +1023,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Edit Venue 🏟️</h1>
-                <p>Perbarui data venue: <?php echo htmlspecialchars($venue_data['name']); ?></p>
+                <p>Perbarui data venue: <?php echo htmlspecialchars($venue_data['name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1074,7 +1074,7 @@ body {
                                    id="name" 
                                    name="name" 
                                    class="form-input <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($venue_data['name']); ?>"
+                                   value="<?php echo htmlspecialchars($venue_data['name'] ?? ''); ?>"
                                    placeholder="Contoh: GOR Buluh Indah, Stadion Utama"
                                    required>
                             <?php if (isset($errors['name'])): ?>
@@ -1090,7 +1090,7 @@ body {
                                    id="location" 
                                    name="location" 
                                    class="form-input <?php echo isset($errors['location']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($venue_data['location']); ?>"
+                                   value="<?php echo htmlspecialchars($venue_data['location'] ?? ''); ?>"
                                    placeholder="Contoh: Jl. Buluh Indah No. 123, Jakarta"
                                    required>
                             <?php if (isset($errors['location'])): ?>
@@ -1106,7 +1106,7 @@ body {
                                    id="capacity" 
                                    name="capacity" 
                                    class="form-input <?php echo isset($errors['capacity']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($venue_data['capacity']); ?>"
+                                   value="<?php echo htmlspecialchars($venue_data['capacity'] ?? ''); ?>"
                                    placeholder="Contoh: 500"
                                    min="1" 
                                    max="100000"
@@ -1138,7 +1138,7 @@ Contoh:
 - Toilet
 - Musholla
 - Kantin
-- Parkir luas untuk 100 mobil"><?php echo htmlspecialchars($venue_data['facilities']); ?></textarea>
+- Parkir luas untuk 100 mobil"><?php echo htmlspecialchars($venue_data['facilities'] ?? ''); ?></textarea>
                     </div>
                 </div>
 

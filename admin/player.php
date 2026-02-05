@@ -1306,7 +1306,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
                 <p>Player Management - Sistem manajemen pemain futsal</p>
             </div>
             
@@ -1326,7 +1326,7 @@ body {
             Daftar Player
             <?php if ($team_id > 0 && !empty($filter_team_name)): ?>
                 <div class="filter-badge">
-                    <span><i class="fas fa-filter"></i> Team: <?php echo htmlspecialchars($filter_team_name); ?></span>
+                    <span><i class="fas fa-filter"></i> Team: <?php echo htmlspecialchars($filter_team_name ?? ''); ?></span>
                     <a href="player.php" title="Clear Filter"><i class="fas fa-times-circle"></i></a>
                 </div>
             <?php endif; ?>
@@ -1337,7 +1337,7 @@ body {
         <?php if ($team_id > 0): ?>
             <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
         <?php endif; ?>
-        <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." value="<?php echo htmlspecialchars($search); ?>">
+        <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
         <button type="submit"><i class="fas fa-search"></i></button>
             </form>
             
@@ -1408,7 +1408,7 @@ body {
                                         $photo_displayed = true;
                                 ?>
                                     <img src="<?php echo $photo_path; ?>" 
-                                         alt="<?php echo htmlspecialchars($player['name']); ?>" 
+                                         alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>" 
                                          class="player-photo">
                                 <?php 
                                     endif;
@@ -1422,15 +1422,15 @@ body {
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <strong><?php echo htmlspecialchars($player['name']); ?></strong><br>
+                                <strong><?php echo htmlspecialchars($player['name'] ?? ''); ?></strong><br>
                                 <small style="color: var(--gray);">
                                     <?php echo !empty($player['position']) ? htmlspecialchars($player['position']) : '-'; ?>
                                 </small>
                             </td>
                             <td class="team-cell">
                                 <?php if (!empty($player['team_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($player['team_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($player['team_name']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($player['team_logo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($player['team_name'] ?? ''); ?>" 
                                          class="team-logo">
                                 <?php endif; ?>
                                 <span class="team-name">
@@ -1476,7 +1476,7 @@ body {
                             </td>
                             <td class="sport-cell">
                                 <?php if (!empty($player['sport_type'])): ?>
-                                    <span class="sport-badge"><?php echo htmlspecialchars($player['sport_type']); ?></span>
+                                    <span class="sport-badge"><?php echo htmlspecialchars($player['sport_type'] ?? ''); ?></span>
                                 <?php else: ?>
                                     -
                                 <?php endif; ?>
@@ -1497,7 +1497,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="showDeleteModal(<?php echo $player['id']; ?>, '<?php echo htmlspecialchars(addslashes($player['name'])); ?>')"
+                                            onclick="showDeleteModal(<?php echo $player['id']; ?>, '<?php echo htmlspecialchars(addslashes($player['name'] ?? '')); ?>')"
                                             title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>

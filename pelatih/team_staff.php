@@ -136,22 +136,22 @@ try {
                     <tr>
                          <td>
                             <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
-                            alt="<?php echo htmlspecialchars($staff['name']); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
+                            alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
                         </td>
                         <td class="name-cell">
-                            <?php echo htmlspecialchars($staff['name']); ?>
-                            <div style="font-size: 11px; color: var(--gray); font-weight: normal;"><?php echo htmlspecialchars($staff['email']); ?></div>
+                            <?php echo htmlspecialchars($staff['name'] ?? ''); ?>
+                            <div style="font-size: 11px; color: var(--gray); font-weight: normal;"><?php echo htmlspecialchars($staff['email'] ?? ''); ?></div>
                         </td>
-                        <td class="team-cell"><?php echo htmlspecialchars($staff['team_name']); ?></td>
+                        <td class="team-cell"><?php echo htmlspecialchars($staff['team_name'] ?? ''); ?></td>
                         <td class="position-cell">
-                            <span class="position-badge"><?php echo htmlspecialchars($staff['position']); ?></span>
+                            <span class="position-badge"><?php echo htmlspecialchars($staff['position'] ?? ''); ?></span>
                         </td>
                         <td class="age-cell"><?php echo $staff['age']; ?></td>
                         <td class="certificate-cell">
                             <a href="javascript:void(0);" 
                             class="view-certificates" 
                             data-staff-id="<?php echo $staff['id']; ?>"
-                            data-staff-name="<?php echo htmlspecialchars($staff['name']); ?>"
+                            data-staff-name="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>"
                             style="text-decoration: none;">
                                 <span class="certificate-count clickable" style="cursor: pointer; position: relative; padding-right: 20px;">
                         <?php echo $staff['certificate_count']; ?> Sertifikat

@@ -104,9 +104,9 @@ try {
                         <td>
                             <img src="../images/teams/<?php echo $team['logo']; ?>" alt="<?php echo $team['name']; ?>" class="team-logo" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
                         </td>
-                        <td class="team-name-cell"><?php echo htmlspecialchars($team['name']); ?></td>
-                        <td class="alias-cell"><?php echo htmlspecialchars($team['alias']); ?></td>
-                        <td class="coach-cell"><?php echo htmlspecialchars($team['coach']); ?></td>
+                        <td class="team-name-cell"><?php echo htmlspecialchars($team['name'] ?? ''); ?></td>
+                        <td class="alias-cell"><?php echo htmlspecialchars($team['alias'] ?? ''); ?></td>
+                        <td class="coach-cell"><?php echo htmlspecialchars($team['coach'] ?? ''); ?></td>
                         <td>
                             <a href="team_players.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['player_count']; ?> pemain">
                                 <span class="count-cell players"><?php echo $team['player_count']; ?></span>

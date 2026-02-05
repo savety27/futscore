@@ -378,14 +378,14 @@ if ($team_id) {
             <div class="card-top">
                 <div class="card-icon-box">
                     <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Tim" style="width: 32px; height: 32px; object-fit: contain;">
+                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo ?? ''); ?>" alt="Tim" style="width: 32px; height: 32px; object-fit: contain;">
                     <?php else: ?>
                         <i class="fas fa-shield"></i>
                     <?php endif; ?>
                 </div>
             </div>
             <div>
-                <div class="card-value" style="font-size: 1.5rem;"><?php echo htmlspecialchars($team_name); ?></div>
+                <div class="card-value" style="font-size: 1.5rem;"><?php echo htmlspecialchars($team_name ?? ''); ?></div>
                 <div class="card-label">Tim Utama</div>
             </div>
         </div>
@@ -464,12 +464,12 @@ if ($team_id) {
                     <div class="team-block">
                         <div class="team-logo-frame">
                             <?php if ($next_match['team1_logo'] && file_exists('../images/teams/' . $next_match['team1_logo'])): ?>
-                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo']); ?>" alt="Team 1">
+                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo'] ?? ''); ?>" alt="Team 1">
                             <?php else: ?>
                                 <i class="fas fa-shield" style="font-size: 2rem; color: #cbd5e1;"></i>
                             <?php endif; ?>
                         </div>
-                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team1_name']); ?></h4>
+                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team1_name'] ?? ''); ?></h4>
                     </div>
 
                     <div class="vs-capsule">VS</div>
@@ -477,12 +477,12 @@ if ($team_id) {
                     <div class="team-block">
                         <div class="team-logo-frame">
                             <?php if ($next_match['team2_logo'] && file_exists('../images/teams/' . $next_match['team2_logo'])): ?>
-                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo']); ?>" alt="Team 2">
+                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo'] ?? ''); ?>" alt="Team 2">
                             <?php else: ?>
                                 <i class="fas fa-shield" style="font-size: 2rem; color: #cbd5e1;"></i>
                             <?php endif; ?>
                         </div>
-                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team2_name']); ?></h4>
+                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team2_name'] ?? ''); ?></h4>
                     </div>
                 </div>
 

@@ -914,8 +914,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -977,7 +977,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Venue Details 🏟️</h1>
-                <p>Detail informasi venue: <?php echo htmlspecialchars($venue_data['name']); ?></p>
+                <p>Detail informasi venue: <?php echo htmlspecialchars($venue_data['name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1063,23 +1063,23 @@ body {
                 </div>
                 
                 <h2 style="font-size: 28px; color: #333; margin-bottom: 10px;">
-                    <?php echo htmlspecialchars($venue_data['name']); ?>
+                    <?php echo htmlspecialchars($venue_data['name'] ?? ''); ?>
                 </h2>
                 <p style="color: #666; margin-bottom: 15px;">
                     <i class="fas fa-map-pin"></i>
-                    Lokasi: <?php echo htmlspecialchars($venue_data['location']); ?>
+                    Lokasi: <?php echo htmlspecialchars($venue_data['location'] ?? ''); ?>
                 </p>
             </div>
             
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Nama Venue</span>
-                    <div class="info-value"><?php echo htmlspecialchars($venue_data['name']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($venue_data['name'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
                     <span class="info-label">Lokasi</span>
-                    <div class="info-value"><?php echo htmlspecialchars($venue_data['location']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($venue_data['location'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
@@ -1127,7 +1127,7 @@ body {
             
             <?php if (!empty($venue_data['facilities'])): ?>
                 <div class="facilities-display">
-                    <?php echo nl2br(htmlspecialchars($venue_data['facilities'])); ?>
+                    <?php echo nl2br(htmlspecialchars($venue_data['facilities'] ?? '')); ?>
                 </div>
             <?php else: ?>
                 <div class="empty-state">

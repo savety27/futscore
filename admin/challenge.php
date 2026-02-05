@@ -1056,8 +1056,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1199,35 +1199,35 @@ body {
                         <tr>
                             <td class="count-cell"><?php echo $no++; ?></td>
                             <td class="code-cell">
-                                <strong><?php echo htmlspecialchars($challenge['challenge_code']); ?></strong>
+                                <strong><?php echo htmlspecialchars($challenge['challenge_code'] ?? ''); ?></strong>
                             </td>
                             <td class="status-cell">
                                 <?php 
                                 $status_class = 'status-' . strtolower($challenge['status']);
                                 ?>
                                 <span class="status-badge <?php echo $status_class; ?>">
-                                    <?php echo htmlspecialchars($challenge['status']); ?>
+                                    <?php echo htmlspecialchars($challenge['status'] ?? ''); ?>
                                 </span>
                             </td>
                             <td class="team-cell">
                                 <?php if (!empty($challenge['challenger_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['challenger_name']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
                                          class="team-logo-small">
                                 <?php else: ?>
                                     <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
                                     </div>
                                 <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['challenger_name']); ?>
+                                <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>
                             </td>
                             <td class="vs-cell" style="text-align: center; font-weight: bold; color: var(--primary);">
                                 VS
                             </td>
                             <td class="team-cell">
                                 <?php if (!empty($challenge['opponent_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['opponent_name']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
                                          class="team-logo-small">
                                 <?php else: ?>
                                     <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
@@ -1248,7 +1248,7 @@ body {
                             <td class="sport-cell">
                                 <?php if (!empty($challenge['sport_type'])): ?>
                                     <span style="padding: 4px 8px; background: #f0f7ff; color: var(--primary); border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['sport_type']); ?>
+                                        <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
                                     </span>
                                 <?php else: ?>
                                     <span style="padding: 4px 8px; background: #f0f0f0; color: #666; border-radius: 12px; font-size: 11px;">
@@ -1259,7 +1259,7 @@ body {
                             <td class="match-cell">
                                 <?php if (!empty($challenge['match_status'])): ?>
                                     <span style="padding: 4px 8px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['match_status']); ?>
+                                        <?php echo htmlspecialchars($challenge['match_status'] ?? ''); ?>
                                     </span>
                                 <?php else: ?>
                                     <span style="padding: 4px 8px; background: #f8f9fa; color: #6c757d; border-radius: 12px; font-size: 11px;">
@@ -1295,7 +1295,7 @@ body {
                                     </a>
                                     <!-- TOMBOL DELETE SELALU TAMPIL -->
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteChallenge(<?php echo $challenge['id']; ?>, '<?php echo htmlspecialchars(addslashes($challenge['challenge_code'])); ?>')">
+                                            onclick="deleteChallenge(<?php echo $challenge['id']; ?>, '<?php echo htmlspecialchars(addslashes($challenge['challenge_code'] ?? '')); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

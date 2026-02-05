@@ -385,9 +385,9 @@ try {
                             class="sport-select">
                         <option value="">Semua Olahraga</option>
                         <?php foreach ($sport_types as $sport): ?>
-                            <option value="<?php echo htmlspecialchars($sport); ?>" 
+                            <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" 
                                 <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars(ucwords($sport)); ?>
+                                <?php echo htmlspecialchars(ucwords($sport ?? '')); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -428,7 +428,7 @@ try {
                     <?php foreach ($challenges as $challenge): ?>
                     <tr>
                         <td>
-                            <strong><?php echo htmlspecialchars($challenge['challenge_code']); ?></strong>
+                            <strong><?php echo htmlspecialchars($challenge['challenge_code'] ?? ''); ?></strong>
                         </td>
                         <td>
                             <div style="font-weight: 600; color: var(--dark);"><?php echo $challenge['formatted_date']; ?></div>
@@ -438,33 +438,33 @@ try {
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <div style="text-align: center;">
                                     <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['challenger_name']); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
                                          class="team-logo"
                                          onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
                                     <div style="font-size: 12px; margin-top: 5px; font-weight: 600;">
-                                        <?php echo htmlspecialchars($challenge['challenger_name']); ?>
+                                        <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>
                                     </div>
                                 </div>
                                 <div style="color: var(--gray);">vs</div>
                                 <div style="text-align: center;">
                                     <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['opponent_name']); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
                                          class="team-logo"
                                          onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
                                     <div style="font-size: 12px; margin-top: 5px; font-weight: 600;">
-                                        <?php echo htmlspecialchars($challenge['opponent_name']); ?>
+                                        <?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>
                                     </div>
                                 </div>
                             </div>
                         </td>
                         <td>
                             <span style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 600;">
-                                <?php echo htmlspecialchars($challenge['sport_type']); ?>
+                                <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
                             </span>
                         </td>
                         <td>
                             <?php if (!empty($challenge['venue_name'])): ?>
-                                <span><?php echo htmlspecialchars($challenge['venue_name']); ?></span>
+                                <span><?php echo htmlspecialchars($challenge['venue_name'] ?? ''); ?></span>
                             <?php else: ?>
                                 <span style="color: var(--gray); font-style: italic;">Akan ditentukan</span>
                             <?php endif; ?>
@@ -480,7 +480,7 @@ try {
                                         $winner_name = ($challenge['winner_team_id'] == $challenge['challenger_id']) 
                                             ? $challenge['challenger_name'] 
                                             : $challenge['opponent_name'];
-                                        echo htmlspecialchars($winner_name);
+                                        echo htmlspecialchars($winner_name ?? '');
                                         ?>
                                     </div>
                                 <?php endif; ?>

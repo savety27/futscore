@@ -297,7 +297,7 @@ $pageTitle = "Player List";
                             </td>
                             <td class="col-name">
                                 <a href="<?php echo SITE_URL; ?>/player_view.php?id=<?php echo $p['id']; ?>" style="color: inherit; text-decoration: none;">
-                                    <?php echo htmlspecialchars($p['name']); ?>
+                                    <?php echo htmlspecialchars($p['name'] ?? ''); ?>
                                 </a>
                             </td>
                             <td>

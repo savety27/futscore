@@ -1089,8 +1089,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1153,7 +1153,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Edit Challenge 🏆</h1>
-                <p>Perbarui challenge: <?php echo htmlspecialchars($challenge_data['challenge_code']); ?></p>
+                <p>Perbarui challenge: <?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1170,7 +1170,7 @@ body {
                 <i class="fas fa-edit"></i>
                 <span>Edit Challenge</span>
                 <span class="status-badge-large status-<?php echo strtolower($challenge_data['status']); ?>">
-                    <?php echo htmlspecialchars($challenge_data['status']); ?>
+                    <?php echo htmlspecialchars($challenge_data['status'] ?? ''); ?>
                 </span>
             </div>
             <a href="challenge.php" class="btn btn-secondary">
@@ -1209,9 +1209,9 @@ body {
                                 <option value="">Pilih Challenger Team</option>
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>" 
-                                            data-sport="<?php echo htmlspecialchars($team['sport_type']); ?>"
+                                            data-sport="<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>"
                                             <?php echo $challenge_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name']); ?> (<?php echo htmlspecialchars($team['sport_type']); ?>)
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1231,7 +1231,7 @@ body {
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>"
                                             <?php echo $challenge_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name']); ?> (<?php echo htmlspecialchars($team['sport_type']); ?>)
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1246,8 +1246,8 @@ body {
                         <div class="vs-title">PERTANDINGAN</div>
                         <div class="team-vs-container">
                             <div class="team-box">
-                                <h4><?php echo htmlspecialchars($challenge_data['challenger_name']); ?></h4>
-                                <p><?php echo htmlspecialchars($challenge_data['challenger_sport']); ?></p>
+                                <h4><?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?></h4>
+                                <p><?php echo htmlspecialchars($challenge_data['challenger_sport'] ?? ''); ?></p>
                             </div>
                             <div class="vs-symbol">VS</div>
                             <div class="team-box">
@@ -1291,7 +1291,7 @@ body {
                                 <?php foreach ($venues as $venue): ?>
                                     <option value="<?php echo $venue['id']; ?>"
                                             <?php echo $challenge_data['venue_id'] == $venue['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($venue['name']); ?> (<?php echo htmlspecialchars($venue['location']); ?>)
+                                        <?php echo htmlspecialchars($venue['name'] ?? ''); ?> (<?php echo htmlspecialchars($venue['location'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1392,7 +1392,7 @@ body {
                             Catatan Tambahan
                         </label>
                         <textarea id="notes" name="notes" class="form-textarea" 
-                                  placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes']); ?></textarea>
+                                  placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes'] ?? ''); ?></textarea>
                     </div>
                 </div>
 

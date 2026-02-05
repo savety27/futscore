@@ -117,8 +117,8 @@ foreach ($pelatih as $p) {
     
     echo '<tr>';
     echo '<td>' . $no++ . '</td>';
-    echo '<td>' . htmlspecialchars($p['username']) . '</td>';
-    echo '<td>' . htmlspecialchars($p['email']) . '</td>';
+    echo '<td>' . htmlspecialchars($p['username'] ?? '') . '</td>';
+    echo '<td>' . htmlspecialchars($p['email'] ?? '') . '</td>';
     echo '<td>' . (!empty($p['full_name']) ? htmlspecialchars($p['full_name']) : '-') . '</td>';
     echo '<td class="' . $role_class . '">';
     if ($p['role'] === 'superadmin') {
@@ -128,7 +128,7 @@ foreach ($pelatih as $p) {
     } elseif ($p['role'] === 'editor') {
         echo 'Editor';
     } else {
-        echo htmlspecialchars($p['role']);
+        echo htmlspecialchars($p['role'] ?? '');
     }
     echo '</td>';
     echo '<td>' . (!empty($p['team_name']) ? htmlspecialchars($p['team_name']) : '-') . '</td>';

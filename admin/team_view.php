@@ -1009,8 +1009,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1072,7 +1072,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Team Details ⚽</h1>
-                <p>Detail informasi team: <?php echo htmlspecialchars($team_data['name']); ?></p>
+                <p>Detail informasi team: <?php echo htmlspecialchars($team_data['name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1156,8 +1156,8 @@ body {
             
             <div style="display: flex; gap: 40px; align-items: center; margin-bottom: 30px; flex-wrap: wrap;">
                 <?php if (!empty($team_data['logo'])): ?>
-                    <img src="../images/teams/<?php echo htmlspecialchars($team_data['logo']); ?>" 
-                         alt="<?php echo htmlspecialchars($team_data['name']); ?>" 
+                    <img src="../images/teams/<?php echo htmlspecialchars($team_data['logo'] ?? ''); ?>" 
+                         alt="<?php echo htmlspecialchars($team_data['name'] ?? ''); ?>"  
                          class="team-logo-large">
                 <?php else: ?>
                     <div class="team-logo-large" style="background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center;">
@@ -1167,19 +1167,19 @@ body {
                 
                 <div style="flex: 1; min-width: 300px;">
                     <h2 style="font-size: 28px; color: #333; margin-bottom: 10px;">
-                        <?php echo htmlspecialchars($team_data['name']); ?>
+                        <?php echo htmlspecialchars($team_data['name'] ?? ''); ?>
                         <?php if (!empty($team_data['alias'])): ?>
-                            <span style="color: #666; font-size: 20px;">(<?php echo htmlspecialchars($team_data['alias']); ?>)</span>
+                            <span style="color: #666; font-size: 20px;">(<?php echo htmlspecialchars($team_data['alias'] ?? ''); ?>)</span>
                         <?php endif; ?>
                     </h2>
                     <p style="color: #666; margin-bottom: 15px;">
                         <i class="fas fa-user-tie"></i>
-                        Manager/Coach: <strong><?php echo htmlspecialchars($team_data['coach']); ?></strong>
+                        Manager/Coach: <strong><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></strong>
                     </p>
                     <?php if (!empty($team_data['basecamp'])): ?>
                         <p style="color: #666;">
                             <i class="fas fa-map-marker-alt"></i>
-                            Basecamp: <?php echo htmlspecialchars($team_data['basecamp']); ?>
+                            Basecamp: <?php echo htmlspecialchars($team_data['basecamp'] ?? ''); ?>
                         </p>
                     <?php endif; ?>
                 </div>
@@ -1188,7 +1188,7 @@ body {
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Nama Lengkap</span>
-                    <div class="info-value"><?php echo htmlspecialchars($team_data['name']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($team_data['name'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
@@ -1200,7 +1200,7 @@ body {
                 
                 <div class="info-item">
                     <span class="info-label">Manager/Coach</span>
-                    <div class="info-value"><?php echo htmlspecialchars($team_data['coach']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
@@ -1226,7 +1226,7 @@ body {
                     <span class="info-label">Cabor</span>
                     <div class="info-value">
                         <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
-                            <?php echo htmlspecialchars($team_data['sport_type']); ?>
+                            <?php echo htmlspecialchars($team_data['sport_type'] ?? ''); ?>
                         </span>
                     </div>
                 </div>
@@ -1278,8 +1278,8 @@ body {
                     <?php foreach ($players as $player): ?>
                         <div class="player-card">
                             <?php if (!empty($player['photo'])): ?>
-                                <img src="../images/players/<?php echo htmlspecialchars($player['photo']); ?>" 
-                                     alt="<?php echo htmlspecialchars($player['name']); ?>" 
+                                <img src="../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
+                                     alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>"  
                                      class="player-avatar">
                             <?php else: ?>
                                 <div class="player-avatar" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
@@ -1287,7 +1287,7 @@ body {
                                 </div>
                             <?php endif; ?>
                             <div class="player-info">
-                                <div class="player-name"><?php echo htmlspecialchars($player['name']); ?></div>
+                                <div class="player-name"><?php echo htmlspecialchars($player['name'] ?? ''); ?></div>
                                 <div class="player-position">
                                     <?php echo !empty($player['position_name']) ? htmlspecialchars($player['position_name']) : 'No Position'; ?>
                                 </div>
@@ -1327,8 +1327,8 @@ body {
                     <?php foreach ($staff as $staff_member): ?>
                         <div class="staff-card">
                             <?php if (!empty($staff_member['photo'])): ?>
-                                <img src="../<?php echo htmlspecialchars($staff_member['photo']); ?>" 
-                                     alt="<?php echo htmlspecialchars($staff_member['name']); ?>" 
+                                <img src="../<?php echo htmlspecialchars($staff_member['photo'] ?? ''); ?>" 
+                                     alt="<?php echo htmlspecialchars($staff_member['name'] ?? ''); ?>"  
                                      class="staff-avatar">
                             <?php else: ?>
                                 <div class="staff-avatar" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
@@ -1336,7 +1336,7 @@ body {
                                 </div>
                             <?php endif; ?>
                             <div class="staff-info">
-                                <div class="staff-name"><?php echo htmlspecialchars($staff_member['name']); ?></div>
+                                <div class="staff-name"><?php echo htmlspecialchars($staff_member['name'] ?? ''); ?></div>
                                 <div class="staff-position">
                                     <?php echo !empty($staff_member['position_name']) ? htmlspecialchars($staff_member['position_name']) : 'Staff'; ?>
                                 </div>

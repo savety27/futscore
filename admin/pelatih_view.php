@@ -995,8 +995,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1056,7 +1056,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Detail Pelatih 👤</h1>
-                <p>Detail informasi pelatih: <?php echo htmlspecialchars($pelatih_data['full_name']); ?></p>
+                <p>Detail informasi pelatih: <?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1091,8 +1091,8 @@ body {
                 <i class="fas fa-user-tie"></i>
             </div>
             <div class="profile-info">
-                <h1 class="profile-name"><?php echo htmlspecialchars($pelatih_data['full_name']); ?></h1>
-                <div class="profile-username">@<?php echo htmlspecialchars($pelatih_data['username']); ?></div>
+                <h1 class="profile-name"><?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></h1>
+                <div class="profile-username">@<?php echo htmlspecialchars($pelatih_data['username'] ?? ''); ?></div>
                 <div class="profile-role <?php echo 'role-' . $pelatih_data['role']; ?>">
                     <?php 
                     if ($pelatih_data['role'] === 'superadmin') {
@@ -1117,7 +1117,7 @@ body {
                     <i class="fas fa-envelope"></i>
                 </div>
                 <div class="stat-label">Email</div>
-                <div class="stat-number" style="font-size: 18px;"><?php echo htmlspecialchars($pelatih_data['email']); ?></div>
+                <div class="stat-number" style="font-size: 18px;"><?php echo htmlspecialchars($pelatih_data['email'] ?? ''); ?></div>
             </div>
             
             <div class="stat-card">
@@ -1166,10 +1166,10 @@ body {
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <div class="team-details">
-                    <h3 class="team-name"><?php echo htmlspecialchars($pelatih_data['team_name']); ?></h3>
-                    <div class="team-alias">(<?php echo htmlspecialchars($pelatih_data['team_alias']); ?>)</div>
+                    <h3 class="team-name"><?php echo htmlspecialchars($pelatih_data['team_name'] ?? ''); ?></h3>
+                    <div class="team-alias">(<?php echo htmlspecialchars($pelatih_data['team_alias'] ?? ''); ?>)</div>
                     <?php if (!empty($pelatih_data['sport_type'])): ?>
-                        <span class="team-sport"><?php echo htmlspecialchars($pelatih_data['sport_type']); ?></span>
+                        <span class="team-sport"><?php echo htmlspecialchars($pelatih_data['sport_type'] ?? ''); ?></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1177,12 +1177,12 @@ body {
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Nama Tim</span>
-                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['team_name']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['team_name'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
                     <span class="info-label">Alias Tim</span>
-                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['team_alias']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['team_alias'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
@@ -1196,8 +1196,8 @@ body {
                     <span class="info-label">Warna Seragam</span>
                     <div class="info-value">
                         <?php if (!empty($pelatih_data['uniform_color'])): ?>
-                            <span class="color-display" style="background-color: <?php echo htmlspecialchars($pelatih_data['uniform_color']); ?>;"></span>
-                            <?php echo htmlspecialchars($pelatih_data['uniform_color']); ?>
+                            <span class="color-display" style="background-color: <?php echo htmlspecialchars($pelatih_data['uniform_color'] ?? ''); ?>;"></span>
+                            <?php echo htmlspecialchars($pelatih_data['uniform_color'] ?? ''); ?>
                         <?php else: ?>
                             -
                         <?php endif; ?>
@@ -1233,17 +1233,17 @@ body {
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Username</span>
-                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['username']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['username'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
                     <span class="info-label">Email</span>
-                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['email']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['email'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
                     <span class="info-label">Nama Lengkap</span>
-                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['full_name']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
@@ -1267,7 +1267,7 @@ body {
                     <div class="info-value">
                         <span class="badge badge-primary">
                             <i class="fas fa-users"></i>
-                            <?php echo htmlspecialchars($pelatih_data['team_name']); ?>
+                            <?php echo htmlspecialchars($pelatih_data['team_name'] ?? ''); ?>
                         </span>
                     </div>
                 </div>
@@ -1365,7 +1365,7 @@ body {
                     <li>Pastikan email yang terdaftar masih aktif</li>
                     <li>Gunakan password yang kuat dengan kombinasi huruf, angka, dan simbol</li>
                     <?php if (!empty($pelatih_data['team_name'])): ?>
-                    <li>Akun ini terhubung dengan tim: <?php echo htmlspecialchars($pelatih_data['team_name']); ?></li>
+                    <li>Akun ini terhubung dengan tim: <?php echo htmlspecialchars($pelatih_data['team_name'] ?? ''); ?></li>
                     <?php endif; ?>
                 </ul>
             </div>

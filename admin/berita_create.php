@@ -1099,8 +1099,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1211,7 +1211,7 @@ body {
                                    id="judul" 
                                    name="judul" 
                                    class="form-input <?php echo isset($errors['judul']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['judul']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['judul'] ?? ''); ?>"
                                    placeholder="Masukkan judul berita yang menarik"
                                    maxlength="200"
                                    required>
@@ -1231,7 +1231,7 @@ body {
                                    id="slug" 
                                    name="slug" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['slug']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['slug'] ?? ''); ?>"
                                    placeholder="judul-berita-seo-friendly">
                             <small style="color: #666; display: block; margin-top: 5px;">
                                 Akan digenerate otomatis dari judul jika kosong
@@ -1246,7 +1246,7 @@ body {
                                    id="penulis" 
                                    name="penulis" 
                                    class="form-input <?php echo isset($errors['penulis']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['penulis']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['penulis'] ?? ''); ?>"
                                    placeholder="Nama penulis berita"
                                    required>
                             <?php if (isset($errors['penulis'])): ?>
@@ -1263,7 +1263,7 @@ body {
                                        id="tag" 
                                        name="tag" 
                                        class="form-input tag-input" 
-                                       value="<?php echo htmlspecialchars($form_data['tag']); ?>"
+                                       value="<?php echo htmlspecialchars($form_data['tag'] ?? ''); ?>"
                                        placeholder="olahraga, futsal, prestasi">
                                 <span class="tag-help">
                                     <i class="fas fa-question-circle"></i>
@@ -1318,7 +1318,7 @@ body {
                                   class="form-textarea <?php echo isset($errors['konten']) ? 'is-invalid' : ''; ?>"
                                   placeholder="Tulis konten berita di sini..."
                                   rows="10"
-                                  required><?php echo htmlspecialchars($form_data['konten']); ?></textarea>
+                                  required><?php echo htmlspecialchars($form_data['konten'] ?? ''); ?></textarea>
                         <div class="char-count">
                             <span id="kontenCount">0</span> karakter
                         </div>
@@ -1369,8 +1369,8 @@ body {
                         <i class="fas fa-eye"></i> Preview
                     </div>
                     <div class="preview-content">
-                        <strong>Judul:</strong> <span id="previewJudul"><?php echo htmlspecialchars($form_data['judul']); ?></span><br>
-                        <strong>Slug:</strong> <span id="previewSlug"><?php echo htmlspecialchars($form_data['slug']); ?></span><br>
+                        <strong>Judul:</strong> <span id="previewJudul"><?php echo htmlspecialchars($form_data['judul'] ?? ''); ?></span><br>
+                        <strong>Slug:</strong> <span id="previewSlug"><?php echo htmlspecialchars($form_data['slug'] ?? ''); ?></span><br>
                         <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($form_data['status']); ?></span>
                     </div>
                 </div>

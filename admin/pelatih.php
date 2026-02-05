@@ -1072,8 +1072,8 @@ body {
                 <div class="logo"></div>
             </div>
            <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1210,10 +1210,10 @@ body {
                         <tr>
                             <td class="count-cell"><?php echo $no++; ?></td>
                             <td class="username-cell">
-                                <strong><?php echo htmlspecialchars($p['username']); ?></strong>
+                                <strong><?php echo htmlspecialchars($p['username'] ?? ''); ?></strong>
                             </td>
                             <td class="email-cell">
-                                <?php echo htmlspecialchars($p['email']); ?>
+                                <?php echo htmlspecialchars($p['email'] ?? ''); ?>
                             </td>
                             <td class="name-cell">
                                 <?php echo !empty($p['full_name']) ? htmlspecialchars($p['full_name']) : '-'; ?>
@@ -1227,9 +1227,9 @@ body {
                             </td>
                             <td class="team-cell">
                                 <?php if (!empty($p['team_name'])): ?>
-                                    <span class="team-badge" title="<?php echo htmlspecialchars($p['team_alias']); ?>">
+                                    <span class="team-badge" title="<?php echo htmlspecialchars($p['team_alias'] ?? ''); ?>">
                                         <i class="fas fa-users"></i>
-                                        <?php echo htmlspecialchars($p['team_name']); ?>
+                                        <?php echo htmlspecialchars($p['team_name'] ?? ''); ?>
                                     </span>
                                 <?php else: ?>
                                     <span class="no-team">-</span>
@@ -1262,7 +1262,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deletePelatih(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['username'])); ?>')">
+                                            onclick="deletePelatih(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['username'] ?? '')); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

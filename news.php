@@ -92,13 +92,13 @@ if ($isSingleNews) {
         <div class="breadcrumb">
             <a href="index.php">Home</a> › 
             <a href="news.php">Berita</a> › 
-            <span><?php echo htmlspecialchars($news['judul']); ?></span>
+            <span><?php echo htmlspecialchars($news['judul'] ?? ''); ?></span>
         </div>
         
         <!-- Detail Berita -->
         <div class="news-detail">
             <div class="news-header-detail">
-                <h1><?php echo htmlspecialchars($news['judul']); ?></h1>
+                <h1><?php echo htmlspecialchars($news['judul'] ?? ''); ?></h1>
                 <div class="news-meta-detail">
                     <span class="news-date">
                         <i class="fas fa-calendar"></i> 
@@ -111,7 +111,7 @@ if ($isSingleNews) {
                     <?php if (!empty($news['penulis'])): ?>
                     <span class="news-author">
                         <i class="fas fa-user"></i> 
-                        <?php echo htmlspecialchars($news['penulis']); ?>
+                        <?php echo htmlspecialchars($news['penulis'] ?? ''); ?>
                     </span>
                     <?php endif; ?>
                 </div>
@@ -124,7 +124,7 @@ if ($isSingleNews) {
                 $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
                 <img src="<?php echo $imagePath; ?>" 
-                     alt="<?php echo htmlspecialchars($news['judul']); ?>"
+                     alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                      class="news-image-detail-main"
                      onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
             </div>
@@ -143,7 +143,7 @@ if ($isSingleNews) {
                     foreach ($lines as $line):
                         $line = trim($line);
                         if (!empty($line)):
-                            echo '<p>' . nl2br(htmlspecialchars($line)) . '</p>';
+                            echo '<p>' . nl2br(htmlspecialchars($line ?? '')) . '</p>';
                         else:
                             echo '<br>';
                         endif;
@@ -161,7 +161,7 @@ if ($isSingleNews) {
                     $tag = trim($tag);
                     if (!empty($tag)):
                 ?>
-                <a href="news.php?tag=<?php echo urlencode($tag); ?>" class="tag-item"><?php echo htmlspecialchars($tag); ?></a>
+                <a href="news.php?tag=<?php echo urlencode($tag); ?>" class="tag-item"><?php echo htmlspecialchars($tag ?? ''); ?></a>
                 <?php 
                     endif;
                 endforeach; 
@@ -207,12 +207,12 @@ if ($isSingleNews) {
                     <a href="news.php?slug=<?php echo $related['slug']; ?>" class="related-link">
                         <div class="related-image-container">
                             <img src="<?php echo $imagePath; ?>" 
-                                 alt="<?php echo htmlspecialchars($related['judul']); ?>"
+                                 alt="<?php echo htmlspecialchars($related['judul'] ?? ''); ?>"
                                  class="related-image"
                                  onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
                         </div>
                         <div class="related-content">
-                            <h4 class="related-title"><?php echo htmlspecialchars($related['judul']); ?></h4>
+                            <h4 class="related-title"><?php echo htmlspecialchars($related['judul'] ?? ''); ?></h4>
                             <div class="related-meta">
                                 <span class="related-date"><?php echo date('d M Y', strtotime($related['created_at'])); ?></span>
                                 <span class="related-views"><i class="fas fa-eye"></i> <?php echo number_format($related['views']); ?></span>
@@ -368,7 +368,7 @@ if ($isSingleNews) {
                         <input type="text" 
                                name="search" 
                                placeholder="Cari berita..." 
-                               value="<?php echo htmlspecialchars($searchKeyword); ?>"
+                               value="<?php echo htmlspecialchars($searchKeyword ?? ''); ?>"
                                class="search-input">
                         <button type="submit" class="search-button">Cari</button>
                         <?php if (!empty($searchKeyword)): ?>
@@ -388,14 +388,14 @@ if ($isSingleNews) {
                             <i class="fas fa-tag"></i> Tag:
                         </div>
                         <form method="GET" action="news.php" class="filter-form" id="tagForm">
-                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword); ?>">
-                            <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy); ?>">
+                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword ?? ''); ?>">
+                            <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sortBy ?? ''); ?>">
                             <select name="tag" id="tag" class="filter-select" onchange="document.getElementById('tagForm').submit()">
                                 <option value="">Semua Tag</option>
                                 <?php foreach ($allTags as $tag): ?>
-                                <option value="<?php echo htmlspecialchars($tag); ?>" 
+                                <option value="<?php echo htmlspecialchars($tag ?? ''); ?>" 
                                     <?php echo ($tagFilter === $tag) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($tag); ?>
+                                    <?php echo htmlspecialchars($tag ?? ''); ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -408,8 +408,8 @@ if ($isSingleNews) {
                             <i class="fas fa-sort-amount-down"></i> Urutkan:
                         </div>
                         <form method="GET" action="news.php" class="filter-form" id="sortForm">
-                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword); ?>">
-                            <input type="hidden" name="tag" value="<?php echo htmlspecialchars($tagFilter); ?>">
+                            <input type="hidden" name="search" value="<?php echo htmlspecialchars($searchKeyword ?? ''); ?>">
+                            <input type="hidden" name="tag" value="<?php echo htmlspecialchars($tagFilter ?? ''); ?>">
                             <select name="sort" id="sort" class="filter-select" onchange="document.getElementById('sortForm').submit()">
                                 <option value="newest" <?php echo ($sortBy === 'newest') ? 'selected' : ''; ?>>Terbaru</option>
                                 <option value="popular" <?php echo ($sortBy === 'popular') ? 'selected' : ''; ?>>Terpopuler</option>
@@ -426,7 +426,7 @@ if ($isSingleNews) {
             <?php if (!empty($searchKeyword)): ?>
             <div class="search-results">
                 <span class="results-label">Hasil pencarian:</span>
-                <span class="results-keyword">"<?php echo htmlspecialchars($searchKeyword); ?>"</span>
+                <span class="results-keyword">"<?php echo htmlspecialchars($searchKeyword ?? ''); ?>"</span>
                 <span class="results-count">(<?php echo $totalNews; ?> hasil)</span>
                 <a href="news.php" class="clear-results">
                     <i class="fas fa-times"></i> Hapus filter
@@ -436,7 +436,7 @@ if ($isSingleNews) {
             <?php if (!empty($tagFilter)): ?>
                 <div class="tag-results">
                 <span class="results-label">Filter tag:</span>
-                <span class="tag-badge"><?php echo htmlspecialchars($tagFilter); ?></span>
+                <span class="tag-badge"><?php echo htmlspecialchars($tagFilter ?? ''); ?></span>
                     <a href="news.php" class="clear-tag">
                 <i class="fas fa-times"></i> Hapus
                 </a>
@@ -457,9 +457,9 @@ if ($isSingleNews) {
                     <p class="no-results-message">
                         <?php 
                         if (!empty($searchKeyword)) {
-                            echo "Tidak ada hasil untuk '" . htmlspecialchars($searchKeyword) . "'";
+                            echo "Tidak ada hasil untuk '" . htmlspecialchars($searchKeyword ?? '') . "'";
                         } elseif (!empty($tagFilter)) {
-                            echo "Tidak ada berita dengan tag '" . htmlspecialchars($tagFilter) . "'";
+                            echo "Tidak ada berita dengan tag '" . htmlspecialchars($tagFilter ?? '') . "'";
                         } else {
                             echo "Belum ada artikel berita tersedia";
                         }
@@ -482,7 +482,7 @@ if ($isSingleNews) {
                         <div class="news-item-image">
                             <a href="news.php?slug=<?php echo $news['slug']; ?>" class="news-image-link">
                                 <img src="<?php echo $imagePath; ?>" 
-                                     alt="<?php echo htmlspecialchars($news['judul']); ?>"
+                                     alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                                      class="news-image"
                                      onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
                                 <div class="news-image-overlay"></div>
@@ -502,14 +502,14 @@ if ($isSingleNews) {
                                     if (!empty($firstTag)):
                                 ?>
                                 <a href="news.php?tag=<?php echo urlencode($firstTag); ?>" class="category-tag">
-                                    <?php echo htmlspecialchars($firstTag); ?>
+                                    <?php echo htmlspecialchars($firstTag ?? ''); ?>
                                 </a>
                                 <?php endif; endif; ?>
                             </div>
                             
                             <h3 class="news-item-title">
                                 <a href="news.php?slug=<?php echo $news['slug']; ?>">
-                                    <?php echo htmlspecialchars($news['judul']); ?>
+                                    <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                                 </a>
                             </h3>
                             
@@ -525,7 +525,7 @@ if ($isSingleNews) {
                                 <?php if (!empty($news['penulis'])): ?>
                                 <div class="meta-item">
                                     <i class="far fa-user"></i>
-                                    <span><?php echo htmlspecialchars($news['penulis']); ?></span>
+                                    <span><?php echo htmlspecialchars($news['penulis'] ?? ''); ?></span>
                                 </div>
                                 <?php endif; ?>
                             </div>
@@ -533,7 +533,7 @@ if ($isSingleNews) {
                             <p class="news-item-excerpt">
                                 <?php 
                                 $excerpt = strip_tags($news['konten']);
-                                $excerpt = htmlspecialchars($excerpt);
+                                $excerpt = htmlspecialchars($excerpt ?? '');
                                 if (strlen($excerpt) > 120) {
                                     echo substr($excerpt, 0, 120) . '...';
                                 } else {
@@ -621,7 +621,7 @@ if ($isSingleNews) {
                                 <div class="popular-content">
                                     <h4 class="popular-title">
                                         <a href="news.php?slug=<?php echo $news['slug']; ?>">
-                                            <?php echo htmlspecialchars($news['judul']); ?>
+                                            <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                                         </a>
                                     </h4>
                                     <div class="popular-meta">
@@ -663,7 +663,7 @@ if ($isSingleNews) {
                         ?>
                         <a href="news.php?tag=<?php echo urlencode($tag); ?>" 
                            class="tag-item <?php echo $tagSize; ?>">
-                            #<?php echo htmlspecialchars($tag); ?>
+                            #<?php echo htmlspecialchars($tag ?? ''); ?>
                         </a>
                         <?php endfor; ?>
                     </div>

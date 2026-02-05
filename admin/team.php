@@ -1160,8 +1160,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1243,7 +1243,7 @@ body {
             
             <form method="GET" action="" class="search-bar" id="searchForm">
                 <input type="text" name="search" placeholder="Cari team (nama, alias, coach, cabor)..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
                 </button>
@@ -1304,8 +1304,8 @@ body {
                             <td class="count-cell"><?php echo $no++; ?></td>
                             <td class="logo-cell">
                                 <?php if (!empty($team['logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($team['logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($team['name']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"  
                                          class="team-logo">
                                 <?php else: ?>
                                     <div class="team-logo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
@@ -1314,13 +1314,13 @@ body {
                                 <?php endif; ?>
                             </td>
                             <td class="team-name-cell">
-                                <strong><?php echo htmlspecialchars($team['name']); ?></strong>
+                                <strong><?php echo htmlspecialchars($team['name'] ?? ''); ?></strong>
                             </td>
                             <td class="alias-cell">
                                 <?php echo !empty($team['alias']) ? htmlspecialchars($team['alias']) : '-'; ?>
                             </td>
                             <td class="coach-cell">
-                                <?php echo htmlspecialchars($team['coach']); ?>
+                                <?php echo htmlspecialchars($team['coach'] ?? ''); ?>
                             </td>
                             <td class="established-cell">
                                 <?php echo !empty($team['established_year']) ? $team['established_year'] : '-'; ?>
@@ -1343,7 +1343,7 @@ body {
                             </td>
                             <td class="sport-cell">
                                 <?php if (!empty($team['sport_type'])): ?>
-                                    <span class="sport-badge"><?php echo htmlspecialchars($team['sport_type']); ?></span>
+                                    <span class="sport-badge"><?php echo htmlspecialchars($team['sport_type'] ?? ''); ?></span>
                                 <?php else: ?>
                                     -
                                 <?php endif; ?>
@@ -1369,7 +1369,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteTeam(<?php echo $team['id']; ?>, '<?php echo htmlspecialchars(addslashes($team['name'])); ?>')">
+                                            onclick="deleteTeam(<?php echo $team['id']; ?>, '<?php echo htmlspecialchars(addslashes($team['name'] ?? '')); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

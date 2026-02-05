@@ -1192,8 +1192,8 @@ select.form-control {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1254,7 +1254,7 @@ select.form-control {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?> ! 👋</h1>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
                 <p>Edit Player - Sistem manajemen pemain futsal</p>
             </div>
             
@@ -1275,7 +1275,7 @@ select.form-control {
                 </a>
                 <div class="page-title">
                     <i class="fas fa-edit"></i>
-                    <span>Edit Player: <?php echo htmlspecialchars($player['name']); ?></span>
+                    <span>Edit Player: <?php echo htmlspecialchars($player['name'] ?? ''); ?></span>
                 </div>
                 <div></div> <!-- Empty div for spacing -->
             </div>
@@ -1283,7 +1283,7 @@ select.form-control {
             <?php if (isset($error)): ?>
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i>
-                <span><?php echo $error; ?></span>
+                <span><?php echo htmlspecialchars($error ?? ''); ?></span>
             </div>
             <?php endif; ?>
 
@@ -1316,7 +1316,7 @@ select.form-control {
                                     $photo_path = '../../images/players/' . $player['photo'];
                                     if (file_exists($photo_path)): ?>
                                         <img src="<?php echo $photo_path; ?>" 
-                                             alt="<?php echo htmlspecialchars($player['name']); ?>"
+                                             alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>"
                                              id="currentPhoto">
                                     <?php else: ?>
                                         <div class="default-photo">
@@ -1340,13 +1340,13 @@ select.form-control {
                         <div class="form-group">
                             <label for="name">Nama <span class="required">*</span></label>
                             <input type="text" id="name" name="name" class="form-control" 
-                                   value="<?php echo htmlspecialchars($player['name']); ?>" required>
+                                   value="<?php echo htmlspecialchars($player['name'] ?? ''); ?>" required>
                         </div>
 
                         <div class="form-group">
                             <label for="birth_place">Tempat Lahir <span class="required">*</span></label>
                             <input type="text" id="birth_place" name="birth_place" class="form-control" 
-                                   value="<?php echo htmlspecialchars($player['birth_place']); ?>" required>
+                                   value="<?php echo htmlspecialchars($player['birth_place'] ?? ''); ?>" required>
                         </div>
 
                         <div class="form-group">
@@ -1396,13 +1396,13 @@ select.form-control {
                         <div class="form-group">
                             <label for="nik">NIK <span class="required">*</span></label>
                             <input type="text" id="nik" name="nik" class="form-control" 
-                                   value="<?php echo htmlspecialchars($player['nik']); ?>" required maxlength="16">
+                                   value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>" required maxlength="16">
                         </div>
 
                         <div class="form-group">
                             <label for="nisn">NISN</label>
                             <input type="text" id="nisn" name="nisn" class="form-control" 
-                                   value="<?php echo htmlspecialchars($player['nisn']); ?>" maxlength="20">
+                                   value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>" maxlength="20">
                         </div>
 
                         <div class="form-group">
@@ -1420,49 +1420,49 @@ select.form-control {
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" id="email" name="email" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['email']); ?>">
+                                   value="<?php echo htmlspecialchars($player['email'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="phone">Telpon</label>
                             <input type="tel" id="phone" name="phone" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['phone']); ?>">
+                                   value="<?php echo htmlspecialchars($player['phone'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="nationality">Kewarganegaraan</label>
                             <input type="text" id="nationality" name="nationality" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['nationality']); ?>">
+                                   value="<?php echo htmlspecialchars($player['nationality'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group full-width">
                             <label for="street">Alamat - Jalan/No</label>
                             <input type="text" id="street" name="street" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['street']); ?>">
+                                   value="<?php echo htmlspecialchars($player['street'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="city">Kota</label>
                             <input type="text" id="city" name="city" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['city']); ?>">
+                                   value="<?php echo htmlspecialchars($player['city'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="province">Provinsi</label>
                             <input type="text" id="province" name="province" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['province']); ?>">
+                                   value="<?php echo htmlspecialchars($player['province'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="postal_code">Kode Pos</label>
                             <input type="text" id="postal_code" name="postal_code" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['postal_code']); ?>">
+                                   value="<?php echo htmlspecialchars($player['postal_code'] ?? ''); ?>">
                         </div>
 
                         <div class="form-group">
                             <label for="country">Negara</label>
                             <input type="text" id="country" name="country" class="form-control"
-                                   value="<?php echo htmlspecialchars($player['country']); ?>">
+                                   value="<?php echo htmlspecialchars($player['country'] ?? ''); ?>">
                         </div>
                     </div>
                 </div>
@@ -1587,7 +1587,7 @@ select.form-control {
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>"
                                         <?php echo $player['team_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name']); ?>
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

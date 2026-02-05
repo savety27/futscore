@@ -1154,8 +1154,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1237,7 +1237,7 @@ body {
             
             <form method="GET" action="" class="search-bar" id="searchForm">
                 <input type="text" name="search" placeholder="Cari berita (judul, konten, penulis)..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
                 </button>
@@ -1314,8 +1314,8 @@ body {
                             <td class="no-cell"><?php echo $no++; ?></td>
                             <td class="image-cell">
                                 <?php if (!empty($b['gambar'])): ?>
-                                    <img src="../images/berita/<?php echo htmlspecialchars($b['gambar']); ?>" 
-                                         alt="<?php echo htmlspecialchars($b['judul']); ?>" 
+                                    <img src="../images/berita/<?php echo htmlspecialchars($b['gambar'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($b['judul'] ?? ''); ?>" 
                                          class="news-image">
                                 <?php else: ?>
                                     <div class="news-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
@@ -1324,14 +1324,14 @@ body {
                                 <?php endif; ?>
                             </td>
                             <td class="judul-cell">
-                                <strong><?php echo htmlspecialchars($b['judul']); ?></strong><br>
-                                <small style="color: #666; font-size: 11px;">Slug: <?php echo htmlspecialchars($b['slug']); ?></small>
+                                <strong><?php echo htmlspecialchars($b['judul'] ?? ''); ?></strong><br>
+                                <small style="color: #666; font-size: 11px;">Slug: <?php echo htmlspecialchars($b['slug'] ?? ''); ?></small>
                             </td>
                             <td class="excerpt-cell">
                                 <?php echo createExcerpt($b['konten'], 120); ?>
                             </td>
                             <td class="penulis-cell">
-                                <?php echo !empty($b['penulis']) ? htmlspecialchars($b['penulis']) : '-'; ?>
+                                <?php echo !empty($b['penulis']) ? htmlspecialchars($b['penulis'] ?? '') : '-'; ?>
                             </td>
                             <td>
                                 <?php if (!empty($b['tag'])): ?>
@@ -1341,7 +1341,7 @@ body {
                                         $tag = trim($tag);
                                         if (!empty($tag)):
                                     ?>
-                                    <span class="tag-item"><?php echo htmlspecialchars($tag); ?></span>
+                                    <span class="tag-item"><?php echo htmlspecialchars($tag ?? ''); ?></span>
                                     <?php endif; endforeach; ?>
                                 <?php else: ?>
                                     -
@@ -1373,7 +1373,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteBerita(<?php echo $b['id']; ?>, '<?php echo htmlspecialchars(addslashes($b['judul'])); ?>')"
+                                            onclick="deleteBerita(<?php echo $b['id']; ?>, '<?php echo htmlspecialchars(addslashes($b['judul'] ?? '')); ?>')"
                                             title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>

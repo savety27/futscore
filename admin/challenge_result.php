@@ -1216,8 +1216,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1280,7 +1280,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Input Hasil Pertandingan ⚽</h1>
-                <p>Challenge: <?php echo htmlspecialchars($challenge_data['challenge_code']); ?></p>
+                <p>Challenge: <?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1327,15 +1327,15 @@ body {
                         <div class="score-input-container">
                             <div class="team-score-box">
                                 <?php if (!empty($challenge_data['challenger_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['challenger_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge_data['challenger_name']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['challenger_logo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?>" 
                                          class="team-logo-medium">
                                 <?php else: ?>
                                     <div class="team-logo-medium" style="background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-shield-alt" style="color: #999; font-size: 36px;"></i>
                                     </div>
                                 <?php endif; ?>
-                                <div class="team-name"><?php echo htmlspecialchars($challenge_data['challenger_name']); ?></div>
+                                <div class="team-name"><?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?></div>
                                 <input type="number" 
                                        id="challenger_score" 
                                        name="challenger_score" 
@@ -1353,15 +1353,15 @@ body {
                             
                             <div class="team-score-box">
                                 <?php if (!empty($challenge_data['opponent_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['opponent_logo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge_data['opponent_name']); ?>" 
+                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['opponent_logo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?>" 
                                          class="team-logo-medium">
                                 <?php else: ?>
                                     <div class="team-logo-medium" style="background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center;">
                                         <i class="fas fa-shield-alt" style="color: #999; font-size: 36px;"></i>
                                     </div>
                                 <?php endif; ?>
-                                <div class="team-name"><?php echo htmlspecialchars($challenge_data['opponent_name']); ?></div>
+                                <div class="team-name"><?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?></div>
                                 <input type="number" 
                                        id="opponent_score" 
                                        name="opponent_score" 
@@ -1452,7 +1452,7 @@ body {
                                    id="match_official" 
                                    name="match_official" 
                                    class="form-input" 
-                                   value="<?php echo isset($form_data['match_official']) ? htmlspecialchars($form_data['match_official']) : ($challenge_data['match_official'] ? htmlspecialchars($challenge_data['match_official']) : ''); ?>"
+                                   value="<?php echo isset($form_data['match_official']) ? htmlspecialchars($form_data['match_official'] ?? '') : ($challenge_data['match_official'] ? htmlspecialchars($challenge_data['match_official'] ?? '') : ''); ?>"
                                    placeholder="Masukkan nama wasit...">
                         </div>
                         
@@ -1461,7 +1461,7 @@ body {
                                 Catatan Pertandingan
                             </label>
                             <textarea id="match_notes" name="match_notes" class="form-textarea" 
-                                      placeholder="Masukkan catatan pertandingan (kondisi lapangan, kejadian penting, dll)..."><?php echo isset($form_data['match_notes']) ? htmlspecialchars($form_data['match_notes']) : ($challenge_data['match_notes'] ? htmlspecialchars($challenge_data['match_notes']) : ''); ?></textarea>
+                                      placeholder="Masukkan catatan pertandingan (kondisi lapangan, kejadian penting, dll)..."><?php echo isset($form_data['match_notes']) ? htmlspecialchars($form_data['match_notes'] ?? '') : ($challenge_data['match_notes'] ? htmlspecialchars($challenge_data['match_notes'] ?? '') : ''); ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -1544,10 +1544,10 @@ document.addEventListener('DOMContentLoaded', function() {
             resultPreview.innerHTML = 'Hasil: SERI';
             resultPreview.style.color = '#F9A826'; // warning color
         } else if (challengerScore > opponentScore) {
-            resultPreview.innerHTML = `Pemenang: <?php echo htmlspecialchars($challenge_data['challenger_name']); ?>`;
+            resultPreview.innerHTML = `Pemenang: <?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?>`;
             resultPreview.style.color = '#2E7D32'; // success color
         } else {
-            resultPreview.innerHTML = `Pemenang: <?php echo htmlspecialchars($challenge_data['opponent_name']); ?>`;
+            resultPreview.innerHTML = `Pemenang: <?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?>`;
             resultPreview.style.color = '#2E7D32'; // success color
         }
     }

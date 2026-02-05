@@ -1044,8 +1044,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1105,7 +1105,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Edit Pelatih 👤</h1>
-                <p>Perbarui data pelatih: <?php echo htmlspecialchars($pelatih_data['full_name']); ?></p>
+                <p>Perbarui data pelatih: <?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1156,7 +1156,7 @@ body {
                                    id="username" 
                                    name="username" 
                                    class="form-input <?php echo isset($errors['username']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($pelatih_data['username']); ?>"
+                                   value="<?php echo htmlspecialchars($pelatih_data['username'] ?? ''); ?>"
                                    placeholder="Masukkan username (min. 3 karakter)"
                                    required>
                             <?php if (isset($errors['username'])): ?>
@@ -1172,7 +1172,7 @@ body {
                                    id="email" 
                                    name="email" 
                                    class="form-input <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($pelatih_data['email']); ?>"
+                                   value="<?php echo htmlspecialchars($pelatih_data['email'] ?? ''); ?>"
                                    placeholder="contoh@email.com"
                                    required>
                             <?php if (isset($errors['email'])): ?>
@@ -1249,7 +1249,7 @@ body {
                                    id="full_name" 
                                    name="full_name" 
                                    class="form-input <?php echo isset($errors['full_name']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($pelatih_data['full_name']); ?>"
+                                   value="<?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?>"
                                    placeholder="Masukkan nama lengkap"
                                    required>
                             <?php if (isset($errors['full_name'])): ?>
@@ -1285,7 +1285,7 @@ body {
                                         <?php foreach ($teams as $team): ?>
                                             <option value="<?php echo $team['id']; ?>" 
                                                 <?php echo $pelatih_data['team_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($team['name']); ?>
+                                                <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     <?php endif; ?>

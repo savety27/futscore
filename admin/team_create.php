@@ -1085,8 +1085,8 @@ body {
                 <div class="logo"></div>
             </div>
            <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1197,7 +1197,7 @@ body {
                                    id="name" 
                                    name="name" 
                                    class="form-input <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['name']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['name'] ?? ''); ?>"
                                    required>
                             <?php if (isset($errors['name'])): ?>
                                 <span class="error"><?php echo $errors['name']; ?></span>
@@ -1212,7 +1212,7 @@ body {
                                    id="alias" 
                                    name="alias" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['alias']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['alias'] ?? ''); ?>"
                                    placeholder="Contoh: BUFC, SSB ABC">
                         </div>
                         
@@ -1224,7 +1224,7 @@ body {
                                    id="coach" 
                                    name="coach" 
                                    class="form-input <?php echo isset($errors['coach']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['coach']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['coach'] ?? ''); ?>"
                                    placeholder="Masukkan nama manager/coach"
                                    required>
                             <?php if (isset($errors['coach'])): ?>
@@ -1240,7 +1240,7 @@ body {
                                    id="established_year" 
                                    name="established_year" 
                                    class="form-input <?php echo isset($errors['established_year']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['established_year']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['established_year'] ?? ''); ?>"
                                    placeholder="Contoh: 2020"
                                    min="1900" 
                                    max="<?php echo date('Y'); ?>"
@@ -1290,7 +1290,7 @@ body {
                                    id="uniform_color" 
                                    name="uniform_color" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['uniform_color']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['uniform_color'] ?? ''); ?>"
                                    placeholder="Contoh: Biru-Kuning, Merah-Putih">
                         </div>
                     </div>
@@ -1311,7 +1311,7 @@ body {
                                    id="basecamp" 
                                    name="basecamp" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['basecamp']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['basecamp'] ?? ''); ?>"
                                    placeholder="Masukkan lokasi basecamp team">
                         </div>
                         

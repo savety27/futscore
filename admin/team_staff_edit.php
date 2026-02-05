@@ -1368,8 +1368,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1431,7 +1431,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Edit Team Staff 👔</h1>
-                <p>Perbarui data staff: <?php echo htmlspecialchars($staff_data['name']); ?></p>
+                <p>Perbarui data staff: <?php echo htmlspecialchars($staff_data['name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1482,7 +1482,7 @@ body {
                                 <option value="">Pilih Team</option>
                                 <?php foreach ($teams as $team): ?>
                                 <option value="<?php echo $team['id']; ?>" <?php echo $staff_data['team_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($team['name']); ?> (<?php echo htmlspecialchars($team['alias']); ?>)
+                                    <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['alias'] ?? ''); ?>)
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1499,7 +1499,7 @@ body {
                                    id="name" 
                                    name="name" 
                                    class="form-input <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($staff_data['name']); ?>"
+                                   value="<?php echo htmlspecialchars($staff_data['name'] ?? ''); ?>"
                                    required>
                             <?php if (isset($errors['name'])): ?>
                                 <span class="error"><?php echo $errors['name']; ?></span>
@@ -1530,7 +1530,7 @@ body {
                             </label>
                             <?php if (!empty($staff_data['photo'])): ?>
                                 <div style="margin-bottom: 15px; position: relative; display: inline-block;">
-                                    <img src="../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
+                                    <img src="../<?php echo htmlspecialchars($staff_data['photo'] ?? ''); ?>" 
                                          alt="Current Photo" 
                                          style="max-width: 200px; max-height: 200px; border-radius: 10px; border: 2px solid #ddd; object-fit: cover;">
                                     <div style="margin-top: 10px;">
@@ -1710,9 +1710,9 @@ body {
                                         <i class="fas fa-trash"></i> Hapus
                                     </label>
                                 </div>
-                                <h5 style="margin-bottom: 10px; color: var(--primary);"><?php echo htmlspecialchars($cert['certificate_name']); ?></h5>
+                                <h5 style="margin-bottom: 10px; color: var(--primary);"><?php echo htmlspecialchars($cert['certificate_name'] ?? ''); ?></h5>
                                 <?php if ($cert['issuing_authority']): ?>
-                                    <p style="margin-bottom: 5px;"><strong>Penerbit:</strong> <?php echo htmlspecialchars($cert['issuing_authority']); ?></p>
+                                    <p style="margin-bottom: 5px;"><strong>Penerbit:</strong> <?php echo htmlspecialchars($cert['issuing_authority'] ?? ''); ?></p>
                                 <?php endif; ?>
                                 <?php if ($cert['issue_date']): ?>
                                     <p style="margin-bottom: 15px;"><strong>Tanggal:</strong> <?php echo date('d/m/Y', strtotime($cert['issue_date'])); ?></p>
@@ -1722,14 +1722,14 @@ body {
                                     $file_ext = pathinfo($cert['certificate_file'], PATHINFO_EXTENSION);
                                     if (in_array(strtolower($file_ext), ['jpg', 'jpeg', 'png', 'gif'])): 
                                     ?>
-                                        <img src="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file']); ?>" 
-                                             alt="<?php echo htmlspecialchars($cert['certificate_name']); ?>" 
+                                        <img src="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file'] ?? ''); ?>" 
+                                             alt="<?php echo htmlspecialchars($cert['certificate_name'] ?? ''); ?>" 
                                              style="width: 100%; height: 150px; object-fit: contain; border-radius: 5px; background: #f0f0f0;">
                                     <?php else: ?>
                                         <div style="background: #f0f0f0; padding: 20px; text-align: center; border-radius: 5px;">
                                             <i class="fas fa-file-alt" style="font-size: 48px; color: #666;"></i>
-                                            <p style="margin-top: 10px; word-break: break-all;"><?php echo htmlspecialchars($cert['certificate_file']); ?></p>
-                                            <a href="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file']); ?>" 
+                                            <p style="margin-top: 10px; word-break: break-all;"><?php echo htmlspecialchars($cert['certificate_file'] ?? ''); ?></p>
+                                            <a href="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file'] ?? ''); ?>" 
                                                target="_blank" 
                                                class="btn btn-sm btn-primary" 
                                                style="margin-top: 10px;">

@@ -725,9 +725,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                 <!-- Search -->
                 <div class="filter-group">
                     <label for="search">Pencarian</label>
-                    <input type="text" name="search" id="search" 
-                           value="<?php echo htmlspecialchars($search); ?>" 
-                           placeholder="Cari kode, tim, venue, cabor...">
+                    <input type="text" name="search" class="form-control bg-dark text-light border-0" placeholder="Cari event..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
                 </div>
                 
                 <!-- Status Filter -->
@@ -736,10 +734,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                     <select name="status" id="status">
                         <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
                         <?php foreach ($statuses as $status): ?>
-                            <option value="<?php echo htmlspecialchars($status); ?>" 
-                                <?php echo $filter_status === $status ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars(ucfirst($status)); ?>
-                            </option>
+                            <option value="<?php echo htmlspecialchars($status ?? ''); ?>" <?php echo $filter_status == $status ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($status ?? '')); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -750,10 +745,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                     <select name="sport" id="sport">
                         <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Cabor</option>
                         <?php foreach ($sports as $sport): ?>
-                            <option value="<?php echo htmlspecialchars($sport); ?>" 
-                                <?php echo $filter_sport === $sport ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($sport); ?>
-                            </option>
+                            <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" <?php echo $filter_sport == $sport ? 'selected' : ''; ?>><?php echo htmlspecialchars($sport ?? ''); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -764,10 +756,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                     <select name="match_status" id="match_status">
                         <option value="all" <?php echo $filter_match_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
                         <?php foreach ($match_statuses as $ms): ?>
-                            <option value="<?php echo htmlspecialchars($ms); ?>" 
-                                <?php echo $filter_match_status === $ms ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars(ucfirst($ms)); ?>
-                            </option>
+                            <option value="<?php echo htmlspecialchars($ms ?? ''); ?>" <?php echo $filter_match_status == $ms ? 'selected' : ''; ?>><?php echo htmlspecialchars(ucfirst($ms ?? '')); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

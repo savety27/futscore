@@ -49,11 +49,11 @@ $pageTitle = "Home";
                             ?>
                             <div class="team-logo-container">
                                 <img src="<?php echo $logo1Path; ?>" 
-                                     alt="<?php echo $match['challenger_name']; ?>" 
+                                     alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
                                      class="team-logo"
                                      onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                             </div>
-                            <span class="team-name"><?php echo $match['challenger_name']; ?></span>
+                            <span class="team-name"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                         </div>
                         
                         <div class="vs">VS</div>
@@ -66,11 +66,11 @@ $pageTitle = "Home";
                             ?>
                             <div class="team-logo-container">
                                 <img src="<?php echo $logo2Path; ?>" 
-                                     alt="<?php echo $match['opponent_name']; ?>" 
+                                     alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
                                      class="team-logo"
                                      onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                             </div>
-                            <span class="team-name"><?php echo $match['opponent_name']; ?></span>
+                            <span class="team-name"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                         </div>
                     </div>
                     
@@ -85,7 +85,7 @@ $pageTitle = "Home";
                     </div>
                     
                     <div class="match-details">
-                        <span class="match-venue"><i class="fas fa-map-marker-alt"></i> <?php echo $match['venue_name']; ?></span>
+                        <span class="match-venue"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
                         <button class="btn-details" data-match-id="<?php echo $match['id']; ?>">View Details</button>
                     </div>
                 </div>
@@ -128,7 +128,7 @@ $pageTitle = "Home";
                 ?>
                 <div class="news-item-large" data-news-id="<?php echo $news['id']; ?>">
                     <img src="<?php echo $imagePath; ?>" 
-                         alt="<?php echo htmlspecialchars($news['judul']); ?>" 
+                         alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>" 
                          class="news-image"
                          onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
                     <div class="news-content">
@@ -138,17 +138,17 @@ $pageTitle = "Home";
                         </div>
                         <h3 class="news-title">
                             <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul']); ?>
+                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                             </a>
                         </h3>
                         <p class="news-excerpt">
                             <?php 
                             $content = $news['konten'] ?? ($news['content'] ?? '');
                             $excerpt = strip_tags($content);
-                            echo htmlspecialchars(mb_substr($excerpt, 0, 100)) . '...'; 
+                            echo htmlspecialchars(mb_substr($excerpt ?? '', 0, 100)) . '...'; 
                             ?>
                         </p>
-                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis']); ?></p>
+                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
                 </div>
             </div>
@@ -164,7 +164,7 @@ $pageTitle = "Home";
                 <div class="news-item-small" data-news-id="<?php echo $news['id']; ?>">
                     <div class="news-thumbnail">
                         <img src="<?php echo $imagePath; ?>" 
-                             alt="<?php echo htmlspecialchars($news['judul']); ?>"
+                             alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                              class="news-thumb"
                              onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
                     </div>
@@ -175,10 +175,10 @@ $pageTitle = "Home";
                         </div>
                         <h4 class="news-title">
                             <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul']); ?>
+                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                             </a>
                         </h4>
-                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis']); ?></p>
+                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
                 </div>
                 <?php endfor; ?>
@@ -214,7 +214,7 @@ $pageTitle = "Home";
                 ?>
                 <div class="news-item-large" data-news-id="<?php echo $news['id']; ?>">
                     <img src="<?php echo $imagePath; ?>" 
-                         alt="<?php echo htmlspecialchars($news['judul']); ?>" 
+                         alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>" 
                          class="news-image"
                          onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
                     <div class="news-content">
@@ -225,16 +225,16 @@ $pageTitle = "Home";
                         </div>
                         <h3 class="news-title">
                             <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul']); ?>
+                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                             </a>
                         </h3>
                         <p class="news-excerpt">
                             <?php 
                             $excerpt = strip_tags($news['konten']);
-                            echo htmlspecialchars(mb_substr($excerpt, 0, 100)) . '...'; 
+                            echo htmlspecialchars(mb_substr($excerpt ?? '', 0, 100)) . '...'; 
                             ?>
                         </p>
-                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis']); ?></p>
+                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
                 </div>
             </div>
@@ -250,7 +250,7 @@ $pageTitle = "Home";
                 <div class="news-item-small" data-news-id="<?php echo $news['id']; ?>">
                     <div class="news-thumbnail">
                         <img src="<?php echo $imagePath; ?>" 
-                             alt="<?php echo htmlspecialchars($news['judul']); ?>"
+                             alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                              class="news-thumb"
                              onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
                     </div>
@@ -261,10 +261,10 @@ $pageTitle = "Home";
                         </div>
                         <h4 class="news-title">
                             <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul']); ?>
+                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                             </a>
                         </h4>
-                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis']); ?></p>
+                        <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
                 </div>
                 <?php endfor; ?>
@@ -321,21 +321,21 @@ $pageTitle = "Home";
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                                     </div>
                                     <div class="vs-sm">VS</div>
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                                     </div>
                                 </div>
                             </td>
@@ -348,12 +348,12 @@ $pageTitle = "Home";
                             <td class="match-venue-cell">
                                 <div class="venue-info">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name']); ?></span>
+                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
                                 </div>
                             </td>
                             <td class="match-event-cell">
-                                <span class="event-badge"><?php echo htmlspecialchars($match['sport_type']); ?></span>
-                                <div class="round-info"><?php echo htmlspecialchars($match['challenge_code']); ?></div>
+                                <span class="event-badge"><?php echo htmlspecialchars($match['sport_type'] ?? ''); ?></span>
+                                <div class="round-info"><?php echo htmlspecialchars($match['challenge_code'] ?? ''); ?></div>
                             </td>
                             <td class="match-actions-cell">
                                 <button class="btn-view btn-view-schedule" data-match-id="<?php echo $match['id']; ?>">
@@ -408,21 +408,21 @@ $pageTitle = "Home";
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                                     </div>
                                     <div class="vs-sm">VS</div>
                                     <div class="team-info">
                                         <div class="team-logo-wrapper">
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
                                                  class="team-logo-sm"
                                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                                         </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
+                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                                     </div>
                                 </div>
                             </td>
@@ -443,7 +443,7 @@ $pageTitle = "Home";
                             <td class="match-venue-cell">
                                 <div class="venue-info">
                                     <i class="fas fa-map-marker-alt"></i>
-                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name']); ?></span>
+                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
                                 </div>
                             </td>
                             <td class="match-actions-cell">
@@ -698,10 +698,10 @@ $pageTitle = "Home";
                         <div class="transfer-team">
                             <span class="transfer-team-label">From</span>
                             <img src="<?php echo $fromLogoPath; ?>" 
-                                 alt="<?php echo htmlspecialchars($fromTeam); ?>" 
+                                 alt="<?php echo htmlspecialchars($fromTeam ?? ''); ?>" 
                                  class="transfer-team-logo"
                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
-                            <span class="transfer-team-name"><?php echo htmlspecialchars($fromTeam); ?></span>
+                            <span class="transfer-team-name"><?php echo htmlspecialchars($fromTeam ?? ''); ?></span>
                         </div>
                         
                         <div class="transfer-arrow-container">
@@ -711,10 +711,10 @@ $pageTitle = "Home";
                         <div class="transfer-team">
                             <span class="transfer-team-label">To</span>
                             <img src="<?php echo $toLogoPath; ?>" 
-                                 alt="<?php echo htmlspecialchars($toTeam); ?>" 
+                                 alt="<?php echo htmlspecialchars($toTeam ?? ''); ?>" 
                                  class="transfer-team-logo"
                                  onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
-                            <span class="transfer-team-name"><?php echo htmlspecialchars($toTeam); ?></span>
+                            <span class="transfer-team-name"><?php echo htmlspecialchars($toTeam ?? ''); ?></span>
                         </div>
                     </div>
                     
@@ -760,15 +760,15 @@ $pageTitle = "Home";
                     $teamLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/MGP FC.jpeg';
                     ?>
                     <img src="<?php echo $teamLogo; ?>" 
-                         alt="<?php echo htmlspecialchars($team['name']); ?>" 
+                         alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                          class="team-logo-premium"
                          onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                 </div>
                 <div class="winner-info">
-                    <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
+                    <h3 class="team-name"><?php echo htmlspecialchars($team['name'] ?? ''); ?></h3>
                     <div class="achievement-badge">
                         <i class="fas fa-trophy"></i>
-                        <span><?php echo htmlspecialchars($team['achievement']); ?></span>
+                        <span><?php echo htmlspecialchars($team['achievement'] ?? ''); ?></span>
                     </div>
                 </div>
                 <div class="winner-footer">
@@ -796,7 +796,7 @@ $pageTitle = "Home";
                     $tLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/MGP FC.jpeg';
                     ?>
                     <img src="<?php echo $tLogo; ?>" 
-                         alt="<?php echo htmlspecialchars($team['name']); ?>" 
+                         alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                          class="team-logo-lg"
                          onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
                 </div>

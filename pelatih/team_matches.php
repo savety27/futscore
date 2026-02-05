@@ -21,7 +21,7 @@ if (!$team_info) {
 }
 
 // Update page title
-$page_title = htmlspecialchars($team_info['name']) . ' - Pertandingan';
+$page_title = htmlspecialchars($team_info['name'] ?? '') . ' - Pertandingan';
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -84,7 +84,7 @@ try {
                 <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
             <?php endif; ?>
             <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name']); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Riwayat Pertandingan</span></h2>
+                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Riwayat Pertandingan</span></h2>
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
@@ -141,7 +141,7 @@ try {
                         <td>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <img src="../images/teams/<?php echo $opponent_logo; ?>" alt="Opponent" style="width: 30px; height: 30px; border-radius: 50%; object-fit: contain; background: #eee;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
-                                <span><?php echo htmlspecialchars($opponent_name); ?></span>
+                                <span><?php echo htmlspecialchars($opponent_name ?? ''); ?></span>
                             </div>
                         </td>
                         <td style="text-align: center;">

@@ -1176,8 +1176,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1259,7 +1259,7 @@ body {
             
             <form method="GET" action="" class="search-bar" id="searchForm">
                 <input type="text" name="search" placeholder="Cari venue (nama, lokasi, fasilitas)..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
                 </button>
@@ -1339,10 +1339,10 @@ body {
                         <tr>
                             <td class="capacity-cell"><?php echo $no++; ?></td>
                             <td class="name-cell">
-                                <strong><?php echo htmlspecialchars($venue['name']); ?></strong>
+                                <strong><?php echo htmlspecialchars($venue['name'] ?? ''); ?></strong>
                             </td>
                             <td class="location-cell">
-                                <?php echo htmlspecialchars($venue['location']); ?>
+                                <?php echo htmlspecialchars($venue['location'] ?? ''); ?>
                             </td>
                             <td class="capacity-cell">
                                 <span class="badge badge-primary"><?php echo number_format($venue['capacity']); ?> orang</span>
@@ -1374,7 +1374,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteVenue(<?php echo $venue['id']; ?>, '<?php echo htmlspecialchars(addslashes($venue['name'])); ?>')">
+                                            onclick="deleteVenue(<?php echo $venue['id']; ?>, '<?php echo htmlspecialchars(addslashes($venue['name'] ?? '')); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

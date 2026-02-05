@@ -1291,8 +1291,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1403,7 +1403,7 @@ body {
                                 <option value="">Pilih Team</option>
                                 <?php foreach ($teams as $team): ?>
                                 <option value="<?php echo $team['id']; ?>" <?php echo $form_data['team_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($team['name']); ?> (<?php echo htmlspecialchars($team['alias']); ?>)
+                                    <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['alias'] ?? ''); ?>)
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1420,7 +1420,7 @@ body {
                                    id="name" 
                                    name="name" 
                                    class="form-input <?php echo isset($errors['name']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['name']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['name'] ?? ''); ?>"
                                    required>
                             <?php if (isset($errors['name'])): ?>
                                 <span class="error"><?php echo $errors['name']; ?></span>
@@ -1485,7 +1485,7 @@ body {
                                    id="email" 
                                    name="email" 
                                    class="form-input <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['email']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['email'] ?? ''); ?>"
                                    placeholder="email@example.com">
                             <?php if (isset($errors['email'])): ?>
                                 <span class="error"><?php echo $errors['email']; ?></span>
@@ -1500,7 +1500,7 @@ body {
                                    id="phone" 
                                    name="phone" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['phone']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['phone'] ?? ''); ?>"
                                    placeholder="+62 812-3456-7890">
                         </div>
                         
@@ -1512,7 +1512,7 @@ body {
                                    id="birth_place" 
                                    name="birth_place" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['birth_place']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['birth_place'] ?? ''); ?>"
                                    placeholder="Kota tempat lahir">
                         </div>
                         
@@ -1524,7 +1524,7 @@ body {
                                    id="birth_date" 
                                    name="birth_date" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['birth_date']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['birth_date'] ?? ''); ?>"
                                    max="<?php echo date('Y-m-d'); ?>">
                         </div>
                     </div>
@@ -1545,7 +1545,7 @@ body {
                                       name="address" 
                                       class="form-textarea" 
                                       rows="3"
-                                      placeholder="Alamat lengkap"><?php echo htmlspecialchars($form_data['address']); ?></textarea>
+                                      placeholder="Alamat lengkap"><?php echo htmlspecialchars($form_data['address'] ?? ''); ?></textarea>
                         </div>
                         
                         <div class="form-group">
@@ -1556,7 +1556,7 @@ body {
                                    id="city" 
                                    name="city" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['city']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['city'] ?? ''); ?>"
                                    placeholder="Nama kota">
                         </div>
                         
@@ -1568,7 +1568,7 @@ body {
                                    id="province" 
                                    name="province" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['province']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['province'] ?? ''); ?>"
                                    placeholder="Nama provinsi">
                         </div>
                         
@@ -1580,7 +1580,7 @@ body {
                                    id="postal_code" 
                                    name="postal_code" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['postal_code']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['postal_code'] ?? ''); ?>"
                                    placeholder="12345">
                         </div>
                         
@@ -1592,7 +1592,7 @@ body {
                                    id="country" 
                                    name="country" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['country']); ?>"
+                                   value="<?php echo htmlspecialchars($form_data['country'] ?? ''); ?>"
                                    placeholder="Indonesia">
                         </div>
                     </div>

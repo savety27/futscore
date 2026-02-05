@@ -1016,8 +1016,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1121,24 +1121,24 @@ body {
         <div class="challenge-header">
             <div class="challenge-code"><?php echo htmlspecialchars($challenge_data['challenge_code']); ?></div>
             <div class="challenge-status status-<?php echo strtolower($challenge_data['status']); ?>">
-                <?php echo htmlspecialchars($challenge_data['status']); ?>
+                <?php echo htmlspecialchars($challenge_data['status'] ?? ''); ?>
             </div>
             
             <!-- TEAMS VS DISPLAY -->
             <div class="teams-vs">
                 <div class="team-card">
                     <?php if (!empty($challenge_data['challenger_logo'])): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['challenger_logo']); ?>" 
-                             alt="<?php echo htmlspecialchars($challenge_data['challenger_name']); ?>" 
+                        <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['challenger_logo'] ?? ''); ?>" 
+                             alt="<?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?>" 
                              class="team-logo-large">
                     <?php else: ?>
                         <div class="team-logo-large" style="background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-shield-alt" style="color: #999; font-size: 48px;"></i>
                         </div>
                     <?php endif; ?>
-                    <div class="team-name"><?php echo htmlspecialchars($challenge_data['challenger_name']); ?></div>
-                    <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['challenger_coach']); ?></div>
-                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['challenger_sport']); ?></div>
+                    <div class="team-name"><?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?></div>
+                    <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['challenger_coach'] ?? ''); ?></div>
+                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['challenger_sport'] ?? ''); ?></div>
                 </div>
                 
                 <div class="vs-center">
@@ -1154,17 +1154,17 @@ body {
                 
                 <div class="team-card">
                     <?php if (!empty($challenge_data['opponent_logo'])): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['opponent_logo']); ?>" 
-                             alt="<?php echo htmlspecialchars($challenge_data['opponent_name']); ?>" 
+                        <img src="../images/teams/<?php echo htmlspecialchars($challenge_data['opponent_logo'] ?? ''); ?>" 
+                             alt="<?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?>" 
                              class="team-logo-large">
                     <?php else: ?>
                         <div class="team-logo-large" style="background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-shield-alt" style="color: #999; font-size: 48px;"></i>
                         </div>
                     <?php endif; ?>
-                    <div class="team-name"><?php echo htmlspecialchars($challenge_data['opponent_name']); ?></div>
-                    <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['opponent_coach']); ?></div>
-                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['sport_type']); ?></div>
+                    <div class="team-name"><?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?></div>
+                    <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['opponent_coach'] ?? ''); ?></div>
+                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['sport_type'] ?? ''); ?></div>
                 </div>
             </div>
         </div>
@@ -1181,14 +1181,17 @@ body {
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Kode Challenge</span>
-                    <div class="info-value"><?php echo htmlspecialchars($challenge_data['challenge_code']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
                     <span class="info-label">Status</span>
                     <div class="info-value">
-                        <span class="challenge-status status-<?php echo strtolower($challenge_data['status']); ?>" style="padding: 4px 12px;">
-                            <?php echo htmlspecialchars($challenge_data['status']); ?>
+                        <span class="badge badge-<?php 
+                            echo $challenge_data['status'] == 'approved' ? 'success' : 
+                                ($challenge_data['status'] == 'pending' ? 'warning' : 'danger'); 
+                        ?>">
+                            <?php echo htmlspecialchars($challenge_data['status'] ?? ''); ?>
                         </span>
                     </div>
                 </div>
@@ -1196,8 +1199,8 @@ body {
                 <div class="info-item">
                     <span class="info-label">Venue/Lokasi</span>
                     <div class="info-value">
-                        <strong><?php echo htmlspecialchars($challenge_data['venue_name']); ?></strong><br>
-                        <small><?php echo htmlspecialchars($challenge_data['venue_location']); ?></small>
+                        <strong><?php echo htmlspecialchars($challenge_data['venue_name'] ?? ''); ?></strong><br>
+                        <small><?php echo htmlspecialchars($challenge_data['venue_location'] ?? ''); ?></small>
                         <?php if (!empty($challenge_data['venue_capacity'])): ?>
                             <br><small>Kapasitas: <?php echo $challenge_data['venue_capacity']; ?> orang</small>
                         <?php endif; ?>
@@ -1208,7 +1211,7 @@ body {
                     <span class="info-label">Cabor</span>
                     <div class="info-value">
                         <span style="padding: 4px 12px; background: var(--primary); color: white; border-radius: 12px; font-size: 14px;">
-                            <?php echo htmlspecialchars($challenge_data['sport_type']); ?>
+                            <?php echo htmlspecialchars($challenge_data['sport_type'] ?? ''); ?>
                         </span>
                     </div>
                 </div>
@@ -1230,7 +1233,7 @@ body {
                     <div class="time-label">Status Match</div>
                     <div class="time-value">
                         <?php if (!empty($challenge_data['match_status'])): ?>
-                            <span style="color: var(--warning);"><?php echo htmlspecialchars($challenge_data['match_status']); ?></span>
+                            <span style="color: var(--warning);"><?php echo htmlspecialchars($challenge_data['match_status'] ?? ''); ?></span>
                         <?php else: ?>
                             <span style="color: #999;">Belum Mulai</span>
                         <?php endif; ?>
@@ -1245,7 +1248,7 @@ body {
                     Catatan
                 </div>
                 <div style="color: #666; line-height: 1.6;">
-                    <?php echo nl2br(htmlspecialchars($challenge_data['notes'])); ?>
+                    <?php echo nl2br(htmlspecialchars($challenge_data['notes'] ?? '')); ?>
                 </div>
             </div>
             <?php endif; ?>
@@ -1280,7 +1283,7 @@ body {
                             $winner_name = ($challenge_data['winner_team_id'] == $challenge_data['challenger_id']) 
                                 ? $challenge_data['challenger_name'] 
                                 : $challenge_data['opponent_name'];
-                            echo htmlspecialchars($winner_name);
+                            echo htmlspecialchars($winner_name ?? '');
                             ?>
                         </span>
                     </div>
@@ -1290,14 +1293,14 @@ body {
                 <?php if (!empty($challenge_data['match_duration'])): ?>
                 <div class="info-item">
                     <span class="info-label">Durasi Pertandingan</span>
-                    <div class="info-value"><?php echo htmlspecialchars($challenge_data['match_duration']); ?> menit</div>
+                    <div class="info-value"><?php echo htmlspecialchars($challenge_data['match_duration'] ?? ''); ?> menit</div>
                 </div>
                 <?php endif; ?>
                 
                 <?php if (!empty($challenge_data['match_official'])): ?>
                 <div class="info-item">
                     <span class="info-label">Wasit</span>
-                    <div class="info-value"><?php echo htmlspecialchars($challenge_data['match_official']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($challenge_data['match_official'] ?? ''); ?></div>
                 </div>
                 <?php endif; ?>
                 
@@ -1305,7 +1308,7 @@ body {
                 <div class="info-item" style="grid-column: span 2;">
                     <span class="info-label">Catatan Pertandingan</span>
                     <div class="info-value" style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <?php echo nl2br(htmlspecialchars($challenge_data['match_notes'])); ?>
+                        <?php echo nl2br(htmlspecialchars($challenge_data['match_notes'] ?? '')); ?>
                     </div>
                 </div>
                 <?php endif; ?>

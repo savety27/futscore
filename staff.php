@@ -928,7 +928,7 @@ $pageTitle = "Staff List";
                                         <?php if ($staff_photo['found']): ?>
                                             <img src="<?php echo $staff_photo['url']; ?>" 
                                                  class="staff-img-sm" 
-                                                 alt="<?php echo htmlspecialchars($s['name']); ?>"
+                                                 alt="<?php echo htmlspecialchars($s['name'] ?? ''); ?>"
                                                  onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <?php endif; ?>
                                         
@@ -941,7 +941,7 @@ $pageTitle = "Staff List";
                                             <?php if ($team_logo['found']): ?>
                                                 <img src="<?php echo $team_logo['url']; ?>" 
                                                      class="team-badge-img" 
-                                                     alt="<?php echo htmlspecialchars($s['team_name']); ?>"
+                                                     alt="<?php echo htmlspecialchars($s['team_name'] ?? ''); ?>"
                                                      onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                             <?php endif; ?>
                                             
@@ -954,13 +954,13 @@ $pageTitle = "Staff List";
                                 
                                 <!-- Kolom Nama -->
                                 <td class="col-name">
-                                    <div class="staff-name"><?php echo htmlspecialchars($s['name']); ?></div>
+                                    <div class="staff-name"><?php echo htmlspecialchars($s['name'] ?? ''); ?></div>
                                     <div class="staff-contact">
                                         <?php if (!empty($s['email'])): ?>
-                                            <div><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($s['email']); ?></div>
+                                            <div><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($s['email'] ?? ''); ?></div>
                                         <?php endif; ?>
                                         <?php if (!empty($s['phone'])): ?>
-                                            <div><i class="fas fa-phone"></i> <?php echo htmlspecialchars($s['phone']); ?></div>
+                                            <div><i class="fas fa-phone"></i> <?php echo htmlspecialchars($s['phone'] ?? ''); ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -971,13 +971,13 @@ $pageTitle = "Staff List";
                                         <?php if ($team_logo['found']): ?>
                                             <img src="<?php echo $team_logo['url']; ?>" 
                                                  class="team-logo" 
-                                                 alt="<?php echo htmlspecialchars($s['team_name']); ?>"
+                                                 alt="<?php echo htmlspecialchars($s['team_name'] ?? ''); ?>"
                                                  onerror="this.style.display='none'">
                                         <?php endif; ?>
                                         <div class="team-info">
                                             <span class="team-name"><?php echo htmlspecialchars($s['team_name'] ?: '-'); ?></span>
                                             <?php if (!empty($s['team_alias'])): ?>
-                                                <span class="team-alias"><?php echo htmlspecialchars($s['team_alias']); ?></span>
+                                                <span class="team-alias"><?php echo htmlspecialchars($s['team_alias'] ?? ''); ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -997,7 +997,7 @@ $pageTitle = "Staff List";
                                 <td class="col-certificate">
                                     <?php if ($s['certificate_count'] > 0): ?>
                                         <div class="cert-count" 
-                                             onclick="loadCertificates(<?php echo $s['id']; ?>, '<?php echo htmlspecialchars(addslashes($s['name'])); ?>')">
+                                             onclick="loadCertificates(<?php echo $s['id']; ?>, '<?php echo htmlspecialchars(addslashes($s['name'] ?? '')); ?>')">
                                             <i class="fas fa-certificate"></i>
                                             <span><?php echo $s['certificate_count']; ?></span>
                                         </div>

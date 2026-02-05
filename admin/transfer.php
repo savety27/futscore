@@ -826,8 +826,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -882,8 +882,8 @@ body {
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name); ?>!</h1>
-                <p>Transfer Center - Perpindahan pemain antar tim</p>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?>!</h1>
+                <p>Kelola transfer pemain antar team</p>
             </div>
             
             <div class="user-actions">
@@ -914,7 +914,7 @@ body {
         <?php if (!empty($errors)): ?>
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-circle"></i>
-            <span><?php echo implode(' ', array_map('htmlspecialchars', $errors)); ?></span>
+            <span><?php echo implode(' ', array_map(fn($e) => htmlspecialchars($e ?? ''), $errors)); ?></span>
         </div>
         <?php endif; ?>
 
@@ -951,7 +951,7 @@ body {
                             <option value="">-- Pilih Tim Tujuan --</option>
                             <?php foreach ($teams as $team): ?>
                                 <option value="<?php echo (int)$team['id']; ?>">
-                                    <?php echo htmlspecialchars($team['name']); ?>
+                                    <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

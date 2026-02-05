@@ -119,14 +119,14 @@ foreach ($challenges as $challenge) {
     
     echo '<tr>';
     echo '<td>' . $no++ . '</td>';
-    echo '<td>' . htmlspecialchars($challenge['challenge_code']) . '</td>';
-    echo '<td>' . htmlspecialchars($challenge['status']) . '</td>';
-    echo '<td>' . htmlspecialchars($challenge['challenger_name']) . '</td>';
+    echo '<td>' . htmlspecialchars($challenge['challenge_code'] ?? '') . '</td>';
+    echo '<td>' . htmlspecialchars($challenge['status'] ?? '') . '</td>';
+    echo '<td>' . htmlspecialchars($challenge['challenger_name'] ?? '') . '</td>';
     echo '<td>' . htmlspecialchars($challenge['opponent_name'] ?? 'TBD') . '</td>';
     echo '<td>' . htmlspecialchars($challenge['venue_name'] ?? '-') . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($challenge['challenge_date'])) . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($challenge['expiry_date'])) . '</td>';
-    echo '<td>' . htmlspecialchars($challenge['sport_type']) . '</td>';
+    echo '<td>' . htmlspecialchars($challenge['sport_type'] ?? '') . '</td>';
     echo '<td>' . htmlspecialchars($challenge['match_status'] ?? 'Belum Mulai') . '</td>';
     echo '<td>' . ($challenge['challenger_score'] !== null ? $challenge['challenger_score'] : '-') . '</td>';
     echo '<td>' . ($challenge['opponent_score'] !== null ? $challenge['opponent_score'] : '-') . '</td>';

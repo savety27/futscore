@@ -1027,8 +1027,8 @@ tbody tr:hover {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1090,7 +1090,7 @@ tbody tr:hover {
         <div class="topbar">
             <div class="greeting">
                 <h1>Team Staff Details 👔</h1>
-                <p>Detail informasi staff: <?php echo htmlspecialchars($staff_data['name']); ?></p>
+                <p>Detail informasi staff: <?php echo htmlspecialchars($staff_data['name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -1158,8 +1158,8 @@ tbody tr:hover {
             
             <div style="display: flex; gap: 40px; align-items: center; margin-bottom: 30px; flex-wrap: wrap;">
                 <?php if (!empty($staff_data['photo'])): ?>
-                    <img src="../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
-                         alt="<?php echo htmlspecialchars($staff_data['name']); ?>" 
+                    <img src="../<?php echo htmlspecialchars($staff_data['photo'] ?? ''); ?>" 
+                         alt="<?php echo htmlspecialchars($staff_data['name'] ?? ''); ?>" 
                          class="staff-photo-large" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
                 <?php else: ?>
                     <div class="staff-photo-large" style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center; border: 5px solid white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
@@ -1187,15 +1187,15 @@ tbody tr:hover {
                     </p>
                     <p style="color: #666; margin-bottom: 15px;">
                         <i class="fas fa-users"></i>
-                        Team: <strong><?php echo htmlspecialchars($staff_data['team_name']); ?></strong>
+                        Team: <strong><?php echo htmlspecialchars($staff_data['team_name'] ?? ''); ?></strong>
                         <?php if (!empty($staff_data['team_alias'])): ?>
-                            (<?php echo htmlspecialchars($staff_data['team_alias']); ?>)
+                            (<?php echo htmlspecialchars($staff_data['team_alias'] ?? ''); ?>)
                         <?php endif; ?>
                     </p>
                     <?php if (!empty($staff_data['email'])): ?>
                         <p style="color: #666;">
                             <i class="fas fa-envelope"></i>
-                            Email: <?php echo htmlspecialchars($staff_data['email']); ?>
+                            Email: <?php echo htmlspecialchars($staff_data['email'] ?? ''); ?>
                         </p>
                     <?php endif; ?>
                 </div>
@@ -1204,7 +1204,7 @@ tbody tr:hover {
             <div class="info-grid">
                 <div class="info-item">
                     <span class="info-label">Nama Lengkap</span>
-                    <div class="info-value"><?php echo htmlspecialchars($staff_data['name']); ?></div>
+                    <div class="info-value"><?php echo htmlspecialchars($staff_data['name'] ?? ''); ?></div>
                 </div>
                 
                 <div class="info-item">
@@ -1219,9 +1219,9 @@ tbody tr:hover {
                 <div class="info-item">
                     <span class="info-label">Team</span>
                     <div class="info-value">
-                        <strong><?php echo htmlspecialchars($staff_data['team_name']); ?></strong>
+                        <strong><?php echo htmlspecialchars($staff_data['team_name'] ?? ''); ?></strong>
                         <?php if (!empty($staff_data['team_alias'])): ?>
-                            <br><small>(<?php echo htmlspecialchars($staff_data['team_alias']); ?>)</small>
+                            <br><small>(<?php echo htmlspecialchars($staff_data['team_alias'] ?? ''); ?>)</small>
                         <?php endif; ?>
                     </div>
                 </div>

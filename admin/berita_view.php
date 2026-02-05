@@ -137,7 +137,7 @@ function cleanTextContent($text) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Detail Berita - <?php echo htmlspecialchars($berita['judul']); ?></title>
+<title>Detail Berita - <?php echo htmlspecialchars($berita['judul'] ?? ''); ?></title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
@@ -998,8 +998,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1094,12 +1094,12 @@ body {
         <div class="detail-container">
             <!-- Berita Header -->
             <div class="berita-header">
-                <h1 class="berita-title"><?php echo htmlspecialchars($berita['judul']); ?></h1>
+                <h1 class="berita-title"><?php echo htmlspecialchars($berita['judul'] ?? ''); ?></h1>
                 
                 <div class="berita-meta">
                     <div class="meta-item">
                         <i class="fas fa-user"></i>
-                        <span>Penulis: <?php echo htmlspecialchars($berita['penulis']); ?></span>
+                        <span>Penulis: <?php echo htmlspecialchars($berita['penulis'] ?? ''); ?></span>
                     </div>
                     
                     <div class="meta-item">
@@ -1118,7 +1118,7 @@ body {
                 </div>
                 
                 <div class="slug-info">
-                    <i class="fas fa-link"></i> Slug: <?php echo htmlspecialchars($berita['slug']); ?>
+                    <i class="fas fa-link"></i> Slug: <?php echo htmlspecialchars($berita['slug'] ?? ''); ?>
                 </div>
             </div>
 
@@ -1152,8 +1152,8 @@ body {
             <!-- Berita Image -->
             <div class="berita-image-container">
                 <?php if (!empty($berita['gambar'])): ?>
-                    <img src="../images/berita/<?php echo htmlspecialchars($berita['gambar']); ?>" 
-                         alt="<?php echo htmlspecialchars($berita['judul']); ?>" 
+                    <img src="../images/berita/<?php echo htmlspecialchars($berita['gambar'] ?? ''); ?>" 
+                         alt="<?php echo htmlspecialchars($berita['judul'] ?? ''); ?>" 
                          class="berita-image">
                 <?php else: ?>
                     <div class="image-placeholder">
@@ -1173,7 +1173,7 @@ body {
                     <?php foreach ($tags as $tag): ?>
                         <?php $tag = trim($tag); ?>
                         <?php if (!empty($tag)): ?>
-                        <span class="tag-item"><?php echo htmlspecialchars($tag); ?></span>
+                        <span class="tag-item"><?php echo htmlspecialchars($tag ?? ''); ?></span>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
@@ -1196,7 +1196,7 @@ body {
                 } else {
                     // Konten plain text - tampilkan dengan formatting yang baik
                     $cleaned_content = cleanTextContent($content);
-                    echo '<div class="plain-text-content">' . nl2br(htmlspecialchars($cleaned_content)) . '</div>';
+                    echo '<div class="plain-text-content">' . nl2br(htmlspecialchars($cleaned_content ?? '')) . '</div>';
                 }
                 ?>
             </div>
@@ -1208,7 +1208,7 @@ body {
                     Edit Berita
                 </a>
                 
-                <button onclick="deleteBerita(<?php echo $berita_id; ?>, '<?php echo htmlspecialchars(addslashes($berita['judul'])); ?>')" 
+                <button onclick="deleteBerita(<?php echo $berita_id; ?>, '<?php echo htmlspecialchars(addslashes($berita['judul'] ?? '')); ?>')" 
                         class="action-btn" style="background: var(--danger); color: white;">
                     <i class="fas fa-trash"></i>
                     Hapus Berita

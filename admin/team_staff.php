@@ -1212,8 +1212,8 @@ body {
                 <div class="logo"></div>
             </div>
             <div class="academy-info">
-                <div class="academy-name"><?php echo $academy_name; ?></div>
-                <div class="academy-email"><?php echo $email; ?></div>
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
             </div>
         </div>
 
@@ -1292,7 +1292,7 @@ body {
                     Daftar Staff
                     <?php if ($team_id > 0 && !empty($filter_team_name)): ?>
                         <div class="filter-badge">
-                            <span><i class="fas fa-filter"></i> Team: <?php echo htmlspecialchars($filter_team_name); ?></span>
+                            <span><i class="fas fa-filter"></i> Team: <?php echo htmlspecialchars($filter_team_name ?? ''); ?></span>
                             <a href="team_staff.php" title="Clear Filter"><i class="fas fa-times-circle"></i></a>
                         </div>
                     <?php endif; ?>
@@ -1304,7 +1304,7 @@ body {
                     <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
                 <?php endif; ?>
                 <input type="text" name="search" placeholder="Cari staff (nama, email, posisi)..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
                 </button>
@@ -1361,8 +1361,8 @@ body {
                             <td class="count-cell"><?php echo $no++; ?></td>
                             <td class="photo-cell">
                                 <?php if (!empty($staff['photo'])): ?>
-                                    <img src="../<?php echo htmlspecialchars($staff['photo']); ?>" 
-                                         alt="<?php echo htmlspecialchars($staff['name']); ?>" 
+                                    <img src="../<?php echo htmlspecialchars($staff['photo'] ?? ''); ?>" 
+                                         alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" 
                                          class="staff-photo">
                                 <?php else: ?>
                                     <div class="staff-photo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
@@ -1371,16 +1371,16 @@ body {
                                 <?php endif; ?>
                             </td>
                             <td class="name-cell">
-                                <strong><?php echo htmlspecialchars($staff['name']); ?></strong>
+                                <strong><?php echo htmlspecialchars($staff['name'] ?? ''); ?></strong>
                                 <?php if (!empty($staff['email'])): ?>
-                                    <br><small style="color: var(--gray);"><?php echo htmlspecialchars($staff['email']); ?></small>
+                                    <br><small style="color: var(--gray);"><?php echo htmlspecialchars($staff['email'] ?? ''); ?></small>
                                 <?php endif; ?>
                             </td>
                             <td class="team-cell">
                                 <?php if (!empty($staff['team_name'])): ?>
-                                    <strong><?php echo htmlspecialchars($staff['team_name']); ?></strong>
+                                    <strong><?php echo htmlspecialchars($staff['team_name'] ?? ''); ?></strong>
                                     <?php if (!empty($staff['team_alias'])): ?>
-                                        <br><small style="color: var(--gray);">(<?php echo htmlspecialchars($staff['team_alias']); ?>)</small>
+                                        <br><small style="color: var(--gray);">(<?php echo htmlspecialchars($staff['team_alias'] ?? ''); ?>)</small>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     <span style="color: var(--gray);">-</span>
@@ -1414,7 +1414,7 @@ body {
                             </td>
                             <td class="certificate-cell">
                                 <?php if ($staff['certificate_count'] > 0): ?>
-                                    <span class="certificate-count" onclick="viewCertificates(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'])); ?>')">
+                                    <span class="certificate-count" onclick="viewCertificates(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'] ?? '')); ?>')">
                                         <i class="fas fa-certificate"></i> <?php echo $staff['certificate_count']; ?>
                                     </span>
                                 <?php else: ?>
@@ -1443,7 +1443,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteStaff(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'])); ?>')">
+                                            onclick="deleteStaff(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'] ?? '')); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

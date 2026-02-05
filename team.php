@@ -19,7 +19,7 @@ if ($teamId > 0) {
     
     // Get events this team participated in
     $conn = $db->getConnection();
-    $eventSql = "SELECT DISTINCT e.id, e.name 
+    $eventSql = "SELECT DISTINCT e.id, e.name, e.start_date 
                  FROM events e
                  INNER JOIN matches m ON e.id = m.event_id
                  WHERE (m.team1_id = ? OR m.team2_id = ?)
@@ -412,11 +412,11 @@ if ($teamId > 0) {
         <div class="team-info-card">
             <div class="team-info-header">
                 <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
-                     alt="<?php echo htmlspecialchars($team['name']); ?>" 
+                     alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                      class="team-logo-large"
                      onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                 <div class="team-title-section">
-                    <h1><?php echo htmlspecialchars($team['name']); ?></h1>
+                    <h1><?php echo htmlspecialchars($team['name'] ?? ''); ?></h1>
                     <?php if (!empty($team['established_year'])): ?>
                         <div class="team-subtitle">Didirikan sejak <?php echo date('d M Y', strtotime($team['established_year'] . '-01-01')); ?></div>
                     <?php endif; ?>
@@ -428,8 +428,8 @@ if ($teamId > 0) {
                             <div class="detail-value">
                                 <?php 
                                 $managerCoach = [];
-                                if (!empty($team['manager'])) $managerCoach[] = htmlspecialchars($team['manager']);
-                                if (!empty($team['coach'])) $managerCoach[] = htmlspecialchars($team['coach']);
+                                if (!empty($team['manager'])) $managerCoach[] = htmlspecialchars($team['manager'] ?? '');
+                                if (!empty($team['coach'])) $managerCoach[] = htmlspecialchars($team['coach'] ?? '');
                                 echo implode(' / ', $managerCoach);
                                 ?>
                             </div>
@@ -439,14 +439,14 @@ if ($teamId > 0) {
                         <?php if (!empty($team['basecamp'])): ?>
                         <div class="detail-item">
                             <div class="detail-label">Basecamp</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($team['basecamp']); ?></div>
+                            <div class="detail-value"><?php echo htmlspecialchars($team['basecamp'] ?? ''); ?></div>
                         </div>
                         <?php endif; ?>
                         
                         <?php if (!empty($team['contact'])): ?>
                         <div class="detail-item">
                             <div class="detail-label">Kontak</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($team['contact']); ?></div>
+                            <div class="detail-value"><?php echo htmlspecialchars($team['contact'] ?? ''); ?></div>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -464,7 +464,7 @@ if ($teamId > 0) {
             <div class="player-tabs">
                 <?php foreach ($events as $event): ?>
                     <button class="player-tab" data-event="<?php echo $event['id']; ?>">
-                        <?php echo htmlspecialchars($event['name']); ?>
+                        <?php echo htmlspecialchars($event['name'] ?? ''); ?>
                     </button>
                 <?php endforeach; ?>
                 <button class="player-tab active" data-tab="players">Players</button>

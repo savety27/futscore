@@ -26,15 +26,15 @@ try {
         foreach ($certificates as $cert) {
             echo '<div class="certificate-item">';
             echo '<div class="certificate-info">';
-            echo '<h4>' . htmlspecialchars($cert['certificate_name']) . '</h4>';
-            echo '<p><strong>Lembaga Penerbit:</strong> ' . htmlspecialchars($cert['issuing_authority']) . '</p>';
-            echo '<p><strong>Tanggal Terbit:</strong> ' . htmlspecialchars($cert['issue_date']) . '</p>';
+            echo '<h4>' . htmlspecialchars($cert['certificate_name'] ?? '') . '</h4>';
+            echo '<p><strong>Lembaga Penerbit:</strong> ' . htmlspecialchars($cert['issuing_authority'] ?? '') . '</p>';
+            echo '<p><strong>Tanggal Terbit:</strong> ' . htmlspecialchars($cert['issue_date'] ?? '') . '</p>';
             echo '</div>';
             
             // Tampilkan gambar sertifikat
             $certificate_file = basename($cert['certificate_file']);
             echo '<img src="../uploads/certificates/' . $certificate_file . '" 
-                  alt="' . htmlspecialchars($cert['certificate_name']) . '" 
+                  alt="' . htmlspecialchars($cert['certificate_name'] ?? '') . '" 
                   class="certificate-image"
                   onerror="this.onerror=null; this.src=\'../images/default-certificate.png\'">';
             echo '</div>';

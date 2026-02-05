@@ -98,15 +98,15 @@ $no = 1;
 foreach ($teams as $team) {
     echo '<tr>';
     echo '<td>' . $no++ . '</td>';
-    echo '<td>' . htmlspecialchars($team['name']) . '</td>';
+    echo '<td>' . htmlspecialchars($team['name'] ?? '') . '</td>';
     echo '<td>' . (!empty($team['alias']) ? htmlspecialchars($team['alias']) : '-') . '</td>';
-    echo '<td>' . htmlspecialchars($team['coach']) . '</td>';
+    echo '<td>' . htmlspecialchars($team['coach'] ?? '') . '</td>';
     echo '<td>' . $team['established_year'] . '</td>';
     echo '<td>' . (!empty($team['uniform_color']) ? htmlspecialchars($team['uniform_color']) : '-') . '</td>';
     echo '<td>' . $team['player_count'] . '</td>';
     echo '<td>' . $team['staff_count'] . '</td>';
     echo '<td>' . (!empty($team['basecamp']) ? htmlspecialchars($team['basecamp']) : '-') . '</td>';
-    echo '<td>' . htmlspecialchars($team['sport_type']) . '</td>';
+    echo '<td>' . htmlspecialchars($team['sport_type'] ?? '') . '</td>';
     echo '<td>' . ($team['is_active'] ? 'Aktif' : 'Non-Aktif') . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($team['created_at'])) . '</td>';
     echo '</tr>';

@@ -76,8 +76,8 @@ $offset = ($page - 1) * $perPage;
                     <select id="eventFilter" class="filter-select">
                         <option value="0">All Events</option>
                         <?php foreach ($events as $event): ?>
-                        <option value="<?php echo htmlspecialchars($event); ?>" <?php echo $eventId === $event ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($event); ?>
+                        <option value="<?php echo htmlspecialchars($event ?? ''); ?>" <?php echo $eventId === $event ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($event ?? ''); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
@@ -89,7 +89,7 @@ $offset = ($page - 1) * $perPage;
                         <option value="0">All Teams</option>
                         <?php foreach ($teams as $team): ?>
                         <option value="<?php echo $team['id']; ?>" <?php echo $teamId == $team['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($team['name']); ?>
+                            <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
@@ -134,21 +134,21 @@ $offset = ($page - 1) * $perPage;
                                 <div class="team-info">
                                     <div class="team-logo-wrapper">
                                         <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
-                                             alt="<?php echo htmlspecialchars($match['challenger_name']); ?>" 
+                                             alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
                                              class="team-logo-sm"
                                              onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                     </div>
-                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name']); ?></span>
+                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                                 </div>
                                 <div class="vs-sm">VS</div>
                                 <div class="team-info">
                                     <div class="team-logo-wrapper">
                                         <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
-                                             alt="<?php echo htmlspecialchars($match['opponent_name']); ?>" 
+                                             alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
                                              class="team-logo-sm"
                                              onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                     </div>
-                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name']); ?></span>
+                                    <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                                 </div>
                             </div>
                         </td>
@@ -172,11 +172,11 @@ $offset = ($page - 1) * $perPage;
                         <td class="match-venue-cell">
                             <div class="venue-info">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span class="venue-text"><?php echo htmlspecialchars($match['venue_name']); ?></span>
+                                <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
                             </div>
                         </td>
                         <td class="match-event-cell">
-                            <span class="event-badge"><?php echo htmlspecialchars($match['sport_type']); ?></span>
+                            <span class="event-badge"><?php echo htmlspecialchars($match['sport_type'] ?? ''); ?></span>
                         </td>
                         <td class="match-actions-cell">
                             <?php if ($isScheduled): ?>
