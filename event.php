@@ -195,16 +195,16 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
 
     <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
         <div class="sidebar-logo">
             <a href="<?php echo SITE_URL; ?>">
                 <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
@@ -501,17 +501,36 @@ const sidebar = document.getElementById('sidebar');
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
 
+const setSidebarOpen = (open) => {
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
 if (sidebarToggle && sidebar && sidebarOverlay) {
     sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('active');
-        sidebarOverlay.classList.toggle('active');
-        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+        const isOpen = sidebar.classList.contains('active');
+        setSidebarOpen(!isOpen);
     });
 
     sidebarOverlay.addEventListener('click', () => {
-        sidebar.classList.remove('active');
-        sidebarOverlay.classList.remove('active');
-        document.body.style.overflow = '';
+        setSidebarOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setSidebarOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) {
+            setSidebarOpen(false);
+        }
     });
 }
 </script>
