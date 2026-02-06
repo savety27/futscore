@@ -1406,7 +1406,7 @@ body {
                                 ];
                                 ?>
                                 <span class="position-badge <?php echo $position_class[$staff['position']] ?? 'badge-secondary'; ?>">
-                                    <?php echo $position_labels[$staff['position']] ?? ucfirst($staff['position']); ?>
+                                    <?php echo $position_labels[$staff['position'] ?? ''] ?? ucfirst($staff['position'] ?? ''); ?>
                                 </span>
                             </td>
                             <td class="age-cell">

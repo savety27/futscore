@@ -1516,7 +1516,7 @@ body {
                     <div class="preview-content">
                         <strong>Judul:</strong> <span id="previewJudul"><?php echo htmlspecialchars($berita_data['judul'] ?? ''); ?></span><br>
                         <strong>Slug:</strong> <span id="previewSlug"><?php echo htmlspecialchars($berita_data['slug'] ?? ''); ?></span><br>
-                        <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($berita_data['status']); ?></span>
+                        <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($berita_data['status'] ?? ''); ?></span>
                     </div>
                 </div>
 

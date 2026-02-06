@@ -1,3 +1,4 @@
+    <?php if (!isset($hideNavbars) || !$hideNavbars): ?>
     </main>
 
     <!-- Footer -->
@@ -52,6 +53,7 @@
             </div>
         </div>
     </footer>
+    <?php endif; ?>
 
     <!-- JavaScript -->
     <script>

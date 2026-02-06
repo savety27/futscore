@@ -200,7 +200,7 @@ function formatGender($gender) {
     } elseif (strpos($gender_lower, 'laki') !== false || $gender_lower == 'l' || $gender_lower == 'laki-laki') {
         return 'Laki-laki';
     } else {
-        return ucfirst($gender);
+        return ucfirst($gender ?? '');
     }
 }
 ?>

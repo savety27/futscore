@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once 'includes/header.php';
+require_once 'includes/functions.php';
 
 // Cek koneksi database
 if (!$db || !$db->getConnection()) {
@@ -107,7 +107,7 @@ function formatPosition($position) {
         'scout' => 'Scout'
     ];
     
-    return $position_labels[$position] ?? ucfirst(str_replace('_', ' ', $position));
+    return $position_labels[$position] ?? ucfirst(str_replace('_', ' ', $position ?? ''));
 }
 
 // Helper function to check file exists and return correct path
@@ -831,6 +831,8 @@ $pageTitle = "Staff List";
     }
 }
 </style>
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -856,31 +858,117 @@ $pageTitle = "Staff List";
     <div class="image-title" id="imageTitle"></div>
 </div>
 
-<!-- Banner Hero Section DI LUAR container -->
-<div class="staff-hero">
-    <div class="container">
-        <h1>STAFF</h1>
-    </div>
-</div>
-
-<div class="container">
-    <div class="staff-list-section">
-        <!-- Page Header -->
-       
-
-        <!-- Search Bar -->
-        <div class="search-container">
-            <form action="" method="GET" class="search-wrapper">
-                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                       placeholder="Cari staff (nama, email, telepon, jabatan)...">
-                
-            </form>
+<div class="dashboard-wrapper">
+    <!-- Mobile Header -->
+    <header class="mobile-dashboard-header">
+        <div class="mobile-logo">
+            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
         </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
 
-        <!-- Staff Table -->
-        <div class="staff-table-container">
-            <div class="table-responsive">
-                <table class="staff-table">
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
+        <div class="sidebar-logo">
+            <a href="<?php echo SITE_URL; ?>">
+                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-has-dropdown active" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
+                    <div class="nav-link-content">
+                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div id="playerDropdown" class="sidebar-dropdown show">
+                    <a href="player.php">Player</a>
+                    <a href="staff.php" class="active">Team Staff</a>
+                </div>
+            </div>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            
+            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
+                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-login-sidebar">
+                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                </a>
+            <?php endif; ?>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content-dashboard">
+        <header class="dashboard-header dashboard-header-staff">
+            <div class="dashboard-header-inner">
+                <div>
+                    <div class="header-eyebrow">MGP</div>
+                    <h1>TEAM STAFF</h1>
+                    <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi tim untuk memantau peran kunci di setiap skuad.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="header-stat">
+                        <span class="stat-label">Total Staff Aktif</span>
+                        <span class="stat-value"><?php echo number_format($total_records); ?></span>
+                    </div>
+                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-body">
+            <div class="filter-card staff-filter-card">
+                <form action="" method="GET" class="filter-row">
+                    <div class="filter-group">
+                        <label for="search">Pencarian Staff</label>
+                        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" 
+                               placeholder="Cari staff (nama, email, telepon, jabatan)...">
+                    </div>
+                    <div class="filter-actions-new">
+                        <button type="submit" class="btn-filter-apply">
+                            <i class="fas fa-search"></i> Cari
+                        </button>
+                        <a href="staff.php" class="btn-filter-reset">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                    </div>
+                    <?php if ($page > 1): ?>
+                        <input type="hidden" name="page" value="<?php echo $page; ?>">
+                    <?php endif; ?>
+                </form>
+                <div class="filter-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Menampilkan</span>
+                        <span class="summary-value"><?php echo min($offset + 1, $total_records); ?> - <?php echo min($offset + $limit, $total_records); ?></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Total Staff</span>
+                        <span class="summary-value"><?php echo number_format($total_records); ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container-new">
+                <table class="staff-table-new">
                     <thead>
                         <tr>
                             <th class="col-no">No</th>
@@ -900,7 +988,7 @@ $pageTitle = "Staff List";
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada staff ditemukan</p>
                                     <?php if (!empty($search)): ?>
-                                        <p style="margin-top: 10px; font-size: 14px;">
+                                        <p class="no-data-keyword">
                                             Kata kunci: "<?php echo htmlspecialchars($search); ?>"
                                         </p>
                                     <?php endif; ?>
@@ -920,10 +1008,10 @@ $pageTitle = "Staff List";
                             ?>
                             <tr>
                                 <!-- Kolom No -->
-                                <td class="col-no"><?php echo $no++; ?></td>
+                                <td class="col-no" data-label="No"><?php echo $no++; ?></td>
                                 
                                 <!-- Kolom Foto Staff -->
-                                <td class="col-photo">
+                                <td class="col-photo" data-label="Foto">
                                     <div class="staff-photo-wrapper">
                                         <?php if ($staff_photo['found']): ?>
                                             <img src="<?php echo $staff_photo['url']; ?>" 
@@ -953,7 +1041,7 @@ $pageTitle = "Staff List";
                                 </td>
                                 
                                 <!-- Kolom Nama -->
-                                <td class="col-name">
+                                <td class="col-name" data-label="Nama">
                                     <div class="staff-name"><?php echo htmlspecialchars($s['name'] ?? ''); ?></div>
                                     <div class="staff-contact">
                                         <?php if (!empty($s['email'])): ?>
@@ -966,7 +1054,7 @@ $pageTitle = "Staff List";
                                 </td>
                                 
                                 <!-- Kolom Team -->
-                                <td>
+                                <td class="col-team" data-label="Tim">
                                     <div class="team-display">
                                         <?php if ($team_logo['found']): ?>
                                             <img src="<?php echo $team_logo['url']; ?>" 
@@ -984,17 +1072,17 @@ $pageTitle = "Staff List";
                                 </td>
                                 
                                 <!-- Kolom Jabatan -->
-                                <td class="col-position">
+                                <td class="col-position" data-label="Jabatan">
                                     <span class="position-badge <?php echo $position_class; ?>">
                                         <?php echo formatPosition($s['position']); ?>
                                     </span>
                                 </td>
                                 
                                 <!-- Kolom Usia -->
-                                <td class="col-age"><?php echo calculateStaffAge($s['birth_date']); ?></td>
+                                <td class="col-age" data-label="Usia"><?php echo calculateStaffAge($s['birth_date']); ?></td>
                                 
                                 <!-- Kolom Lisensi -->
-                                <td class="col-certificate">
+                                <td class="col-certificate" data-label="Lisensi">
                                     <?php if ($s['certificate_count'] > 0): ?>
                                         <div class="cert-count" 
                                              onclick="loadCertificates(<?php echo $s['id']; ?>, '<?php echo htmlspecialchars(addslashes($s['name'] ?? '')); ?>')">
@@ -1002,14 +1090,12 @@ $pageTitle = "Staff List";
                                             <span><?php echo $s['certificate_count']; ?></span>
                                         </div>
                                     <?php else: ?>
-                                        <span style="color: #a0aec0;">-</span>
+                                        <span class="muted">-</span>
                                     <?php endif; ?>
                                 </td>
                                 
-
-                                
                                 <!-- Kolom Created At -->
-                                <td class="col-created">
+                                <td class="col-created" data-label="Dibuat">
                                     <?php echo date('d M Y', strtotime($s['created_at'])); ?><br>
                                     <small><?php echo date('H:i', strtotime($s['created_at'])); ?></small>
                                 </td>
@@ -1019,62 +1105,119 @@ $pageTitle = "Staff List";
                     </tbody>
                 </table>
             </div>
-        </div>
 
-          <!-- Pagination -->
-        <div class="pagination-info" style="justify-content: flex-start;">
-            <div class="info-text">
-                Showing <?php echo min($offset + 1, $total_records); ?> to <?php echo min($offset + $limit, $total_records); ?> of <?php echo number_format($total_records); ?> entries
+            <!-- Pagination -->
+            <div class="pagination-bar">
+                <div class="pagination-info">
+                    <div class="info-text">
+                        Showing <?php echo min($offset + 1, $total_records); ?> to <?php echo min($offset + $limit, $total_records); ?> of <?php echo number_format($total_records); ?> entries
+                    </div>
+                </div>
+                <?php if ($total_pages > 1): ?>
+                <div class="pagination-controls">
+                    <!-- Previous -->
+                    <?php if ($page > 1): ?>
+                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Previous</a>
+                    <?php else: ?>
+                        <span class="disabled">Previous</span>
+                    <?php endif; ?>
+
+                    <!-- Page Numbers -->
+                    <?php 
+                    $start_page = max(1, $page - 2);
+                    $end_page = min($total_pages, $page + 2);
+
+                    if ($start_page > 1) {
+                        echo '<a href="?page=1&search='.urlencode($search).'">1</a>';
+                        if ($start_page > 2) echo '<span>...</span>';
+                    }
+
+                    for ($i = $start_page; $i <= $end_page; $i++): 
+                    ?>
+                        <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <?php 
+                    if ($end_page < $total_pages) {
+                        if ($end_page < $total_pages - 1) echo '<span>...</span>';
+                        echo '<a href="?page='.$total_pages.'&search='.urlencode($search).'">'.$total_pages.'</a>';
+                    }
+                    ?>
+
+                    <!-- Next -->
+                    <?php if ($page < $total_pages): ?>
+                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Next</a>
+                    <?php else: ?>
+                        <span class="disabled">Next</span>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
-        
-        <?php if ($total_pages > 1): ?>
-        <div class="pagination-controls" style="margin-top: 10px;">
-            <!-- Previous -->
-            <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Previous</a>
-            <?php else: ?>
-                <span class="disabled">Previous</span>
-            <?php endif; ?>
 
-            <!-- Page Numbers -->
-            <?php 
-            $start_page = max(1, $page - 2);
-            $end_page = min($total_pages, $page + 2);
-
-            if ($start_page > 1) {
-                echo '<a href="?page=1&search='.urlencode($search).'">1</a>';
-                if ($start_page > 2) echo '<span>...</span>';
-            }
-
-            for ($i = $start_page; $i <= $end_page; $i++): 
-            ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
-                    <?php echo $i; ?>
-                </a>
-            <?php endfor; ?>
-
-            <?php 
-            if ($end_page < $total_pages) {
-                if ($end_page < $total_pages - 1) echo '<span>...</span>';
-                echo '<a href="?page='.$total_pages.'&search='.urlencode($search).'">'.$total_pages.'</a>';
-            }
-            ?>
-
-            <!-- Next -->
-            <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Next</a>
-            <?php else: ?>
-                <span class="disabled">Next</span>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-        </div>
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>
+                <a href="<?php echo SITE_URL; ?>">Home</a> | 
+                <a href="contact.php">Contact</a> | 
+                <a href="privacy.php">Privacy Policy</a>
+            </p>
+        </footer>
     </div>
 </div>
-<?php require_once 'includes/footer.php'; ?>
 
 <script>
+const SITE_URL = '<?php echo SITE_URL; ?>';
+
+// Sidebar Dropdown Toggle
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    element.classList.toggle('open');
+}
+
+// Sidebar Toggle Strategy for Mobile
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+const setSidebarOpen = (open) => {
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
+if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => {
+        const isOpen = sidebar.classList.contains('active');
+        setSidebarOpen(!isOpen);
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        setSidebarOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setSidebarOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) {
+            setSidebarOpen(false);
+        }
+    });
+}
+
 // Function to load certificates - FIXED VERSION
 function loadCertificates(staffId, staffName) {
     console.log('Loading certificates for:', staffName, 'ID:', staffId);
@@ -1348,6 +1491,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 
 </body>
 </html>

@@ -1183,7 +1183,7 @@ tbody tr:hover {
                         ];
                         ?>
                         <i class="fas fa-briefcase"></i>
-                        Jabatan: <strong><?php echo $position_labels[$staff_data['position']] ?? ucfirst($staff_data['position']); ?></strong>
+                        Jabatan: <strong><?php echo $position_labels[$staff_data['position'] ?? ''] ?? ucfirst($staff_data['position'] ?? ''); ?></strong>
                     </p>
                     <p style="color: #666; margin-bottom: 15px;">
                         <i class="fas fa-users"></i>
@@ -1211,7 +1211,7 @@ tbody tr:hover {
                     <span class="info-label">Jabatan</span>
                     <div class="info-value">
                         <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
-                            <?php echo $position_labels[$staff_data['position']] ?? ucfirst($staff_data['position']); ?>
+                            <?php echo $position_labels[$staff_data['position'] ?? ''] ?? ucfirst($staff_data['position'] ?? ''); ?>
                         </span>
                     </div>
                 </div>

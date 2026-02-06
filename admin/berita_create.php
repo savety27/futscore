@@ -1371,7 +1371,7 @@ body {
                     <div class="preview-content">
                         <strong>Judul:</strong> <span id="previewJudul"><?php echo htmlspecialchars($form_data['judul'] ?? ''); ?></span><br>
                         <strong>Slug:</strong> <span id="previewSlug"><?php echo htmlspecialchars($form_data['slug'] ?? ''); ?></span><br>
-                        <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($form_data['status']); ?></span>
+                        <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($form_data['status'] ?? ''); ?></span>
                     </div>
                 </div>
 
