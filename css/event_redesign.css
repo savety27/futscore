@@ -964,8 +964,8 @@ body.sidebar-open {
         align-items: center;
         justify-content: flex-start;
         gap: 12px;
-        width: 60%;
-        float: left;
+        width: 100%;
+        float: none;
     }
 
     /* Code Badge Indicator */
@@ -993,9 +993,9 @@ body.sidebar-open {
         border-bottom: 1px solid var(--gray-100);
         display: flex;
         align-items: center;
-        justify-content: flex-end;
-        width: 40%;
-        float: left;
+        justify-content: flex-start;
+        width: 100%;
+        float: none;
     }
 
     /* Clear float after header row */
@@ -1179,6 +1179,9 @@ body.sidebar-open {
     /* Badge Sizing */
     .badge-new {
         min-width: 0;
+        flex-shrink: 0;
+        width: auto;
+        white-space: nowrap;
         padding: 8px 14px;
         font-size: 10px;
         letter-spacing: 0.8px;
