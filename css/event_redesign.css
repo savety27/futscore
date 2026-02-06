@@ -1108,43 +1108,75 @@ body.sidebar-open {
         color: var(--gray-300);
     }
 
+
     /* ================================================
-       META ROW - Match Status + Sport Type
-       Side-by-side layout using CSS Grid on parent
+       META SECTION - Simple Vertical Labels
+       Status: <value>
+       Match Status: <value>
+       Cabor: <value>
        ================================================ */
 
-    /* Create a wrapper effect for meta items */
+    /* Challenge Status with Label */
+    .event-table-new td:nth-child(6) {
+        padding: 12px 18px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .event-table-new td:nth-child(6)::before {
+        content: 'Status:';
+        display: inline-block;
+        font-weight: 700;
+        font-size: 11px;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Match Status with Label */
     .event-table-new td:nth-child(7) {
-        padding: 12px 9px 12px 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 12px 18px;
         background: var(--gray-50);
         border-bottom: 1px solid var(--gray-100);
-        border-right: 1px solid var(--gray-200);
-        width: 50%;
-        float: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
+    .event-table-new td:nth-child(7)::before {
+        content: 'Match Status:';
+        display: inline-block;
+        font-weight: 700;
+        font-size: 11px;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Sport Type (Cabor) with Label */
     .event-table-new td:nth-child(8) {
-        padding: 12px 18px 12px 9px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 12px 18px;
         background: var(--gray-50);
         border-bottom: 1px solid var(--gray-100);
-        width: 50%;
-        float: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    /* Clear float after meta row */
-    .event-table-new td:nth-child(8)::after {
-        content: '';
-        display: table;
-        clear: both;
+    .event-table-new td:nth-child(8)::before {
+        content: 'Cabor:';
+        display: inline-block;
+        font-weight: 700;
+        font-size: 11px;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    /* Mobile Badge Sizing */
+    /* Badge Sizing */
     .badge-new {
         min-width: 0;
         padding: 8px 14px;
