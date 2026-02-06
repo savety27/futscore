@@ -327,6 +327,9 @@
     width: 60px;
     text-align: center;
     font-weight: 700;
+}
+
+.staff-table-new td.col-no {
     color: var(--gray-500);
 }
 
@@ -348,6 +351,9 @@
     width: 90px;
     text-align: center;
     font-weight: 600;
+}
+
+.staff-table-new td.col-age {
     color: var(--navy);
 }
 
@@ -358,9 +364,12 @@
 
 .col-created {
     width: 120px;
-    color: var(--gray-500);
     font-size: 12px;
     white-space: nowrap;
+}
+
+.staff-table-new td.col-created {
+    color: var(--gray-500);
 }
 
 /* Staff Photo */

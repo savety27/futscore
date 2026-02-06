@@ -921,7 +921,7 @@ $pageTitle = "Staff List";
         <header class="dashboard-header dashboard-header-staff">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">FUTSCORE</div>
+                    <div class="header-eyebrow">MGP</div>
                     <h1>TEAM STAFF</h1>
                     <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi tim untuk memantau peran kunci di setiap skuad.</p>
                 </div>

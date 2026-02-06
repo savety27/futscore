@@ -144,7 +144,7 @@ function maskNIK($nik) {
         <header class="dashboard-header player-header">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">FUTSCORE</div>
+                    <div class="header-eyebrow">MGP</div>
                     <h1>Player Directory</h1>
                     <p class="header-subtitle">Daftar pemain aktif lengkap dengan informasi dasar dan statistik.</p>
                 </div>

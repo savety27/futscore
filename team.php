@@ -108,7 +108,7 @@ if ($teamId > 0) {
         <header class="dashboard-header dashboard-header-home dashboard-header-team">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">FUTSCORE</div>
+                    <div class="header-eyebrow">MGP</div>
                     <h1>
                         <?php if ($teamId > 0): ?>
                             <?php echo htmlspecialchars($team['name'] ?? ''); ?>
