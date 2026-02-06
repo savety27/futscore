@@ -463,9 +463,9 @@ function initMatchTables() {
         });
     });
 
-    // Row click for table rows
-    document.querySelectorAll('.schedule-row').forEach(row => {
-        row.addEventListener('click', function (e) {
+    // Card click for redesign cards
+    document.querySelectorAll('.schedule-card').forEach(card => {
+        card.addEventListener('click', function (e) {
             if (!e.target.closest('.btn-view-schedule')) {
                 const matchId = this.dataset.matchId;
                 if (matchId) {
@@ -475,8 +475,8 @@ function initMatchTables() {
         });
     });
 
-    document.querySelectorAll('.result-row').forEach(row => {
-        row.addEventListener('click', function (e) {
+    document.querySelectorAll('.result-card').forEach(card => {
+        card.addEventListener('click', function (e) {
             if (!e.target.closest('.btn-view-result')) {
                 const matchId = this.dataset.matchId;
                 if (matchId) {

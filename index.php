@@ -371,80 +371,70 @@ $pageTitle = "Home";
             <p>Belum ada pertandingan yang dijadwalkan</p>
         </div>
         <?php else: ?>
-        <div class="match-table-container">
-            <div class="table-responsive">
-                <table class="match-table">
-                    <thead>
-                        <tr>
-                            <th class="col-no">No</th>
-                            <th class="col-match">Match</th>
-                            <th class="col-datetime">Date & Time</th>
-                            <th class="col-venue">Venue</th>
-                            <th class="col-event">Event</th>
-                            <th class="col-action">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($scheduledMatches as $index => $match): ?>
-                        <tr class="match-row schedule-row" data-match-id="<?php echo $match['id']; ?>">
-                            <td class="match-number"><?php echo $index + 1; ?></td>
-                            <td class="match-teams-cell">
-                                <div class="match-teams-info">
-                                    <div class="team-info">
-                                        <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
-                                                 class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
-                                        </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
-                                    </div>
-                                    <div class="vs-sm">VS</div>
-                                    <div class="team-info">
-                                        <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
-                                                 class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
-                                        </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="match-datetime-cell">
-                                <div class="datetime-info">
-                                    <span class="date-info"><?php echo formatDate($match['challenge_date']); ?></span>
-                                    <span class="time-info"><?php echo date('H:i', strtotime($match['challenge_date'])); ?></span>
-                                </div>
-                            </td>
-                            <td class="match-venue-cell">
-                                <div class="venue-info">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
-                                </div>
-                            </td>
-                            <td class="match-event-cell">
-                                <span class="event-badge"><?php echo htmlspecialchars($match['sport_type'] ?? ''); ?></span>
-                                <div class="round-info"><?php echo htmlspecialchars($match['challenge_code'] ?? ''); ?></div>
-                            </td>
-                            <td class="match-actions-cell">
-                                <button class="btn-view btn-view-schedule" data-match-id="<?php echo $match['id']; ?>">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+        <div class="match-grid-redesign">
+            <?php foreach ($scheduledMatches as $index => $match): ?>
+            <div class="match-item-card schedule-card" data-match-id="<?php echo $match['id']; ?>">
+                <div class="match-card-top">
+                    <span class="m-sport-badge"><?php echo htmlspecialchars($match['sport_type'] ?? 'Futsal'); ?></span>
+                    <span class="m-match-code"><?php echo htmlspecialchars($match['challenge_code'] ?? ''); ?></span>
+                </div>
+                
+                <div class="match-card-main">
+                    <div class="m-team challenger">
+                        <div class="m-team-logo">
+                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
+                                 alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                        </div>
+                        <span class="m-team-name"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
+                    </div>
+                    
+                    <div class="m-vs-divider">
+                        <span class="vs-label">VS</span>
+                    </div>
+                    
+                    <div class="m-team opponent">
+                        <div class="m-team-logo">
+                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
+                                 alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                        </div>
+                        <span class="m-team-name"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
+                    </div>
+                </div>
+                
+                <div class="match-card-bottom">
+                    <div class="m-info-item">
+                        <i class="far fa-calendar-alt"></i>
+                        <span><?php echo formatDate($match['challenge_date']); ?></span>
+                    </div>
+                    <div class="m-info-item">
+                        <i class="far fa-clock"></i>
+                        <span><?php echo date('H:i', strtotime($match['challenge_date'])); ?></span>
+                    </div>
+                </div>
+                
+                <div class="match-card-venue">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span><?php echo htmlspecialchars($match['venue_name'] ?? 'TBA'); ?></span>
+                </div>
+                
+                <div class="match-card-action">
+                    <button class="btn-view-premium btn-view-schedule" data-match-id="<?php echo $match['id']; ?>">
+                        <i class="fas fa-eye"></i> View Match
+                    </button>
+                </div>
             </div>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
         
-          <div class="see-more-section">
-              <a href="all.php?status=schedule" class="btn-see-more">
-                  <i class="fas fa-arrow-right"></i> See All Schedule
-              </a>
-          </div>
+        <div class="see-more-section">
+            <a href="all.php?status=schedule" class="btn-see-more-premium">
+                <span>See All Schedule</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
     </div>
 
     <!-- Result Tab -->
@@ -458,82 +448,63 @@ $pageTitle = "Home";
             <p>Belum ada pertandingan yang selesai</p>
         </div>
         <?php else: ?>
-        <div class="match-table-container">
-            <div class="table-responsive">
-                <table class="match-table">
-                    <thead>
-                        <tr>
-                            <th class="col-no">No</th>
-                            <th class="col-match">Match</th>
-                            <th class="col-score">Score</th>
-                            <th class="col-datetime">Date & Time</th>
-                            <th class="col-venue">Venue</th>
-                            <th class="col-action">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($completedMatches as $index => $match): ?>
-                        <tr class="match-row result-row" data-match-id="<?php echo $match['id']; ?>">
-                            <td class="match-number"><?php echo $index + 1; ?></td>
-                            <td class="match-teams-cell">
-                                <div class="match-teams-info">
-                                    <div class="team-info">
-                                        <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
-                                                 class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
-                                        </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
-                                    </div>
-                                    <div class="vs-sm">VS</div>
-                                    <div class="team-info">
-                                        <div class="team-logo-wrapper">
-                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
-                                                 class="team-logo-sm"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
-                                        </div>
-                                        <span class="team-name-sm"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="match-score-cell">
-                                <div class="score-info">
-                                    <span class="score-team"><?php echo $match['challenger_score']; ?></span>
-                                    <span class="score-separator">-</span>
-                                    <span class="score-team"><?php echo $match['opponent_score']; ?></span>
-                                </div>
-                                <div class="match-status-badge completed">FT</div>
-                            </td>
-                            <td class="match-datetime-cell">
-                                <div class="datetime-info">
-                                    <span class="date-info"><?php echo formatDate($match['challenge_date']); ?></span>
-                                    <span class="time-info"><?php echo date('H:i', strtotime($match['challenge_date'])); ?></span>
-                                </div>
-                            </td>
-                            <td class="match-venue-cell">
-                                <div class="venue-info">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
-                                </div>
-                            </td>
-                            <td class="match-actions-cell">
-                                <button class="btn-view btn-view-result" data-match-id="<?php echo $match['id']; ?>">
-                                    <i class="fas fa-chart-bar"></i> Report
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+        <div class="match-grid-redesign">
+            <?php foreach ($completedMatches as $index => $match): ?>
+            <div class="match-item-card result-card" data-match-id="<?php echo $match['id']; ?>">
+                <div class="match-card-top">
+                    <span class="m-sport-badge"><?php echo htmlspecialchars($match['sport_type'] ?? 'Futsal'); ?></span>
+                    <span class="m-match-status">FT</span>
+                </div>
+                
+                <div class="match-card-main">
+                    <div class="m-team challenger">
+                        <div class="m-team-logo">
+                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
+                                 alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                        </div>
+                        <span class="m-team-name"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
+                    </div>
+                    
+                    <div class="m-score-container">
+                        <span class="m-score"><?php echo $match['challenger_score']; ?> - <?php echo $match['opponent_score']; ?></span>
+                    </div>
+                    
+                    <div class="m-team opponent">
+                        <div class="m-team-logo">
+                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
+                                 alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                        </div>
+                        <span class="m-team-name"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
+                    </div>
+                </div>
+                
+                <div class="match-card-bottom">
+                    <div class="m-info-item">
+                        <i class="far fa-calendar-alt"></i>
+                        <span><?php echo formatDate($match['challenge_date']); ?></span>
+                    </div>
+                    <div class="m-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span><?php echo htmlspecialchars($match['venue_name'] ?? 'TBA'); ?></span>
+                    </div>
+                </div>
+                
+                <div class="match-card-action">
+                    <button class="btn-view-premium btn-view-result" data-match-id="<?php echo $match['id']; ?>">
+                        <i class="fas fa-chart-bar"></i> Match Report
+                    </button>
+                </div>
             </div>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
         
         <div class="see-more-section">
-            <a href="all.php?status=result" class="btn-see-more">
-                <i class="fas fa-arrow-right"></i> See All Results
+            <a href="all.php?status=result" class="btn-see-more-premium">
+                <span>See All Results</span>
+                <i class="fas fa-arrow-right"></i>
             </a>
         </div>
     </div>
