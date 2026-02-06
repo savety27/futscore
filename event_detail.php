@@ -248,13 +248,13 @@ usort($timeline_events, function($a, $b) {
                     </div>
                     
                     <div class="vs-center">
-                        <div class="vs-text">VS</div>
+                        <div class="vs-badge">VS</div>
                         <?php if ($event['challenger_score'] !== null && $event['opponent_score'] !== null): ?>
                             <div class="score-display">
                                 <?php echo $event['challenger_score']; ?><span class="score-separator">:</span><?php echo $event['opponent_score']; ?>
                             </div>
                         <?php else: ?>
-                            <div class="score-display score-pending">
+                            <div class="score-pending">
                                 Belum dimainkan
                             </div>
                         <?php endif; ?>
