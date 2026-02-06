@@ -1,11 +1,18 @@
 <?php
+$hideNavbars = true;
+$pageTitle = "Player Directory";
 require_once 'includes/header.php';
+?>
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/player_redesign.css?v=<?php echo time(); ?>">
+<?php
 
 // Logic for Search and Pagination
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 40;
 $offset = ($page - 1) * $limit;
+$player_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Database connection
 $conn = $db->getConnection();
@@ -44,6 +51,19 @@ if (!empty($search)) {
 $stmt->execute();
 $players = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+// Optional Player Detail (by ID)
+$player_detail = null;
+if ($player_id > 0) {
+    $detail_query = "SELECT p.*, t.name as team_name, t.logo as team_logo 
+                     FROM players p 
+                     LEFT JOIN teams t ON p.team_id = t.id 
+                     WHERE p.id = ? LIMIT 1";
+    $detail_stmt = $conn->prepare($detail_query);
+    $detail_stmt->bind_param("i", $player_id);
+    $detail_stmt->execute();
+    $player_detail = $detail_stmt->get_result()->fetch_assoc();
+}
+
 // Helper Functions
 function calculateAgeV2($birth_date) {
     if (empty($birth_date) || $birth_date == '0000-00-00') return '-';
@@ -59,323 +79,373 @@ function maskNIK($nik) {
     return substr($nik, 0, 3) . str_repeat('*', 9) . substr($nik, -4);
 }
 
-// Page Metadata
-$pageTitle = "Player List";
 ?>
 
-<style>
-/* Hero Banner Styles */
-.player-hero {
-    background: linear-gradient(135deg, #1a1a1a 0%, #c00 100%);
-    padding: 60px 0;
-    text-align: center;
-    color: #fff;
-    margin-bottom: 40px;
-}
-
-.player-hero h1 {
-    font-size: 48px;
-    font-weight: 800;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-}
-
-/* CSS Reset and Base for the section */
-.player-list-section {
-    padding: 40px 0;
-    color: #fff;
-}
-
-.search-container {
-    margin-bottom: 20px;
-    max-width: 400px;
-}
-
-.search-wrapper {
-    position: relative;
-    display: flex;
-}
-
-.search-wrapper input {
-    width: 100%;
-    padding: 12px 15px;
-    background: #fff;
-    border: none;
-    border-radius: 4px;
-    color: #333;
-    font-size: 14px;
-}
-
-.player-table-container {
-    background: #fff;
-    border-radius: 8px;
-    overflow-x: auto;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    border: 1px solid #333;
-}
-
-.player-table {
-    width: 100%;
-    border-collapse: collapse;
-    color: #333;
-    font-size: 13px;
-    min-width: 1200px;
-}
-
-.player-table thead tr {
-    background: linear-gradient(to right, #000, #c00); /* Dark to Red gradient */
-    color: #fff;
-}
-
-.player-table th {
-    padding: 12px 10px;
-    text-align: left;
-    font-weight: 700;
-    text-transform: capitalize;
-    border-right: 1px solid rgba(255,255,255,0.1);
-}
-
-.player-table td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    vertical-align: middle;
-}
-
-.player-table tbody tr:hover {
-    background-color: #f9f9f9;
-}
-
-/* Specific alignments and styles from reference */
-.col-no { width: 40px; text-align: center; }
-.col-photo { width: 60px; text-align: center; }
-.col-name { color: #0066cc; font-weight: 500; }
-.col-team { display: flex; align-items: center; gap: 8px; }
-.team-logo-small { width: 24px; height: 24px; border-radius: 50%; object-fit: contain; background: #eee; }
-.col-center { text-align: center; }
-
-.player-img-sm {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    object-fit: cover;
-}
-
-.placeholder-img {
-    width: 40px;
-    height: 40px;
-    background: #ddd;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-}
-
-/* Pagination Styles */
-.pagination-info {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #ccc; /* Improved contrast for dark background */
-    font-size: 14px;
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 0;
-    border-radius: 4px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-}
-
-.pagination-controls a, 
-.pagination-controls span {
-    padding: 8px 16px;
-    background: #fff;
-    color: #333;
-    text-decoration: none;
-    border-right: 1px solid #ddd;
-}
-
-.pagination-controls a:last-child { border-right: none; }
-
-.pagination-controls a:hover {
-    background: #eee;
-}
-
-.pagination-controls .active {
-    background: #0066cc;
-    color: #fff;
-    border-color: #0066cc;
-}
-
-.pagination-controls .disabled {
-    color: #ccc;
-    cursor: default;
-}
-
-/* Header sort icons (decorative) */
-.sort-icon::after {
-    content: " \21D5";
-    font-size: 10px;
-    opacity: 0.5;
-}
-
-/* Horizontal scrollbar styling for the table container */
-.player-table-container::-webkit-scrollbar {
-    height: 10px;
-}
-.player-table-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-.player-table-container::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-.player-table-container::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-</style>
-
-<!-- Banner Hero Section DI LUAR container -->
-<div class="player-hero">
-    <div class="container">
-        <h1>PLAYERS</h1>
-    </div>
-</div>
-
-<div class="container">
-    <div class="player-list-section">
-        <!-- Search Bar -->
-        <div class="search-container">
-            <form action="" method="GET" class="search-wrapper">
-                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search...">
-            </form>
+<div class="dashboard-wrapper">
+    <!-- Mobile Header -->
+    <header class="mobile-dashboard-header">
+        <div class="mobile-logo">
+            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
         </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
 
-        <!-- Table -->
-        <div class="player-table-container">
-            <table class="player-table">
-                <thead>
-                    <tr>
-                        <th class="col-no">No</th>
-                        <th class="col-photo">Photo</th>
-                        <th class="sort-icon">Nama</th>
-                        <th class="sort-icon">Team</th>
-                        <th class="col-center sort-icon">No Punggung</th>
-                        <th class="col-center sort-icon">Tgl Lahir</th>
-                        <th class="col-center sort-icon">Usia</th>
-                        <th class="col-center sort-icon">JK</th>
-                        <th class="sort-icon">NISN</th>
-                        <th class="sort-icon">NIK</th>
-                        <th class="sort-icon">Cabor</th>
-                        <th class="col-center sort-icon"># Events</th>
-                        <th class="col-center sort-icon"># Matches</th>
-                        <th class="sort-icon">Created At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($players)): ?>
-                        <tr>
-                            <td colspan="14" class="col-center" style="padding: 40px;">No players found.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php 
-                        $no = $offset + 1;
-                        foreach ($players as $p): 
-                        ?>
-                        <tr>
-                            <td class="col-no"><?php echo $no++; ?></td>
-                            <td class="col-photo">
-                                <?php if (!empty($p['photo']) && file_exists('images/players/' . $p['photo'])): ?>
-                                    <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $p['photo']; ?>" class="player-img-sm" alt="">
-                                <?php else: ?>
-                                    <div class="placeholder-img"><i class="fas fa-user"></i></div>
-                                <?php endif; ?>
-                            </td>
-                            <td class="col-name">
-                                <a href="<?php echo SITE_URL; ?>/player_view.php?id=<?php echo $p['id']; ?>" style="color: inherit; text-decoration: none;">
-                                    <?php echo htmlspecialchars($p['name'] ?? ''); ?>
-                                </a>
-                            </td>
-                            <td>
-                                <div class="col-team">
-                                    <?php if (!empty($p['team_logo']) && file_exists('images/teams/' . $p['team_logo'])): ?>
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $p['team_logo']; ?>" class="team-logo-small" alt="">
-                                    <?php else: ?>
-                                        <div class="team-logo-small" style="background: #ddd;"></div>
-                                    <?php endif; ?>
-                                    <span><?php echo htmlspecialchars($p['team_name'] ?: '-'); ?></span>
-                                </div>
-                            </td>
-                            <td class="col-center"><?php echo $p['jersey_number'] ?: '-'; ?></td>
-                            <td class="col-center"><?php echo !empty($p['birth_date']) ? date('d M Y', strtotime($p['birth_date'])) : '-'; ?></td>
-                            <td class="col-center"><?php echo calculateAgeV2($p['birth_date']); ?></td>
-                            <td class="col-center"><?php echo $p['gender'] ?: '-'; ?></td>
-                            <td><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
-                            <td><?php echo maskNIK($p['nik']); ?></td>
-                            <td><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
-                            <td class="col-center">0</td>
-                            <td class="col-center">0</td>
-                            <td><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
+        <div class="sidebar-logo">
+            <a href="<?php echo SITE_URL; ?>">
+                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            </a>
         </div>
-
-        <!-- Pagination -->
-        <div class="pagination-info">
-            <div class="info-text">
-                Showing <?php echo min($offset + 1, $total_records); ?> to <?php echo min($offset + $limit, $total_records); ?> of <?php echo number_format($total_records); ?> entries
-            </div>
-            
-            <?php if ($total_pages > 1): ?>
-                <div class="pagination-controls">
-                    <!-- Previous -->
-                    <?php if ($page > 1): ?>
-                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Previous</a>
-                    <?php else: ?>
-                        <span class="disabled">Previous</span>
-                    <?php endif; ?>
-
-                    <!-- Page Numbers -->
-                    <?php 
-                    $start_page = max(1, $page - 2);
-                    $end_page = min($total_pages, $page + 2);
-
-                    if ($start_page > 1) {
-                        echo '<a href="?page=1&search='.urlencode($search).'">1</a>';
-                        if ($start_page > 2) echo '<span>...</span>';
-                    }
-
-                    for ($i = $start_page; $i <= $end_page; $i++): 
-                    ?>
-                        <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
-                            <?php echo $i; ?>
-                        </a>
-                    <?php endfor; ?>
-
-                    <?php 
-                    if ($end_page < $total_pages) {
-                        if ($end_page < $total_pages - 1) echo '<span>...</span>';
-                        echo '<a href="?page='.$total_pages.'&search='.urlencode($search).'">'.$total_pages.'</a>';
-                    }
-                    ?>
-
-                    <!-- Next -->
-                    <?php if ($page < $total_pages): ?>
-                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Next</a>
-                    <?php else: ?>
-                        <span class="disabled">Next</span>
-                    <?php endif; ?>
+        <nav class="sidebar-nav">
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-has-dropdown open active" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
+                    <div class="nav-link-content">
+                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div id="playerDropdown" class="sidebar-dropdown show">
+                    <a href="player.php" class="active">Player</a>
+                    <a href="staff.php">Team Staff</a>
                 </div>
+            </div>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            
+            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
+                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-login-sidebar">
+                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                </a>
             <?php endif; ?>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content-dashboard">
+        <header class="dashboard-header player-header">
+            <div class="dashboard-header-inner">
+                <div>
+                    <div class="header-eyebrow">FUTSCORE</div>
+                    <h1>Player Directory</h1>
+                    <p class="header-subtitle">Daftar pemain aktif lengkap dengan informasi dasar dan statistik.</p>
+                </div>
+                <div class="header-stats">
+                    <div class="header-pill">
+                        <i class="fas fa-users"></i> <?php echo number_format($total_records); ?> Players
+                    </div>
+                    <div class="header-pill header-pill-light">
+                        <i class="fas fa-check-circle"></i> Active
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-body">
+            <?php if ($player_id > 0): ?>
+                <section class="player-detail-card" id="player-detail">
+                    <?php if (!$player_detail): ?>
+                        <div class="empty-state">
+                            <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
+                            <h3>Player tidak ditemukan</h3>
+                            <p>Player dengan ID tersebut tidak tersedia.</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="player-detail-header">
+                            <div class="player-detail-identity">
+                                <div class="player-photo-lg">
+                                    <?php if (!empty($player_detail['photo']) && file_exists('images/players/' . $player_detail['photo'])): ?>
+                                        <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player_detail['photo']; ?>" alt="">
+                                    <?php else: ?>
+                                        <div class="photo-placeholder"><i class="fas fa-user"></i></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="player-detail-main">
+                                    <h2><?php echo htmlspecialchars($player_detail['name'] ?? ''); ?></h2>
+                                    <div class="player-detail-meta">
+                                        <span class="meta-pill"><i class="fas fa-shirt"></i> #<?php echo htmlspecialchars($player_detail['jersey_number'] ?: '-'); ?></span>
+                                        <span class="meta-pill meta-pill-outline"><i class="fas fa-venus-mars"></i> <?php echo htmlspecialchars($player_detail['gender'] ?: '-'); ?></span>
+                                        <span class="meta-pill meta-pill-outline"><i class="fas fa-user-clock"></i> <?php echo calculateAgeV2($player_detail['birth_date']); ?></span>
+                                    </div>
+                                    <div class="player-team-row">
+                                        <?php if (!empty($player_detail['team_logo']) && file_exists('images/teams/' . $player_detail['team_logo'])): ?>
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $player_detail['team_logo']; ?>" class="team-logo-lg" alt="">
+                                        <?php else: ?>
+                                            <div class="team-logo-lg team-logo-placeholder"></div>
+                                        <?php endif; ?>
+                                        <div>
+                                            <div class="team-label">Team</div>
+                                            <div class="team-name"><?php echo htmlspecialchars($player_detail['team_name'] ?: '-'); ?></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="player-detail-actions">
+                                <a href="player.php?<?php echo http_build_query(['page' => $page ?: 1, 'search' => $search ?: null]); ?>" class="btn-filter-reset">
+                                    <i class="fas fa-arrow-left"></i> Back to list
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="player-detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">NISN</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($player_detail['nisn'] ?: '-'); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">NIK</span>
+                                <span class="detail-value"><?php echo maskNIK($player_detail['nik']); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Tanggal Lahir</span>
+                                <span class="detail-value"><?php echo !empty($player_detail['birth_date']) ? date('d M Y', strtotime($player_detail['birth_date'])) : '-'; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Posisi</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($player_detail['position'] ?: '-'); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Cabor</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($player_detail['sport_type'] ?: '-'); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Created At</span>
+                                <span class="detail-value"><?php echo date('d M Y, H:i', strtotime($player_detail['created_at'])); ?></span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </section>
+            <?php endif; ?>
+
+            <!-- Filter / Search -->
+            <div class="filter-card">
+                <form action="" method="GET" class="filter-row">
+                    <div class="filter-group">
+                        <label for="search">Pencarian</label>
+                        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Cari nama, NIK, atau NISN...">
+                    </div>
+                    <div class="filter-actions-new">
+                        <button type="submit" class="btn-filter-apply">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <a href="player.php" class="btn-filter-reset">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Table -->
+            <div class="player-table-container">
+                <table class="player-table-new">
+                    <thead>
+                        <tr>
+                            <th class="col-no">No</th>
+                            <th class="col-photo">Photo</th>
+                            <th>Nama</th>
+                            <th>Team</th>
+                            <th class="col-center">No Punggung</th>
+                            <th class="col-center">Tgl Lahir</th>
+                            <th class="col-center">Usia</th>
+                            <th class="col-center">JK</th>
+                            <th>NISN</th>
+                            <th>NIK</th>
+                            <th>Cabor</th>
+                            <th class="col-center"># Events</th>
+                            <th class="col-center"># Matches</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($players)): ?>
+                            <tr>
+                                <td colspan="14">
+                                    <div class="empty-state">
+                                        <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
+                                        <h3>Player tidak ditemukan</h3>
+                                        <p>Coba kata kunci lain atau reset filter pencarian.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php 
+                            $no = $offset + 1;
+                            foreach ($players as $p): 
+                            ?>
+                            <tr>
+                                <td class="col-no cell-no" data-label="No"><?php echo $no++; ?></td>
+                                <td class="col-photo cell-photo" data-label="Photo">
+                                    <?php if (!empty($p['photo']) && file_exists('images/players/' . $p['photo'])): ?>
+                                        <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $p['photo']; ?>" class="player-photo-sm" alt="">
+                                    <?php else: ?>
+                                        <div class="placeholder-img"><i class="fas fa-user"></i></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="cell-name" data-label="Nama">
+                                    <a href="player.php?id=<?php echo $p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#player-detail" class="player-link">
+                                        <?php echo htmlspecialchars($p['name'] ?? ''); ?>
+                                    </a>
+                                </td>
+                                <td class="cell-team" data-label="Team">
+                                    <div class="col-team">
+                                        <?php if (!empty($p['team_logo']) && file_exists('images/teams/' . $p['team_logo'])): ?>
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $p['team_logo']; ?>" class="team-logo-small" alt="">
+                                        <?php else: ?>
+                                            <div class="team-logo-small team-logo-placeholder"></div>
+                                        <?php endif; ?>
+                                        <span><?php echo htmlspecialchars($p['team_name'] ?: '-'); ?></span>
+                                    </div>
+                                </td>
+                                <td class="col-center" data-label="No Punggung"><?php echo $p['jersey_number'] ?: '-'; ?></td>
+                                <td class="col-center" data-label="Tgl Lahir"><?php echo !empty($p['birth_date']) ? date('d M Y', strtotime($p['birth_date'])) : '-'; ?></td>
+                                <td class="col-center" data-label="Usia"><?php echo calculateAgeV2($p['birth_date']); ?></td>
+                                <td class="col-center" data-label="JK"><?php echo $p['gender'] ?: '-'; ?></td>
+                                <td data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
+                                <td data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
+                                <td data-label="Cabor"><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
+                                <td class="col-center" data-label="# Events">0</td>
+                                <td class="col-center" data-label="# Matches">0</td>
+                                <td data-label="Created At"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-info">
+                <div class="info-text">
+                    Showing <?php echo min($offset + 1, $total_records); ?> to <?php echo min($offset + $limit, $total_records); ?> of <?php echo number_format($total_records); ?> entries
+                </div>
+                
+                <?php if ($total_pages > 1): ?>
+                    <div class="pagination-controls">
+                        <!-- Previous -->
+                        <?php if ($page > 1): ?>
+                            <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Previous</a>
+                        <?php else: ?>
+                            <span class="disabled">Previous</span>
+                        <?php endif; ?>
+
+                        <!-- Page Numbers -->
+                        <?php 
+                        $start_page = max(1, $page - 2);
+                        $end_page = min($total_pages, $page + 2);
+
+                        if ($start_page > 1) {
+                            echo '<a href="?page=1&search='.urlencode($search).'">1</a>';
+                            if ($start_page > 2) echo '<span>...</span>';
+                        }
+
+                        for ($i = $start_page; $i <= $end_page; $i++): 
+                        ?>
+                            <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="<?php echo ($i == $page) ? 'active' : ''; ?>">
+                                <?php echo $i; ?>
+                            </a>
+                        <?php endfor; ?>
+
+                        <?php 
+                        if ($end_page < $total_pages) {
+                            if ($end_page < $total_pages - 1) echo '<span>...</span>';
+                            echo '<a href="?page='.$total_pages.'&search='.urlencode($search).'">'.$total_pages.'</a>';
+                        }
+                        ?>
+
+                        <!-- Next -->
+                        <?php if ($page < $total_pages): ?>
+                            <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Next</a>
+                        <?php else: ?>
+                            <span class="disabled">Next</span>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
-    </div>
+
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>
+                <a href="<?php echo SITE_URL; ?>">Home</a> | 
+                <a href="contact.php">Contact</a> | 
+                <a href="privacy.php">Privacy Policy</a>
+            </p>
+        </footer>
+    </main>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<script>
+// Sidebar Dropdown Toggle
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    element.classList.toggle('open');
+}
+
+// Sidebar Toggle Strategy for Mobile
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+const setSidebarOpen = (open) => {
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
+if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => {
+        const isOpen = sidebar.classList.contains('active');
+        setSidebarOpen(!isOpen);
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        setSidebarOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setSidebarOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) {
+            setSidebarOpen(false);
+        }
+    });
+}
+</script>
+
+<script>
+// Define SITE_URL for JavaScript
+const SITE_URL = '<?php echo SITE_URL; ?>';
+</script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+</main>
+</body>
+</html>

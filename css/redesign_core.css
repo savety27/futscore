@@ -234,13 +234,15 @@ body.sidebar-open {
     height: 60%;
 }
 
-.sidebar-nav>a.active {
+.sidebar-nav>a.active,
+.sidebar-nav .nav-item-dropdown>a.nav-has-dropdown.active {
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
     color: var(--navy-dark);
     box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
 }
 
-.sidebar-nav>a.active::before {
+.sidebar-nav>a.active::before,
+.sidebar-nav .nav-item-dropdown>a.nav-has-dropdown.active::before {
     display: none;
 }
 
