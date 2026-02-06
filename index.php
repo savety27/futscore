@@ -206,7 +206,7 @@ $pageTitle = "Home";
                 $imagePath = SITE_URL . '/images/berita/' . $image;
                 $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
-                <div class="news-item-large" data-news-id="<?php echo $news['id']; ?>">
+                <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-large news-link" data-news-id="<?php echo $news['id']; ?>">
                     <img src="<?php echo $imagePath; ?>" 
                          alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>" 
                          class="news-image"
@@ -217,9 +217,7 @@ $pageTitle = "Home";
                             <span class="news-views"><i class="fas fa-eye"></i> <span class="view-count" id="view-count-<?php echo $news['id']; ?>"><?php echo $news['views']; ?></span>x</span>
                         </div>
                         <h3 class="news-title">
-                            <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
-                            </a>
+                            <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                         </h3>
                         <p class="news-excerpt">
                             <?php 
@@ -230,7 +228,7 @@ $pageTitle = "Home";
                         </p>
                         <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
-                </div>
+                </a>
             </div>
             
             <div class="news-sidebar">
@@ -241,7 +239,7 @@ $pageTitle = "Home";
                     $imagePath = SITE_URL . '/images/berita/' . $image;
                     $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
-                <div class="news-item-small" data-news-id="<?php echo $news['id']; ?>">
+                <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-small news-link" data-news-id="<?php echo $news['id']; ?>">
                     <div class="news-thumbnail">
                         <img src="<?php echo $imagePath; ?>" 
                              alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
@@ -254,13 +252,11 @@ $pageTitle = "Home";
                             <span class="news-views"><i class="fas fa-eye"></i> <span class="view-count" id="view-count-<?php echo $news['id']; ?>"><?php echo $news['views']; ?></span>x</span>
                         </div>
                         <h4 class="news-title">
-                            <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
-                            </a>
+                            <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                         </h4>
                         <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
-                </div>
+                </a>
                 <?php endfor; ?>
             </div>
         </div>
@@ -292,7 +288,7 @@ $pageTitle = "Home";
                 $imagePath = SITE_URL . '/images/berita/' . $image;
                 $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
-                <div class="news-item-large" data-news-id="<?php echo $news['id']; ?>">
+                <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-large news-link" data-news-id="<?php echo $news['id']; ?>">
                     <img src="<?php echo $imagePath; ?>" 
                          alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>" 
                          class="news-image"
@@ -304,9 +300,7 @@ $pageTitle = "Home";
                             <span class="news-popular-badge"><i class="fas fa-fire"></i> Trending</span>
                         </div>
                         <h3 class="news-title">
-                            <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
-                            </a>
+                            <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                         </h3>
                         <p class="news-excerpt">
                             <?php 
@@ -316,7 +310,7 @@ $pageTitle = "Home";
                         </p>
                         <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
-                </div>
+                </a>
             </div>
             
             <div class="news-sidebar">
@@ -327,7 +321,7 @@ $pageTitle = "Home";
                     $imagePath = SITE_URL . '/images/berita/' . $image;
                     $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
-                <div class="news-item-small" data-news-id="<?php echo $news['id']; ?>">
+                <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-small news-link" data-news-id="<?php echo $news['id']; ?>">
                     <div class="news-thumbnail">
                         <img src="<?php echo $imagePath; ?>" 
                              alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
@@ -340,13 +334,11 @@ $pageTitle = "Home";
                             <span class="news-views"><i class="fas fa-eye"></i> <span class="view-count" id="view-count-<?php echo $news['id']; ?>"><?php echo $news['views']; ?></span>x</span>
                         </div>
                         <h4 class="news-title">
-                            <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-link" data-news-id="<?php echo $news['id']; ?>">
-                                <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
-                            </a>
+                            <?php echo htmlspecialchars($news['judul'] ?? ''); ?>
                         </h4>
                         <p class="news-author">by <?php echo htmlspecialchars($news['penulis'] ?? ''); ?></p>
                     </div>
-                </div>
+                </a>
                 <?php endfor; ?>
             </div>
         </div>
