@@ -22,7 +22,6 @@ if (!isset($conn)) {
     $stats = [
         'total_players' => 0,
         'total_teams' => 0,
-        'total_events' => 0,
         'active_teams' => 0
     ];
 } else {
@@ -30,7 +29,6 @@ if (!isset($conn)) {
     $stats = [
         'total_players' => 0,
         'total_teams' => 0,
-        'total_events' => 0,
         'active_teams' => 0
     ];
 
@@ -43,11 +41,7 @@ if (!isset($conn)) {
         
         $stmt = $conn->query("SELECT COUNT(*) FROM teams WHERE is_active = 1");
         $stats['active_teams'] = $stmt->fetchColumn();
-        
-        $stmt = $conn->query("SELECT COUNT(*) FROM events");
-        $stats['total_events'] = $stmt->fetchColumn();
     } catch (PDOException $e) {
-        $stats['total_events'] = 0;
     }
 }
 
@@ -827,16 +821,6 @@ body {
                 <div class="stat-content">
                     <h3><?php echo number_format($stats['total_teams']); ?></h3>
                     <p>Total Team</p>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="stat-content">
-                    <h3><?php echo number_format($stats['total_events']); ?></h3>
-                    <p>Total Event</p>
                 </div>
             </div>
 

@@ -1,92 +1,34 @@
-<?php
-session_start();
-// TAMBAHKIN INI - Deklarasi variabel sebelum digunakan
-$photo_displayed = false;
-require_once '../config/database.php';
+﻿<?php
+$page_title = 'Detail Player';
+$current_page = 'players';
+require_once 'config/database.php';
+require_once 'includes/header.php';
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
-}
+$team_id = $_SESSION['team_id'] ?? 0;
 
-// Mendapatkan nama file saat ini untuk penanda menu 'Active'
-$current_page = basename($_SERVER['PHP_SELF']);
-
-// --- DATA MENU DROPDOWN ---
-$menu_items = [
-    'dashboard' => [
-        'icon' => '🏠',
-        'name' => 'Dashboard',
-        'url' => '../dashboard.php',
-        'submenu' => false
-    ],
-    'master' => [
-        'icon' => '📊',
-        'name' => 'Master Data',
-        'submenu' => true,
-        'items' => [
-            'player' => '../player.php',
-            'team' => '../team.php',
-            'team_staff' => '../team_staff.php',
-            'transfer' => '../transfer.php',
-        ]
-    ],
-    'Event' => [
-        'icon' => '🏆',
-        'name' => 'Event',
-        'url' => '../challenge.php',
-        'submenu' => false
-    ],
-    'Venue' => [
-        'icon' => '📍',
-        'name' => 'Venue',
-        'url' => '../venue.php',
-        'submenu' => false
-    ],
-    'Pelatih' => [
-        'icon' => '👨‍🏫',
-        'name' => 'Pelatih',
-        'url' => '../pelatih.php',
-        'submenu' => false
-    ],
-    'Berita' => [
-        'icon' => '📰',
-        'name' => 'Berita',
-        'url' => '../berita.php',
-        'submenu' => false
-    ]
-];
-
-$academy_name = "Hi, Welcome...";
-$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
-$admin_email = $_SESSION['admin_email'] ?? '';
-$email = $admin_email;
-
-if (!isset($_GET['id']) || empty($_GET['id'])) {
-    header("Location: ../player.php");
+if (!isset($_GET['id']) || empty($_GET['id']) || !$team_id) {
+    header('Location: players.php');
     exit;
 }
 
 $player_id = (int)$_GET['id'];
 
 try {
-    // Get player data with team info
     $stmt = $conn->prepare("
         SELECT p.*, t.name as team_name, t.logo as team_logo, 
                t.coach, t.basecamp
-        FROM players p 
-        LEFT JOIN teams t ON p.team_id = t.id 
-        WHERE p.id = ?
+        FROM players p
+        LEFT JOIN teams t ON p.team_id = t.id
+        WHERE p.id = ? AND p.team_id = ?
     ");
-    $stmt->execute([$player_id]);
+    $stmt->execute([$player_id, $team_id]);
     $player = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$player) {
-        header("Location: ../player.php");
+        header('Location: players.php');
         exit;
     }
-    
-    // Calculate age
+
     if (!empty($player['birth_date']) && $player['birth_date'] != '0000-00-00') {
         $birth_date = new DateTime($player['birth_date']);
         $today = new DateTime();
@@ -98,41 +40,24 @@ try {
         $player['age_months'] = '-';
     }
     
-    // Format gender untuk display
     function formatGenderView($gender) {
         if (empty($gender)) return '-';
-        
-        // Handle enum values 'L' and 'P'
-        if ($gender == 'L') {
-            return 'Laki-laki';
-        } elseif ($gender == 'P') {
-            return 'Perempuan';
-        }
-        
+        if ($gender == 'L') return 'Laki-laki';
+        if ($gender == 'P') return 'Perempuan';
         $gender_lower = strtolower($gender);
-        
-        if (strpos($gender_lower, 'perempuan') !== false || $gender_lower == 'p' || $gender_lower == 'perempuan') {
-            return 'Perempuan';
-        } elseif (strpos($gender_lower, 'laki') !== false || $gender_lower == 'l' || $gender_lower == 'laki-laki') {
-            return 'Laki-laki';
-        } else {
-            return ucfirst($gender ?? '');
-        }
+        if (strpos($gender_lower, 'perempuan') !== false || $gender_lower == 'p') return 'Perempuan';
+        if (strpos($gender_lower, 'laki') !== false || $gender_lower == 'l') return 'Laki-laki';
+        return ucfirst($gender);
     }
-    
+
 } catch (Exception $e) {
-    die("Error: " . $e->getMessage());
+    echo "<div class='card'><div class='alert alert-danger'>Error: " . htmlspecialchars($e->getMessage()) . "</div></div>";
+    require_once 'includes/footer.php';
+    exit;
 }
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>View Player - FutScore</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 <style>
-/* CSS styles for sidebar and layout */
 :root {
     --primary: #0A2463;
     --secondary: #FFD700;
@@ -147,255 +72,12 @@ try {
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-    color: var(--dark);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* ===== SIDEBAR ===== */
-.sidebar {
-    width: 280px;
-    background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
-    color: white;
-    padding: 0;
-    position: fixed;
-    height: 100vh;
-    overflow-y: auto;
-    z-index: 100;
-    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
-    transition: var(--transition);
-}
-
-.sidebar-header {
-    padding: 30px 25px;
-    text-align: center;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 2px solid var(--secondary);
-}
-
-.logo-container {
-    position: relative;
-    display: inline-block;
-}
-
-.logo {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--secondary) 0%, #FFEC8B 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    border: 4px solid white;
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
-    position: relative;
-    overflow: hidden;
-    transition: var(--transition);
-}
-
-.logo:hover {
-    transform: rotate(15deg) scale(1.05);
-    box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
-}
-
-.logo::before {
-    content: "⚽";
-    font-size: 48px;
-    color: var(--primary);
-}
-
-.academy-info {
-    text-align: center;
-    animation: fadeIn 0.8s ease-out;
-}
-
-.academy-name {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--secondary);
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-}
-
-.academy-email {
-    font-size: 14px;
-    opacity: 0.9;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-/* Menu */
-.menu {
-    padding: 25px 15px;
-}
-
-.menu-item {
-    margin-bottom: 8px;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.menu-link {
-    display: flex;
-    align-items: center;
-    padding: 16px 20px;
-    color: rgba(255, 255, 255, 0.85);
-    text-decoration: none;
-    transition: var(--transition);
-    position: relative;
-    border-left: 4px solid transparent;
-}
-
-.menu-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-left-color: var(--secondary);
-    padding-left: 25px;
-}
-
-.menu-link.active {
-    background: rgba(255, 215, 0, 0.15);
-    color: var(--secondary);
-    border-left-color: var(--secondary);
-    font-weight: 600;
-}
-
-.menu-icon {
-    font-size: 22px;
-    margin-right: 15px;
-    width: 30px;
-    text-align: center;
-}
-
-.menu-text {
-    flex: 1;
-    font-size: 16px;
-}
-
-.menu-arrow {
-    font-size: 12px;
-    transition: var(--transition);
-}
-
-.menu-arrow.rotate {
-    transform: rotate(90deg);
-}
-
-/* Submenu */
-.submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease-in-out;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0 0 12px 12px;
-}
-
-.submenu.open {
-    max-height: 300px;
-}
-
-.submenu-item {
-    padding: 5px 15px 5px 70px;
-}
-
-.submenu-link {
-    display: block;
-    padding: 12px 15px;
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    border-radius: 8px;
-    transition: var(--transition);
-    position: relative;
-    font-size: 14px;
-}
-
-.submenu-link:hover {
-    background: rgba(255, 215, 0, 0.1);
-    color: var(--secondary);
-    padding-left: 20px;
-}
-
-.submenu-link.active {
-    background: rgba(255, 215, 0, 0.1);
-    color: var(--secondary);
-    padding-left: 20px;
-}
-
-.submenu-link::before {
-    content: "•";
-    position: absolute;
-    left: 0;
-    color: var(--secondary);
-    font-size: 18px;
-}
-
-/* ===== MAIN CONTENT ===== */
-.main {
-    flex: 1;
-    padding: 30px;
-    margin-left: 280px;
-    transition: var(--transition);
-}
-
-/* Topbar */
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40px;
-    padding: 20px 25px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
-}
-
-.greeting h1 {
-    font-size: 28px;
-    color: var(--primary);
-    margin-bottom: 5px;
-}
-
-.greeting p {
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.logout-btn {
-    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
-    color: white;
-    padding: 12px 28px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
-}
-
-.logout-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
+.player-view {
+    margin-top: 20px;
 }
 
 /* Container */
-.container {
+.player-view .container {
     max-width: 1200px;
     margin: 0 auto;
     background: white;
@@ -405,7 +87,7 @@ body {
 }
 
 /* Header */
-.header {
+.player-view .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -414,7 +96,7 @@ body {
     color: white;
 }
 
-.back-btn {
+.player-view .back-btn {
     background: rgba(255, 255, 255, 0.1);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -427,29 +109,29 @@ body {
     transition: var(--transition);
 }
 
-.back-btn:hover {
+.player-view .back-btn:hover {
     background: var(--secondary);
     color: var(--primary);
     border-color: var(--secondary);
 }
 
-.page-title {
+.player-view .page-title {
     font-size: 24px;
     display: flex;
     align-items: center;
     gap: 15px;
 }
 
-.page-title i {
+.player-view .page-title i {
     color: var(--secondary);
 }
 
-.action-buttons {
+.player-view .action-buttons {
     display: flex;
     gap: 10px;
 }
 
-.btn {
+.player-view .btn {
     padding: 10px 20px;
     border-radius: 10px;
     border: none;
@@ -463,49 +145,49 @@ body {
     text-decoration: none;
 }
 
-.btn-primary {
+.player-view .btn-primary {
     background: linear-gradient(135deg, var(--primary), var(--accent));
     color: white;
 }
 
-.btn-primary:hover {
+.player-view .btn-primary:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
 }
 
-.btn-warning {
+.player-view .btn-warning {
     background: linear-gradient(135deg, var(--warning), #FF9800);
     color: white;
 }
 
-.btn-warning:hover {
+.player-view .btn-warning:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(249, 168, 38, 0.2);
 }
 
-.btn-success {
+.player-view .btn-success {
     background: linear-gradient(135deg, var(--success), #1B5E20);
     color: white;
 }
 
-.btn-success:hover {
+.player-view .btn-success:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
 }
 
 /* Player Profile */
-.player-profile {
+.player-view .player-profile {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 30px;
     padding: 30px;
 }
 
-.player-photo-section {
+.player-view .player-photo-section {
     text-align: center;
 }
 
-.player-photo {
+.player-view .player-photo {
     width: 250px;
     height: 250px;
     border-radius: 50%;
@@ -515,7 +197,7 @@ body {
     margin-bottom: 20px;
 }
 
-.default-photo {
+.player-view .default-photo {
     width: 250px;
     height: 250px;
     border-radius: 50%;
@@ -528,18 +210,18 @@ body {
     box-shadow: var(--card-shadow);
 }
 
-.default-photo i {
+.player-view .default-photo i {
     font-size: 80px;
     color: var(--primary);
 }
 
-.player-name {
+.player-view .player-name {
     font-size: 28px;
     color: var(--dark);
     margin-bottom: 10px;
 }
 
-.player-team {
+.player-view .player-team {
     color: var(--primary);
     font-weight: 600;
     margin-bottom: 5px;
@@ -549,7 +231,7 @@ body {
     gap: 10px;
 }
 
-.player-number {
+.player-view .player-number {
     font-size: 24px;
     color: var(--secondary);
     font-weight: 700;
@@ -564,22 +246,22 @@ body {
 }
 
 /* Player Details */
-.player-details {
+.player-view .player-details {
     padding-right: 20px;
 }
 
-.details-grid {
+.player-view .details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     margin-bottom: 30px;
 }
 
-.detail-group {
+.player-view .detail-group {
     margin-bottom: 15px;
 }
 
-.detail-label {
+.player-view .detail-label {
     font-weight: 600;
     color: var(--gray);
     font-size: 13px;
@@ -589,7 +271,7 @@ body {
     gap: 8px;
 }
 
-.detail-value {
+.player-view .detail-value {
     font-size: 15px;
     color: var(--dark);
     padding: 8px 0;
@@ -597,14 +279,14 @@ body {
 }
 
 /* Skills Section */
-.skills-section {
+.player-view .skills-section {
     background: #f8f9fa;
     padding: 30px;
     margin: 30px;
     border-radius: 15px;
 }
 
-.section-title {
+.player-view .section-title {
     font-size: 20px;
     color: var(--primary);
     margin-bottom: 25px;
@@ -613,26 +295,26 @@ body {
     gap: 15px;
 }
 
-.skills-grid {
+.player-view .skills-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
 }
 
-.skill-item {
+.player-view .skill-item {
     background: white;
     padding: 15px;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
-.skill-name {
+.player-view .skill-name {
     font-weight: 600;
     color: var(--dark);
     margin-bottom: 10px;
 }
 
-.skill-bar {
+.player-view .skill-bar {
     height: 10px;
     background: #e0e0e0;
     border-radius: 5px;
@@ -640,14 +322,14 @@ body {
     margin-bottom: 5px;
 }
 
-.skill-fill {
+.player-view .skill-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--primary), var(--accent));
     border-radius: 5px;
     transition: width 1s ease-in-out;
 }
 
-.skill-value {
+.player-view .skill-value {
     text-align: right;
     font-weight: 700;
     color: var(--primary);
@@ -655,18 +337,18 @@ body {
 }
 
 /* Documents Section */
-.documents-section {
+.player-view .documents-section {
     padding: 30px;
 }
 
-.documents-grid {
+.player-view .documents-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
     margin-top: 20px;
 }
 
-.document-card {
+.player-view .document-card {
     background: white;
     border-radius: 15px;
     padding: 20px;
@@ -676,26 +358,26 @@ body {
     border: 2px solid transparent;
 }
 
-.document-card:hover {
+.player-view .document-card:hover {
     transform: translateY(-5px);
     border-color: var(--primary);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
-.document-icon {
+.player-view .document-icon {
     font-size: 40px;
     color: var(--primary);
     margin-bottom: 15px;
     opacity: 0.8;
 }
 
-.document-name {
+.player-view .document-name {
     font-weight: 600;
     color: var(--dark);
     margin-bottom: 10px;
 }
 
-.document-status {
+.player-view .document-status {
     display: inline-block;
     padding: 6px 15px;
     border-radius: 20px;
@@ -704,17 +386,17 @@ body {
     margin-bottom: 15px;
 }
 
-.status-available {
+.player-view .status-available {
     background: rgba(46, 125, 50, 0.1);
     color: var(--success);
 }
 
-.status-unavailable {
+.player-view .status-unavailable {
     background: rgba(158, 158, 158, 0.1);
     color: #9E9E9E;
 }
 
-.document-preview {
+.player-view .document-preview {
     width: 100%;
     height: 150px;
     border-radius: 10px;
@@ -723,7 +405,7 @@ body {
     border: 2px solid #e0e0e0;
 }
 
-.document-preview img {
+.player-view .document-preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -731,136 +413,22 @@ body {
     transition: var(--transition);
 }
 
-.document-preview img:hover {
+.player-view .document-preview img:hover {
     transform: scale(1.05);
 }
 
-
-/* =========================================
-   MOBILE RESPONSIVE DESIGN
-   ========================================= */
-
-/* Default: Hide mobile-only elements on desktop */
-.menu-toggle {
-    display: none;
-}
-
-.menu-overlay {
-    display: none;
-}
-
-/* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
-    .sidebar {
-        width: 240px;
-    }
-
-    .main {
-        margin-left: 240px;
-    }
-    
-    .player-profile {
-        grid-template-columns: 250px 1fr;
-        gap: 20px;
-        padding: 20px;
-    }
-}
-
-/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
+/* ===== MOBILE RESPONSIVE DESIGN ===== */
 @media screen and (max-width: 768px) {
-    
-    /* Show Mobile Menu Toggle Button */
-    .menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
-        color: var(--primary);
-        border: none;
-        border-radius: 50%;
-        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
-        z-index: 1001;
-        font-size: 24px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .menu-toggle:hover {
-        transform: scale(1.1);
-        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
-    }
-
-    .menu-toggle:active {
-        transform: scale(0.95);
-    }
-
-    /* Sidebar: Hidden by default on mobile */
-    .sidebar {
-        transform: translateX(-100%);
-        box-shadow: none;
-        width: 280px;
-    }
-
-    /* Sidebar: Show when active */
-    .sidebar.active {
-        transform: translateX(0);
-        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Overlay: Show when menu is open */
-    .menu-overlay {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 99;
-        opacity: 0;
-        visibility: hidden;
-        transition: var(--transition);
-        backdrop-filter: blur(2px);
-    }
-
-    body.menu-open .menu-overlay {
-        opacity: 1;
-        visibility: visible;
-    }
-
     /* Main Content: Full width on mobile */
-    .main {
+    .player-view .main {
         margin-left: 0;
         padding: 20px 15px;
         width: 100%;
         max-width: 100vw;
     }
 
-    /* Topbar: Stack vertically */
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .greeting h1 {
-        font-size: 24px;
-    }
-
-    .user-actions {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-    }
-
     /* Header */
-    .header {
+    .player-view .header {
         flex-direction: column;
         gap: 15px;
         align-items: center;
@@ -868,206 +436,64 @@ body {
         padding: 20px;
     }
     
-    .page-title {
+    .player-view .page-title {
         order: -1; /* Title first */
     }
     
-    .action-buttons {
+    .player-view .action-buttons {
         flex-wrap: wrap;
         justify-content: center;
         width: 100%;
     }
     
-    .btn {
+    .player-view .btn {
         flex: 1;
         justify-content: center;
         min-width: 140px;
     }
 
     /* Player Profile Layout */
-    .player-profile {
+    .player-view .player-profile {
         grid-template-columns: 1fr;
         padding: 20px;
         gap: 30px;
     }
     
-    .details-grid {
+    .player-view .details-grid {
         grid-template-columns: 1fr;
     }
     
-    .skills-grid {
+    .player-view .skills-grid {
         grid-template-columns: 1fr;
     }
     
-    .documents-grid {
+    .player-view .documents-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
 @media screen and (max-width: 480px) {
-    
-    /* Reduce font sizes */
-    .greeting h1 {
-        font-size: 20px;
-    }
-    
-    .greeting p {
-        font-size: 13px;
-    }
-
-    /* Compact sidebar */
-    .sidebar {
-        width: 260px;
-    }
-
-    .sidebar-header {
-        padding: 20px 15px;
-    }
-
-    .logo {
-        width: 80px;
-        height: 80px;
-    }
-
-    .logo::before {
-        font-size: 36px;
-    }
-
-    .academy-name {
+    .player-view .section-title {
         font-size: 18px;
     }
     
-    /* Compact menu */
-    .menu {
-        padding: 20px 10px;
-    }
-
-    .menu-link {
-        padding: 14px 15px;
-        font-size: 15px;
-    }
-
-    .menu-icon {
-        font-size: 20px;
-        width: 28px;
-    }
-
-    /* Smaller mobile toggle button */
-    .menu-toggle {
-        width: 55px;
-        height: 55px;
-        font-size: 22px;
-        bottom: 20px;
-        right: 20px;
-    }
-    
-    .section-title {
-        font-size: 18px;
-    }
-    
-    .player-photo, .default-photo {
+    .player-view .player-photo,
+    .player-view .default-photo {
         width: 180px;
         height: 180px;
     }
+    
+    .player-view .player-name {
+        font-size: 22px;
+    }
 }
 </style>
-</head>
-<body>
 
-
-<!-- Mobile Menu Components (hidden by default via CSS) -->
-<div class="menu-overlay"></div>
-<button class="menu-toggle" id="menuToggle">
-    <i class="fas fa-bars"></i>
-</button>
-
-<div class="wrapper">
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-container">
-                <div class="logo"></div>
-            </div>
-            <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
-            </div>
-        </div>
-
-        <div class="menu">
-            <?php foreach ($menu_items as $key => $item): ?>
-            <?php 
-                // Cek apakah menu ini aktif berdasarkan URL saat ini
-                $isActive = false;
-                $isSubmenuOpen = false;
-                
-                if ($item['submenu']) {
-                    // Cek jika salah satu sub-item ada yang aktif
-                    foreach($item['items'] as $subUrl) {
-                        // Karena kita di dalam folder 'player', perlu relative path
-                        if($current_page === 'view.php' && $subUrl === '../player.php') {
-                            $isActive = true;
-                            $isSubmenuOpen = true;
-                            break;
-                        }
-                    }
-                } else {
-                    // Untuk menu tanpa submenu
-                    if ($current_page === 'view.php' && $item['url'] === '../player.php') {
-                        $isActive = true;
-                    }
-                }
-            ?>
-            <div class="menu-item">
-                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
-                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
-                   data-menu="<?php echo $key; ?>">
-                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                        <span class="menu-text"><?php echo $item['name']; ?></span>
-                        <?php if ($item['submenu']): ?>
-                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
-                        <?php endif; ?>
-                </a>
-                
-                <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
-                    <div class="submenu-item">
-                        <a href="<?php echo $subUrl; ?>" 
-                           class="submenu-link <?php echo ($current_page === 'view.php' && $subUrl === '../player.php') ? 'active' : ''; ?>">
-                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
-                        </a>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main">
-        <!-- TOPBAR -->
-        <div class="topbar">
-            <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
-                <p>Player Profile - Sistem manajemen pemain futsal</p>
-            </div>
-            
-            <div class="user-actions">
-                <a href="../logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </a>
-            </div>
-        </div>
-
-        <div class="container">
+<div class="player-view">
+    <div class="container">
             <!-- Header -->
             <div class="header">
-                <a href="../player.php" class="back-btn">
+                <a href="players.php" class="back-btn">
                     <i class="fas fa-arrow-left"></i>
                     Kembali ke Players
                 </a>
@@ -1076,7 +502,7 @@ body {
                     <span>Player Profile</span>
                 </div>
                 <div class="action-buttons">
-                    <a href="edit.php?id=<?php echo $player['id']; ?>" class="btn btn-warning">
+                    <a href="player_form.php?id=<?php echo $player['id']; ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i>
                         Edit Player
                     </a>
@@ -1084,7 +510,7 @@ body {
                         <i class="fas fa-camera"></i>
                         Print Player
                     </button>
-                    <a href="../player.php" class="btn btn-primary">
+                    <a href="players.php" class="btn btn-primary">
                         <i class="fas fa-list"></i>
                         All Players
                     </a>
@@ -1094,12 +520,29 @@ body {
             <!-- Player Profile -->
             <div class="player-profile">
                 <div class="player-photo-section">
-                    <?php if (!empty($player['photo'])): 
-                        $photo_path = '../../images/players/' . $player['photo'];
-                        if (file_exists($photo_path)):
+                    <?php 
+                    $photo_displayed = false;
+                    if (!empty($player['photo'])): 
+                        $photo_path = 'images/players/' . $player['photo'];
+                        $possible_paths = [
+                            $photo_path,
+                            '../' . $photo_path,
+                            '../../' . $photo_path,
+                            '../../../' . $photo_path
+                        ];
+                        
+                        $found_photo = false;
+                        foreach ($possible_paths as $path) {
+                            if (file_exists($path)) {
+                                $found_photo = $path;
+                                break;
+                            }
+                        }
+                        
+                        if ($found_photo):
                             $photo_displayed = true;
                     ?>
-                        <img src="<?php echo $photo_path; ?>" 
+                        <img src="<?php echo $found_photo; ?>" 
                              alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>" 
                              class="player-photo">
                     <?php 
@@ -1373,11 +816,26 @@ body {
                             <?php echo !empty($player['ktp_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['ktp_image'])): 
-                            $ktp_path = '../../images/players/' . $player['ktp_image'];
-                            if (file_exists($ktp_path)): ?>
+                            $ktp_path = 'images/players/' . $player['ktp_image'];
+                            $possible_paths = [
+                                $ktp_path,
+                                '../' . $ktp_path,
+                                '../../' . $ktp_path,
+                                '../../../' . $ktp_path
+                            ];
+                            
+                            $found_ktp = false;
+                            foreach ($possible_paths as $path) {
+                                if (file_exists($path)) {
+                                    $found_ktp = $path;
+                                    break;
+                                }
+                            }
+                            
+                            if ($found_ktp): ?>
                             <div class="document-preview">
-                                <img src="<?php echo $ktp_path; ?>" 
-                                     alt="KTP" onclick="viewDocument('<?php echo $ktp_path; ?>')">
+                                <img src="<?php echo $found_ktp; ?>" 
+                                     alt="KTP" onclick="viewDocument('<?php echo $found_ktp; ?>')">
                             </div>
                         <?php endif; endif; ?>
                     </div>
@@ -1392,11 +850,26 @@ body {
                             <?php echo !empty($player['kk_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['kk_image'])): 
-                            $kk_path = '../../images/players/' . $player['kk_image'];
-                            if (file_exists($kk_path)): ?>
+                            $kk_path = 'images/players/' . $player['kk_image'];
+                            $possible_paths = [
+                                $kk_path,
+                                '../' . $kk_path,
+                                '../../' . $kk_path,
+                                '../../../' . $kk_path
+                            ];
+                            
+                            $found_kk = false;
+                            foreach ($possible_paths as $path) {
+                                if (file_exists($path)) {
+                                    $found_kk = $path;
+                                    break;
+                                }
+                            }
+                            
+                            if ($found_kk): ?>
                             <div class="document-preview">
-                                <img src="<?php echo $kk_path; ?>" 
-                                     alt="KK" onclick="viewDocument('<?php echo $kk_path; ?>')">
+                                <img src="<?php echo $found_kk; ?>" 
+                                     alt="KK" onclick="viewDocument('<?php echo $found_kk; ?>')">
                             </div>
                         <?php endif; endif; ?>
                     </div>
@@ -1411,11 +884,26 @@ body {
                             <?php echo !empty($player['birth_cert_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['birth_cert_image'])): 
-                            $akte_path = '../../images/players/' . $player['birth_cert_image'];
-                            if (file_exists($akte_path)): ?>
+                            $akte_path = 'images/players/' . $player['birth_cert_image'];
+                            $possible_paths = [
+                                $akte_path,
+                                '../' . $akte_path,
+                                '../../' . $akte_path,
+                                '../../../' . $akte_path
+                            ];
+                            
+                            $found_akte = false;
+                            foreach ($possible_paths as $path) {
+                                if (file_exists($path)) {
+                                    $found_akte = $path;
+                                    break;
+                                }
+                            }
+                            
+                            if ($found_akte): ?>
                             <div class="document-preview">
-                                <img src="<?php echo $akte_path; ?>" 
-                                     alt="Akta Lahir" onclick="viewDocument('<?php echo $akte_path; ?>')">
+                                <img src="<?php echo $found_akte; ?>" 
+                                     alt="Akta Lahir" onclick="viewDocument('<?php echo $found_akte; ?>')">
                             </div>
                         <?php endif; endif; ?>
                     </div>
@@ -1430,11 +918,26 @@ body {
                             <?php echo !empty($player['diploma_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['diploma_image'])): 
-                            $ijazah_path = '../../images/players/' . $player['diploma_image'];
-                            if (file_exists($ijazah_path)): ?>
+                            $ijazah_path = 'images/players/' . $player['diploma_image'];
+                            $possible_paths = [
+                                $ijazah_path,
+                                '../' . $ijazah_path,
+                                '../../' . $ijazah_path,
+                                '../../../' . $ijazah_path
+                            ];
+                            
+                            $found_ijazah = false;
+                            foreach ($possible_paths as $path) {
+                                if (file_exists($path)) {
+                                    $found_ijazah = $path;
+                                    break;
+                                }
+                            }
+                            
+                            if ($found_ijazah): ?>
                             <div class="document-preview">
-                                <img src="<?php echo $ijazah_path; ?>" 
-                                     alt="Ijazah" onclick="viewDocument('<?php echo $ijazah_path; ?>')">
+                                <img src="<?php echo $found_ijazah; ?>" 
+                                     alt="Ijazah" onclick="viewDocument('<?php echo $found_ijazah; ?>')">
                             </div>
                         <?php endif; endif; ?>
                     </div>
@@ -1442,60 +945,11 @@ body {
             </div>
         </div>
     </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-
-// Mobile Menu Toggle Functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
-
-    if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
-
-    // Animate skill bars on load (Merged from below)
+    // Animate skill bars on load
     const skillBars = document.querySelectorAll('.skill-fill');
     skillBars.forEach(bar => {
         const width = bar.style.width;
@@ -1505,7 +959,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     });
     
-    // Handle image errors (Merged from below)
+    // Handle image errors
     document.querySelectorAll('.player-photo, .document-preview img').forEach(img => {
         img.addEventListener('error', function() {
             if (this.classList.contains('player-photo')) {
@@ -1572,8 +1026,6 @@ async function downloadPlayerScreenshot() {
         }
     }
 }
-
-// Animate skill bars on load
 </script>
-</body>
-</html>
+
+<?php require_once 'includes/footer.php'; ?>

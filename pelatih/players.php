@@ -96,7 +96,7 @@ if ($team_id) {
                         <th>Kontak</th>
                         <th style="width: 80px;">Skills</th>
                         <th>Status</th>
-                        <th style="width: 150px;">Aksi</th>
+                        <th style="width: 200px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -225,19 +225,28 @@ if ($team_id) {
                         </td>
                         <td class="actions-cell">
                             <div class="action-buttons">
+                                <!-- TAMBAHKAN TOMBOL VIEW DISINI -->
+                                <a href="player_view.php?id=<?php echo $player['id']; ?>" 
+                                   class="btn-primary btn-sm"
+                                   title="Lihat Detail Pemain"
+                                   aria-label="Lihat Detail Pemain">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="player_form.php?id=<?php echo $player['id']; ?>" 
-                                   class="btn-edit" 
-                                   title="Ubah Pemain">
-                                    <i class="fas fa-edit"></i> Edit
+                                   class="btn-primary btn-sm"
+                                   title="Ubah Pemain"
+                                   aria-label="Ubah Pemain">
+                                    <i class="fas fa-edit"></i>
                                 </a>
                                 <form action="player_actions.php" method="POST" class="delete-form">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo $player['id']; ?>">
                                     <button type="submit" 
-                                            class="btn-delete" 
+                                            class="btn-primary btn-sm"
                                             title="Hapus Pemain"
+                                            aria-label="Hapus Pemain"
                                             data-name="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
-                                        <i class="fas fa-trash"></i> Hapus
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </div>

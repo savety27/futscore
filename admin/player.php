@@ -523,8 +523,7 @@ body {
     gap: 15px;
 }
 
-    font-size: 32px;
-}
+    
 
 .page-title span {
     display: flex;

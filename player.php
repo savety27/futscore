@@ -453,4 +453,3 @@ const SITE_URL = '<?php echo SITE_URL; ?>';
 </main>
 </body>
 </html>
-
