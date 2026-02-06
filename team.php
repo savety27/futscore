@@ -728,6 +728,5 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
-</main>
 </body>
 </html>

@@ -103,5 +103,7 @@ $latestNews = getLatestNews(3);
     </div>
     <?php endif; ?>
 
+    <?php if (!isset($hideNavbars) || !$hideNavbars): ?>
     <!-- Main Content -->
     <main class="main-content">
+    <?php endif; ?>
