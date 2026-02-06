@@ -483,6 +483,16 @@ body {
     box-shadow: 0 5px 15px rgba(249, 168, 38, 0.2);
 }
 
+.btn-success {
+    background: linear-gradient(135deg, var(--success), #1B5E20);
+    color: white;
+}
+
+.btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+}
+
 /* Player Profile */
 .player-profile {
     display: grid;
@@ -1070,6 +1080,10 @@ body {
                         <i class="fas fa-edit"></i>
                         Edit Player
                     </a>
+                    <button type="button" class="btn btn-success" id="printPlayerBtn">
+                        <i class="fas fa-camera"></i>
+                        Print Player
+                    </button>
                     <a href="../player.php" class="btn btn-primary">
                         <i class="fas fa-list"></i>
                         All Players
@@ -1430,6 +1444,7 @@ body {
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 
 // Mobile Menu Toggle Functionality
@@ -1498,6 +1513,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    const printBtn = document.getElementById('printPlayerBtn');
+    if (printBtn) {
+        printBtn.addEventListener('click', async function() {
+            await downloadPlayerScreenshot();
+        });
+    }
 });
 
 function viewDocument(imagePath) {
@@ -1509,6 +1531,45 @@ function showDefaultPhoto(imgElement) {
     let defaultPhoto = imgElement.nextElementSibling;
     if (defaultPhoto && defaultPhoto.classList.contains('default-photo')) {
         defaultPhoto.style.display = 'flex';
+    }
+}
+
+async function downloadPlayerScreenshot() {
+    if (typeof html2canvas === 'undefined') {
+        alert('Screenshot library not loaded. Please refresh the page.');
+        return;
+    }
+
+    const target = document.querySelector('.main');
+    if (!target) return;
+
+    const printBtn = document.getElementById('printPlayerBtn');
+    const originalText = printBtn ? printBtn.innerHTML : '';
+    if (printBtn) {
+        printBtn.disabled = true;
+        printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    }
+
+    try {
+        const canvas = await html2canvas(target, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            windowWidth: target.scrollWidth,
+            windowHeight: target.scrollHeight
+        });
+
+        const link = document.createElement('a');
+        link.download = 'player-<?php echo (int)$player['id']; ?>-profile.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (error) {
+        alert('Failed to generate screenshot.');
+    } finally {
+        if (printBtn) {
+            printBtn.disabled = false;
+            printBtn.innerHTML = originalText;
+        }
     }
 }
 
