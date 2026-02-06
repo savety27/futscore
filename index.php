@@ -706,41 +706,60 @@ $pageTitle = "Home";
     </div>
 </div>
 
-<!-- Match Detail Modal -->
+<!-- Match Detail Modal - REDESIGNED -->
 <div class="match-modal" id="matchModal">
-    <div class="match-modal-content">
-        <div class="match-modal-header">
-            <h3 id="matchModalTitle">Match Details</h3>
-            <button class="match-modal-close" id="closeMatchModal">&times;</button>
+    <div class="match-modal-content premium-modal">
+        <div class="match-modal-header premium-header">
+            <div class="header-content">
+                <i class="fas fa-trophy header-icon"></i>
+                <h3 id="matchModalTitle">Match Details</h3>
+            </div>
+            <button class="match-modal-close" id="closeMatchModal">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         
         <div class="match-modal-body">
-            <div class="match-tabs">
-                <button class="match-tab active" data-tab="goals">Goals</button>
-                <button class="match-tab" data-tab="lineups">Lineups</button>
+            <div class="match-tabs-premium">
+                <button class="match-tab active" data-tab="goals">
+                    <i class="fas fa-futbol"></i> Goals
+                </button>
+                <button class="match-tab" data-tab="lineups">
+                    <i class="fas fa-users"></i> Lineups
+                </button>
             </div>
             
-            <div class="match-detail-header">
-                <div class="match-teams-large">
-                    <div class="team-large">
-                        <img id="team1LogoLarge" src="" alt="" class="team-logo-large">
-                        <h4 id="team1Name"></h4>
+            <div class="match-detail-header-premium">
+                <div class="match-teams-comparison">
+                    <div class="team-side team-left">
+                        <div class="team-logo-glow">
+                            <img id="team1LogoLarge" src="" alt="" class="team-logo-large-p">
+                        </div>
+                        <h4 id="team1Name" class="p-team-name"></h4>
                     </div>
                     
-                    <div class="vs-large">
-                        <span class="vs-text-large">VS</span>
-                        <div class="score-large" id="matchScoreLarge"></div>
+                    <div class="vs-score-center">
+                        <span class="vs-badge">VS</span>
+                        <div class="score-display-premium" id="matchScoreLarge"></div>
                     </div>
                     
-                    <div class="team-large">
-                        <img id="team2LogoLarge" src="" alt="" class="team-logo-large">
-                        <h4 id="team2Name"></h4>
+                    <div class="team-side team-right">
+                        <div class="team-logo-glow">
+                            <img id="team2LogoLarge" src="" alt="" class="team-logo-large-p">
+                        </div>
+                        <h4 id="team2Name" class="p-team-name"></h4>
                     </div>
                 </div>
                 
-                <div class="match-info">
-                    <p id="matchDateTime"></p>
-                    <p id="matchLocation"></p>
+                <div class="match-meta-info">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span id="matchDateTime"></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="matchLocation"></span>
+                    </div>
                 </div>
             </div>
             
