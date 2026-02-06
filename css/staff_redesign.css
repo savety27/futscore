@@ -489,16 +489,55 @@
     letter-spacing: 0.5px;
 }
 
-.manager-badge { background: #1d4ed8; color: white; }
-.headcoach-badge { background: #059669; color: white; }
-.coach-badge { background: #7c3aed; color: white; }
-.goalkeeper_coach-badge { background: #d97706; color: white; }
-.medic-badge { background: #dc2626; color: white; }
-.official-badge { background: #475569; color: white; }
-.assistant_coach-badge { background: #0891b2; color: white; }
-.fitness_coach-badge { background: #ea580c; color: white; }
-.analyst-badge { background: #9333ea; color: white; }
-.scout-badge { background: #65a30d; color: white; }
+.manager-badge {
+    background: #1d4ed8;
+    color: white;
+}
+
+.headcoach-badge {
+    background: #059669;
+    color: white;
+}
+
+.coach-badge {
+    background: #7c3aed;
+    color: white;
+}
+
+.goalkeeper_coach-badge {
+    background: #d97706;
+    color: white;
+}
+
+.medic-badge {
+    background: #dc2626;
+    color: white;
+}
+
+.official-badge {
+    background: #475569;
+    color: white;
+}
+
+.assistant_coach-badge {
+    background: #0891b2;
+    color: white;
+}
+
+.fitness_coach-badge {
+    background: #ea580c;
+    color: white;
+}
+
+.analyst-badge {
+    background: #9333ea;
+    color: white;
+}
+
+.scout-badge {
+    background: #65a30d;
+    color: white;
+}
 
 /* Certificate Count */
 .cert-count {
@@ -869,7 +908,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -999,7 +1040,8 @@
         border-bottom: none;
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: flex-start;
+        gap: 12px;
         font-size: 13px;
     }
 
@@ -1010,7 +1052,8 @@
         text-transform: uppercase;
         color: var(--gray-500);
         font-weight: 700;
-        min-width: 88px;
+        width: 80px;
+        flex-shrink: 0;
     }
 
     .staff-table-new td.col-no {
