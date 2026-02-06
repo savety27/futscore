@@ -977,7 +977,7 @@
 
     .staff-table-new tr {
         display: grid;
-        grid-template-columns: 72px 1fr;
+        grid-template-columns: 88px 1fr;
         grid-template-areas:
             "photo name"
             "photo team"
@@ -985,6 +985,7 @@
             "photo age"
             "photo certificate"
             "photo created";
+        column-gap: 12px;
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         border-radius: 16px;
         box-shadow: 0 2px 12px rgba(15, 39, 68, 0.08);
