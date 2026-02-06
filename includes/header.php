@@ -93,7 +93,7 @@ $latestNews = getLatestNews(3);
     <?php endif; ?>
 
     <!-- BPJS Banner -->
-    <?php if (basename($_SERVER['PHP_SELF']) == 'index.php'): ?>
+    <?php if (basename($_SERVER['PHP_SELF']) == 'index.php' && (!isset($hideNavbars) || !$hideNavbars)): ?>
     <div class="bpjs-banner">
         <div class="container">
             <a href="<?php echo SITE_URL; ?>/bpjs.php?src=navbar">

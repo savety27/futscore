@@ -1,4 +1,5 @@
 <?php
+$hideNavbars = true;
 require_once 'includes/header.php';
 
 // Get data from database
@@ -14,8 +15,87 @@ $newTeams = getTeams(5);
 $pageTitle = "Home";
 ?>
 
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
+
+<div class="dashboard-wrapper">
+    <!-- Mobile Header -->
+    <header class="mobile-dashboard-header">
+        <div class="mobile-logo">
+            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
+        <div class="sidebar-logo">
+            <a href="<?php echo SITE_URL; ?>">
+                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="<?php echo SITE_URL; ?>" class="active"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
+                    <div class="nav-link-content">
+                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div id="playerDropdown" class="sidebar-dropdown">
+                    <a href="player.php">Player</a>
+                    <a href="staff.php">Team Staff</a>
+                </div>
+            </div>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            
+            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
+                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-login-sidebar">
+                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                </a>
+            <?php endif; ?>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content-dashboard">
+        <header class="dashboard-header dashboard-header-home">
+            <div class="dashboard-header-inner">
+                <div>
+                    <div class="header-eyebrow">FUTSCORE</div>
+                    <h1>Home Dashboard</h1>
+                    <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan tim terbaru dalam satu tampilan yang rapi.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Lihat Event</a>
+                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Team</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-body">
+
 <!-- Match Summary Cards dengan Horizontal Scroll -->
-<div class="container section-container">
+<div class="container section-container section-elevated">
     <div class="section-header">
         <h2 class="section-title">LATEST MATCHES</h2>
         <div class="scroll-controls">
@@ -509,152 +589,6 @@ $pageTitle = "Home";
     </div>
     
     <div class="tab-content" id="transfer">
-        <style>
-            .transfers-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-                gap: 25px;
-                margin: 30px 0;
-            }
-            .transfer-card {
-                background: linear-gradient(145deg, #131313, #0a0a0a);
-                border: 1px solid rgba(0, 255, 136, 0.2);
-                border-radius: 20px;
-                padding: 24px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                position: relative;
-                overflow: hidden;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            }
-            .transfer-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 4px;
-                background: linear-gradient(90deg, transparent, var(--primary-green), transparent);
-                opacity: 0.5;
-            }
-            .transfer-card:hover {
-                transform: translateY(-8px);
-                box-shadow: 0 20px 40px rgba(0, 255, 136, 0.15);
-                border-color: var(--primary-green);
-            }
-            .transfer-header {
-                display: flex;
-                gap: 18px;
-                align-items: center;
-            }
-            .transfer-player-photo {
-                width: 70px;
-                height: 70px;
-                border-radius: 18px;
-                overflow: hidden;
-                background: #1a1a1a;
-                border: 2px solid rgba(255, 255, 255, 0.1);
-                flex: 0 0 70px;
-                position: relative;
-            }
-            .transfer-player-img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-            .transfer-player-details {
-                flex: 1;
-                min-width: 0;
-            }
-            .transfer-player-name {
-                font-size: 18px;
-                font-weight: 800;
-                margin: 0 0 4px;
-                color: #fff;
-                letter-spacing: 0.5px;
-                text-transform: uppercase;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .transfer-date-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 10px;
-                background: rgba(0, 255, 136, 0.1);
-                border-radius: 6px;
-                color: #00ff88;
-                font-size: 11px;
-                font-weight: 700;
-            }
-            .transfer-flow {
-                display: flex;
-                align-items: center;
-                background: rgba(255, 255, 255, 0.03);
-                border-radius: 15px;
-                padding: 15px;
-                gap: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-            }
-            .transfer-team {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 8px;
-                text-align: center;
-                min-width: 0;
-            }
-            .transfer-team-label {
-                font-size: 9px;
-                text-transform: uppercase;
-                color: #888;
-                letter-spacing: 1px;
-                margin-bottom: -4px;
-            }
-            .transfer-team-logo {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                object-fit: contain;
-                background: #000;
-                border: 2px solid rgba(255, 255, 255, 0.05);
-                padding: 4px;
-            }
-            .transfer-team-name {
-                font-size: 12px;
-                color: #fff;
-                font-weight: 700;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                width: 100%;
-            }
-            .transfer-arrow-container {
-                display: flex;
-                align-items: center;
-                color: #00ff88;
-                font-size: 18px;
-            }
-            .transfer-footer {
-                display: flex;
-                justify-content: center;
-            }
-            .transfer-status {
-                font-size: 10px;
-                font-weight: 800;
-                text-transform: uppercase;
-                color: #000;
-                background: #00ff88;
-                padding: 4px 12px;
-                border-radius: 99px;
-                letter-spacing: 1px;
-            }
-        </style>
         <?php if (empty($recentTransfers)): ?>
         <div class="empty-state">
             <i class="fas fa-exchange-alt"></i>
@@ -887,5 +821,73 @@ $pageTitle = "Home";
         <div class="schedule-modal-body" id="scheduleModalContent"></div>
     </div>
 </div>
+        </div>
 
-<?php require_once 'includes/footer.php'; ?>
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>
+                <a href="<?php echo SITE_URL; ?>">Home</a> | 
+                <a href="contact.php">Contact</a> | 
+                <a href="privacy.php">Privacy Policy</a>
+            </p>
+        </footer>
+    </div>
+</div>
+
+<script>
+// Sidebar Dropdown Toggle
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    element.classList.toggle('open');
+}
+
+// Sidebar Toggle Strategy for Mobile
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+const setSidebarOpen = (open) => {
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
+if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => {
+        const isOpen = sidebar.classList.contains('active');
+        setSidebarOpen(!isOpen);
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        setSidebarOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setSidebarOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) {
+            setSidebarOpen(false);
+        }
+    });
+}
+</script>
+
+<script>
+// Define SITE_URL for JavaScript
+const SITE_URL = '<?php echo SITE_URL; ?>';
+</script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+</main>
+</body>
+</html>

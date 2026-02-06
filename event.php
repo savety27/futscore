@@ -230,6 +230,21 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
             <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            
+            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
+                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-login-sidebar">
+                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                </a>
+            <?php endif; ?>
         </nav>
     </aside>
 
