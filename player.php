@@ -168,6 +168,7 @@ function maskNIK($nik) {
                             <h3>Player tidak ditemukan</h3>
                             <p>Player dengan ID tersebut tidak tersedia.</p>
                         </div>
+
                     <?php else: ?>
                         <div class="player-detail-header">
                             <div class="player-detail-identity">
@@ -231,6 +232,7 @@ function maskNIK($nik) {
                                 <span class="detail-value"><?php echo date('d M Y, H:i', strtotime($player_detail['created_at'])); ?></span>
                             </div>
                         </div>
+
                     <?php endif; ?>
                 </section>
             <?php endif; ?>
@@ -449,3 +451,4 @@ const SITE_URL = '<?php echo SITE_URL; ?>';
 </main>
 </body>
 </html>
+
