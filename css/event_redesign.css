@@ -624,12 +624,13 @@
     }
 
     .event-table-new td:nth-child(6) {
-        padding: 14px 18px 14px 9px;
+        padding: 14px 18px;
         background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
         border-bottom: 1px solid var(--gray-100);
         display: flex;
         align-items: center;
         justify-content: flex-start;
+        gap: 12px;
         width: 100%;
     }
 
@@ -731,6 +732,8 @@
     .event-table-new td:nth-child(6)::before {
         content: 'Status:';
         display: inline-block;
+        flex: 0 0 120px;
+        width: 120px;
         font-weight: 700;
         font-size: 11px;
         color: var(--gray-600);
@@ -739,17 +742,19 @@
     }
 
     .event-table-new td:nth-child(7) {
-        padding: 12px 18px;
+        padding: 14px 18px;
         background: var(--gray-50);
         border-bottom: 1px solid var(--gray-100);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .event-table-new td:nth-child(7)::before {
         content: 'Match Status:';
         display: inline-block;
+        flex: 0 0 120px;
+        width: 120px;
         font-weight: 700;
         font-size: 11px;
         color: var(--gray-600);
@@ -758,17 +763,19 @@
     }
 
     .event-table-new td:nth-child(8) {
-        padding: 12px 18px;
+        padding: 14px 18px;
         background: var(--gray-50);
         border-bottom: 1px solid var(--gray-100);
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
 
     .event-table-new td:nth-child(8)::before {
         content: 'Cabor:';
         display: inline-block;
+        flex: 0 0 120px;
+        width: 120px;
         font-weight: 700;
         font-size: 11px;
         color: var(--gray-600);
