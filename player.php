@@ -365,12 +365,14 @@ function maskNIK($nik) {
                             </a>
                         <?php endfor; ?>
 
+
                         <?php 
                         if ($end_page < $total_pages) {
                             if ($end_page < $total_pages - 1) echo '<span>...</span>';
                             echo '<a href="?page='.$total_pages.'&search='.urlencode($search).'">'.$total_pages.'</a>';
                         }
                         ?>
+
 
                         <!-- Next -->
                         <?php if ($page < $total_pages): ?>
@@ -451,4 +453,5 @@ const SITE_URL = '<?php echo SITE_URL; ?>';
 </main>
 </body>
 </html>
+
 
