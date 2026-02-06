@@ -68,6 +68,34 @@
     max-width: 600px;
 }
 
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: var(--white);
+    color: var(--navy-dark);
+    text-decoration: none;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-back:hover {
+    background: var(--gold);
+    color: var(--navy-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+}
+
+.btn-back i {
+    font-size: 14px;
+}
+
 .header-meta {
     position: relative;
     z-index: 2;
