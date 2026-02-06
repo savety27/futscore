@@ -849,40 +849,59 @@ body.sidebar-open {
 
 @media (max-width: 768px) {
     .dashboard-header h1 {
-        font-size: 24px;
-        letter-spacing: 1.6px;
+        font-size: 26px;
+        letter-spacing: 2px;
     }
 
+    /* Filter Section - Mobile Optimized */
     .filter-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 14px;
+        gap: 16px;
     }
 
     .filter-group {
         min-width: 100%;
     }
 
+    .filter-group label {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 16px;
+        font-size: 15px;
+        border-radius: 14px;
+    }
+
     .filter-actions-new {
         width: 100%;
         flex-direction: column;
         align-items: stretch;
+        gap: 10px;
     }
 
     .btn-filter-apply,
     .btn-filter-reset {
         width: 100%;
         justify-content: center;
+        padding: 16px 24px;
+        font-size: 14px;
+        min-height: 48px;
     }
 
+    /* Table Container - Remove Desktop Styling */
     .table-container-new {
         background: transparent;
         box-shadow: none;
         border: none;
         overflow: visible;
+        border-radius: 0;
     }
 
-    /* Table to Card Transformation */
+    /* Hide Table Header */
     .event-table-new thead {
         display: none;
     }
@@ -892,141 +911,310 @@ body.sidebar-open {
     }
 
     .event-table-new tbody {
-        display: grid;
-        gap: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
 
+    /* ================================================
+       MATCH CARD - Sports App Style
+       ================================================ */
     .event-table-new tr {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas:
-            "code status"
-            "match match"
-            "score winner"
-            "matchstatus cabor"
-            "action action";
-        gap: 10px 12px;
-        border: 1px solid var(--gray-100);
-        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
         background: white;
-        padding: 14px;
-        box-shadow: var(--shadow-sm);
+        border-radius: 18px;
+        box-shadow: 0 2px 12px rgba(15, 39, 68, 0.08);
+        border: 1px solid var(--gray-100);
+        overflow: hidden;
+        padding: 0;
     }
 
+    .event-table-new tr:hover {
+        background: white;
+        box-shadow: 0 4px 20px rgba(15, 39, 68, 0.12);
+    }
+
+    /* Reset all TD defaults */
     .event-table-new td {
-        text-align: left !important;
         padding: 0;
         border-bottom: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        text-align: left !important;
     }
 
     .event-table-new td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        font-size: 10px;
-        text-transform: uppercase;
-        color: var(--gray-400);
-        letter-spacing: 0.6px;
-        margin-right: 10px;
+        display: none;
     }
 
+    /* Hide Row Number */
     .event-table-new td[data-label="No"] {
         display: none;
     }
 
-    .event-table-new td:nth-child(2) {
-        grid-area: code;
-        font-weight: 700;
-        color: var(--navy);
-    }
-
-    .event-table-new td:nth-child(3) {
-        grid-area: match;
-        display: block;
-    }
-
-    .event-table-new td:nth-child(3)::before {
-        display: block;
-        margin-bottom: 6px;
-    }
-
-    .event-table-new td:nth-child(4) {
-        grid-area: score;
-    }
-
-    .event-table-new td:nth-child(5) {
-        grid-area: winner;
-    }
-
+    /* ================================================
+       CARD HEADER - Code + Status
+       ================================================ */
+    .event-table-new td:nth-child(2),
     .event-table-new td:nth-child(6) {
-        grid-area: status;
-        justify-content: flex-end;
+        padding: 14px 18px;
+        background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+        border-bottom: 1px solid var(--gray-100);
     }
 
+    .event-table-new td:nth-child(2) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    /* Code Badge */
+    .event-table-new td:nth-child(2)::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 20px;
+        background: var(--blue-accent);
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .event-table-new td:nth-child(2) {
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--navy);
+        letter-spacing: 0.5px;
+    }
+
+    /* Challenge Status Badge - Move to Header */
+    .event-table-new td:nth-child(6) {
+        position: absolute;
+        top: 14px;
+        right: 18px;
+        padding: 0;
+        background: transparent;
+        border: none;
+    }
+
+    .event-table-new tr {
+        position: relative;
+    }
+
+    /* ================================================
+       HERO SECTION - Teams Display
+       ================================================ */
+    .event-table-new td:nth-child(3) {
+        padding: 24px 18px 20px;
+        display: block;
+    }
+
+    .match-cell-new {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .team-info-new {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    /* Team Names - Larger, Centered */
+    .team-info-new span {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--navy-dark);
+        text-align: center;
+        flex: 1;
+    }
+
+    /* Team Logos - Larger */
+    .team-logo-tiny {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        padding: 4px;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+    }
+
+    /* VS Separator - Prominent */
+    .match-cell-new>div:nth-child(2) {
+        font-weight: 900;
+        font-size: 14px;
+        color: var(--red);
+        letter-spacing: 2px;
+        padding: 8px 0;
+    }
+
+    /* ================================================
+       SCORE ZONE - Prominent Display
+       ================================================ */
+    .event-table-new td:nth-child(4) {
+        padding: 16px 18px;
+        background: linear-gradient(135deg, var(--white-blue) 0%, var(--gray-50) 100%);
+        border-top: 1px solid var(--gray-100);
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .score-display {
+        font-size: 28px !important;
+        font-weight: 900 !important;
+        letter-spacing: 3px;
+        color: var(--navy-dark) !important;
+    }
+
+    .score-pending {
+        font-size: 24px;
+        color: var(--gray-300);
+    }
+
+    /* ================================================
+       WINNER SECTION
+       ================================================ */
+    .event-table-new td:nth-child(5) {
+        padding: 14px 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 1px solid var(--gray-100);
+    }
+
+    .btn-winner-new {
+        padding: 10px 20px;
+        font-size: 13px;
+        border-radius: 24px;
+        gap: 8px;
+    }
+
+    .btn-winner-new i {
+        font-size: 12px;
+    }
+
+    .no-winner {
+        font-size: 14px;
+        color: var(--gray-300);
+    }
+
+    /* ================================================
+       META ROW - Match Status + Sport Type
+       Side-by-side layout using CSS Grid on parent
+       ================================================ */
+
+    /* Create a wrapper effect for meta items */
     .event-table-new td:nth-child(7) {
-        grid-area: matchstatus;
+        padding: 12px 9px 12px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-100);
+        border-right: 1px solid var(--gray-200);
+        width: 50%;
+        float: left;
     }
 
     .event-table-new td:nth-child(8) {
-        grid-area: cabor;
+        padding: 12px 18px 12px 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--gray-100);
+        width: 50%;
+        float: left;
     }
 
+    /* Clear float after meta row */
+    .event-table-new td:nth-child(8)::after {
+        content: '';
+        display: table;
+        clear: both;
+    }
+
+    /* Mobile Badge Sizing */
+    .badge-new {
+        min-width: 0;
+        padding: 8px 14px;
+        font-size: 10px;
+        letter-spacing: 0.8px;
+    }
+
+    .badge-cabor {
+        background: var(--gray-200);
+        color: var(--gray-700);
+        font-weight: 700;
+    }
+
+    /* ================================================
+       ACTION BUTTON - View Details
+       ================================================ */
     .event-table-new td:nth-child(9) {
-        grid-area: action;
-    }
-
-    .event-table-new td:nth-child(9)::before {
-        display: none;
+        padding: 16px 18px;
+        display: flex;
+        justify-content: center;
     }
 
     .event-table-new td:nth-child(9) a {
         width: 100%;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
         justify-content: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        border-radius: 12px;
+        border: 2px solid var(--navy);
+        color: var(--navy);
+        background: white;
+        transition: all var(--transition-normal);
     }
 
-    .match-cell-new {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
+    .event-table-new td:nth-child(9) a:hover {
+        background: var(--navy);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(15, 39, 68, 0.2);
     }
 
-    .team-info-new {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .team-logo-tiny {
-        width: 24px;
-        height: 24px;
-    }
-
-    .score-display {
-        font-size: 14px !important;
-    }
-
-    .badge-new {
-        min-width: 0;
-        padding: 6px 10px;
-        font-size: 9px;
-    }
-
-    .btn-winner-new {
-        padding: 6px 10px;
-        font-size: 10px;
-    }
-
+    /* ================================================
+       PAGINATION - Mobile Friendly
+       ================================================ */
     .pagination-info {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
-        padding: 0 0 10px;
+        gap: 16px;
+        padding: 0 0 16px;
+    }
+
+    .info-text {
+        text-align: center;
+        font-size: 14px;
     }
 
     .pagination-controls {
         flex-wrap: wrap;
-        justify-content: flex-start;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .pagination-controls a,
+    .pagination-controls span {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        font-size: 14px;
     }
 }
 
@@ -1041,32 +1229,120 @@ body.sidebar-open {
     }
 
     .dashboard-header {
-        padding: 32px 12px 46px;
+        padding: 28px 12px 42px;
     }
 
     .dashboard-header h1 {
         font-size: 22px;
-        letter-spacing: 1.4px;
+        letter-spacing: 1.5px;
     }
 
     .filter-card {
         margin: -18px 12px 18px;
-        padding: 18px;
-    }
-
-    .event-table-new tr {
-        padding: 12px;
+        padding: 16px;
         border-radius: 14px;
     }
 
-    .event-table-new td {
+    .filter-group input,
+    .filter-group select {
+        padding: 14px;
+        font-size: 14px;
+    }
+
+    .btn-filter-apply,
+    .btn-filter-reset {
+        padding: 14px 20px;
+        font-size: 13px;
+        min-height: 44px;
+    }
+
+    .dashboard-body {
+        padding: 0 12px 24px;
+    }
+
+    /* Compact Card Spacing */
+    .event-table-new tbody {
+        gap: 14px;
+    }
+
+    .event-table-new tr {
+        border-radius: 16px;
+    }
+
+    .event-table-new td:nth-child(2),
+    .event-table-new td:nth-child(6) {
+        padding: 12px 14px;
+    }
+
+    .event-table-new td:nth-child(3) {
+        padding: 20px 14px 16px;
+    }
+
+    .team-info-new span {
+        font-size: 15px;
+    }
+
+    .team-logo-tiny {
+        width: 32px;
+        height: 32px;
+    }
+
+    .match-cell-new>div:nth-child(2) {
+        font-size: 13px;
+        padding: 6px 0;
+    }
+
+    .event-table-new td:nth-child(4) {
+        padding: 14px 14px;
+    }
+
+    .score-display {
+        font-size: 24px !important;
+        letter-spacing: 2px;
+    }
+
+    .score-pending {
+        font-size: 20px;
+    }
+
+    .event-table-new td:nth-child(5) {
+        padding: 12px 14px;
+    }
+
+    .btn-winner-new {
+        padding: 8px 16px;
         font-size: 12px;
+    }
+
+    .event-table-new td:nth-child(7),
+    .event-table-new td:nth-child(8) {
+        padding: 10px 14px;
+    }
+
+    .badge-new {
+        padding: 7px 12px;
+        font-size: 9px;
+    }
+
+    .event-table-new td:nth-child(9) {
+        padding: 14px 14px;
+    }
+
+    .event-table-new td:nth-child(9) a {
+        min-height: 44px;
+        font-size: 13px;
     }
 
     .pagination-controls a,
     .pagination-controls span {
-        padding: 8px 12px;
-        font-size: 12px;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .info-text {
+        font-size: 13px;
     }
 }
 
