@@ -922,17 +922,19 @@ body.sidebar-open {
     .event-table-new tr {
         display: flex;
         flex-direction: column;
-        background: white;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         border-radius: 18px;
         box-shadow: 0 2px 12px rgba(15, 39, 68, 0.08);
-        border: 1px solid var(--gray-100);
+        border: 1px solid var(--gray-200);
         overflow: hidden;
         padding: 0;
+        position: relative;
     }
 
     .event-table-new tr:hover {
-        background: white;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%);
         box-shadow: 0 4px 20px rgba(15, 39, 68, 0.12);
+        border-color: var(--blue-accent);
     }
 
     /* Reset all TD defaults */
@@ -952,23 +954,21 @@ body.sidebar-open {
     }
 
     /* ================================================
-       CARD HEADER - Code + Status
+       CARD HEADER - Code + Status (Side by Side)
        ================================================ */
-    .event-table-new td:nth-child(2),
-    .event-table-new td:nth-child(6) {
+    .event-table-new td:nth-child(2) {
         padding: 14px 18px;
         background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
         border-bottom: 1px solid var(--gray-100);
-    }
-
-    .event-table-new td:nth-child(2) {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 12px;
+        width: 60%;
+        float: left;
     }
 
-    /* Code Badge */
+    /* Code Badge Indicator */
     .event-table-new td:nth-child(2)::before {
         content: '';
         display: block;
@@ -981,23 +981,28 @@ body.sidebar-open {
 
     .event-table-new td:nth-child(2) {
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12px;
         color: var(--navy);
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
     }
 
-    /* Challenge Status Badge - Move to Header */
+    /* Challenge Status Badge - Right Side of Header */
     .event-table-new td:nth-child(6) {
-        position: absolute;
-        top: 14px;
-        right: 18px;
-        padding: 0;
-        background: transparent;
-        border: none;
+        padding: 14px 18px 14px 9px;
+        background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 40%;
+        float: left;
     }
 
-    .event-table-new tr {
-        position: relative;
+    /* Clear float after header row */
+    .event-table-new td:nth-child(6)::after {
+        content: '';
+        display: table;
+        clear: both;
     }
 
     /* ================================================
