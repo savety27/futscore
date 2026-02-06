@@ -271,15 +271,13 @@ $pageTitle = "Player List";
                         <th class="sort-icon">NISN</th>
                         <th class="sort-icon">NIK</th>
                         <th class="sort-icon">Cabor</th>
-                        <th class="col-center sort-icon"># Events</th>
-                        <th class="col-center sort-icon"># Matches</th>
                         <th class="sort-icon">Created At</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($players)): ?>
                         <tr>
-                            <td colspan="14" class="col-center" style="padding: 40px;">No players found.</td>
+                            <td colspan="12" class="col-center" style="padding: 40px;">No players found.</td>
                         </tr>
                     <?php else: ?>
                         <?php 
@@ -317,8 +315,6 @@ $pageTitle = "Player List";
                             <td><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
                             <td><?php echo maskNIK($p['nik']); ?></td>
                             <td><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
-                            <td class="col-center">0</td>
-                            <td class="col-center">0</td>
                             <td><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
                         </tr>
                         <?php endforeach; ?>
