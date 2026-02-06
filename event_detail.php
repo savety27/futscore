@@ -44,7 +44,7 @@ if (!$event) {
 
 // Helper Functions
 function getStatusBadge($status) {
-    $status = strtolower($status);
+    $status = strtolower($status ?? '');
     $badges = [
         'open' => '<span class="status-badge status-open">Open</span>',
         'accepted' => '<span class="status-badge status-accepted">Accepted</span>',
@@ -57,7 +57,7 @@ function getStatusBadge($status) {
 }
 
 function getMatchStatusBadge($match_status) {
-    $match_status = strtolower($match_status);
+    $match_status = strtolower($match_status ?? '');
     $badges = [
         'scheduled' => '<span class="status-badge match-scheduled">Scheduled</span>',
         'ongoing' => '<span class="status-badge match-ongoing">Ongoing</span>',

@@ -139,7 +139,7 @@ while ($row = $match_status_result->fetch_assoc()) {
 
 // Helper Functions with better badges
 function getStatusBadge($status) {
-    $status = strtolower($status);
+    $status = strtolower($status ?? '');
     $badges = [
         'open' => '<span class="badge-new" style="background-color: #3498db;">Open</span>',
         'accepted' => '<span class="badge-new badge-completed">Accepted</span>',
@@ -152,7 +152,7 @@ function getStatusBadge($status) {
 }
 
 function getMatchStatusBadge($match_status) {
-    $match_status = strtolower($match_status);
+    $match_status = strtolower($match_status ?? '');
     $badges = [
         'scheduled' => '<span class="badge-new badge-warning">Scheduled</span>',
         'ongoing' => '<span class="badge-new badge-pending">Ongoing</span>',
