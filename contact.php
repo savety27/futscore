@@ -76,12 +76,6 @@ require_once 'includes/header.php';
                     <a class="contact-action primary" href="mailto:info@futscore.com">
                         <i class="fas fa-envelope"></i> Kirim Email
                     </a>
-                    <a class="contact-action ghost" href="https://instagram.com/futscore.id" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-instagram"></i> Instagram
-                    </a>
-                    <a class="contact-action ghost" href="https://youtube.com/@futscoreindonesia4634" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-youtube"></i> YouTube
-                    </a>
                 </div>
             </div>
         </header>
@@ -92,7 +86,7 @@ require_once 'includes/header.php';
                     <div class="contact-card-header">
                         <div>
                             <span class="contact-label">Kontak Pusat</span>
-                            <h2 class="contact-card-title">Gema Digital</h2>
+                            <h2 class="contact-card-title">MGP</h2>
                         </div>
                         <p class="contact-card-subtitle">Pusat layanan resmi untuk kebutuhan operasional, informasi event, dan koordinasi nasional.</p>
                     </div>
@@ -109,24 +103,8 @@ require_once 'includes/header.php';
                             <i class="fas fa-envelope"></i>
                             <div>
                                 <h3>Email</h3>
-                                <p>info@futscore.com</p>
-                                <a href="mailto:info@futscore.com" class="contact-link">Kirim Email</a>
-                            </div>
-                        </div>
-                        <div class="contact-info-item">
-                            <i class="fab fa-instagram"></i>
-                            <div>
-                                <h3>Instagram</h3>
-                                <p>@futscore.id</p>
-                                <a href="https://instagram.com/futscore.id" target="_blank" rel="noopener noreferrer" class="contact-link">Kunjungi Instagram</a>
-                            </div>
-                        </div>
-                        <div class="contact-info-item">
-                            <i class="fab fa-youtube"></i>
-                            <div>
-                                <h3>YouTube</h3>
-                                <p>@futscoreindonesia4634</p>
-                                <a href="https://youtube.com/@futscoreindonesia4634" target="_blank" rel="noopener noreferrer" class="contact-link">Kunjungi YouTube</a>
+                                <p>info@mgp.com</p>
+                                <a href="mailto:info@mgp.com" class="contact-link">Kirim Email</a>
                             </div>
                         </div>
                     </div>
@@ -195,166 +173,6 @@ require_once 'includes/header.php';
                                 <div class="dc-phone">
                                     <i class="fas fa-phone"></i>
                                     <span>+62 821-8658-2328</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6283182526542', 'Abu', 'DC Jawa Barat')">
-                            <div class="dc-header">
-                                <h3>DC Jawa Barat</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Abu</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 831-8252-6542</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6289607665222', 'Mahfudin', 'DC Jawa Tengah')">
-                            <div class="dc-header">
-                                <h3>DC Jawa Tengah</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Mahfudin</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 896-0766-5222</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6281336681197', 'Tyas', 'DC Jawa Timur')">
-                            <div class="dc-header">
-                                <h3>DC Jawa Timur</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Tyas</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 813-3668-1197</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('62895341836843', 'Hanif', 'DC Sumsel')">
-                            <div class="dc-header">
-                                <h3>DC Sumsel</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Hanif</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 895-3418-3684-3</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('628981434528', 'Robert', 'DC Kalteng')">
-                            <div class="dc-header">
-                                <h3>DC Kalteng</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Robert</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 898-1434-528</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6282154000055', 'Phandi', 'DC Kaltim')">
-                            <div class="dc-header">
-                                <h3>DC Kaltim</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Phandi</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 821-5400-0055</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6282194754209', 'Takeshi', 'DC Ternate')">
-                            <div class="dc-header">
-                                <h3>DC Ternate</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Takeshi</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 821-9475-4209</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6288294336553', 'Ale', 'DC General Support')">
-                            <div class="dc-header">
-                                <h3>DC General Support</h3>
-                                <span class="dc-badge support">Support</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Ale</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 882-9433-6553</span>
                                 </div>
                                 <button class="dc-whatsapp" type="button">
                                     <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
