@@ -64,7 +64,7 @@ try {
             'medic' => 'Medic',
             'official' => 'Official'
         ];
-        $staff['position_formatted'] = $position_labels[$staff['position']] ?? ucfirst($staff['position']);
+        $staff['position_formatted'] = $position_labels[$staff['position'] ?? ''] ?? ucfirst($staff['position'] ?? '');
     }
     unset($staff); // Break the reference with the last element
     

@@ -55,7 +55,7 @@ function getStatusBadge($status) {
         'expired' => '<span class="status-badge status-expired">Expired</span>',
         'cancelled' => '<span class="status-badge status-cancelled">Cancelled</span>'
     ];
-    return $badges[$status] ?? '<span class="status-badge status-default">' . ucfirst($status) . '</span>';
+    return $badges[$status] ?? '<span class="status-badge status-default">' . ucfirst($status ?? '') . '</span>';
 }
 
 function getMatchStatusBadge($match_status) {

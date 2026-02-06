@@ -154,7 +154,7 @@ try {
                                 <?php 
                                     $m_status = $match['match_status'] ?: $match['status'];
                                     $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'live' => 'Langsung', 'accepted' => 'Diterima'];
-                                    echo $m_status_map[$m_status] ?? ucfirst($m_status); 
+                                    echo $m_status_map[$m_status ?? ''] ?? ucfirst($m_status ?? ''); 
                                 ?>
                             </span>
                         </td>

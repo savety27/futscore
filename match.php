@@ -1,9 +1,10 @@
-<?php
+﻿<?php
 // ============================================
 // SEMUA LOGIC DAN REDIRECT HARUS SEBELUM OUTPUT
 // ============================================
 
 $pageTitle = "Match Details";
+$hideNavbars = true;
 
 // Get match ID from URL
 $matchId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -74,433 +75,389 @@ if (!$match && $source !== 'challenge') {
     $stmt->close();
 }
 
-if (!$match) {
-    echo '<div class="container"><div class="alert alert-danger">Match not found</div></div>';
-    require_once 'includes/footer.php';
-    exit();
-}
-
-
-// Get lineups for this match
+$matchNotFound = false;
 $lineups = ['team1' => [], 'team2' => []];
-$sqlLineups = "SELECT l.*, p.name as player_name, p.photo, p.jersey_number, t.id as team_id, t.name as team_name
-               FROM lineups l
-               LEFT JOIN players p ON l.player_id = p.id
-               LEFT JOIN teams t ON l.team_id = t.id
-               WHERE l.match_id = ?
-               ORDER BY l.is_starting DESC, p.jersey_number ASC";
-$stmtLineups = $conn->prepare($sqlLineups);
-$stmtLineups->bind_param('i', $matchId);
-$stmtLineups->execute();
-$resultLineups = $stmtLineups->get_result();
-while ($lineup = $resultLineups->fetch_assoc()) {
-    if ($lineup['team_id'] == $match['team1_id']) {
-        $lineups['team1'][] = $lineup;
-    } else if ($lineup['team_id'] == $match['team2_id']) {
-        $lineups['team2'][] = $lineup;
+
+if (!$match) {
+    $matchNotFound = true;
+} else {
+    // Get lineups for this match
+    $sqlLineups = "SELECT l.*, p.name as player_name, p.photo, p.jersey_number, t.id as team_id, t.name as team_name
+                   FROM lineups l
+                   LEFT JOIN players p ON l.player_id = p.id
+                   LEFT JOIN teams t ON l.team_id = t.id
+                   WHERE l.match_id = ?
+                   ORDER BY l.is_starting DESC, p.jersey_number ASC";
+    $stmtLineups = $conn->prepare($sqlLineups);
+    $stmtLineups->bind_param('i', $matchId);
+    $stmtLineups->execute();
+    $resultLineups = $stmtLineups->get_result();
+    while ($lineup = $resultLineups->fetch_assoc()) {
+        if ($lineup['team_id'] == $match['team1_id']) {
+            $lineups['team1'][] = $lineup;
+        } else if ($lineup['team_id'] == $match['team2_id']) {
+            $lineups['team2'][] = $lineup;
+        }
     }
+    $stmtLineups->close();
 }
-$stmtLineups->close();
+
+$statusValue = '';
+$statusLabel = 'TBA';
+$statusClass = 'status-tba';
+$matchTime = 'TBD';
+$locationLabel = 'TBA';
+$eventName = '';
+$matchCode = '';
+$scoreAvailable = false;
+
+if (!$matchNotFound) {
+    $statusValue = strtolower($match['status'] ?? '');
+    $statusLabel = $statusValue ? ucfirst($statusValue) : 'TBA';
+    $statusClass = $statusValue ? 'status-' . preg_replace('/[^a-z0-9]+/', '-', $statusValue) : 'status-tba';
+    $matchTime = !empty($match['match_date']) ? date('H:i', strtotime($match['match_date'])) : 'TBD';
+    $locationLabel = $match['location'] ?? ($match['venue_name'] ?? 'TBA');
+    $eventName = $match['event_name'] ?? '';
+    $matchCode = $match['match_code'] ?? '';
+    $scoreAvailable = $match['score1'] !== null && $match['score2'] !== null;
+}
 
 ?>
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/match_redesign.css?v=<?php echo time(); ?>">
 
-    :root {
-        --bg-dark: #0f172a;
-        --bg-card: #1e293b;
-        --bg-card-hover: #334155;
-        --accent: #00ff88;
-        --accent-glow: rgba(0, 255, 136, 0.4);
-        --text-primary: #f8fafc;
-        --text-secondary: #94a3b8;
-        --border-color: #334155;
-        --success: #10b981;
-        --danger: #ef4444;
-        --font-main: 'Outfit', sans-serif;
-    }
+<div class="dashboard-wrapper">
+    <!-- Mobile Header -->
+    <header class="mobile-dashboard-header">
+        <div class="mobile-logo">
+            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
 
-    body {
-        background-color: var(--bg-dark) !important;
-        font-family: var(--font-main) !important;
-        color: var(--text-primary);
-    }
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
-    .match-detail-page {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
-
-    /* --- HERO SECTION --- */
-    .match-hero {
-        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-        border: 1px solid var(--border-color);
-        border-radius: 24px;
-        padding: 60px 40px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 40px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    }
-
-    .match-hero::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(0,255,136,0.05) 0%, transparent 70%);
-        animation: pulse 10s infinite alternate;
-        z-index: 0;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); opacity: 0.5; }
-        100% { transform: scale(1.2); opacity: 1; }
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 60px;
-    }
-
-    .team-display {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .team-logo-wrapper {
-        width: 120px;
-        height: 120px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 50%;
-        padding: 20px;
-        border: 2px solid var(--border-color);
-        box-shadow: 0 0 30px rgba(0,0,0,0.2);
-        transition: transform 0.3s ease;
-    }
-
-    .team-display:hover .team-logo-wrapper {
-        transform: scale(1.05);
-        border-color: var(--accent);
-        box-shadow: 0 0 30px var(--accent-glow);
-    }
-
-    .team-logo-img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    .team-name {
-        font-size: 1.5rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .match-center {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .match-score {
-        font-size: 4rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        text-shadow: 0 0 20px rgba(0,0,0,0.5);
-        letter-spacing: -2px;
-        line-height: 1;
-    }
-
-    .match-vs {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--text-secondary);
-        background: var(--bg-card);
-        padding: 5px 15px;
-        border-radius: 20px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-
-    .match-meta-pill {
-        display: flex;
-        gap: 20px;
-        background: rgba(0,0,0,0.3);
-        padding: 10px 25px;
-        border-radius: 50px;
-        border: 1px solid var(--border-color);
-        margin-top: 20px;
-        backdrop-filter: blur(10px);
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        font-weight: 500;
-    }
-
-    .meta-item i {
-        color: var(--accent);
-    }
-
-    .event-badge {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: var(--accent);
-        color: var(--bg-dark);
-        padding: 5px 15px;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 0 15px var(--accent-glow);
-    }
-
-    .section-title {
-        text-align: center;
-        font-size: 1.2rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: var(--text-secondary);
-        margin-bottom: 30px;
-        position: relative;
-        display: inline-block;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-    
-    .section-title::after {
-        content: '';
-        display: block;
-        width: 40px;
-        height: 2px;
-        background: var(--accent);
-        margin: 10px auto 0;
-    }
-
-    /* --- LINEUPS GRID --- */
-    .lineups-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-    }
-
-    .team-column h3 {
-        text-align: center;
-        color: var(--accent);
-        margin-bottom: 20px;
-        font-size: 1.2rem;
-    }
-
-    .players-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 15px;
-    }
-
-    .player-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 15px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .player-card:hover {
-        transform: translateY(-3px);
-        border-color: var(--accent);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .player-avatar {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        object-fit: cover;
-        background: var(--bg-dark);
-        border: 2px solid var(--border-color);
-    }
-
-    .player-info h4 {
-        font-size: 0.95rem;
-        margin: 0;
-        color: var(--text-primary);
-        font-weight: 600;
-    }
-
-    .player-meta {
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .player-number {
-        color: var(--accent);
-        font-weight: 700;
-    }
-
-    .starter-badge {
-        font-size: 0.65rem;
-        background: rgba(0,255,136,0.1);
-        color: var(--accent);
-        padding: 2px 6px;
-        border-radius: 4px;
-        border: 1px solid rgba(0,255,136,0.2);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 50px;
-        color: var(--text-secondary);
-        font-style: italic;
-    }
-
-    @media (max-width: 768px) {
-        .hero-content {
-            flex-direction: column;
-            gap: 30px;
-        }
-        .match-score { font-size: 3rem; }
-        .lineups-grid { grid-template-columns: 1fr; }
-        
-        .players-grid { grid-template-columns: 1fr; }
-    }
-</style>
-
-<div class="container match-detail-page">
-    
-    <!-- Hero Section -->
-    <div class="match-hero">
-        <?php if (!empty($match['event_name'])): ?>
-            <div class="event-badge"><?php echo htmlspecialchars($match['event_name'] ?? ''); ?></div>
-        <?php endif; ?>
-
-        <div class="hero-content">
-            <!-- Team 1 -->
-            <div class="team-display">
-                <div class="team-logo-wrapper">
-                    <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                         alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>" 
-                         class="team-logo-img"
-                         onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
-                </div>
-                <div class="team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></div>
-            </div>
-
-            <!-- Score -->
-            <div class="match-center">
-                <?php if ($match['status'] === 'completed'): ?>
-                    <div class="match-score">
-                        <?php echo $match['score1']; ?> - <?php echo $match['score2']; ?>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
+        <div class="sidebar-logo">
+            <a href="<?php echo SITE_URL; ?>">
+                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
+                    <div class="nav-link-content">
+                        <i class="fas fa-users"></i> <span>PLAYER</span>
                     </div>
-                <?php else: ?>
-                    <div class="match-vs">VS</div>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div id="playerDropdown" class="sidebar-dropdown">
+                    <a href="player.php">Player</a>
+                    <a href="staff.php">Team Staff</a>
+                </div>
+            </div>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            
+            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
+                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-login-sidebar">
+                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                </a>
+            <?php endif; ?>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content-dashboard">
+        <header class="dashboard-header dashboard-header-match">
+            <div class="dashboard-header-inner">
+                <div>
+                    <div class="header-eyebrow">FUTSCORE</div>
+                    <h1><?php echo $matchNotFound ? 'Match Not Found' : 'Match Details'; ?></h1>
+                    <p class="header-subtitle">Detail pertandingan, status, dan susunan pemain dalam tampilan yang rapi dan modern.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="all.php?status=result" class="btn-secondary"><i class="fas fa-list"></i> All Matches</a>
+                    <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Explore Events</a>
+                </div>
+            </div>
+            <?php if (!$matchNotFound): ?>
+            <div class="header-meta">
+                <?php if (!empty($eventName)): ?>
+                    <span class="meta-chip"><i class="fas fa-trophy"></i> <?php echo htmlspecialchars($eventName ?? ''); ?></span>
                 <?php endif; ?>
-                
-                <div class="match-meta-pill">
-                    <div class="meta-item"><i class="far fa-calendar"></i> <?php echo formatDateTime($match['match_date']); ?></div>
-                    <div class="meta-item"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($match['location'] ?? 'TBA'); ?></div>
-                    <div class="meta-item"><i class="fas fa-circle-info"></i> <?php echo ucfirst($match['status']); ?></div>
-                </div>
+                <?php if (!empty($matchCode)): ?>
+                    <span class="meta-chip"><i class="fas fa-hashtag"></i> <?php echo htmlspecialchars($matchCode ?? ''); ?></span>
+                <?php endif; ?>
+                <span class="meta-chip <?php echo htmlspecialchars($statusClass ?? ''); ?>">
+                    <i class="fas fa-circle-info"></i> <?php echo htmlspecialchars($statusLabel ?? ''); ?>
+                </span>
             </div>
+            <?php endif; ?>
+        </header>
 
-            <!-- Team 2 -->
-            <div class="team-display">
-                <div class="team-logo-wrapper">
-                    <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                         alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>" 
-                         class="team-logo-img"
-                         onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
-                </div>
-                <div class="team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="section-title">Team Lineups</div>
-    <div class="lineups-grid">
-        <!-- Team 1 Squad -->
-        <div class="team-column">
-            <h3><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
-            <?php if(empty($lineups['team1'])): ?>
-                <div class="empty-state">No lineup submitted yet.</div>
+        <div class="dashboard-body">
+            <?php if ($matchNotFound): ?>
+                <section class="section-container">
+                    <div class="empty-state">
+                        <i class="fas fa-futbol"></i>
+                        <h4>Match not found</h4>
+                        <p>Match ID yang kamu cari tidak tersedia.</p>
+                    </div>
+                </section>
             <?php else: ?>
-                <div class="players-grid">
-                    <?php foreach($lineups['team1'] as $player): ?>
-                    <div class="player-card">
-                        <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                             class="player-avatar"
-                             onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                        <div class="player-info">
-                            <h4><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></h4>
-                            <div class="player-meta">
-                                <span class="player-number">#<?php echo $player['jersey_number']; ?></span>
-                                <span><?php echo $player['position']; ?></span>
-                                <?php if($player['is_starting']): ?>
-                                    <span class="starter-badge">Starter</span>
-                                <?php endif; ?>
+                <section class="section-container section-elevated match-summary-card">
+                    <div class="match-tags">
+                        <?php if (!empty($eventName)): ?>
+                            <span class="match-tag event-tag"><i class="fas fa-bolt"></i> <?php echo htmlspecialchars($eventName ?? ''); ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($matchCode)): ?>
+                            <span class="match-tag code-tag"><i class="fas fa-hashtag"></i> <?php echo htmlspecialchars($matchCode ?? ''); ?></span>
+                        <?php endif; ?>
+                        <span class="match-tag status-tag <?php echo htmlspecialchars($statusClass ?? ''); ?>">
+                            <i class="fas fa-flag-checkered"></i> <?php echo htmlspecialchars($statusLabel ?? ''); ?>
+                        </span>
+                    </div>
+
+                    <div class="match-teams-grid">
+                        <div class="match-team">
+                            <div class="match-team-logo">
+                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
+                                     alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                            </div>
+                            <div class="match-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></div>
+                        </div>
+
+                        <div class="match-score-block">
+                            <?php if ($scoreAvailable): ?>
+                                <div class="score-pill"><?php echo $match['score1']; ?> - <?php echo $match['score2']; ?></div>
+                                <div class="score-subtext">Final Score</div>
+                            <?php else: ?>
+                                <div class="vs-pill">VS</div>
+                                <div class="score-subtext"><?php echo htmlspecialchars($matchTime ?? ''); ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="match-team">
+                            <div class="match-team-logo">
+                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
+                                     alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                            </div>
+                            <div class="match-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="match-meta-grid">
+                        <div class="match-meta-card">
+                            <div class="match-meta-icon"><i class="far fa-calendar-alt"></i></div>
+                            <div>
+                                <div class="match-meta-label">Date & Time</div>
+                                <div class="match-meta-value"><?php echo formatDateTime($match['match_date']); ?></div>
+                            </div>
+                        </div>
+                        <div class="match-meta-card">
+                            <div class="match-meta-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <div class="match-meta-label">Location</div>
+                                <div class="match-meta-value"><?php echo htmlspecialchars($locationLabel ?? 'TBA'); ?></div>
+                            </div>
+                        </div>
+                        <div class="match-meta-card">
+                            <div class="match-meta-icon"><i class="fas fa-circle-info"></i></div>
+                            <div>
+                                <div class="match-meta-label">Status</div>
+                                <div class="match-meta-value">
+                                    <span class="status-chip <?php echo htmlspecialchars($statusClass ?? ''); ?>">
+                                        <?php echo htmlspecialchars($statusLabel ?? ''); ?>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
+                </section>
 
-        <!-- Team 2 Squad -->
-        <div class="team-column">
-            <h3><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
-            <?php if(empty($lineups['team2'])): ?>
-                <div class="empty-state">No lineup submitted yet.</div>
-            <?php else: ?>
-                <div class="players-grid">
-                    <?php foreach($lineups['team2'] as $player): ?>
-                    <div class="player-card">
-                        <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                             class="player-avatar"
-                             onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                        <div class="player-info">
-                            <h4><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></h4>
-                            <div class="player-meta">
-                                <span class="player-number">#<?php echo $player['jersey_number']; ?></span>
-                                <span><?php echo $player['position']; ?></span>
-                                <?php if($player['is_starting']): ?>
-                                    <span class="starter-badge">Starter</span>
-                                <?php endif; ?>
-                            </div>
+                <section class="section-container lineup-section">
+                    <div class="section-header">
+                        <h2 class="section-title">TEAM LINEUPS</h2>
+                        <div class="lineup-legend">
+                            <span class="legend-pill"><i class="fas fa-star"></i> Starter</span>
                         </div>
                     </div>
-                    <?php endforeach; ?>
-                </div>
+
+                    <div class="lineups-grid">
+                        <div class="lineup-card">
+                            <div class="lineup-card-header">
+                                <div class="lineup-team">
+                                    <div class="lineup-team-logo">
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
+                                             alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                    </div>
+                                    <div class="lineup-team-info">
+                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
+                                        <span class="lineup-count"><?php echo count($lineups['team1']); ?> pemain</span>
+                                    </div>
+                                </div>
+                                <span class="team-side-badge">Home</span>
+                            </div>
+
+                            <?php if (empty($lineups['team1'])): ?>
+                                <div class="empty-state">No lineup submitted yet.</div>
+                            <?php else: ?>
+                                <div class="lineup-list">
+                                    <?php foreach ($lineups['team1'] as $player): ?>
+                                        <div class="lineup-player">
+                                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                                 class="lineup-avatar"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                            <div class="lineup-info">
+                                                <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
+                                                <div class="lineup-meta">
+                                                    <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
+                                                    <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
+                                                    <?php if ($player['is_starting']): ?>
+                                                        <span class="lineup-badge">Starter</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="lineup-card">
+                            <div class="lineup-card-header">
+                                <div class="lineup-team">
+                                    <div class="lineup-team-logo">
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
+                                             alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                    </div>
+                                    <div class="lineup-team-info">
+                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
+                                        <span class="lineup-count"><?php echo count($lineups['team2']); ?> pemain</span>
+                                    </div>
+                                </div>
+                                <span class="team-side-badge away">Away</span>
+                            </div>
+
+                            <?php if (empty($lineups['team2'])): ?>
+                                <div class="empty-state">No lineup submitted yet.</div>
+                            <?php else: ?>
+                                <div class="lineup-list">
+                                    <?php foreach ($lineups['team2'] as $player): ?>
+                                        <div class="lineup-player">
+                                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                                 class="lineup-avatar"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                            <div class="lineup-info">
+                                                <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
+                                                <div class="lineup-meta">
+                                                    <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
+                                                    <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
+                                                    <?php if ($player['is_starting']): ?>
+                                                        <span class="lineup-badge">Starter</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </section>
             <?php endif; ?>
         </div>
-    </div>
 
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>
+                <a href="<?php echo SITE_URL; ?>">Home</a> | 
+                <a href="contact.php">Contact</a> | 
+                <a href="privacy.php">Privacy Policy</a>
+            </p>
+        </footer>
+    </main>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<script>
+// Sidebar Dropdown Toggle
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    element.classList.toggle('open');
+}
+
+// Sidebar Toggle Strategy for Mobile
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+const setSidebarOpen = (open) => {
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
+if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => {
+        const isOpen = sidebar.classList.contains('active');
+        setSidebarOpen(!isOpen);
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        setSidebarOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setSidebarOpen(false);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) {
+            setSidebarOpen(false);
+        }
+    });
+}
+</script>
+
+<script>
+const SITE_URL = '<?php echo SITE_URL; ?>';
+</script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+</main>
+</body>
+</html>
+
+

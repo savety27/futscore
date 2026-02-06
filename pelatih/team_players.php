@@ -215,7 +215,7 @@ try {
                             <span class="status-badge <?php echo $player['status']; ?>">
                                 <?php 
                                     $status_map = ['active' => 'Aktif', 'inactive' => 'Non-aktif', 'injured' => 'Cedera', 'suspended' => 'Skorsing'];
-                                    echo $status_map[$player['status']] ?? ucfirst($player['status']); 
+                                    echo $status_map[$player['status'] ?? ''] ?? ucfirst($player['status'] ?? ''); 
                                 ?>
                             </span>
                         </td>

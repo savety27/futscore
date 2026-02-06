@@ -148,7 +148,7 @@ function getStatusBadge($status) {
         'expired' => '<span class="badge-new badge-warning">Expired</span>',
         'cancelled' => '<span class="badge-new badge-warning">Cancelled</span>'
     ];
-    return $badges[$status] ?? '<span class="badge-new" style="background-color: #bdc3c7;">' . ucfirst($status) . '</span>';
+    return $badges[$status] ?? '<span class="badge-new" style="background-color: #bdc3c7;">' . ucfirst($status ?? '') . '</span>';
 }
 
 function getMatchStatusBadge($match_status) {

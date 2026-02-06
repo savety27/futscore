@@ -107,7 +107,7 @@ function formatPosition($position) {
         'scout' => 'Scout'
     ];
     
-    return $position_labels[$position] ?? ucfirst(str_replace('_', ' ', $position));
+    return $position_labels[$position] ?? ucfirst(str_replace('_', ' ', $position ?? ''));
 }
 
 // Helper function to check file exists and return correct path

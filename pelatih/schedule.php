@@ -504,7 +504,7 @@ try {
                                 <?php 
                                     $s_status = strtolower($challenge['status']);
                                     $s_status_map = ['accepted' => 'Diterima', 'open' => 'Terbuka', 'rejected' => 'Ditolak', 'expired' => 'Kedaluwarsa'];
-                                    echo htmlspecialchars($s_status_map[$s_status] ?? ucfirst($challenge['status'])); 
+                                    echo htmlspecialchars($s_status_map[$s_status ?? ''] ?? ucfirst($challenge['status'] ?? '')); 
                                 ?>
                             </span>
                         <?php endif; ?>
@@ -525,7 +525,7 @@ try {
                                     <?php 
                                         $m_status = strtolower($challenge['match_status']);
                                         $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'cancelled' => 'Dibatalkan', 'abandoned' => 'Dihentikan', 'postponed' => 'Ditunda'];
-                                        echo htmlspecialchars($m_status_map[$m_status] ?? ucfirst($challenge['match_status'])); 
+                                        echo htmlspecialchars($m_status_map[$m_status ?? ''] ?? ucfirst($challenge['match_status'] ?? '')); 
                                     ?>
                                 </span>
                             <?php else: ?>
