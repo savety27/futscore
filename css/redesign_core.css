@@ -332,6 +332,8 @@ body.sidebar-open {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    /* Stabilizer for flex-box overflow */
 }
 
 /* Responsive Handling */

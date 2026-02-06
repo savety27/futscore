@@ -119,6 +119,8 @@
     border: 1px solid var(--gray-100);
     box-shadow: var(--shadow-lg);
     margin-bottom: 22px;
+    min-width: 0;
+    /* Prevent flex overflow */
 }
 
 .section-container.section-elevated {
@@ -207,6 +209,8 @@
 /* Match summary cards */
 .match-cards-container {
     margin-top: 12px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .match-cards-scroll {
@@ -215,6 +219,7 @@
     overflow-x: auto;
     padding-bottom: 6px;
     scroll-snap-type: x mandatory;
+    max-width: 100%;
 }
 
 .match-cards-scroll::-webkit-scrollbar {
@@ -1367,6 +1372,7 @@
 }
 
 @media (min-width: 1200px) {
+
     .players-grid,
     .transfers-grid,
     .winners-grid,

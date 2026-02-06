@@ -189,6 +189,7 @@
     overflow: hidden;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--gray-100);
+    min-width: 0;
 }
 
 .event-table-new {
