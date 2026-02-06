@@ -301,7 +301,7 @@ function getQueryString($exclude = []) {
     <main class="main-content-dashboard">
         <header class="dashboard-header dashboard-header-news">
             <div class="dashboard-header-inner">
-                <div class="header-eyebrow">FUTSCORE</div>
+                <div class="header-eyebrow">MGP</div>
                 <h1><?php echo $isSingleNews ? 'Detail Berita' : 'Berita Terbaru'; ?></h1>
                 <p class="header-subtitle">
                     <?php if ($isSingleNews): ?>

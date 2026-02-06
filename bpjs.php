@@ -72,7 +72,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
         <header class="dashboard-header dashboard-header-bpjs">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">FUTSCORE</div>
+                    <div class="header-eyebrow">MGP</div>
                     <h1>BPJS Ketenagakerjaan</h1>
                     <p class="header-subtitle">Futscore bekerja sama dengan BPJS Ketenagakerjaan untuk memudahkan pendaftaran atlet usia muda.</p>
                 </div>
