@@ -1,0 +1,568 @@
+<?php
+$page_title = 'Jadwal Pertandingan';
+$current_page = 'schedule';
+require_once 'config/database.php';
+require_once 'includes/header.php';
+
+// Get pelatih's team_id directly from session (like in dashboard.php)
+$my_team_id = $_SESSION['team_id'] ?? 0;
+
+// Fallback: If not in session, try to get from database using pelatih_id
+if ($my_team_id == 0) {
+    $pelatih_id = $_SESSION['pelatih_id'] ?? 0;
+    try {
+        $stmtTeam = $conn->prepare("SELECT team_id FROM team_staff WHERE id = ?");
+        $stmtTeam->execute([$pelatih_id]);
+        $staff = $stmtTeam->fetch(PDO::FETCH_ASSOC);
+        $my_team_id = $staff['team_id'] ?? 0;
+        
+        // Save to session for future use
+        if ($my_team_id > 0) {
+            $_SESSION['team_id'] = $my_team_id;
+        }
+    } catch (PDOException $e) {
+        // Ignore error
+    }
+}
+
+// Handle search dan filter
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
+// Ambil semua tipe olahraga yang tersedia untuk filter
+$sport_types = [];
+try {
+    $sport_query = "SELECT DISTINCT sport_type FROM challenges WHERE sport_type IS NOT NULL AND sport_type != '' ORDER BY sport_type";
+    $sport_stmt = $conn->prepare($sport_query);
+    $sport_stmt->execute();
+    $sport_types = $sport_stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    // Jika error, sport_types akan tetap array kosong
+}
+
+// Base query untuk challenges dengan join ke teams untuk nama tim
+$base_query = "SELECT 
+    c.*,
+    t1.name as challenger_name,
+    t1.logo as challenger_logo,
+    t2.name as opponent_name,
+    t2.logo as opponent_logo,
+    v.name as venue_name
+    FROM challenges c
+    LEFT JOIN teams t1 ON c.challenger_id = t1.id
+    LEFT JOIN teams t2 ON c.opponent_id = t2.id
+    LEFT JOIN venues v ON c.venue_id = v.id
+    WHERE 1=1";
+
+$count_query = "SELECT COUNT(*) as total FROM challenges c WHERE 1=1";
+
+// Tambahkan kondisi untuk search
+if (!empty($search)) {
+    $search_term = "%{$search}%";
+    $base_query .= " AND (c.challenge_code LIKE ? 
+                OR t1.name LIKE ? 
+                OR t2.name LIKE ? 
+                OR c.sport_type LIKE ?
+                OR c.status LIKE ?
+                OR c.match_status LIKE ?)";
+    $count_query .= " AND (c.challenge_code LIKE ? 
+                OR EXISTS (SELECT 1 FROM teams t WHERE t.id = c.challenger_id AND t.name LIKE ?)
+                OR EXISTS (SELECT 1 FROM teams t WHERE t.id = c.opponent_id AND t.name LIKE ?)
+                OR c.sport_type LIKE ?
+                OR c.status LIKE ?
+                OR c.match_status LIKE ?)";
+}
+
+// Tambahkan kondisi untuk filter olahraga
+if (!empty($sport_filter)) {
+    $base_query .= " AND c.sport_type = ?";
+    $count_query .= " AND c.sport_type = ?";
+}
+
+$base_query .= " ORDER BY c.challenge_date DESC";
+
+$total_data = 0;
+$total_pages = 1;
+$challenges = [];
+
+try {
+    // Hitung total data dengan filter
+    if (!empty($search) && !empty($sport_filter)) {
+        // Keduanya: search dan filter olahraga
+        $stmt = $conn->prepare($count_query);
+        $stmt->execute([
+            $search_term, $search_term, $search_term, 
+            $search_term, $search_term, $search_term,
+            $sport_filter
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_data = $result['total'];
+    } elseif (!empty($search)) {
+        // Hanya search
+        $stmt = $conn->prepare($count_query);
+        $stmt->execute([
+            $search_term, $search_term, $search_term, 
+            $search_term, $search_term, $search_term
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_data = $result['total'];
+    } elseif (!empty($sport_filter)) {
+        // Hanya filter olahraga
+        $stmt = $conn->prepare($count_query);
+        $stmt->execute([$sport_filter]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_data = $result['total'];
+    } else {
+        // Tidak ada filter
+        $stmt = $conn->prepare($count_query);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $total_data = $result['total'];
+    }
+    
+    $total_pages = ceil($total_data / $limit);
+    
+    // Query data dengan pagination
+    $query = $base_query . " LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($query);
+    
+    if (!empty($search) && !empty($sport_filter)) {
+        // Keduanya: search dan filter olahraga
+        $stmt->bindValue(1, $search_term);
+        $stmt->bindValue(2, $search_term);
+        $stmt->bindValue(3, $search_term);
+        $stmt->bindValue(4, $search_term);
+        $stmt->bindValue(5, $search_term);
+        $stmt->bindValue(6, $search_term);
+        $stmt->bindValue(7, $sport_filter);
+        $stmt->bindValue(8, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(9, $offset, PDO::PARAM_INT);
+    } elseif (!empty($search)) {
+        // Hanya search
+        $stmt->bindValue(1, $search_term);
+        $stmt->bindValue(2, $search_term);
+        $stmt->bindValue(3, $search_term);
+        $stmt->bindValue(4, $search_term);
+        $stmt->bindValue(5, $search_term);
+        $stmt->bindValue(6, $search_term);
+        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
+    } elseif (!empty($sport_filter)) {
+        // Hanya filter olahraga
+        $stmt->bindValue(1, $sport_filter);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+    } else {
+        // Tidak ada filter
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    }
+    
+    $stmt->execute();
+    $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Format tanggal dan waktu
+    foreach ($challenges as &$challenge) {
+        // Format challenge_date
+        if (!empty($challenge['challenge_date'])) {
+            $date = new DateTime($challenge['challenge_date']);
+            $challenge['formatted_date'] = $date->format('d M Y');
+            $challenge['formatted_time'] = $date->format('H:i');
+        } else {
+            $challenge['formatted_date'] = '-';
+            $challenge['formatted_time'] = '-';
+        }
+        
+        // Format match status badge color
+        $challenge['match_status_badge'] = 'gray';
+        if (!empty($challenge['match_status'])) {
+            switch(strtolower($challenge['match_status'])) {
+                case 'completed':
+                    $challenge['match_status_badge'] = 'success';
+                    break;
+                case 'scheduled':
+                    $challenge['match_status_badge'] = 'primary';
+                    break;
+                case 'cancelled':
+                case 'abandoned':
+                    $challenge['match_status_badge'] = 'danger';
+                    break;
+                case 'postponed':
+                    $challenge['match_status_badge'] = 'warning';
+                    break;
+                default:
+                    $challenge['match_status_badge'] = 'gray';
+            }
+        }
+        
+        // Format status badge color
+        $challenge['status_badge'] = 'gray';
+        if (!empty($challenge['status'])) {
+            switch(strtolower($challenge['status'])) {
+                case 'accepted':
+                    $challenge['status_badge'] = 'success';
+                    break;
+                case 'open':
+                    $challenge['status_badge'] = 'primary';
+                    break;
+                case 'rejected':
+                    $challenge['status_badge'] = 'danger';
+                    break;
+                case 'expired':
+                    $challenge['status_badge'] = 'warning';
+                    break;
+                default:
+                    $challenge['status_badge'] = 'gray';
+            }
+        }
+        
+        // Set default logos jika kosong
+        $challenge['challenger_logo'] = $challenge['challenger_logo'] ?: 'default-team.png';
+        $challenge['opponent_logo'] = $challenge['opponent_logo'] ?: 'default-team.png';
+    }
+    unset($challenge);
+
+} catch (PDOException $e) {
+    echo "Error: " . $e->getMessage();
+}
+?>
+
+<style>
+.filter-container {
+    margin-bottom: 25px;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-form {
+    width: 100%;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    color: var(--dark);
+    transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+.search-btn {
+    position: absolute;
+    left: 12px;
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sport-filter-wrapper {
+    width: 200px;
+}
+
+.sport-select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    color: var(--dark);
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.sport-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.clear-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background-color: #f8f9fa;
+    color: var(--dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+.clear-filter-btn:hover {
+    background-color: #e9ecef;
+    color: var(--dark);
+    text-decoration: none;
+}
+
+.clear-filter-btn i {
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group,
+    .sport-filter-wrapper {
+        min-width: 100%;
+        width: 100%;
+    }
+    
+    .clear-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<div class="card">
+    <div class="section-header">
+        <h2 class="section-title">Jadwal Pertandingan</h2>
+        <!-- Read Only: No Add Button -->
+    </div>
+
+    <div class="filter-container">
+        <div class="filter-row">
+            <!-- Search Bar -->
+            <div class="filter-group">
+                <form action="" method="GET" class="filter-form">
+                    <div class="search-wrapper">
+                        <input type="text" name="search" placeholder="Cari pertandingan..." 
+                               value="<?php echo htmlspecialchars($search); ?>"
+                               class="search-input">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Sport Filter -->
+            <div class="sport-filter-wrapper">
+                <form action="" method="GET" id="sportFilterForm" class="filter-form">
+                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                    <select name="sport" onchange="document.getElementById('sportFilterForm').submit()" 
+                            class="sport-select">
+                        <option value="">Semua Olahraga</option>
+                        <?php foreach ($sport_types as $sport): ?>
+                            <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" 
+                                <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars(ucwords($sport ?? '')); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+            </div>
+            
+            <!-- Clear Filter Button -->
+            <?php if (!empty($search) || !empty($sport_filter)): ?>
+            <div class="filter-group" style="flex: 0 0 auto;">
+                <a href="schedule.php" class="clear-filter-btn">
+                    <i class="fas fa-times"></i> Hapus Filter
+                </a>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    </div>
+
+    <?php if (empty($challenges)): ?>
+        <p style="text-align: center; color: var(--gray); padding: 20px;">Pertandingan tidak ditemukan.</p>
+    <?php else: ?>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Kode Pertandingan</th>
+                        <th>Tanggal</th>
+                        <th>Tim</th>
+                        <th>Olahraga</th>
+                        <th>Venue</th>
+                        <th>Skor</th>
+                        <th>Status</th>
+                        <th>Status Pertandingan</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($challenges as $challenge): ?>
+                    <tr>
+                        <td>
+                            <strong><?php echo htmlspecialchars($challenge['challenge_code'] ?? ''); ?></strong>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--dark);"><?php echo $challenge['formatted_date']; ?></div>
+                            <div style="font-size: 13px; color: var(--gray);"><?php echo $challenge['formatted_time']; ?></div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="text-align: center;">
+                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo']); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
+                                         class="team-logo"
+                                         onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                                    <div style="font-size: 12px; margin-top: 5px; font-weight: 600;">
+                                        <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>
+                                    </div>
+                                </div>
+                                <div style="color: var(--gray);">vs</div>
+                                <div style="text-align: center;">
+                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo']); ?>" 
+                                         alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
+                                         class="team-logo"
+                                         onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                                    <div style="font-size: 12px; margin-top: 5px; font-weight: 600;">
+                                        <?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <?php if (!empty($challenge['venue_name'])): ?>
+                                <span><?php echo htmlspecialchars($challenge['venue_name'] ?? ''); ?></span>
+                            <?php else: ?>
+                                <span style="color: var(--gray); font-style: italic;">Akan ditentukan</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($challenge['challenger_score']) || !empty($challenge['opponent_score'])): ?>
+                                <div style="font-weight: 700; font-size: 18px; text-align: center; color: var(--primary);">
+                                    <?php echo htmlspecialchars($challenge['challenger_score'] ?? 0); ?> - <?php echo htmlspecialchars($challenge['opponent_score'] ?? 0); ?>
+                                </div>
+                                <?php if (!empty($challenge['winner_team_id'])): ?>
+                                    <div style="font-size: 11px; color: var(--success); text-align: center; font-weight: 600;">
+                                        <?php 
+                                        $winner_name = ($challenge['winner_team_id'] == $challenge['challenger_id']) 
+                                            ? $challenge['challenger_name'] 
+                                            : $challenge['opponent_name'];
+                                        echo htmlspecialchars($winner_name ?? '');
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span style="color: var(--gray); font-style: italic;">Belum dimainkan</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($challenge['status'])): ?>
+                                <?php 
+                                $badge_class = '';
+                                switch($challenge['status_badge']) {
+                                    case 'success': $badge_class = 'background: #e8f5e9; color: var(--success);'; break;
+                                    case 'primary': $badge_class = 'background: #f0f7ff; color: var(--primary);'; break;
+                                    case 'danger': $badge_class = 'background: #ffebee; color: var(--danger);'; break;
+                                    case 'warning': $badge_class = 'background: #fff8e1; color: var(--warning);'; break;
+                                    default: $badge_class = 'background: #f5f5f5; color: var(--gray);';
+                                }
+                                ?>
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $badge_class; ?>">
+                                <?php 
+                                    $s_status = strtolower($challenge['status']);
+                                    $s_status_map = ['accepted' => 'Diterima', 'open' => 'Terbuka', 'rejected' => 'Ditolak', 'expired' => 'Kedaluwarsa'];
+                                    echo htmlspecialchars($s_status_map[$s_status] ?? ucfirst($challenge['status'])); 
+                                ?>
+                            </span>
+                        <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if (!empty($challenge['match_status'])): ?>
+                                <?php 
+                                $match_badge_class = '';
+                                switch($challenge['match_status_badge']) {
+                                    case 'success': $match_badge_class = 'background: #e8f5e9; color: var(--success);'; break;
+                                    case 'primary': $match_badge_class = 'background: #f0f7ff; color: var(--primary);'; break;
+                                    case 'danger': $match_badge_class = 'background: #ffebee; color: var(--danger);'; break;
+                                    case 'warning': $match_badge_class = 'background: #fff8e1; color: var(--warning);'; break;
+                                    default: $match_badge_class = 'background: #f5f5f5; color: var(--gray);';
+                                }
+                                ?>
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $match_badge_class; ?>">
+                                    <?php 
+                                        $m_status = strtolower($challenge['match_status']);
+                                        $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'cancelled' => 'Dibatalkan', 'abandoned' => 'Dihentikan', 'postponed' => 'Ditunda'];
+                                        echo htmlspecialchars($m_status_map[$m_status] ?? ucfirst($challenge['match_status'])); 
+                                    ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="color: var(--gray); font-style: italic;">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($challenge['status'] === 'accepted' && ($my_team_id == $challenge['challenger_id'] || $my_team_id == $challenge['opponent_id'])): ?>
+                            <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-block;">
+                                <i class="fas fa-users-cog"></i> Atur Lineup
+                            </a>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <?php if ($total_pages > 1): ?>
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">&laquo; Seb</a>
+            <?php endif; ?>
+            
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php endfor; ?>
+            
+            <?php if ($page < $total_pages): ?>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">Sel &raquo;</a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+    <?php endif; ?>
+</div>
+
+<?php require_once 'includes/footer.php'; ?>

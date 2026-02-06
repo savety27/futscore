@@ -1,0 +1,1413 @@
+<?php
+session_start();
+
+// Load database config
+$config_path = __DIR__ . '/config/database.php';
+if (file_exists($config_path)) {
+    require_once $config_path;
+} else {
+    die("Database configuration file not found at: $config_path");
+}
+
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: ../index.php");
+    exit;
+}
+
+// Menu items sesuai dengan file pertama
+$menu_items = [
+    'dashboard' => [
+        'icon' => '🏠',
+        'name' => 'Dashboard',
+        'url' => 'dashboard.php',
+        'submenu' => false
+    ],
+    'master' => [
+        'icon' => '📊',
+        'name' => 'Master Data',
+        'submenu' => true,
+        'items' => [
+            'player' => 'player.php',
+            'team' => 'team.php',
+            'team_staff' => 'team_staff.php',
+            'transfer' => 'transfer.php',
+        ]
+    ],
+    'Event' => [
+        'icon' => '🏆',
+        'name' => 'Event',
+        'url' => 'challenge.php',
+        'submenu' => false
+    ],
+    'Venue' => [
+        'icon' => '📍',
+        'name' => 'Venue',
+        'url' => 'venue.php',
+        'submenu' => false
+    ],
+    'Pelatih' => [
+        'icon' => '👨‍🏫',
+        'name' => 'Pelatih',
+        'url' => 'pelatih.php',
+        'submenu' => false
+    ],
+    'Berita' => [
+        'icon' => '📰',
+        'name' => 'Berita',
+        'url' => 'berita.php',
+        'submenu' => false
+    ]
+];
+
+// Get admin info
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_email = $_SESSION['admin_email'] ?? '';
+
+$academy_name = "Hi, Welcome...";
+$email = $admin_email;
+
+// Mendapatkan nama file saat ini untuk penanda menu 'Active'
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// Get team ID
+$team_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($team_id <= 0) {
+    header("Location: team.php");
+    exit;
+}
+
+// Fetch team data with player and staff count
+try {
+    $stmt = $conn->prepare("
+        SELECT t.*, 
+        (SELECT COUNT(*) FROM players p WHERE p.team_id = t.id AND p.status = 'active') as player_count,
+        (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count
+        FROM teams t 
+        WHERE t.id = ?
+    ");
+    $stmt->execute([$team_id]);
+    $team_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$team_data) {
+        header("Location: team.php");
+        exit;
+    }
+    
+    // Fetch players in this team - FIXED QUERY
+    $players_stmt = $conn->prepare("
+        SELECT p.*, p.position as position_name
+        FROM players p 
+        WHERE p.team_id = ? AND p.status = 'active'
+        ORDER BY p.name ASC
+        LIMIT 10
+    ");
+    $players_stmt->execute([$team_id]);
+    $players = $players_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch staff in this team - FIXED QUERY
+    $staff_stmt = $conn->prepare("
+        SELECT ts.*, ts.position as position_name
+        FROM team_staff ts 
+        WHERE ts.team_id = ?
+        ORDER BY ts.name ASC
+        LIMIT 10
+    ");
+    $staff_stmt->execute([$team_id]);
+    $staff = $staff_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+} catch (PDOException $e) {
+    die("Error fetching team data: " . $e->getMessage());
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>View Team - FutScore</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+    --primary: #0A2463;
+    --secondary: #FFD700;
+    --accent: #4CC9F0;
+    --success: #2E7D32;
+    --warning: #F9A826;
+    --danger: #D32F2F;
+    --light: #F8F9FA;
+    --dark: #1A1A2E;
+    --gray: #6C757D;
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+    color: var(--dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
+    color: white;
+    padding: 0;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.sidebar-header {
+    padding: 30px 25px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid var(--secondary);
+}
+
+.logo-container {
+    position: relative;
+    display: inline-block;
+}
+
+.logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary) 0%, #FFEC8B 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 4px solid white;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.logo:hover {
+    transform: rotate(15deg) scale(1.05);
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+}
+
+.logo::before {
+    content: "⚽";
+    font-size: 48px;
+    color: var(--primary);
+}
+
+.academy-info {
+    text-align: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.academy-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.academy-email {
+    font-size: 14px;
+    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Menu */
+.menu {
+    padding: 25px 15px;
+}
+
+.menu-item {
+    margin-bottom: 8px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: var(--transition);
+    position: relative;
+    border-left: 4px solid transparent;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-left-color: var(--secondary);
+    padding-left: 25px;
+}
+
+.menu-link.active {
+    background: rgba(255, 215, 0, 0.15);
+    color: var(--secondary);
+    border-left-color: var(--secondary);
+    font-weight: 600;
+}
+
+.menu-icon {
+    font-size: 22px;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+}
+
+.menu-text {
+    flex: 1;
+    font-size: 16px;
+}
+
+.menu-arrow {
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.menu-arrow.rotate {
+    transform: rotate(90deg);
+}
+
+/* Submenu */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 12px 12px;
+}
+
+.submenu.open {
+    max-height: 300px;
+}
+
+.submenu-item {
+    padding: 5px 15px 5px 70px;
+}
+
+.submenu-link {
+    display: block;
+    padding: 12px 15px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--transition);
+    position: relative;
+    font-size: 14px;
+}
+
+.submenu-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link.active {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--secondary);
+    padding-left: 20px;
+}
+
+.submenu-link::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--secondary);
+    font-size: 18px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+    flex: 1;
+    padding: 30px;
+    margin-left: 280px;
+    transition: var(--transition);
+}
+
+/* Topbar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 20px 25px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
+}
+
+.greeting h1 {
+    font-size: 28px;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.greeting p {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.notification {
+    position: relative;
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--primary);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--danger);
+    color: white;
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+}
+
+.logout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+}
+
+.page-title {
+    font-size: 28px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-title i {
+    color: var(--secondary);
+    font-size: 32px;
+}
+
+.search-bar {
+    position: relative;
+    width: 400px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 15px 50px 15px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: var(--transition);
+    background: #f8f9fa;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+}
+
+.search-bar button {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: var(--transition);
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(10, 36, 99, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success), #4CAF50);
+    color: white;
+    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+}
+
+.btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.stat-icon {
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Info Card */
+.info-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: var(--card-shadow);
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.info-title {
+    font-size: 22px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    margin-bottom: 15px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.info-value {
+    font-size: 16px;
+    color: #333;
+}
+
+.info-value.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+/* Team Logo Large */
+.team-logo-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Player and Staff Cards */
+.player-card, .staff-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: var(--transition);
+}
+
+.player-card:hover, .staff-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.player-avatar, .staff-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f0f0f0;
+}
+
+.player-info, .staff-info {
+    flex: 1;
+}
+
+.player-name, .staff-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.player-position, .staff-position {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Badge Styles */
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-primary {
+    background: rgba(10, 36, 99, 0.1);
+    color: var(--primary);
+}
+
+.badge-secondary {
+    background: rgba(108, 117, 125, 0.1);
+    color: var(--gray);
+}
+
+.badge-success {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success);
+}
+
+.badge-danger {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--danger);
+}
+
+.badge-warning {
+    background: rgba(249, 168, 38, 0.1);
+    color: var(--warning);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 60px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+
+/* =========================================
+   MOBILE RESPONSIVE DESIGN
+   ========================================= */
+
+/* Default: Hide mobile-only elements on desktop */
+.menu-toggle {
+    display: none;
+}
+
+.menu-overlay {
+    display: none;
+}
+
+/* ===== TABLET (max-width: 1024px) ===== */
+@media screen and (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+
+    .main {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+        max-width: calc(100vw - 240px);
+    }
+}
+
+/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
+@media screen and (max-width: 768px) {
+    
+    /* Show Mobile Menu Toggle Button */
+    .menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
+        color: var(--primary);
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        z-index: 1001;
+        font-size: 24px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    /* Sidebar: Hidden by default on mobile */
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+        width: 280px;
+    }
+
+    /* Sidebar: Show when active */
+    .sidebar.active {
+        transform: translateX(0);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Overlay: Show when menu is open */
+    .menu-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+        backdrop-filter: blur(2px);
+    }
+
+    body.menu-open .menu-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Main Content: Full width on mobile */
+    .main {
+        margin-left: 0;
+        padding: 20px 15px;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    /* Topbar: Stack vertically */
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .user-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    /* Page Header */
+    .page-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+    }
+
+    .page-title {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Stats Grid & Info Cards */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .info-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .info-title {
+        justify-content: center;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Team Header Section (Logo + Name) */
+    .info-card > div[style*="display: flex"] {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px !important;
+    }
+    
+    .team-logo-large {
+        margin: 0 auto;
+    }
+    
+    .info-card > div > div[style*="min-width: 300px"] {
+        min-width: unset !important;
+        width: 100%;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    
+    /* Reduce font sizes */
+    .greeting h1 {
+        font-size: 20px;
+    }
+    
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
+    .page-title i {
+        font-size: 26px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Compact sidebar */
+    .sidebar {
+        width: 260px;
+    }
+
+    .sidebar-header {
+        padding: 20px 15px;
+    }
+
+    .logo {
+        width: 80px;
+        height: 80px;
+    }
+
+    .logo::before {
+        font-size: 36px;
+    }
+
+    .academy-name {
+        font-size: 18px;
+    }
+    
+    /* Compact menu */
+    .menu {
+        padding: 20px 10px;
+    }
+
+    .menu-link {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+
+    .menu-icon {
+        font-size: 20px;
+        width: 28px;
+    }
+
+    /* Smaller mobile toggle button */
+    .menu-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+</style>
+</head>
+<body>
+
+
+<!-- Mobile Menu Components (hidden by default via CSS) -->
+<div class="menu-overlay"></div>
+<button class="menu-toggle" id="menuToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="wrapper">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <div class="logo"></div>
+            </div>
+            <div class="academy-info">
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
+            </div>
+        </div>
+
+        <div class="menu">
+            <?php foreach ($menu_items as $key => $item): ?>
+            <?php 
+                // Cek apakah menu ini aktif berdasarkan URL saat ini
+                $isActive = false;
+                $isSubmenuOpen = false;
+                
+                if ($item['submenu']) {
+                    // Cek jika salah satu sub-item ada yang aktif
+                    // Untuk halaman team_view.php, kita juga ingin submenu team aktif
+                    foreach($item['items'] as $subKey => $subUrl) {
+                        if($current_page === $subUrl || 
+                           ($subKey === 'team' && ($current_page === 'team_create.php' || $current_page === 'team_edit.php' || $current_page === 'team_view.php'))) {
+                            $isActive = true;
+                            $isSubmenuOpen = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if ($current_page === $item['url']) {
+                        $isActive = true;
+                    }
+                }
+            ?>
+            <div class="menu-item">
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
+                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
+                   data-menu="<?php echo $key; ?>">
+                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                        <span class="menu-text"><?php echo $item['name']; ?></span>
+                        <?php if ($item['submenu']): ?>
+                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                        <?php endif; ?>
+                </a>
+                
+                <?php if ($item['submenu']): ?>
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
+                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
+                    <div class="submenu-item">
+                        <a href="<?php echo $subUrl; ?>" 
+                           class="submenu-link <?php echo ($current_page === $subUrl || ($subKey === 'team' && ($current_page === 'team_create.php' || $current_page === 'team_edit.php' || $current_page === 'team_view.php'))) ? 'active' : ''; ?>">
+                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
+                        </a>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar">
+            <div class="greeting">
+                <h1>Team Details ⚽</h1>
+                <p>Detail informasi team: <?php echo htmlspecialchars($team_data['name'] ?? ''); ?></p>
+            </div>
+            
+            <div class="user-actions">
+                <a href="logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-users"></i>
+                <span>Detail Team</span>
+            </div>
+            <div class="action-buttons">
+                <a href="team_edit.php?id=<?php echo $team_id; ?>" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Team
+                </a>
+                <a href="team.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </div>
+        </div>
+
+        <!-- TEAM STATS -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #0A2463;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number"><?php echo $team_data['player_count']; ?></div>
+                <div class="stat-label">Total Players</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #FFD700;">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="stat-number"><?php echo $team_data['staff_count']; ?></div>
+                <div class="stat-label">Total Staff</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #4CC9F0;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-number"><?php echo $team_data['established_year']; ?></div>
+                <div class="stat-label">Tahun Berdiri</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon" style="color: #2E7D32;">
+                    <i class="fas fa-running"></i>
+                </div>
+                <div class="stat-value">
+                    <div class="stat-number"><?php echo $team_data['sport_type']; ?></div>
+                    <div class="stat-label">Cabor</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM INFORMATION -->
+        <div class="info-card">
+            <div class="info-header">
+                <div class="info-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informasi Team
+                </div>
+                <div>
+                    <?php if ($team_data['is_active']): ?>
+                        <span class="badge badge-success" style="padding: 8px 16px;">AKTIF</span>
+                    <?php else: ?>
+                        <span class="badge badge-danger" style="padding: 8px 16px;">NON-AKTIF</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 40px; align-items: center; margin-bottom: 30px; flex-wrap: wrap;">
+                <?php if (!empty($team_data['logo'])): ?>
+                    <img src="../images/teams/<?php echo htmlspecialchars($team_data['logo'] ?? ''); ?>" 
+                         alt="<?php echo htmlspecialchars($team_data['name'] ?? ''); ?>"  
+                         class="team-logo-large">
+                <?php else: ?>
+                    <div class="team-logo-large" style="background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-shield-alt" style="color: #999; font-size: 48px;"></i>
+                    </div>
+                <?php endif; ?>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <h2 style="font-size: 28px; color: #333; margin-bottom: 10px;">
+                        <?php echo htmlspecialchars($team_data['name'] ?? ''); ?>
+                        <?php if (!empty($team_data['alias'])): ?>
+                            <span style="color: #666; font-size: 20px;">(<?php echo htmlspecialchars($team_data['alias'] ?? ''); ?>)</span>
+                        <?php endif; ?>
+                    </h2>
+                    <p style="color: #666; margin-bottom: 15px;">
+                        <i class="fas fa-user-tie"></i>
+                        Manager/Coach: <strong><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></strong>
+                    </p>
+                    <?php if (!empty($team_data['basecamp'])): ?>
+                        <p style="color: #666;">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Basecamp: <?php echo htmlspecialchars($team_data['basecamp'] ?? ''); ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nama Lengkap</span>
+                    <div class="info-value"><?php echo htmlspecialchars($team_data['name'] ?? ''); ?></div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Alias</span>
+                    <div class="info-value">
+                        <?php echo !empty($team_data['alias']) ? htmlspecialchars($team_data['alias']) : '-'; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Manager/Coach</span>
+                    <div class="info-value"><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Tahun Berdiri</span>
+                    <div class="info-value"><?php echo $team_data['established_year']; ?></div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Warna Kostum</span>
+                    <div class="info-value">
+                        <?php echo !empty($team_data['uniform_color']) ? htmlspecialchars($team_data['uniform_color']) : '-'; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Basecamp</span>
+                    <div class="info-value">
+                        <?php echo !empty($team_data['basecamp']) ? htmlspecialchars($team_data['basecamp']) : '-'; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Cabor</span>
+                    <div class="info-value">
+                        <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
+                            <?php echo htmlspecialchars($team_data['sport_type'] ?? ''); ?>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Status</span>
+                    <div class="info-value">
+                        <?php if ($team_data['is_active']): ?>
+                            <span class="badge badge-success">Aktif</span>
+                        <?php else: ?>
+                            <span class="badge badge-danger">Non-Aktif</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Dibuat Pada</span>
+                    <div class="info-value">
+                        <?php echo date('d F Y, H:i', strtotime($team_data['created_at'])); ?>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-label">Terakhir Diupdate</span>
+                    <div class="info-value">
+                        <?php echo date('d F Y, H:i', strtotime($team_data['updated_at'])); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAYERS SECTION -->
+        <div class="info-card">
+            <div class="info-header">
+                <div class="info-title">
+                    <i class="fas fa-users"></i>
+                    Players in Team (<?php echo count($players); ?>)
+                </div>
+                <?php if (!empty($players)): ?>
+                <a href="player.php?team=<?php echo $team_id; ?>" class="btn btn-primary btn-sm" style="padding: 8px 16px; font-size: 14px;">
+                    <i class="fas fa-external-link-alt"></i>
+                    Lihat Semua Players
+                </a>
+                <?php endif; ?>
+            </div>
+            
+            <?php if (!empty($players)): ?>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                    <?php foreach ($players as $player): ?>
+                        <div class="player-card">
+                            <?php if (!empty($player['photo'])): ?>
+                                <img src="../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
+                                     alt="<?php echo htmlspecialchars($player['name'] ?? ''); ?>"  
+                                     class="player-avatar">
+                            <?php else: ?>
+                                <div class="player-avatar" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user" style="color: #999; font-size: 24px;"></i>
+                                </div>
+                            <?php endif; ?>
+                            <div class="player-info">
+                                <div class="player-name"><?php echo htmlspecialchars($player['name'] ?? ''); ?></div>
+                                <div class="player-position">
+                                    <?php echo !empty($player['position_name']) ? htmlspecialchars($player['position_name']) : 'No Position'; ?>
+                                </div>
+                                <div style="font-size: 12px; color: #999;">
+                                    Back Number: <?php echo !empty($player['jersey_number']) ? $player['jersey_number'] : '-'; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <h4>Tidak ada players dalam team ini</h4>
+                    <p>Tambahkan players ke team ini melalui menu Players</p>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- STAFF SECTION -->
+        <div class="info-card">
+            <div class="info-header">
+                <div class="info-title">
+                    <i class="fas fa-user-tie"></i>
+                    Staff in Team (<?php echo count($staff); ?>)
+                </div>
+                <?php if (!empty($staff)): ?>
+                <a href="team_staff.php?team=<?php echo $team_id; ?>" class="btn btn-primary btn-sm" style="padding: 8px 16px; font-size: 14px;">
+                    <i class="fas fa-external-link-alt"></i>
+                    Lihat Semua Staff
+                </a>
+                <?php endif; ?>
+            </div>
+            
+            <?php if (!empty($staff)): ?>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                    <?php foreach ($staff as $staff_member): ?>
+                        <div class="staff-card">
+                            <?php if (!empty($staff_member['photo'])): ?>
+                                <img src="../<?php echo htmlspecialchars($staff_member['photo'] ?? ''); ?>" 
+                                     alt="<?php echo htmlspecialchars($staff_member['name'] ?? ''); ?>"  
+                                     class="staff-avatar">
+                            <?php else: ?>
+                                <div class="staff-avatar" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user-tie" style="color: #999; font-size: 24px;"></i>
+                                </div>
+                            <?php endif; ?>
+                            <div class="staff-info">
+                                <div class="staff-name"><?php echo htmlspecialchars($staff_member['name'] ?? ''); ?></div>
+                                <div class="staff-position">
+                                    <?php echo !empty($staff_member['position_name']) ? htmlspecialchars($staff_member['position_name']) : 'Staff'; ?>
+                                </div>
+                                <div style="font-size: 12px; color: #999;">
+                                    <?php echo !empty($staff_member['phone']) ? $staff_member['phone'] : 'No Phone'; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="fas fa-user-tie"></i>
+                    <h4>Tidak ada staff dalam team ini</h4>
+                    <p>Tambahkan staff ke team ini melalui menu Team Staff</p>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile Menu Toggle Functionality
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.menu-overlay');
+
+    if (menuToggle && sidebar && overlay) {
+        // Toggle menu when clicking hamburger button
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            document.body.classList.toggle('menu-open');
+        });
+
+        // Close menu when clicking overlay
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            document.body.classList.remove('menu-open');
+        });
+
+        // Close menu when clicking a menu link (better UX on mobile)
+        const menuLinks = document.querySelectorAll('.menu-link');
+        menuLinks.forEach(function(link) {
+            // Only close if it's not a submenu toggle
+            if (!link.querySelector('.menu-arrow')) {
+                link.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('menu-open');
+                });
+            }
+        });
+    }
+    
+    // Menu toggle functionality (untuk Submenu)
+    document.querySelectorAll('.menu-link').forEach(link => {
+        if (link.querySelector('.menu-arrow')) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                const arrow = this.querySelector('.menu-arrow');
+                
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                    arrow.classList.toggle('rotate');
+                }
+            });
+        }
+    });
+});
+</script>
+</body>
+</html>
