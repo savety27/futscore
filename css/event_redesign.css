@@ -85,7 +85,7 @@ body.sidebar-open {
     flex-direction: column;
     position: fixed;
     height: 100vh;
-    z-index: 1000;
+    z-index: 1200;
     box-shadow: 4px 0 30px rgba(10, 22, 40, 0.3);
     transition: transform var(--transition-normal);
 }
@@ -133,7 +133,7 @@ body.sidebar-open {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
-    z-index: 999;
+    z-index: 1150;
     opacity: 0;
     visibility: hidden;
     transition: all var(--transition-normal);
