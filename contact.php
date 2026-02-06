@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .dc-header {
-    display: flex;
+    display: flex;  
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 1rem;
     }
     
-    .dc-card {
+    .dc-card {  
         padding: 15px;
     }
 }
