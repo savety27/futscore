@@ -2,6 +2,7 @@
 $hideNavbars = true;
 require_once 'includes/header.php';
 ?>
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/event_redesign.css?v=<?php echo time(); ?>">
 <?php
 

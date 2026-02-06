@@ -1,338 +1,7 @@
 /* ================================================
    EVENT PAGE - PREMIUM WHITE-BLUE DESIGN
-   Refined minimalist aesthetic with subtle depth
+   Specialized styles for Events, Matches, and Tables
    ================================================ */
-
-/* Google Fonts Import */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-/* CSS Variables for Consistent Theming */
-:root {
-    /* Primary Blues */
-    --navy-dark: #0a1628;
-    --navy: #0f2744;
-    --navy-light: #1a3a5c;
-    --blue-primary: #1e5bb8;
-    --blue-accent: #3b82f6;
-    --blue-light: #60a5fa;
-
-    /* Whites & Neutrals */
-    --white: #ffffff;
-    --white-blue: #f0f6ff;
-    --gray-50: #f8fafc;
-    --gray-100: #f1f5f9;
-    --gray-200: #e2e8f0;
-    --gray-300: #cbd5e1;
-    --gray-400: #94a3b8;
-    --gray-500: #64748b;
-    --gray-600: #475569;
-    --gray-700: #334155;
-
-    /* Accents */
-    --gold: #f59e0b;
-    --gold-light: #fbbf24;
-    --green: #10b981;
-    --red: #ef4444;
-    --orange: #f97316;
-
-    /* Effects */
-    --shadow-sm: 0 1px 2px rgba(15, 39, 68, 0.04);
-    --shadow-md: 0 4px 12px rgba(15, 39, 68, 0.08);
-    --shadow-lg: 0 8px 30px rgba(15, 39, 68, 0.12);
-    --shadow-xl: 0 20px 50px rgba(15, 39, 68, 0.15);
-
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Base Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: linear-gradient(135deg, var(--white-blue) 0%, var(--gray-50) 50%, var(--white) 100%);
-    min-height: 100vh;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: var(--gray-700);
-    -webkit-font-smoothing: antialiased;
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-body.sidebar-open {
-    overflow: hidden;
-}
-
-/* Dashboard Layout */
-.dashboard-wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* ================================================
-   SIDEBAR
-   ================================================ */
-.sidebar {
-    width: 240px;
-    background: linear-gradient(180deg, var(--navy-dark) 0%, var(--navy) 100%);
-    color: white;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    height: 100vh;
-    z-index: 1200;
-    box-shadow: 4px 0 30px rgba(10, 22, 40, 0.3);
-    transition: transform var(--transition-normal);
-}
-
-/* Mobile Header & Sidebar Overlay */
-.mobile-dashboard-header {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 56px;
-    background: var(--navy);
-    padding: 0 16px;
-    z-index: 1100;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.mobile-logo img {
-    height: 32px;
-}
-
-.sidebar-toggle {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 10px;
-    border-radius: 8px;
-    transition: background var(--transition-fast);
-}
-
-.sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 1150;
-    opacity: 0;
-    visibility: hidden;
-    transition: all var(--transition-normal);
-}
-
-.sidebar-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.sidebar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 1px;
-    height: 100%;
-    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.sidebar-logo {
-    padding: 30px 24px 40px;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 10px;
-}
-
-.sidebar-logo img {
-    max-width: 140px;
-    filter: brightness(1.1);
-    transition: transform var(--transition-normal);
-}
-
-.sidebar-logo img:hover {
-    transform: scale(1.05);
-}
-
-.sidebar-nav {
-    flex: 1;
-    padding: 10px 0;
-    overflow-y: auto;
-}
-
-.sidebar-nav::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar-nav::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar-nav::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-}
-
-.sidebar-nav>a,
-.sidebar-nav .nav-item-dropdown>a.nav-has-dropdown {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 24px;
-    color: rgba(255, 255, 255, 0.75);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    transition: all var(--transition-normal);
-    cursor: pointer;
-    position: relative;
-    margin: 2px 12px;
-    border-radius: 10px;
-}
-
-.sidebar-nav>a::before,
-.sidebar-nav .nav-item-dropdown>a.nav-has-dropdown::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 0;
-    background: var(--gold);
-    border-radius: 0 3px 3px 0;
-    transition: height var(--transition-normal);
-}
-
-.sidebar-nav>a:hover,
-.sidebar-nav .nav-item-dropdown>a.nav-has-dropdown:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.sidebar-nav>a:hover::before,
-.sidebar-nav .nav-item-dropdown>a.nav-has-dropdown:hover::before {
-    height: 60%;
-}
-
-.sidebar-nav>a.active {
-    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-    color: var(--navy-dark);
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-}
-
-.sidebar-nav>a.active::before {
-    display: none;
-}
-
-.sidebar-nav a i {
-    width: 20px;
-    text-align: center;
-    font-size: 15px;
-    opacity: 0.9;
-}
-
-/* Sidebar Dropdown */
-.nav-item-dropdown {
-    margin: 2px 0;
-}
-
-.sidebar-dropdown {
-    display: none;
-    background: rgba(0, 0, 0, 0.15);
-    margin: 4px 12px 8px;
-    border-radius: 8px;
-    overflow: hidden;
-    animation: slideDown var(--transition-normal) ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.sidebar-dropdown.show {
-    display: block;
-}
-
-.sidebar-dropdown a {
-    display: block;
-    padding: 12px 20px 12px 54px;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    font-weight: 500;
-    letter-spacing: 0.3px;
-}
-
-.sidebar-dropdown a:hover {
-    color: var(--gold);
-    background: transparent;
-    padding-left: 58px;
-}
-
-.sidebar-dropdown a.active {
-    color: var(--gold);
-    background: transparent;
-}
-
-.nav-has-dropdown {
-    justify-content: space-between;
-}
-
-.nav-link-content {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.dropdown-icon {
-    font-size: 10px;
-    transition: transform var(--transition-normal);
-    opacity: 0.6;
-}
-
-.nav-has-dropdown.open .dropdown-icon {
-    transform: rotate(180deg);
-}
-
-/* ================================================
-   MAIN CONTENT
-   ================================================ */
-.main-content-dashboard {
-    flex: 1;
-    margin-left: 240px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
 
 /* Header */
 .dashboard-header {
@@ -789,7 +458,7 @@ body.sidebar-open {
 }
 
 /* ================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN (Event Specific)
    ================================================ */
 @media (max-width: 1200px) {
     .filter-group {
@@ -806,24 +475,6 @@ body.sidebar-open {
 }
 
 @media (max-width: 992px) {
-    .sidebar {
-        transform: translateX(-100%);
-        width: 264px;
-    }
-
-    .sidebar.active {
-        transform: translateX(0);
-    }
-
-    .mobile-dashboard-header {
-        display: flex;
-    }
-
-    .main-content-dashboard {
-        margin-left: 0;
-        padding-top: 56px;
-    }
-
     .dashboard-header {
         padding: 36px 16px 52px;
     }
@@ -836,14 +487,6 @@ body.sidebar-open {
 
     .dashboard-body {
         padding: 0 16px 30px;
-    }
-
-    .sidebar-logo {
-        padding: 20px 18px 26px;
-    }
-
-    .sidebar-logo img {
-        max-width: 120px;
     }
 }
 
@@ -916,9 +559,7 @@ body.sidebar-open {
         gap: 16px;
     }
 
-    /* ================================================
-       MATCH CARD - Sports App Style
-       ================================================ */
+    /* MATCH CARD - Sports App Style */
     .event-table-new tr {
         display: flex;
         flex-direction: column;
@@ -953,9 +594,7 @@ body.sidebar-open {
         display: none;
     }
 
-    /* ================================================
-       CARD HEADER - Code + Status (Side by Side)
-       ================================================ */
+    /* CARD HEADER - Code + Status */
     .event-table-new td:nth-child(2) {
         padding: 14px 18px;
         background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
@@ -965,10 +604,8 @@ body.sidebar-open {
         justify-content: flex-start;
         gap: 12px;
         width: 100%;
-        float: none;
     }
 
-    /* Code Badge Indicator */
     .event-table-new td:nth-child(2)::before {
         content: '';
         display: block;
@@ -986,7 +623,6 @@ body.sidebar-open {
         letter-spacing: 0.3px;
     }
 
-    /* Challenge Status Badge - Right Side of Header */
     .event-table-new td:nth-child(6) {
         padding: 14px 18px 14px 9px;
         background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
@@ -995,19 +631,9 @@ body.sidebar-open {
         align-items: center;
         justify-content: flex-start;
         width: 100%;
-        float: none;
     }
 
-    /* Clear float after header row */
-    .event-table-new td:nth-child(6)::after {
-        content: '';
-        display: table;
-        clear: both;
-    }
-
-    /* ================================================
-       HERO SECTION - Teams Display
-       ================================================ */
+    /* Teams Display */
     .event-table-new td:nth-child(3) {
         padding: 24px 18px 20px;
         display: block;
@@ -1028,7 +654,6 @@ body.sidebar-open {
         width: 100%;
     }
 
-    /* Team Names - Larger, Centered */
     .team-info-new span {
         font-size: 16px;
         font-weight: 700;
@@ -1037,7 +662,6 @@ body.sidebar-open {
         flex: 1;
     }
 
-    /* Team Logos - Larger */
     .team-logo-tiny {
         width: 36px;
         height: 36px;
@@ -1047,7 +671,6 @@ body.sidebar-open {
         border: 1px solid var(--gray-200);
     }
 
-    /* VS Separator - Prominent */
     .match-cell-new>div:nth-child(2) {
         font-weight: 900;
         font-size: 14px;
@@ -1056,9 +679,7 @@ body.sidebar-open {
         padding: 8px 0;
     }
 
-    /* ================================================
-       SCORE ZONE - Prominent Display
-       ================================================ */
+    /* Score Zone */
     .event-table-new td:nth-child(4) {
         padding: 16px 18px;
         background: linear-gradient(135deg, var(--white-blue) 0%, var(--gray-50) 100%);
@@ -1081,9 +702,7 @@ body.sidebar-open {
         color: var(--gray-300);
     }
 
-    /* ================================================
-       WINNER SECTION
-       ================================================ */
+    /* Winner Section */
     .event-table-new td:nth-child(5) {
         padding: 14px 18px;
         display: flex;
@@ -1108,24 +727,7 @@ body.sidebar-open {
         color: var(--gray-300);
     }
 
-
-    /* ================================================
-       META SECTION - Simple Vertical Labels
-       Status: <value>
-       Match Status: <value>
-       Cabor: <value>
-       ================================================ */
-
-    /* Challenge Status with Label */
-    .event-table-new td:nth-child(6) {
-        padding: 12px 18px;
-        background: var(--gray-50);
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
+    /* Meta labels */
     .event-table-new td:nth-child(6)::before {
         content: 'Status:';
         display: inline-block;
@@ -1136,7 +738,6 @@ body.sidebar-open {
         letter-spacing: 0.5px;
     }
 
-    /* Match Status with Label */
     .event-table-new td:nth-child(7) {
         padding: 12px 18px;
         background: var(--gray-50);
@@ -1156,7 +757,6 @@ body.sidebar-open {
         letter-spacing: 0.5px;
     }
 
-    /* Sport Type (Cabor) with Label */
     .event-table-new td:nth-child(8) {
         padding: 12px 18px;
         background: var(--gray-50);
@@ -1176,7 +776,6 @@ body.sidebar-open {
         letter-spacing: 0.5px;
     }
 
-    /* Badge Sizing */
     .badge-new {
         min-width: 0;
         flex-shrink: 0;
@@ -1184,7 +783,6 @@ body.sidebar-open {
         white-space: nowrap;
         padding: 8px 14px;
         font-size: 10px;
-        letter-spacing: 0.8px;
     }
 
     .badge-cabor {
@@ -1193,9 +791,7 @@ body.sidebar-open {
         font-weight: 700;
     }
 
-    /* ================================================
-       ACTION BUTTON - View Details
-       ================================================ */
+    /* Action Button */
     .event-table-new td:nth-child(9) {
         padding: 16px 18px;
         display: flex;
@@ -1215,19 +811,9 @@ body.sidebar-open {
         border: 2px solid var(--navy);
         color: var(--navy);
         background: white;
-        transition: all var(--transition-normal);
     }
 
-    .event-table-new td:nth-child(9) a:hover {
-        background: var(--navy);
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(15, 39, 68, 0.2);
-    }
-
-    /* ================================================
-       PAGINATION - Mobile Friendly
-       ================================================ */
+    /* Pagination */
     .pagination-info {
         flex-direction: column;
         align-items: stretch;
@@ -1259,15 +845,6 @@ body.sidebar-open {
 }
 
 @media (max-width: 480px) {
-    .mobile-dashboard-header {
-        height: 52px;
-        padding: 0 12px;
-    }
-
-    .main-content-dashboard {
-        padding-top: 52px;
-    }
-
     .dashboard-header {
         padding: 28px 12px 42px;
     }
@@ -1283,57 +860,12 @@ body.sidebar-open {
         border-radius: 14px;
     }
 
-    .filter-group input,
-    .filter-group select {
-        padding: 14px;
-        font-size: 14px;
-    }
-
-    .btn-filter-apply,
-    .btn-filter-reset {
-        padding: 14px 20px;
-        font-size: 13px;
-        min-height: 44px;
-    }
-
     .dashboard-body {
         padding: 0 12px 24px;
     }
 
-    /* Compact Card Spacing */
-    .event-table-new tbody {
-        gap: 14px;
-    }
-
-    .event-table-new tr {
-        border-radius: 16px;
-    }
-
-    .event-table-new td:nth-child(2),
-    .event-table-new td:nth-child(6) {
-        padding: 12px 14px;
-    }
-
-    .event-table-new td:nth-child(3) {
-        padding: 20px 14px 16px;
-    }
-
     .team-info-new span {
         font-size: 15px;
-    }
-
-    .team-logo-tiny {
-        width: 32px;
-        height: 32px;
-    }
-
-    .match-cell-new>div:nth-child(2) {
-        font-size: 13px;
-        padding: 6px 0;
-    }
-
-    .event-table-new td:nth-child(4) {
-        padding: 14px 14px;
     }
 
     .score-display {
@@ -1341,47 +873,11 @@ body.sidebar-open {
         letter-spacing: 2px;
     }
 
-    .score-pending {
-        font-size: 20px;
-    }
-
-    .event-table-new td:nth-child(5) {
-        padding: 12px 14px;
-    }
-
-    .btn-winner-new {
-        padding: 8px 16px;
-        font-size: 12px;
-    }
-
-    .event-table-new td:nth-child(7),
-    .event-table-new td:nth-child(8) {
-        padding: 10px 14px;
-    }
-
-    .badge-new {
-        padding: 7px 12px;
-        font-size: 9px;
-    }
-
-    .event-table-new td:nth-child(9) {
-        padding: 14px 14px;
-    }
-
-    .event-table-new td:nth-child(9) a {
-        min-height: 44px;
-        font-size: 13px;
-    }
-
     .pagination-controls a,
     .pagination-controls span {
         min-width: 40px;
         min-height: 40px;
         padding: 10px;
-        font-size: 13px;
-    }
-
-    .info-text {
         font-size: 13px;
     }
 }
@@ -1406,7 +902,6 @@ body.sidebar-open {
     animation: fadeIn 0.5s ease-out;
 }
 
-/* Smooth hover transitions for table rows */
 .match-row-new {
     animation: fadeIn 0.3s ease-out;
     animation-fill-mode: both;
