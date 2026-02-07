@@ -271,15 +271,13 @@ function maskNIK($nik) {
                             <th>NISN</th>
                             <th>NIK</th>
                             <th>Cabor</th>
-                            <th class="col-center"># Events</th>
-                            <th class="col-center"># Matches</th>
                             <th>Created At</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($players)): ?>
                             <tr>
-                                <td colspan="14">
+                                <td colspan="12">
                                     <div class="empty-state">
                                         <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
                                         <h3>Player tidak ditemukan</h3>
@@ -323,8 +321,6 @@ function maskNIK($nik) {
                                 <td data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
                                 <td data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
                                 <td data-label="Cabor"><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
-                                <td class="col-center" data-label="# Events">0</td>
-                                <td class="col-center" data-label="# Matches">0</td>
                                 <td data-label="Created At"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
                             </tr>
                             <?php endforeach; ?>
