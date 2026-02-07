@@ -135,8 +135,16 @@ try {
                     <?php foreach ($staff_list as $staff): ?>
                     <tr>
                          <td>
-                            <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
-                            alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
+                            <?php if (!empty($staff['photo'])): ?>
+                                <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
+                                     alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" 
+                                     class="staff-photo"
+                                     onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
+                            <?php else: ?>
+                                <div class="staff-photo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user-tie" style="color: #999; font-size: 24px;"></i>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td class="name-cell">
                             <?php echo htmlspecialchars($staff['name'] ?? ''); ?>

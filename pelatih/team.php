@@ -101,8 +101,17 @@ try {
                 <tbody>
                     <?php foreach ($teams as $team): ?>
                     <tr>
-                        <td>
-                            <img src="../images/teams/<?php echo $team['logo']; ?>" alt="<?php echo $team['name']; ?>" class="team-logo" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                        <td class="logo-cell">
+                            <?php if (!empty($team['logo'])): ?>
+                                <img src="../images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
+                                alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"  
+                                class="team-logo"
+                                onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                            <?php else: ?>
+                                <div class="team-logo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-shield-alt" style="color: #999; font-size: 24px;"></i>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td class="team-name-cell"><?php echo htmlspecialchars($team['name'] ?? ''); ?></td>
                         <td class="alias-cell"><?php echo htmlspecialchars($team['alias'] ?? ''); ?></td>
