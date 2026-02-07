@@ -211,6 +211,7 @@ function formatGender($gender) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Player Management - FutScore</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 /* CSS sama seperti yang Anda miliki */
 .filter-badge {
@@ -1566,6 +1567,8 @@ body {
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 let currentPlayerId = null;
 
@@ -1687,15 +1690,18 @@ function deletePlayer(playerId) {
     .then(data => {
         if (data.success) {
             closeModal();
-            location.reload();
+            toastr.success('Player berhasil dihapus!');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
-            alert('Error: ' + data.message);
+            toastr.error('Error: ' + data.message);
             closeModal();
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Terjadi kesalahan saat menghapus player.');
+        toastr.error('Terjadi kesalahan saat menghapus player.');
         closeModal();
     });
 }

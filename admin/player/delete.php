@@ -55,10 +55,14 @@ try {
         }
     }
     
-    // HARD DELETE (benar-benar hapus dari database)
-    $stmt = $conn->prepare("DELETE FROM players WHERE id = ?");
-    $stmt->execute([$player_id]);
-    
+    // Hapus data terkait lebih dulu untuk menghindari constraint FK
+    try {
+        $stmt = $conn->prepare("DELETE FROM transfers WHERE player_id = ?");
+        $stmt->execute([$player_id]);
+    } catch (Exception $e) {
+        // Table mungkin tidak ada, tidak perlu khawatir
+    }
+
     // Juga hapus dari tabel player_documents dan player_skills jika ada
     try {
         $stmt = $conn->prepare("DELETE FROM player_documents WHERE player_id = ?");
@@ -73,6 +77,10 @@ try {
     } catch (Exception $e) {
         // Table mungkin tidak ada, tidak perlu khawatir
     }
+
+    // HARD DELETE (benar-benar hapus dari database)
+    $stmt = $conn->prepare("DELETE FROM players WHERE id = ?");
+    $stmt->execute([$player_id]);
     
     if ($stmt->rowCount() > 0) {
         echo json_encode(['success' => true, 'message' => 'Player berhasil dihapus permanen']);
