@@ -179,6 +179,17 @@ $db_status = $db ? "connected" : "disconnected";
             -moz-osx-font-smoothing: grayscale;
             animation: body-appear 0.8s var(--ease-out);
         }
+
+        /* Prevent blank page when returning via back/forward cache */
+        body.no-anim .login-main,
+        body.no-anim .login-card,
+        body.no-anim .brand,
+        body.no-anim .form-container,
+        body.no-anim .btn-submit {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
         
         @keyframes body-appear {
             from {
@@ -1077,10 +1088,8 @@ $db_status = $db ? "connected" : "disconnected";
             transition: all 0.3s var(--ease-out);
             -webkit-tap-highlight-color: transparent;
             min-height: 60px;
-            animation: 
-                btn-reveal 0.6s var(--ease-out) 1.1s forwards,
-                btn-glow 2s ease-in-out infinite alternate;
-            opacity: 0;
+            animation: none;
+            opacity: 1;
             transform-style: preserve-3d;
             perspective: 1000px;
         }
@@ -1110,11 +1119,9 @@ $db_status = $db ? "connected" : "disconnected";
         }
         
         .btn-submit:hover:not(:disabled) {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 
-                0 20px 50px rgba(56, 189, 248, 0.8),
-                0 0 60px rgba(56, 189, 248, 0.6);
-            animation: btn-hover-pulse 0.5s var(--ease-out);
+            transform: none;
+            box-shadow: none;
+            animation: none;
         }
         
         @keyframes btn-hover-pulse {
@@ -1123,8 +1130,8 @@ $db_status = $db ? "connected" : "disconnected";
         }
         
         .btn-submit:active:not(:disabled) {
-            transform: translateY(0) scale(0.98);
-            transition: all 0.1s;
+            transform: none;
+            transition: none;
         }
         
         .btn-submit:disabled {
@@ -1135,14 +1142,7 @@ $db_status = $db ? "connected" : "disconnected";
         }
         
         .btn-submit::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.7s;
+            display: none;
         }
         
         .btn-submit:hover::before {
@@ -1156,17 +1156,11 @@ $db_status = $db ? "connected" : "disconnected";
         }
         
         .btn-submit::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
+            display: none;
         }
         
         .btn-submit:hover::after {
-            opacity: 1;
-            animation: btn-sparkle 0.5s linear;
+            animation: none;
         }
         
         @keyframes btn-sparkle {
@@ -1193,8 +1187,8 @@ $db_status = $db ? "connected" : "disconnected";
         .btn-icon {
             position: relative;
             z-index: 1;
-            transition: transform 0.3s var(--ease-out);
-            animation: icon-move 2s ease-in-out infinite;
+            transition: none;
+            animation: none;
         }
         
         @keyframes icon-move {
@@ -1203,8 +1197,8 @@ $db_status = $db ? "connected" : "disconnected";
         }
         
         .btn-submit:hover .btn-icon {
-            transform: translateX(8px);
-            animation: icon-dash 0.5s var(--ease-out);
+            transform: none;
+            animation: none;
         }
         
         @keyframes icon-dash {
@@ -1240,7 +1234,7 @@ $db_status = $db ? "connected" : "disconnected";
         
         .btn-submit.loading .btn-text,
         .btn-submit.loading .btn-icon {
-            display: none;
+            opacity: 0.6;
         }
         
         .btn-submit.loading .loading-spinner {
@@ -1489,9 +1483,7 @@ $db_status = $db ? "connected" : "disconnected";
             .btn-submit {
                 font-size: 1.5rem;
                 min-height: 65px;
-                animation: 
-                    btn-reveal 0.6s var(--ease-out) 1.1s forwards,
-                    btn-glow-desktop 3s ease-in-out infinite alternate;
+                animation: none;
             }
             
             @keyframes btn-glow-desktop {
@@ -1878,6 +1870,16 @@ $db_status = $db ? "connected" : "disconnected";
                 }
                 
                 return true;
+            });
+
+            // Reset loading state when navigating back to this page (bfcache)
+            window.addEventListener('pageshow', function(e) {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+
+                if (e.persisted) {
+                    document.body.classList.add('no-anim');
+                }
             });
             
             // Dynamic alert function with animation
