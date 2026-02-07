@@ -533,17 +533,26 @@ $pageTitle = "Home";
             <?php foreach ($newPlayers as $player): ?>
             <div class="player-card" data-player-id="<?php echo $player['id']; ?>">
                 <div class="player-photo-container">
-                    <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                         alt="<?php echo $player['name']; ?>" 
-                         class="player-photo"
-                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                    <?php if (!empty($player['photo'])): ?>
+                        <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                             alt="<?php echo htmlspecialchars($player['name']); ?>" 
+                             class="player-photo"
+                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="default-photo" style="display: none;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    <?php else: ?>
+                        <div class="default-photo">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    <?php endif; ?>
                 </div>
-                <h3 class="player-name"><?php echo $player['name']; ?></h3>
+                <h3 class="player-name"><?php echo htmlspecialchars($player['name']); ?></h3>
                 <p class="player-team">
-                    <?php echo $player['team_name']; ?> #<?php echo $player['jersey_number']; ?>
+                    <?php echo htmlspecialchars($player['team_name']); ?> #<?php echo htmlspecialchars($player['jersey_number']); ?>
                 </p>
                 <p class="player-info">
-                    <?php echo $player['position']; ?> | <?php echo $player['age']; ?> years
+                    <?php echo htmlspecialchars($player['position']); ?> | <?php echo htmlspecialchars($player['age']); ?> years
                 </p>
             </div>
             <?php endforeach; ?>
@@ -576,10 +585,19 @@ $pageTitle = "Home";
                 <div class="transfer-card">
                     <div class="transfer-header">
                         <div class="transfer-player-photo">
-                            <img src="<?php echo $playerPhotoPath; ?>" 
-                                 alt="<?php echo htmlspecialchars($transfer['player_name'] ?? 'Player'); ?>"
-                                 class="transfer-player-img"
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                            <?php if (!empty($transfer['player_photo'])): ?>
+                                <img src="<?php echo $playerPhotoPath; ?>" 
+                                     alt="<?php echo htmlspecialchars($transfer['player_name'] ?? 'Player'); ?>"
+                                     class="transfer-player-img"
+                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="default-photo" style="display: none;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            <?php else: ?>
+                                <div class="default-photo">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <div class="transfer-player-details">
                             <h3 class="transfer-player-name"><?php echo htmlspecialchars($transfer['player_name'] ?? 'Unknown Player'); ?></h3>
