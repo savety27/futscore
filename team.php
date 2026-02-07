@@ -413,7 +413,6 @@ if ($teamId > 0) {
                                 </div>
                                 <div class="player-item-info">
                                     <span class="player-name">${escapeHtml(staff.name)}</span>
-                                    <div class="staff-position">${positionText}</div>
                                 </div>
                             </div>
                         `;
@@ -536,8 +535,6 @@ if ($teamId > 0) {
                                  alt="${escapeHtml(staff.name)}" 
                                  class="player-photo-large"
                                  onerror="this.src='<?php echo SITE_URL; ?>/images/staff/default-staff.jpg'">
-                            <h3 class="detail-name">${escapeHtml(staff.name)}</h3>
-                            <p class="detail-role">${positionText}</p>
                         </div>
                         
                         <div class="player-detail-info">

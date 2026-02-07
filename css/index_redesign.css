@@ -1949,15 +1949,23 @@
 }
 
 .team-roster-section .player-photo-container {
-    text-align: center;
-    margin-bottom: 16px;
+    width: 170px;
+    height: 170px;
+    margin: 0 auto 16px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid var(--gray-100);
+    background: var(--gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .team-roster-section .player-photo-large {
     width: 170px;
     height: 170px;
     border-radius: 16px;
-    object-fit: cover;
+    object-fit: contain;
     border: 2px solid var(--gray-100);
     background: var(--gray-50);
 }
@@ -2216,6 +2224,11 @@
         width: 180px;
         height: 180px;
     }
+
+    .team-roster-section .player-photo-container {
+        width: 180px;
+        height: 180px;
+    }
 }
 
 @media (min-width: 992px) {
@@ -2239,4 +2252,15 @@
         width: 190px;
         height: 190px;
     }
+
+    .team-roster-section .player-photo-container {
+        width: 190px;
+        height: 190px;
+    }
+}
+
+.team-roster-section .player-detail-panel .player-photo-large {
+    object-fit: contain;
+    object-position: center;
+    background: var(--gray-50);
 }
