@@ -69,7 +69,7 @@ require_once 'includes/header.php';
     <main class="main-content-dashboard">
         <header class="dashboard-header contact-header">
             <div class="contact-hero">
-                <span class="contact-eyebrow">FUTSCORE</span>
+                <span class="contact-eyebrow">MGP</span>
                 <h1>Hubungi Kami</h1>
                 <p class="contact-subtitle">Tim MGP siap membantu operasional dan informasi event di seluruh Indonesia. Respons rata-rata 1x24 jam kerja.</p>
                 <div class="contact-actions">

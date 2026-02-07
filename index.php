@@ -81,7 +81,7 @@ $pageTitle = "Home";
         <header class="dashboard-header dashboard-header-home">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">FUTSCORE</div>
+                    <div class="header-eyebrow">MGP</div>
                     <h1>Home Dashboard</h1>
                     <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan tim terbaru dalam satu tampilan yang rapi.</p>
                 </div>
