@@ -227,7 +227,7 @@ if ($team_id) {
                             <div class="action-buttons">
                                 <!-- TAMBAHKAN TOMBOL VIEW DISINI -->
                                 <a href="player_view.php?id=<?php echo $player['id']; ?>" 
-                                   class="btn-primary btn-sm"
+                                   class="btn-primary btn-sm btn-view"
                                    title="Lihat Detail Pemain"
                                    aria-label="Lihat Detail Pemain">
                                     <i class="fas fa-eye"></i>
@@ -242,7 +242,7 @@ if ($team_id) {
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo $player['id']; ?>">
                                     <button type="submit" 
-                                            class="btn-primary btn-sm"
+                                             class="btn-primary btn"
                                             title="Hapus Pemain"
                                             aria-label="Hapus Pemain"
                                             data-name="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteForms.forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            const btn = form.querySelector('.btn-delete');
+            const btn = form.querySelector('.btn');
             const playerName = btn.getAttribute('data-name');
             
             confirmDelete(playerName).then(confirmed => {
