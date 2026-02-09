@@ -105,6 +105,7 @@ if (isset($_GET['id'])) {
         <form action="player_actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
             <input type="hidden" name="action" value="<?php echo $action; ?>">
             <input type="hidden" name="id" value="<?php echo $player_id; ?>">
+            <input type="hidden" id="hasExistingKk" value="<?php echo !empty($player['kk_image']) ? '1' : '0'; ?>">
             
             <!-- Basic Information Section -->
             <div class="form-section">
@@ -348,9 +349,15 @@ if (isset($_GET['id'])) {
                             <span class="note">Wajib (16 digit)</span>
                         </label>
                         <input type="text" name="nik" class="form-control" 
+                               id="nikInput"
                                placeholder="Masukkan 16-digit NIK" required
+                               maxlength="16"
+                               inputmode="numeric"
                                pattern="[0-9]{16}"
+                               oninput="validateNIK(this.value)"
+                               title="NIK harus terdiri dari tepat 16 digit angka"
                                value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
+                        <div class="nik-feedback" id="nikFeedback"></div>
                     </div>
 
                     <div class="form-group">
@@ -416,7 +423,7 @@ if (isset($_GET['id'])) {
                 </h2>
                 
                 <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Unggah Dokumen pendukung (Opsional). Maksimal 5MB per file.
+                    Unggah dokumen pendukung. Kartu Keluarga wajib, dokumen lain opsional. Maksimal 5MB per file.
                 </p>
                 
                 <div class="form-grid">
@@ -429,12 +436,16 @@ if (isset($_GET['id'])) {
                     ];
                     
                     foreach ($documents as $key => $doc):
+                        $is_kk = ($key === 'kk_image');
                     ?>
                     <div class="form-group">
                         <label class="form-label">
-                            <span><?php echo $doc['label']; ?></span>
-                            <span class="note">Opsional</span>
+                            <span class="<?php echo $is_kk ? 'required-field' : ''; ?>"><?php echo $doc['label']; ?></span>
+                            <span class="note"><?php echo $is_kk ? 'Wajib' : 'Opsional'; ?></span>
                         </label>
+                        <?php if ($is_kk): ?>
+                            <p class="kk-warning">* FILE KARTU KELUARGA WAJIB DIUPLOAD!</p>
+                        <?php endif; ?>
                         
                         <?php if (!empty($doc['current'])): ?>
                         <div class="current-photo" style="margin-bottom: 10px;">
@@ -846,17 +857,42 @@ if (isset($_GET['id'])) {
     border-left: 4px solid var(--danger);
 }
 
-.note {
-    font-size: 12px;
-    color: var(--gray);
-    margin-top: 5px;
-    font-style: italic;
-}
+  .note {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 5px;
+      font-style: italic;
+  }
+
+  .kk-warning {
+      margin: 6px 0 0;
+      color: var(--danger);
+      font-weight: bold;
+      font-size: 12px;
+  }
 
 .required-field::after {
     content: " *";
     color: var(--danger);
     font-weight: bold;
+}
+
+.nik-feedback {
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--gray);
+}
+
+.nik-feedback.warning {
+    color: var(--warning);
+}
+
+.nik-feedback.error {
+    color: var(--danger);
+}
+
+.nik-feedback.success {
+    color: var(--success);
 }
 
 @keyframes slideDown {
@@ -1019,6 +1055,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // NIK validation
+    const nikInput = document.getElementById('nikInput');
+    const nikFeedback = document.getElementById('nikFeedback');
+
+    function validateNIK(value) {
+        if (!nikInput || !nikFeedback) {
+            return;
+        }
+
+        const numericValue = value.replace(/[^0-9]/g, '');
+        nikInput.value = numericValue.slice(0, 16);
+
+        const length = numericValue.length;
+
+        if (length === 0) {
+            nikFeedback.textContent = 'NIK harus diisi - 16 digit angka';
+            nikFeedback.className = 'nik-feedback warning';
+            nikInput.style.borderColor = '#e1e5eb';
+        } else if (length < 16) {
+            nikFeedback.textContent = `Kurang ${16 - length} digit (${length}/16)`;
+            nikFeedback.className = 'nik-feedback warning';
+            nikInput.style.borderColor = 'var(--warning)';
+        } else if (length > 16) {
+            nikFeedback.textContent = 'Terlalu panjang! Maksimal 16 digit';
+            nikFeedback.className = 'nik-feedback error';
+            nikInput.style.borderColor = 'var(--danger)';
+        } else {
+            const isValid = /^[0-9]{16}$/.test(numericValue);
+            if (isValid) {
+                nikFeedback.textContent = '✓ 16 digit valid';
+                nikFeedback.className = 'nik-feedback success';
+                nikInput.style.borderColor = 'var(--success)';
+            } else {
+                nikFeedback.textContent = 'Hanya boleh angka 0-9';
+                nikFeedback.className = 'nik-feedback error';
+                nikInput.style.borderColor = 'var(--danger)';
+            }
+        }
+
+        if (numericValue.length > 16) {
+            nikInput.value = numericValue.substring(0, 16);
+        }
+    }
+
+    window.validateNIK = validateNIK;
+
+    if (nikInput) {
+        nikInput.addEventListener('input', function(e) {
+            validateNIK(e.target.value);
+        });
+
+        nikInput.addEventListener('keypress', function(e) {
+            const char = String.fromCharCode(e.which || e.keyCode);
+            if (!/[0-9]/.test(char)) {
+                e.preventDefault();
+            }
+        });
+
+        nikInput.addEventListener('paste', function(e) {
+            const pasted = (e.clipboardData || window.clipboardData).getData('text');
+            if (!/^[0-9]+$/.test(pasted)) {
+                e.preventDefault();
+            }
+        });
+
+        if (nikInput.value) {
+            validateNIK(nikInput.value);
+        }
+    }
+
     // Form validation
     const playerForm = document.getElementById('playerForm');
     if (playerForm) {
@@ -1042,6 +1148,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!/^[0-9]{16}$/.test(nik)) {
                 e.preventDefault();
                 alert('NIK must be exactly 16 digits!');
+                return false;
+            }
+
+            // Validate KK upload requirement
+            const kkInput = document.getElementById('kk_imageFile');
+            const hasExistingKkEl = document.getElementById('hasExistingKk');
+            const hasExistingKk = hasExistingKkEl ? hasExistingKkEl.value === '1' : false;
+            const kkSelected = kkInput && kkInput.files && kkInput.files.length > 0;
+            if (!hasExistingKk && !kkSelected) {
+                e.preventDefault();
+                alert('File Kartu Keluarga (KK) wajib diupload!');
                 return false;
             }
 
