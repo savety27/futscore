@@ -115,6 +115,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
             $slug = trim($slug, '-');
             $slug .= '-' . substr(md5(uniqid()), 0, 6);
+
+            // KK is mandatory for add
+            if (!isset($_FILES['kk_image']) || $_FILES['kk_image']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('File Kartu Keluarga (KK) wajib diupload!');
+            }
             
             // Upload files
             $photo = null;
@@ -220,6 +225,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                        FROM players WHERE id = ? AND team_id = ?");
                 $stmt->execute([$id, $team_id]);
                 $current_files = $stmt->fetch();
+            }
+
+            $kk_has_existing = ($current_files && !empty($current_files['kk_image']));
+            $kk_new_uploaded = isset($_FILES['kk_image']) && $_FILES['kk_image']['error'] === UPLOAD_ERR_OK;
+            if (!$kk_has_existing && !$kk_new_uploaded) {
+                throw new Exception('File Kartu Keluarga (KK) wajib diupload!');
             }
             
             foreach ($files_to_check as $file_key => $db_field) {
