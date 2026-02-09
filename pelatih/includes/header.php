@@ -80,7 +80,7 @@ if ($team_id && isset($conn)) {
             <div class="menu-item">
                 <a href="team.php" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">
                     <span class="menu-icon">🏆</span>
-                    <span class="menu-text">Tim</span>
+                    <span class="menu-text">Team</span>
                 </a>
             </div>
 
