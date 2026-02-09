@@ -1,4 +1,4 @@
-﻿
+
 <?php
 $hideNavbars = true;
 require_once 'includes/header.php';
@@ -13,7 +13,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
     <!-- Mobile Header -->
     <header class="mobile-dashboard-header">
         <div class="mobile-logo">
-            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Logo">
         </div>
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
@@ -27,7 +27,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
     <aside class="sidebar" id="sidebar" aria-hidden="true">
         <div class="sidebar-logo">
             <a href="<?php echo SITE_URL; ?>">
-                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+                <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Logo">
             </a>
         </div>
         <nav class="sidebar-nav">
@@ -397,3 +397,4 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
+

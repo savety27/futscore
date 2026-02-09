@@ -11,7 +11,7 @@ require_once 'includes/header.php';
     <!-- Mobile Header -->
     <header class="mobile-dashboard-header">
         <div class="mobile-logo">
-            <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+            <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Logo">
         </div>
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
@@ -25,7 +25,7 @@ require_once 'includes/header.php';
     <aside class="sidebar" id="sidebar" aria-hidden="true">
         <div class="sidebar-logo">
             <a href="<?php echo SITE_URL; ?>">
-                <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Logo">
+                <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Logo">
             </a>
         </div>
         <nav class="sidebar-nav">
@@ -281,3 +281,4 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
+

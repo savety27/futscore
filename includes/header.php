@@ -57,7 +57,7 @@ $latestNews = getLatestNews(3);
             <div class="navbar-content">
                 <div class="logo">
                     <a href="<?php echo SITE_URL; ?>">
-                        <img src="<?php echo SITE_URL; ?>/images/mgp-no-bg.png" alt="Futscore Logo">
+                        <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Futscore Logo">
                     </a>
                 </div>
                 <ul class="nav-menu">
@@ -107,3 +107,4 @@ $latestNews = getLatestNews(3);
     <!-- Main Content -->
     <main class="main-content">
     <?php endif; ?>
+
