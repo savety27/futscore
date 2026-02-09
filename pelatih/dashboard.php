@@ -386,7 +386,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value" style="font-size: 1.5rem;"><?php echo htmlspecialchars($team_name ?? ''); ?></div>
-                <div class="card-label">Tim Utama</div>
+                <div class="card-label"> </div>
             </div>
         </div>
 
