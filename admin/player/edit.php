@@ -2296,7 +2296,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 3000);
                 }
                 
-                alert('❌ PERHATIAN!\n\nFile Kartu Keluarga (KK) belum diupload!\n\nJika menghapus file KK yang ada, harus upload file KK baru.\n\nFile KK wajib diisi untuk verifikasi data player.');
                 return false;
             } else if (!hasExistingFile && !hasFileUpload) {
                 // ERROR: Tidak ada file sama sekali
