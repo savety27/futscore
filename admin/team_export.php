@@ -82,7 +82,7 @@ echo '<th>No</th>';
 echo '<th>Nama Team</th>';
 echo '<th>Alias</th>';
 echo '<th>Manager</th>';
-echo '<th>Tahun Berdiri</th>';
+echo '<th>Tanggal Berdiri</th>';
 echo '<th>Warna Kostum</th>';
 echo '<th>Jumlah Player</th>';
 echo '<th>Jumlah Staff</th>';
@@ -101,7 +101,12 @@ foreach ($teams as $team) {
     echo '<td>' . htmlspecialchars($team['name'] ?? '') . '</td>';
     echo '<td>' . (!empty($team['alias']) ? htmlspecialchars($team['alias']) : '-') . '</td>';
     echo '<td>' . htmlspecialchars($team['coach'] ?? '') . '</td>';
-    echo '<td>' . $team['established_year'] . '</td>';
+    $established_display = '-';
+    if (!empty($team['established_year'])) {
+        $timestamp = strtotime($team['established_year']);
+        $established_display = $timestamp ? date('d/m/Y', $timestamp) : $team['established_year'];
+    }
+    echo '<td>' . htmlspecialchars($established_display) . '</td>';
     echo '<td>' . (!empty($team['uniform_color']) ? htmlspecialchars($team['uniform_color']) : '-') . '</td>';
     echo '<td>' . $team['player_count'] . '</td>';
     echo '<td>' . $team['staff_count'] . '</td>';

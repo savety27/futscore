@@ -1285,7 +1285,7 @@ body {
                         <th>Nama</th>
                         <th>Alias</th>
                         <th>Manager</th>
-                        <th>Tgl Berdiri</th>
+                        <th>Tanggal Berdiri</th>
                         <th>Warna Kostum</th>
                         <th>Player</th>
                         <th>Staff</th>
@@ -1323,7 +1323,14 @@ body {
                                 <?php echo htmlspecialchars($team['coach'] ?? ''); ?>
                             </td>
                             <td class="established-cell">
-                                <?php echo !empty($team['established_year']) ? $team['established_year'] : '-'; ?>
+                                <?php
+                                    $established_display = '-';
+                                    if (!empty($team['established_year'])) {
+                                        $timestamp = strtotime($team['established_year']);
+                                        $established_display = $timestamp ? date('d M Y', $timestamp) : $team['established_year'];
+                                    }
+                                    echo htmlspecialchars($established_display);
+                                ?>
                             </td>
                             <td class="uniform-cell">
                                 <?php echo !empty($team['uniform_color']) ? htmlspecialchars($team['uniform_color']) : '-'; ?>

@@ -98,7 +98,7 @@ try {
             name VARCHAR(100) NOT NULL,
             logo VARCHAR(255),
             coach VARCHAR(100),
-            established_year YEAR,
+            established_year DATE,
             is_active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -116,7 +116,7 @@ try {
         ];
         
         foreach ($sampleTeams as $team) {
-            $insertQuery = "INSERT INTO teams (name, coach, established_year, is_active) VALUES (:name, :coach, YEAR(NOW()), 1)";
+            $insertQuery = "INSERT INTO teams (name, coach, established_year, is_active) VALUES (:name, :coach, CURDATE(), 1)";
             $insertStmt = $conn->prepare($insertQuery);
             $insertStmt->bindParam(':name', $team['name']);
             $insertStmt->bindParam(':coach', $team['coach']);

@@ -95,6 +95,10 @@ try {
     die("Error fetching team data: " . $e->getMessage());
 }
 
+if (!empty($team_data['established_year']) && preg_match('/^\d{4}$/', $team_data['established_year'])) {
+    $team_data['established_year'] .= '-01-01';
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get and sanitize form data
@@ -109,6 +113,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'is_active' => isset($_POST['is_active']) ? 1 : 0,
         'delete_logo' => isset($_POST['delete_logo']) ? 1 : 0
     ];
+
+    if (!empty($form_data['established_year']) && preg_match('/^\d{4}$/', $form_data['established_year'])) {
+        $form_data['established_year'] .= '-01-01';
+    }
     
     // Validation
     if (empty($form_data['name'])) {
@@ -120,11 +128,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if (empty($form_data['established_year'])) {
-        $errors['established_year'] = "Tahun berdiri harus diisi";
-    } elseif (!is_numeric($form_data['established_year'])) {
-        $errors['established_year'] = "Tahun berdiri harus berupa angka";
-    } elseif ($form_data['established_year'] < 1900 || $form_data['established_year'] > date('Y')) {
-        $errors['established_year'] = "Tahun berdiri harus antara 1900 dan " . date('Y');
+        $errors['established_year'] = "Tanggal berdiri harus diisi";
+    } else {
+        $established_date = DateTime::createFromFormat('Y-m-d', $form_data['established_year']);
+        $date_errors = DateTime::getLastErrors();
+        $has_date_errors = is_array($date_errors) && ($date_errors['warning_count'] > 0 || $date_errors['error_count'] > 0);
+
+        if (!$established_date || $has_date_errors) {
+            $errors['established_year'] = "Tanggal berdiri tidak valid";
+        } else {
+            $min_date = new DateTime('1900-01-01');
+            $max_date = new DateTime('today');
+            if ($established_date < $min_date || $established_date > $max_date) {
+                $errors['established_year'] = "Tanggal berdiri harus antara 1900-01-01 dan " . $max_date->format('Y-m-d');
+            } else {
+                $form_data['established_year'] = $established_date->format('Y-m-d');
+            }
+        }
     }
     
     if (empty($form_data['sport_type'])) {
@@ -1278,16 +1298,16 @@ body {
                         
                         <div class="form-group">
                             <label class="form-label" for="established_year">
-                                Tahun Berdiri <span class="required">*</span>
+                                Tanggal Berdiri <span class="required">*</span>
                             </label>
-                            <input type="number" 
+                            <input type="date" 
                                    id="established_year" 
                                    name="established_year" 
                                    class="form-input <?php echo isset($errors['established_year']) ? 'is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($team_data['established_year'] ?? ''); ?>"
-                                   placeholder="Contoh: 2020"
-                                   min="1900" 
-                                   max="<?php echo date('Y'); ?>"
+                                   placeholder="Contoh: 2020-01-31"
+                                   min="1900-01-01" 
+                                   max="<?php echo date('Y-m-d'); ?>"
                                    required>
                             <?php if (isset($errors['established_year'])): ?>
                                 <span class="error"><?php echo $errors['established_year']; ?></span>
@@ -1560,20 +1580,30 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         const name = document.getElementById('name').value.trim();
         const coach = document.getElementById('coach').value.trim();
-        const establishedYear = document.getElementById('established_year').value.trim();
+        const establishedDate = document.getElementById('established_year').value.trim();
         const sportType = document.getElementById('sport_type').value.trim();
 
-        if (!name || !coach || !establishedYear || !sportType) {
+        if (!name || !coach || !establishedDate || !sportType) {
             e.preventDefault();
             toastr.error('Harap isi semua field yang wajib diisi (*)');
             return;
         }
 
-        const currentYear = new Date().getFullYear();
-        const year = parseInt(establishedYear);
-        if (year < 1900 || year > currentYear) {
+        const parsedDate = new Date(`${establishedDate}T00:00:00`);
+        if (Number.isNaN(parsedDate.getTime())) {
             e.preventDefault();
-            toastr.error(`Tahun berdiri harus antara 1900 dan ${currentYear}`);
+            toastr.error('Tanggal berdiri tidak valid');
+            return;
+        }
+
+        const minDate = new Date('1900-01-01T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (parsedDate < minDate || parsedDate > today) {
+            const pad = (value) => String(value).padStart(2, '0');
+            const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+            e.preventDefault();
+            toastr.error(`Tanggal berdiri harus antara 1900-01-01 dan ${todayStr}`);
             return;
         }
     });
