@@ -91,7 +91,7 @@ try {
                         <th class="logo-cell">Logo</th>
                         <th>Nama Tim</th>
                         <th>Alias</th>
-                        <th>Pelatih</th>
+                        <th>Manager</th>
                         <th>Pemain</th>
                         <th>Staf</th>
                         <th>Pertandingan</th>

@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if (empty($form_data['coach'])) {
-        $errors['coach'] = "Manager/Coach harus diisi";
+        $errors['coach'] = "Manager harus diisi";
     }
     
     if (empty($form_data['established_year'])) {
@@ -1218,14 +1218,14 @@ body {
                         
                         <div class="form-group">
                             <label class="form-label" for="coach">
-                                Manager/Coach <span class="required">*</span>
+                                Manager <span class="required">*</span>
                             </label>
                             <input type="text" 
                                    id="coach" 
                                    name="coach" 
                                    class="form-input <?php echo isset($errors['coach']) ? 'is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($form_data['coach'] ?? ''); ?>"
-                                   placeholder="Masukkan nama manager/coach"
+                                   placeholder="Masukkan nama manager"
                                    required>
                             <?php if (isset($errors['coach'])): ?>
                                 <span class="error"><?php echo $errors['coach']; ?></span>

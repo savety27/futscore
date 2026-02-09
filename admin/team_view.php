@@ -1174,7 +1174,7 @@ body {
                     </h2>
                     <p style="color: #666; margin-bottom: 15px;">
                         <i class="fas fa-user-tie"></i>
-                        Manager/Coach: <strong><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></strong>
+                        Manager: <strong><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></strong>
                     </p>
                     <?php if (!empty($team_data['basecamp'])): ?>
                         <p style="color: #666;">
@@ -1199,7 +1199,7 @@ body {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Manager/Coach</span>
+                    <span class="info-label">Manager</span>
                     <div class="info-value"><?php echo htmlspecialchars($team_data['coach'] ?? ''); ?></div>
                 </div>
                 

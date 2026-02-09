@@ -81,7 +81,7 @@ echo '<tr>';
 echo '<th>No</th>';
 echo '<th>Nama Team</th>';
 echo '<th>Alias</th>';
-echo '<th>Manager/Coach</th>';
+echo '<th>Manager</th>';
 echo '<th>Tahun Berdiri</th>';
 echo '<th>Warna Kostum</th>';
 echo '<th>Jumlah Player</th>';

@@ -172,7 +172,7 @@ if ($teamId > 0) {
                         <div class="team-meta-grid">
                             <?php if (!empty($team['manager']) || !empty($team['coach'])): ?>
                             <div class="team-meta-item">
-                                <div class="team-meta-label">Manager / Coach</div>
+                                <div class="team-meta-label">Manager</div>
                                 <div class="team-meta-value">
                                     <?php 
                                     $managerCoach = [];

@@ -1284,11 +1284,11 @@ body {
                         <th>Logo</th>
                         <th>Nama</th>
                         <th>Alias</th>
-                        <th>Manager/Coach</th>
+                        <th>Manager</th>
                         <th>Tgl Berdiri</th>
                         <th>Warna Kostum</th>
-                        <th># Player</th>
-                        <th># Staff</th>
+                        <th>Player</th>
+                        <th>Staff</th>
                         <th>Basecamp</th>
                         <th>Cabor</th>
                         <th>Status</th>
