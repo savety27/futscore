@@ -146,9 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $ktp_file = uploadFile($_FILES['ktp_file'], $upload_dir, 'ktp_');
             }
             
-            // Upload Kartu Keluarga
+            // Upload Kartu Keluarga - WAJIB
             if (isset($_FILES['kk_file']) && $_FILES['kk_file']['error'] == 0) {
                 $kk_file = uploadFile($_FILES['kk_file'], $upload_dir, 'kk_');
+            } else {
+                // Jika file KK tidak diupload, tampilkan error
+                $error = "File Kartu Keluarga (KK) wajib diupload!";
+                throw new Exception($error);
             }
             
             // Upload Akta Lahir
@@ -872,6 +876,62 @@ try {
             font-weight: bold;
         }
 
+        /* Khusus untuk field KK yang wajib */
+        .kk-required {
+            border-color: var(--danger) !important;
+            border-style: dashed !important;
+            border-width: 2px !important;
+        }
+
+        .kk-required-label .required-field::after {
+            content: " *";
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .kk-warning {
+            color: var(--danger);
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Styling untuk scroll ke KK */
+        .kk-highlight {
+            animation: kkBlink 1s ease-in-out 3;
+            box-shadow: 0 0 20px rgba(211, 47, 47, 0.5) !important;
+        }
+
+        @keyframes kkBlink {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(211, 47, 47, 0.5);
+                border-color: var(--danger);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(211, 47, 47, 0.8);
+                border-color: var(--danger);
+                transform: scale(1.02);
+            }
+        }
+
+        /* Pesan error yang lebih jelas */
+        .kk-error-message {
+            display: none;
+            background: linear-gradient(135deg, #FFE5E5 0%, #FFCCCC 100%);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid var(--danger);
+            font-weight: 600;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .kk-error-message.show {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         /* =========================================
            MOBILE RESPONSIVE DESIGN
@@ -1445,6 +1505,15 @@ try {
                             Hanya file berformat gambar yang diterima.
                         </p>
                         
+                        <!-- Pesan error KK yang akan muncul jika KK belum diupload -->
+                        <div class="kk-error-message" id="kkErrorMessage">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <strong>PERHATIAN!</strong> File Kartu Keluarga (KK) belum diupload.
+                                <br><small>Silakan upload file KK untuk melanjutkan.</small>
+                            </div>
+                        </div>
+                        
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">KTP / KIA / Kartu Pelajar / Kartu Identitas</label>
@@ -1460,14 +1529,18 @@ try {
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Kartu Keluarga</label>
-                                <div class="file-upload" id="kkUpload">
+                                <label class="form-label kk-required-label">
+                                    <span class="required-field">Kartu Keluarga</span>
+                                    <span class="note">Wajib diisi</span>
+                                </label>
+                                <div class="file-upload kk-required" id="kkUpload">
                                     <div>
-                                        <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                                        <p style="margin: 0; color: var(--gray);">Klik untuk upload atau drag & drop</p>
-                                        <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--gray);">Maksimal 5MB</p>
+                                        <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--danger); margin-bottom: 10px;"></i>
+                                        <p style="margin: 0; color: var(--danger); font-weight: bold;">Klik untuk upload atau drag & drop</p>
+                                        <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--danger);">Maksimal 5MB</p>
+                                        <p class="kk-warning">* FILE KARTU KELUARGA WAJIB DIUPLOAD!</p>
                                     </div>
-                                    <input type="file" name="kk_file" id="kkFile" accept="image/*">
+                                    <input type="file" name="kk_file" id="kkFile" accept="image/*" required>
                                 </div>
                                 <div class="file-preview" id="kkPreview"></div>
                             </div>
@@ -1678,7 +1751,7 @@ try {
     });
 
     // File upload functionality
-    function setupFileUpload(uploadElement, fileInput, previewElement) {
+    function setupFileUpload(uploadElement, fileInput, previewElement, isRequired = false) {
         const uploadArea = uploadElement;
         const fileInputField = fileInput;
         const previewContainer = previewElement;
@@ -1703,19 +1776,32 @@ try {
             uploadArea.classList.remove('dragover');
             if (e.dataTransfer.files.length) {
                 fileInputField.files = e.dataTransfer.files;
-                handleFileSelect(e.dataTransfer.files[0], previewContainer);
+                handleFileSelect(e.dataTransfer.files[0], previewContainer, uploadArea, isRequired);
             }
         });
 
         // File selection
         fileInputField.addEventListener('change', (e) => {
             if (e.target.files.length) {
-                handleFileSelect(e.target.files[0], previewContainer);
+                handleFileSelect(e.target.files[0], previewContainer, uploadArea, isRequired);
+                // Sembunyikan pesan error jika KK sudah diupload
+                if (isRequired) {
+                    hideKKErrorMessage();
+                }
+            } else {
+                // Jika file dihapus, reset tampilan
+                if (isRequired) {
+                    uploadArea.classList.add('kk-required');
+                    uploadArea.style.borderColor = 'var(--danger)';
+                    uploadArea.style.borderStyle = 'dashed';
+                    // Tampilkan pesan error jika KK dihapus
+                    showKKErrorMessage();
+                }
             }
         });
     }
 
-    function handleFileSelect(file, previewContainer) {
+    function handleFileSelect(file, previewContainer, uploadArea, isRequired = false) {
         if (!file.type.startsWith('image/')) {
             alert('Harap pilih file gambar!');
             return;
@@ -1732,6 +1818,15 @@ try {
                     </div>
                 </div>
             `;
+            
+            // Untuk KK yang wajib, ubah border menjadi hijau saat file diupload
+            if (isRequired) {
+                uploadArea.classList.remove('kk-required');
+                uploadArea.classList.remove('kk-highlight');
+                uploadArea.style.borderColor = 'var(--success)';
+                uploadArea.style.borderStyle = 'solid';
+                uploadArea.style.borderWidth = '2px';
+            }
         };
         reader.readAsDataURL(file);
     }
@@ -1744,10 +1839,26 @@ try {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    // Initialize file uploads
+    // Fungsi untuk menampilkan pesan error KK
+    function showKKErrorMessage() {
+        const errorMessage = document.getElementById('kkErrorMessage');
+        if (errorMessage) {
+            errorMessage.classList.add('show');
+        }
+    }
+
+    // Fungsi untuk menyembunyikan pesan error KK
+    function hideKKErrorMessage() {
+        const errorMessage = document.getElementById('kkErrorMessage');
+        if (errorMessage) {
+            errorMessage.classList.remove('show');
+        }
+    }
+
+    // Initialize file uploads - khusus KK dengan parameter isRequired = true
     setupFileUpload(document.getElementById('photoUpload'), document.getElementById('photoFile'), document.getElementById('photoPreview'));
     setupFileUpload(document.getElementById('ktpUpload'), document.getElementById('ktpFile'), document.getElementById('ktpPreview'));
-    setupFileUpload(document.getElementById('kkUpload'), document.getElementById('kkFile'), document.getElementById('kkPreview'));
+    setupFileUpload(document.getElementById('kkUpload'), document.getElementById('kkFile'), document.getElementById('kkPreview'), true); // KK WAJIB
     setupFileUpload(document.getElementById('akteUpload'), document.getElementById('akteFile'), document.getElementById('aktePreview'));
     setupFileUpload(document.getElementById('ijazahUpload'), document.getElementById('ijazahFile'), document.getElementById('ijazahPreview'));
 
@@ -1814,7 +1925,7 @@ try {
         }
     }
 
-    // Form validation
+    // Form validation - khusus untuk KK
     const playerForm = document.getElementById('playerForm');
     if (playerForm) {
         playerForm.addEventListener('submit', function(e) {
@@ -1828,6 +1939,48 @@ try {
             const jerseyNumber = document.querySelector('input[name="jersey_number"]').value.trim();
             const dominantFoot = document.querySelector('input[name="dominant_foot"]:checked');
             const position = document.querySelector('select[name="position"]').value;
+            
+            // VALIDASI FILE KK - WAJIB DIISI
+            const kkFile = document.getElementById('kkFile');
+            if (!kkFile.files || kkFile.files.length === 0) {
+                e.preventDefault();
+                
+                // Tampilkan pesan error yang jelas
+                showKKErrorMessage();
+                
+                // Scroll ke section Dokumen
+                const documentsSection = document.querySelector('.form-section:nth-child(3)');
+                if (documentsSection) {
+                    documentsSection.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // Tunggi sebentar, lalu scroll lagi ke KK khusus
+                    setTimeout(() => {
+                        const kkUpload = document.getElementById('kkUpload');
+                        if (kkUpload) {
+                            kkUpload.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                            
+                            // Highlight dengan animasi
+                            kkUpload.classList.add('kk-highlight');
+                            
+                            // Hapus highlight setelah 3 detik
+                            setTimeout(() => {
+                                kkUpload.classList.remove('kk-highlight');
+                            }, 3000);
+                        }
+                    }, 500);
+                }
+                
+                // Tampilkan alert yang lebih jelas
+                alert('❌ PERHATIAN!\n\nFile Kartu Keluarga (KK) belum diupload!\n\nSilakan upload file KK terlebih dahulu untuk melanjutkan.\n\nFile KK wajib diisi untuk verifikasi data player.');
+                
+                return false;
+            }
 
             // Validasi NIK 16 digit
             const nikRegex = /^[0-9]{16}$/;
@@ -1883,6 +2036,51 @@ try {
                 e.preventDefault();
             }
         });
+        
+        // Tambahkan highlight khusus untuk field KK yang wajib
+        const kkUpload = document.getElementById('kkUpload');
+        const kkFile = document.getElementById('kkFile');
+        
+        if (kkUpload && kkFile) {
+            // Cek jika KK belum diupload saat halaman dimuat
+            if (!kkFile.files.length) {
+                showKKErrorMessage();
+            }
+            
+            // Tambahkan efek pulsating untuk menarik perhatian
+            setInterval(() => {
+                if (!kkFile.files.length) {
+                    kkUpload.style.boxShadow = kkUpload.style.boxShadow ? 
+                        '' : '0 0 15px rgba(211, 47, 47, 0.3)';
+                }
+            }, 1500);
+            
+            // Tambahkan tooltip hover
+            kkUpload.addEventListener('mouseenter', function() {
+                if (!kkFile.files.length) {
+                    this.title = "⚠ FILE KARTU KELUARGA WAJIB DIUPLOAD!\nKlik untuk memilih file KK";
+                }
+            });
+        }
+        
+        // Tambahkan event listener untuk tombol submit agar memberikan feedback
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                const kkFile = document.getElementById('kkFile');
+                if (!kkFile.files || kkFile.files.length === 0) {
+                    // Berikan feedback visual pada tombol
+                    this.style.background = 'linear-gradient(135deg, var(--warning), #F9A826)';
+                    this.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Cek KK Terlebih Dahulu!';
+                    
+                    // Kembalikan setelah 2 detik
+                    setTimeout(() => {
+                        this.style.background = 'linear-gradient(135deg, var(--primary) 0%, #1a365d 100%)';
+                        this.innerHTML = '<i class="fas fa-save"></i> Simpan Player';
+                    }, 2000);
+                }
+            });
+        }
     });
 </script>
 </body>
