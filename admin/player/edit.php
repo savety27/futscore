@@ -133,6 +133,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $passing = $_POST['passing'] ?? 5;
         $control = $_POST['control'] ?? 5;
         
+        // **VALIDASI NIK 16 DIGIT** - TAMBAHKAN DI SINI
+        if (strlen($nik) != 16 || !is_numeric($nik)) {
+            throw new Exception("NIK harus terdiri dari tepat 16 digit angka!");
+        }
+        
         // Konversi gender ke format database (L/P)
         $gender_db = ($gender == 'Laki-laki') ? 'L' : (($gender == 'Perempuan') ? 'P' : '');
         
@@ -944,6 +949,30 @@ select.form-control {
     }
 }
 
+/* NIK Feedback Styles - TAMBAHKAN INI */
+.nik-feedback {
+    margin-top: 5px;
+    font-size: 12px;
+    font-style: italic;
+    padding: 3px 5px;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.nik-feedback.error {
+    color: var(--danger);
+    background-color: rgba(211, 47, 47, 0.1);
+}
+
+.nik-feedback.warning {
+    color: var(--warning);
+    background-color: rgba(249, 168, 38, 0.1);
+}
+
+.nik-feedback.success {
+    color: var(--success);
+    background-color: rgba(46, 125, 50, 0.1);
+}
 
 /* =========================================
    MOBILE RESPONSIVE DESIGN
@@ -1288,7 +1317,7 @@ select.form-control {
             <?php endif; ?>
 
             <!-- Form -->
-            <form method="POST" action="" enctype="multipart/form-data" class="form-container">
+            <form method="POST" action="" enctype="multipart/form-data" class="form-container" id="playerForm">
                 <input type="hidden" name="player_id" value="<?php echo $player['id']; ?>">
                 
                 <!-- Tabs -->
@@ -1393,10 +1422,20 @@ select.form-control {
                             </div>
                         </div>
 
+                        <!-- **INPUT NIK DENGAN VALIDASI 16 DIGIT** -->
                         <div class="form-group">
                             <label for="nik">NIK <span class="required">*</span></label>
-                            <input type="text" id="nik" name="nik" class="form-control" 
-                                   value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>" required maxlength="16">
+                            <input type="text" 
+                                   id="nik" 
+                                   name="nik" 
+                                   class="form-control" 
+                                   value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>" 
+                                   required 
+                                   maxlength="16"
+                                   pattern="[0-9]{16}"
+                                   oninput="validateNIK(this.value)"
+                                   title="NIK harus terdiri dari tepat 16 digit angka">
+                            <div class="nik-feedback" id="nikFeedback"></div>
                         </div>
 
                         <div class="form-group">
@@ -1675,7 +1714,7 @@ select.form-control {
                         <i class="fas fa-times"></i>
                         Batal
                     </a>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="fas fa-save"></i>
                         Update Player
                     </button>
@@ -1686,7 +1725,6 @@ select.form-control {
 </div>
 
 <script>
-
 // Mobile Menu Toggle Functionality
 document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
@@ -1853,6 +1891,58 @@ function viewDocument(imagePath) {
     window.open(imagePath, '_blank');
 }
 
+// **FUNGSI VALIDASI NIK 16 DIGIT**
+function validateNIK(value) {
+    const nikInput = document.getElementById('nik');
+    const nikFeedback = document.getElementById('nikFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Hanya izinkan angka
+    const numericValue = value.replace(/[^0-9]/g, '');
+    nikInput.value = numericValue.slice(0, 16);
+    
+    const length = numericValue.length;
+    
+    // Update feedback text dan warna
+    const nikFeedbackElement = document.getElementById('nikFeedback');
+    
+    if (length === 0) {
+        nikFeedbackElement.textContent = 'NIK harus diisi - 16 digit angka';
+        nikFeedbackElement.className = 'nik-feedback warning';
+        nikInput.style.borderColor = '#e0e0e0';
+        submitBtn.disabled = false;
+    } else if (length < 16) {
+        nikFeedbackElement.textContent = `Kurang ${16 - length} digit (${length}/16)`;
+        nikFeedbackElement.className = 'nik-feedback warning';
+        nikInput.style.borderColor = 'var(--warning)';
+        submitBtn.disabled = false;
+    } else if (length > 16) {
+        nikFeedbackElement.textContent = 'Terlalu panjang! Maksimal 16 digit';
+        nikFeedbackElement.className = 'nik-feedback error';
+        nikInput.style.borderColor = 'var(--danger)';
+        submitBtn.disabled = true;
+    } else {
+        // Cek apakah semua karakter adalah angka
+        const isValid = /^[0-9]{16}$/.test(numericValue);
+        if (isValid) {
+            nikFeedbackElement.textContent = '✓ 16 digit valid';
+            nikFeedbackElement.className = 'nik-feedback success';
+            nikInput.style.borderColor = 'var(--success)';
+            submitBtn.disabled = false;
+        } else {
+            nikFeedbackElement.textContent = 'Hanya boleh angka 0-9';
+            nikFeedbackElement.className = 'nik-feedback error';
+            nikInput.style.borderColor = 'var(--danger)';
+            submitBtn.disabled = true;
+        }
+    }
+    
+    // Cegah input lebih dari 16 karakter
+    if (numericValue.length > 16) {
+        nikInput.value = numericValue.substring(0, 16);
+    }
+}
+
 // Set max date for birth date
 document.addEventListener('DOMContentLoaded', function() {
     const today = new Date().toISOString().split('T')[0];
@@ -1861,16 +1951,34 @@ document.addEventListener('DOMContentLoaded', function() {
         birthDateInput.max = today;
     }
     
-    // Format NIK input (numbers only)
+    // **INISIALISASI VALIDASI NIK**
     const nikInput = document.getElementById('nik');
     if (nikInput) {
+        // Validasi real-time saat mengetik
         nikInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 16) {
-                value = value.substring(0, 16);
-            }
-            e.target.value = value;
+            validateNIK(e.target.value);
         });
+        
+        // Cegah karakter non-numeric
+        nikInput.addEventListener('keypress', function(e) {
+            const charCode = e.which ? e.which : e.keyCode;
+            if (charCode < 48 || charCode > 57) {
+                e.preventDefault();
+            }
+        });
+        
+        // Cegah paste karakter non-numeric
+        nikInput.addEventListener('paste', function(e) {
+            const pastedData = e.clipboardData.getData('text');
+            if (!/^\d*$/.test(pastedData)) {
+                e.preventDefault();
+            }
+        });
+        
+        // Validasi saat halaman dimuat
+        if (nikInput.value) {
+            validateNIK(nikInput.value);
+        }
     }
     
     // Format NISN input (numbers only)
@@ -1907,6 +2015,35 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // **FORM VALIDATION**
+    const playerForm = document.getElementById('playerForm');
+    if (playerForm) {
+        playerForm.addEventListener('submit', function(e) {
+            const nik = document.getElementById('nik').value;
+            
+            // Validasi NIK 16 digit sebelum submit
+            const nikRegex = /^[0-9]{16}$/;
+            if (!nikRegex.test(nik)) {
+                e.preventDefault();
+                alert('NIK harus terdiri dari tepat 16 digit angka!');
+                document.getElementById('nik').focus();
+                return false;
+            }
+            
+            // Validasi field wajib lainnya
+            const requiredFields = ['name', 'birth_place', 'birth_date', 'sport_type', 'gender'];
+            for (const field of requiredFields) {
+                const element = document.querySelector(`[name="${field}"]`);
+                if (element && !element.value.trim()) {
+                    e.preventDefault();
+                    alert('Harap lengkapi semua field yang wajib diisi!');
+                    element.focus();
+                    return false;
+                }
+            }
+        });
+    }
 });
 </script>
 </body>

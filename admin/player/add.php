@@ -113,6 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($name) || empty($place_of_birth) || empty($date_of_birth) || empty($sport) || 
             empty($gender) || empty($nik) || empty($team_id) || empty($jersey_number) || empty($dominant_foot) || empty($position)) {
             $error = "Semua field yang wajib harus diisi!";
+        } else if (strlen($nik) != 16 || !is_numeric($nik)) {
+            // TAMBAHKAN VALIDASI NIK 16 DIGIT DI SINI
+            $error = "NIK harus terdiri dari tepat 16 digit angka!";
         } else {
             // Konversi gender ke format database (L/P)
             $gender_db = ($gender == 'Laki-laki') ? 'L' : 'P';
@@ -1290,10 +1293,20 @@ try {
                             <div class="form-group">
                                 <label class="form-label">
                                     <span class="required-field">NIK</span>
-                                    <span class="note">Wajib diisi</span>
+                                    <span class="note">Wajib diisi - 16 digit angka</span>
                                 </label>
-                                <input type="text" name="nik" class="form-control" placeholder="Masukkan NIK" required
+                                <input type="text" 
+                                       name="nik" 
+                                       id="nikInput"
+                                       class="form-control" 
+                                       placeholder="Masukkan NIK (16 digit angka)" 
+                                       required
+                                       maxlength="16"
+                                       pattern="[0-9]{16}"
+                                       oninput="validateNIK(this.value)"
+                                       title="NIK harus terdiri dari tepat 16 digit angka"
                                        value="<?php echo isset($_POST['nik']) ? htmlspecialchars($_POST['nik']) : ''; ?>">
+                                <div class="nik-feedback" id="nikFeedback" style="margin-top: 5px; font-size: 12px;"></div>
                             </div>
 
                             <div class="form-group">
@@ -1603,7 +1616,7 @@ try {
                             <i class="fas fa-arrow-left"></i>
                             Kembali ke Daftar
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
                             <i class="fas fa-save"></i>
                             Simpan Player
                         </button>
@@ -1615,7 +1628,6 @@ try {
 </div>
 
 <script>
-
     // Mobile Menu Toggle Functionality
     document.addEventListener('DOMContentLoaded', function() {
         const menuToggle = document.getElementById('menuToggle');
@@ -1752,6 +1764,56 @@ try {
         }
     });
 
+    // Function untuk validasi NIK real-time
+    function validateNIK(value) {
+        const nikInput = document.getElementById('nikInput');
+        const nikFeedback = document.getElementById('nikFeedback');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Hanya izinkan angka
+        const numericValue = value.replace(/[^0-9]/g, '');
+        nikInput.value = numericValue.slice(0, 16);
+        
+        const length = numericValue.length;
+        
+        // Update feedback text dan warna
+        if (length === 0) {
+            nikFeedback.textContent = 'NIK harus diisi - 16 digit angka';
+            nikFeedback.style.color = 'var(--gray)';
+            nikInput.style.borderColor = '#e1e5eb';
+            submitBtn.disabled = false;
+        } else if (length < 16) {
+            nikFeedback.textContent = `Kurang ${16 - length} digit (${length}/16)`;
+            nikFeedback.style.color = 'var(--warning)';
+            nikInput.style.borderColor = 'var(--warning)';
+            submitBtn.disabled = false;
+        } else if (length > 16) {
+            nikFeedback.textContent = 'Terlalu panjang! Maksimal 16 digit';
+            nikFeedback.style.color = 'var(--danger)';
+            nikInput.style.borderColor = 'var(--danger)';
+            submitBtn.disabled = true;
+        } else {
+            // Cek apakah semua karakter adalah angka
+            const isValid = /^[0-9]{16}$/.test(numericValue);
+            if (isValid) {
+                nikFeedback.textContent = '✓ 16 digit valid';
+                nikFeedback.style.color = 'var(--success)';
+                nikInput.style.borderColor = 'var(--success)';
+                submitBtn.disabled = false;
+            } else {
+                nikFeedback.textContent = 'Hanya boleh angka 0-9';
+                nikFeedback.style.color = 'var(--danger)';
+                nikInput.style.borderColor = 'var(--danger)';
+                submitBtn.disabled = true;
+            }
+        }
+        
+        // Cegah input lebih dari 16 karakter
+        if (numericValue.length > 16) {
+            nikInput.value = numericValue.substring(0, 16);
+        }
+    }
+
     // Form validation
     const playerForm = document.getElementById('playerForm');
     if (playerForm) {
@@ -1766,6 +1828,15 @@ try {
             const jerseyNumber = document.querySelector('input[name="jersey_number"]').value.trim();
             const dominantFoot = document.querySelector('input[name="dominant_foot"]:checked');
             const position = document.querySelector('select[name="position"]').value;
+
+            // Validasi NIK 16 digit
+            const nikRegex = /^[0-9]{16}$/;
+            if (!nikRegex.test(nik)) {
+                e.preventDefault();
+                alert('NIK harus terdiri dari tepat 16 digit angka!');
+                document.getElementById('nikInput').focus();
+                return false;
+            }
 
             if (!name || !placeOfBirth || !dateOfBirth || !sport || !gender || !nik || !teamId || !jerseyNumber || !dominantFoot || !position) {
                 e.preventDefault();
@@ -1789,6 +1860,30 @@ try {
             dateInput.value = defaultDate.toISOString().split('T')[0];
         }
     }
+
+    // Trigger validation on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const nikInput = document.getElementById('nikInput');
+        if (nikInput && nikInput.value) {
+            validateNIK(nikInput.value);
+        }
+        
+        // Prevent non-numeric input in NIK field
+        nikInput.addEventListener('keypress', function(e) {
+            const charCode = e.which ? e.which : e.keyCode;
+            if (charCode < 48 || charCode > 57) {
+                e.preventDefault();
+            }
+        });
+        
+        // Prevent paste of non-numeric characters
+        nikInput.addEventListener('paste', function(e) {
+            const pastedData = e.clipboardData.getData('text');
+            if (!/^\d*$/.test(pastedData)) {
+                e.preventDefault();
+            }
+        });
+    });
 </script>
 </body>
 </html>
