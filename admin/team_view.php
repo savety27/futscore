@@ -115,6 +115,12 @@ try {
     ");
     $staff_stmt->execute([$team_id]);
     $staff = $staff_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $established_display = '-';
+    if (!empty($team_data['established_year'])) {
+        $timestamp = strtotime($team_data['established_year']);
+        $established_display = $timestamp ? date('d M Y', $timestamp) : $team_data['established_year'];
+    }
     
 } catch (PDOException $e) {
     die("Error fetching team data: " . $e->getMessage());
@@ -1123,8 +1129,8 @@ body {
                 <div class="stat-icon" style="color: #4CC9F0;">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
-                <div class="stat-number"><?php echo $team_data['established_year']; ?></div>
-                <div class="stat-label">Tahun Berdiri</div>
+                <div class="stat-number"><?php echo htmlspecialchars($established_display); ?></div>
+                <div class="stat-label">Tanggal Berdiri</div>
             </div>
             
             <div class="stat-card">
@@ -1204,8 +1210,8 @@ body {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Tahun Berdiri</span>
-                    <div class="info-value"><?php echo $team_data['established_year']; ?></div>
+                    <span class="info-label">Tanggal Berdiri</span>
+                    <div class="info-value"><?php echo htmlspecialchars($established_display); ?></div>
                 </div>
                 
                 <div class="info-item">

@@ -163,7 +163,11 @@ if ($teamId > 0) {
                             <div class="team-profile-text">
                                 <h2 class="team-name-display"><?php echo htmlspecialchars($team['name'] ?? ''); ?></h2>
                                 <?php if (!empty($team['established_year'])): ?>
-                                    <p class="team-subtitle">Didirikan sejak <?php echo date('d M Y', strtotime($team['established_year'] . '-01-01')); ?></p>
+                                    <?php
+                                        $timestamp = strtotime($team['established_year']);
+                                        $established_display = $timestamp ? date('d M Y', $timestamp) : $team['established_year'];
+                                    ?>
+                                    <p class="team-subtitle">Didirikan sejak <?php echo htmlspecialchars($established_display); ?></p>
                                 <?php endif; ?>
                                 <p class="team-tagline">Fokus pada pembinaan, prestasi, dan pengembangan pemain terbaik.</p>
                             </div>

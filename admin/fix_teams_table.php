@@ -29,7 +29,7 @@ try {
         name VARCHAR(255) NOT NULL,
         alias VARCHAR(100),
         coach VARCHAR(255) NOT NULL,
-        established_year INT,
+        established_year DATE,
         uniform_color VARCHAR(100),
         basecamp VARCHAR(255),
         sport_type VARCHAR(50) NOT NULL,

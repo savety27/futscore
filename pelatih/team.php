@@ -95,7 +95,7 @@ try {
                         <th>Pemain</th>
                         <th>Staf</th>
                         <th>Pertandingan</th>
-                        <th>Berdiri</th>
+                        <th>Tanggal Berdiri</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,7 +131,16 @@ try {
                                 <span class="count-cell matches"><?php echo $team['match_count']; ?></span>
                             </a>
                         </td>
-                        <td class="established-cell"><?php echo htmlspecialchars($team['established_year'] ?? '-'); ?></td>
+                        <td class="established-cell">
+                            <?php
+                                $established_display = '-';
+                                if (!empty($team['established_year'])) {
+                                    $timestamp = strtotime($team['established_year']);
+                                    $established_display = $timestamp ? date('d M Y', $timestamp) : $team['established_year'];
+                                }
+                                echo htmlspecialchars($established_display);
+                            ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
