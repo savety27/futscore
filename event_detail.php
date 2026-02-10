@@ -9,7 +9,7 @@ $event_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($event_id <= 0) {
     header("Location: event.php");
     exit;
-}
+} // ajo
 
 // Database connection
 $conn = $db->getConnection(); //waldi tinggi
