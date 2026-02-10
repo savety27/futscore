@@ -1139,7 +1139,7 @@ body {
                 </div>
                 <div class="stat-value">
                     <div class="stat-number"><?php echo $team_data['sport_type']; ?></div>
-                    <div class="stat-label">Cabor</div>
+                    <div class="stat-label">Event</div>
                 </div>
             </div>
         </div>
@@ -1229,7 +1229,7 @@ body {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Cabor</span>
+                    <span class="info-label">Event</span>
                     <div class="info-value">
                         <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
                             <?php echo htmlspecialchars($team_data['sport_type'] ?? ''); ?>

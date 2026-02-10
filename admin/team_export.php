@@ -87,7 +87,7 @@ echo '<th>Warna Kostum</th>';
 echo '<th>Jumlah Player</th>';
 echo '<th>Jumlah Staff</th>';
 echo '<th>Basecamp</th>';
-echo '<th>Cabor</th>';
+echo '<th>Event</th>';
 echo '<th>Status</th>';
 echo '<th>Tanggal Dibuat</th>';
 echo '</tr>';

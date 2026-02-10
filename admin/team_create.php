@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if (empty($form_data['sport_type'])) {
-        $errors['sport_type'] = "Cabor harus diisi";
+        $errors['sport_type'] = "Event harus diisi";
     }
     
     // Handle file upload
@@ -1315,7 +1315,7 @@ body {
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-map-marker-alt"></i>
-                        Lokasi & Cabor
+                        Lokasi & Event
                     </div>
                     
                     <div class="form-grid">
@@ -1333,25 +1333,13 @@ body {
                         
                         <div class="form-group">
                             <label class="form-label" for="sport_type">
-                                Cabor <span class="required">*</span>
+                                Event <span class="required">*</span>
                             </label>
                             <select id="sport_type" name="sport_type" class="form-select <?php echo isset($errors['sport_type']) ? 'is-invalid' : ''; ?>" required>
-                                <option value="">Pilih Cabor</option>
-                                <option value="Futsal" <?php echo $form_data['sport_type'] == 'Futsal' ? 'selected' : ''; ?>>Futsal</option>
-                                <option value="Sepak Bola" <?php echo $form_data['sport_type'] == 'Sepak Bola' ? 'selected' : ''; ?>>Sepak Bola</option>
-                                <option value="Basket" <?php echo $form_data['sport_type'] == 'Basket' ? 'selected' : ''; ?>>Basket</option>
-                                <option value="Voli" <?php echo $form_data['sport_type'] == 'Voli' ? 'selected' : ''; ?>>Voli</option>
-                                <option value="Badminton" <?php echo $form_data['sport_type'] == 'Badminton' ? 'selected' : ''; ?>>Badminton</option>
-                                <option value="Tenis Meja" <?php echo $form_data['sport_type'] == 'Tenis Meja' ? 'selected' : ''; ?>>Tenis Meja</option>
-                                <option value="Renang" <?php echo $form_data['sport_type'] == 'Renang' ? 'selected' : ''; ?>>Renang</option>
-                                <option value="Atletik" <?php echo $form_data['sport_type'] == 'Atletik' ? 'selected' : ''; ?>>Atletik</option>
-                                <option value="Bulu Tangkis" <?php echo $form_data['sport_type'] == 'Bulu Tangkis' ? 'selected' : ''; ?>>Bulu Tangkis</option>
-                                <option value="Judo" <?php echo $form_data['sport_type'] == 'Judo' ? 'selected' : ''; ?>>Judo</option>
-                                <option value="Taekwondo" <?php echo $form_data['sport_type'] == 'Taekwondo' ? 'selected' : ''; ?>>Taekwondo</option>
-                                <option value="Silat" <?php echo $form_data['sport_type'] == 'Silat' ? 'selected' : ''; ?>>Silat</option>
-                                <option value="Panahan" <?php echo $form_data['sport_type'] == 'Panahan' ? 'selected' : ''; ?>>Panahan</option>
-                                <option value="Angkat Besi" <?php echo $form_data['sport_type'] == 'Angkat Besi' ? 'selected' : ''; ?>>Angkat Besi</option>
-                                <option value="Lainnya" <?php echo $form_data['sport_type'] == 'Lainnya' ? 'selected' : ''; ?>>Lainnya</option>
+                                <option value="">Pilih Event</option>
+                                <option value="LIGA AAFI BATAM U-13 PUTRA 2026" <?php echo $form_data['sport_type'] == 'LIGA AAFI BATAM U-13 PUTRA 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-13 PUTRA 2026</option>
+                                <option value="LIGA AAFI BATAM U-16 PUTRA 2026" <?php echo $form_data['sport_type'] == 'LIGA AAFI BATAM U-16 PUTRA 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-16 PUTRA 2026</option>
+                                <option value="LIGA AAFI BATAM U-16 PUTRI 2026" <?php echo $form_data['sport_type'] == 'LIGA AAFI BATAM U-16 PUTRI 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-16 PUTRI 2026</option>
                             </select>
                             <?php if (isset($errors['sport_type'])): ?>
                                 <span class="error"><?php echo $errors['sport_type']; ?></span>

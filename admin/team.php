@@ -1242,7 +1242,7 @@ body {
             </div>
             
             <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari team (nama, alias, coach, cabor)..." 
+                <input type="text" name="search" placeholder="Cari team (nama, alias, coach, event)..." 
                        value="<?php echo htmlspecialchars($search ?? ''); ?>">
                 <button type="submit">
                     <i class="fas fa-search"></i>
@@ -1290,7 +1290,7 @@ body {
                         <th>Player</th>
                         <th>Staff</th>
                         <th>Basecamp</th>
-                        <th>Cabor</th>
+                        <th>Event</th>
                         <th>Status</th>
                         <th>Created At</th>
                         <th>Action</th>
