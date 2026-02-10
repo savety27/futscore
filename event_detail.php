@@ -12,7 +12,7 @@ if ($event_id <= 0) {
 }
 
 // Database connection
-$conn = $db->getConnection();
+$conn = $db->getConnection(); //waldi tinggi
 
 // Query for Event Data
 $query = "SELECT 
