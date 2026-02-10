@@ -83,19 +83,24 @@ $offset = ($page - 1) * $limit;
 // Query untuk mengambil data teams dengan count yang benar
 $base_query = "SELECT t.*, 
               (SELECT COUNT(*) FROM players p WHERE p.team_id = t.id AND p.status = 'active') as player_count,
-              (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count
-              FROM teams t WHERE 1=1";
+              (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count,
+              GROUP_CONCAT(DISTINCT te.event_name ORDER BY te.event_name SEPARATOR ', ') as event_list
+              FROM teams t
+              LEFT JOIN team_events te ON te.team_id = t.id
+              WHERE 1=1";
 
-$count_query = "SELECT COUNT(*) as total FROM teams t WHERE 1=1";
+$count_query = "SELECT COUNT(DISTINCT t.id) as total FROM teams t
+                LEFT JOIN team_events te ON te.team_id = t.id
+                WHERE 1=1";
 
 // Handle search condition
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $base_query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR t.sport_type LIKE ?)";
-    $count_query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR t.sport_type LIKE ?)";
+    $base_query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR te.event_name LIKE ?)";
+    $count_query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR te.event_name LIKE ?)";
 }
 
-$base_query .= " ORDER BY t.created_at DESC";
+$base_query .= " GROUP BY t.id ORDER BY t.created_at DESC";
 
 // Get total data
 $total_data = 0;
@@ -1349,8 +1354,16 @@ body {
                                 <?php echo !empty($team['basecamp']) ? htmlspecialchars($team['basecamp']) : '-'; ?>
                             </td>
                             <td class="sport-cell">
-                                <?php if (!empty($team['sport_type'])): ?>
-                                    <span class="sport-badge"><?php echo htmlspecialchars($team['sport_type'] ?? ''); ?></span>
+                                <?php
+                                $event_list = $team['event_list'] ?? '';
+                                if (empty($event_list) && !empty($team['sport_type'])) {
+                                    $event_list = $team['sport_type'];
+                                }
+                                ?>
+                                <?php if (!empty($event_list)): ?>
+                                    <?php foreach (explode(', ', $event_list) as $event_name): ?>
+                                        <span class="sport-badge"><?php echo htmlspecialchars($event_name); ?></span>
+                                    <?php endforeach; ?>
                                 <?php else: ?>
                                     -
                                 <?php endif; ?>

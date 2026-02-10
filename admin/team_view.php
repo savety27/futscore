@@ -94,6 +94,14 @@ try {
         exit;
     }
     
+    $events_stmt = $conn->prepare("SELECT event_name FROM team_events WHERE team_id = ? ORDER BY event_name ASC");
+    $events_stmt->execute([$team_id]);
+    $team_events = $events_stmt->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($team_events) && !empty($team_data['sport_type'])) {
+        $team_events = [$team_data['sport_type']];
+    }
+    $event_display = !empty($team_events) ? implode(', ', $team_events) : '-';
+
     // Fetch players in this team - FIXED QUERY
     $players_stmt = $conn->prepare("
         SELECT p.*, p.position as position_name
@@ -714,6 +722,18 @@ body {
     color: var(--warning);
 }
 
+.event-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.event-item {
+    font-size: 0.85rem;
+    color: #444;
+    line-height: 1.2;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -1138,7 +1158,17 @@ body {
                     <i class="fas fa-running"></i>
                 </div>
                 <div class="stat-value">
-                    <div class="stat-number"><?php echo $team_data['sport_type']; ?></div>
+                    <div class="stat-number">
+                        <?php if (!empty($team_events)): ?>
+                            <div class="event-list-view">
+                                <?php foreach ($team_events as $event_name): ?>
+                                    <div class="event-item"><?php echo htmlspecialchars($event_name); ?></div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </div>
                     <div class="stat-label">Event</div>
                 </div>
             </div>
@@ -1232,7 +1262,15 @@ body {
                     <span class="info-label">Event</span>
                     <div class="info-value">
                         <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
-                            <?php echo htmlspecialchars($team_data['sport_type'] ?? ''); ?>
+                            <?php if (!empty($team_events)): ?>
+                                <div class="event-list-view">
+                                    <?php foreach ($team_events as $event_name): ?>
+                                        <div class="event-item"><?php echo htmlspecialchars($event_name); ?></div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
                         </span>
                     </div>
                 </div>

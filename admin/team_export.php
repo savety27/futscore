@@ -20,15 +20,18 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 // Query untuk mengambil semua data teams
 $query = "SELECT t.*, 
           (SELECT COUNT(*) FROM players p WHERE p.team_id = t.id AND p.status = 'active') as player_count,
-          (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count
-          FROM teams t WHERE 1=1";
+          (SELECT COUNT(*) FROM team_staff ts WHERE ts.team_id = t.id) as staff_count,
+          GROUP_CONCAT(DISTINCT te.event_name ORDER BY te.event_name SEPARATOR ', ') as event_list
+          FROM teams t
+          LEFT JOIN team_events te ON te.team_id = t.id
+          WHERE 1=1";
 
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR t.sport_type LIKE ?)";
+    $query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR te.event_name LIKE ?)";
 }
 
-$query .= " ORDER BY t.created_at DESC";
+$query .= " GROUP BY t.id ORDER BY t.created_at DESC";
 
 try {
     if (!empty($search)) {
@@ -111,7 +114,11 @@ foreach ($teams as $team) {
     echo '<td>' . $team['player_count'] . '</td>';
     echo '<td>' . $team['staff_count'] . '</td>';
     echo '<td>' . (!empty($team['basecamp']) ? htmlspecialchars($team['basecamp']) : '-') . '</td>';
-    echo '<td>' . htmlspecialchars($team['sport_type'] ?? '') . '</td>';
+    $event_list = $team['event_list'] ?? '';
+    if (empty($event_list) && !empty($team['sport_type'])) {
+        $event_list = $team['sport_type'];
+    }
+    echo '<td>' . htmlspecialchars($event_list) . '</td>';
     echo '<td>' . ($team['is_active'] ? 'Aktif' : 'Non-Aktif') . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($team['created_at'])) . '</td>';
     echo '</tr>';

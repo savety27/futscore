@@ -69,6 +69,12 @@ $email = $admin_email;
 // Mendapatkan nama file saat ini untuk penanda menu 'Active'
 $current_page = basename($_SERVER['PHP_SELF']);
 
+$event_types = [
+    'LIGA AAFI BATAM U-13 PUTRA 2026',
+    'LIGA AAFI BATAM U-16 PUTRA 2026',
+    'LIGA AAFI BATAM U-16 PUTRI 2026'
+];
+
 // Get team ID
 $team_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -91,6 +97,13 @@ try {
         header("Location: team.php");
         exit;
     }
+
+    $events_stmt = $conn->prepare("SELECT event_name FROM team_events WHERE team_id = ? ORDER BY event_name ASC");
+    $events_stmt->execute([$team_id]);
+    $team_events = $events_stmt->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($team_events) && !empty($team_data['sport_type'])) {
+        $team_events = [$team_data['sport_type']];
+    }
 } catch (PDOException $e) {
     die("Error fetching team data: " . $e->getMessage());
 }
@@ -102,6 +115,14 @@ if (!empty($team_data['established_year']) && preg_match('/^\d{4}$/', $team_data
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get and sanitize form data
+    $selected_events = $_POST['sport_types'] ?? [];
+    if (!is_array($selected_events)) {
+        $selected_events = [];
+    }
+    $selected_events = array_values(array_filter($selected_events, function($event) use ($event_types) {
+        return in_array($event, $event_types, true);
+    }));
+
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
         'alias' => trim($_POST['alias'] ?? ''),
@@ -109,7 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'established_year' => trim($_POST['established_year'] ?? ''),
         'uniform_color' => trim($_POST['uniform_color'] ?? ''),
         'basecamp' => trim($_POST['basecamp'] ?? ''),
-        'sport_type' => trim($_POST['sport_type'] ?? ''),
+        'sport_type' => $selected_events[0] ?? '',
+        'sport_types' => $selected_events,
         'is_active' => isset($_POST['is_active']) ? 1 : 0,
         'delete_logo' => isset($_POST['delete_logo']) ? 1 : 0
     ];
@@ -147,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    if (empty($form_data['sport_type'])) {
+    if (empty($form_data['sport_types'])) {
         $errors['sport_type'] = "Event harus diisi";
     }
     
@@ -206,6 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If no errors, update database
     if (empty($errors)) {
         try {
+            $conn->beginTransaction();
             $stmt = $conn->prepare("
                 UPDATE teams SET 
                     name = ?, 
@@ -233,18 +256,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $logo_path,
                 $team_id
             ]);
+
+            $delete_stmt = $conn->prepare("DELETE FROM team_events WHERE team_id = ?");
+            $delete_stmt->execute([$team_id]);
+
+            if (!empty($form_data['sport_types'])) {
+                $event_stmt = $conn->prepare("INSERT INTO team_events (team_id, event_name) VALUES (?, ?)");
+                foreach ($form_data['sport_types'] as $event_name) {
+                    $event_stmt->execute([$team_id, $event_name]);
+                }
+            }
+
+            $conn->commit();
             
             $_SESSION['success_message'] = "Team berhasil diperbarui!";
             header("Location: team.php");
             exit;
             
         } catch (PDOException $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
             $errors['database'] = "Gagal memperbarui data: " . $e->getMessage();
         }
     } else {
         // Update team_data with new form data for display
         $team_data = array_merge($team_data, $form_data);
     }
+}
+
+$selected_events_for_form = $team_events ?? [];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $selected_events_for_form = $form_data['sport_types'] ?? [];
 }
 ?>
 <!DOCTYPE html>
@@ -768,6 +811,19 @@ body {
 .checkbox-group input {
     width: auto;
     margin-right: 10px;
+}
+
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.event-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.92rem;
 }
 
 /* File Upload */
@@ -1397,12 +1453,15 @@ body {
                             <label class="form-label" for="sport_type">
                                 Event <span class="required">*</span>
                             </label>
-                            <select id="sport_type" name="sport_type" class="form-select <?php echo isset($errors['sport_type']) ? 'is-invalid' : ''; ?>" required>
-                                <option value="">Pilih Event</option>
-                                <option value="LIGA AAFI BATAM U-13 PUTRA 2026" <?php echo $team_data['sport_type'] == 'LIGA AAFI BATAM U-13 PUTRA 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-13 PUTRA 2026</option>
-                                <option value="LIGA AAFI BATAM U-16 PUTRA 2026" <?php echo $team_data['sport_type'] == 'LIGA AAFI BATAM U-16 PUTRA 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-16 PUTRA 2026</option>
-                                <option value="LIGA AAFI BATAM U-16 PUTRI 2026" <?php echo $team_data['sport_type'] == 'LIGA AAFI BATAM U-16 PUTRI 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-16 PUTRI 2026</option>
-                            </select>
+                            <div class="event-list">
+                                <?php foreach ($event_types as $event_option): ?>
+                                    <label class="event-option">
+                                        <input type="checkbox" name="sport_types[]" value="<?php echo htmlspecialchars($event_option); ?>"
+                                            <?php echo in_array($event_option, $selected_events_for_form, true) ? 'checked' : ''; ?>>
+                                        <span><?php echo htmlspecialchars($event_option); ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
                             <?php if (isset($errors['sport_type'])): ?>
                                 <span class="error"><?php echo $errors['sport_type']; ?></span>
                             <?php endif; ?>
@@ -1569,9 +1628,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = document.getElementById('name').value.trim();
         const coach = document.getElementById('coach').value.trim();
         const establishedDate = document.getElementById('established_year').value.trim();
-        const sportType = document.getElementById('sport_type').value.trim();
+        const selectedEvents = document.querySelectorAll('input[name="sport_types[]"]:checked');
 
-        if (!name || !coach || !establishedDate || !sportType) {
+        if (!name || !coach || !establishedDate || selectedEvents.length === 0) {
             e.preventDefault();
             toastr.error('Harap isi semua field yang wajib diisi (*)');
             return;
