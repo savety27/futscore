@@ -6,6 +6,8 @@ require_once 'includes/header.php';
 
 $challenge_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $pelatih_id = $_SESSION['pelatih_id'] ?? 0;
+$match_event = '';
+$event_fallback = false;
 
 // Verify challenge exists and pelatih owns one of the teams
 try {
@@ -53,6 +55,8 @@ if ($my_team_id == 0) {
         exit;
     }
 
+    $match_event = trim($challenge['sport_type'] ?? '');
+
     // Determine current lineup
     $current_lineup = [];
     $stmtLineup = $conn->prepare("SELECT player_id, is_starting FROM lineups WHERE match_id = ? AND team_id = ?");
@@ -62,9 +66,23 @@ if ($my_team_id == 0) {
     }
 
     // Get all players
-    $stmtPlayers = $conn->prepare("SELECT * FROM players WHERE team_id = ? AND status = 'active' ORDER BY jersey_number ASC");
-    $stmtPlayers->execute([$my_team_id]);
-    $players = $stmtPlayers->fetchAll(PDO::FETCH_ASSOC);
+    if ($match_event !== '') {
+        $stmtPlayers = $conn->prepare("SELECT * FROM players WHERE team_id = ? AND status = 'active' AND sport_type = ? ORDER BY jersey_number ASC");
+        $stmtPlayers->execute([$my_team_id, $match_event]);
+        $players = $stmtPlayers->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($players)) {
+            $event_fallback = true;
+            $stmtPlayers = $conn->prepare("SELECT * FROM players WHERE team_id = ? AND status = 'active' ORDER BY jersey_number ASC");
+            $stmtPlayers->execute([$my_team_id]);
+            $players = $stmtPlayers->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } else {
+        $event_fallback = true;
+        $stmtPlayers = $conn->prepare("SELECT * FROM players WHERE team_id = ? AND status = 'active' ORDER BY jersey_number ASC");
+        $stmtPlayers->execute([$my_team_id]);
+        $players = $stmtPlayers->fetchAll(PDO::FETCH_ASSOC);
+    }
 
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
@@ -127,6 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
         </div>
     <?php endif; ?>
+    
+    <?php if (!empty($event_fallback)): ?>
+        <div class="alert alert-warning">
+            Event pertandingan belum diatur atau tidak ada pemain yang cocok. Menampilkan semua pemain tim.
+        </div>
+    <?php endif; ?>
 
     <form method="POST" action="">
         <div class="table-responsive">
@@ -138,6 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <th>No</th>
                         <th>Nama</th>
                         <th>Posisi</th>
+                        <th>Event</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -162,6 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <td><span class="badge badge-primary"><?php echo $player['jersey_number']; ?></span></td>
                         <td><?php echo htmlspecialchars($player['name'] ?? ''); ?></td>
                         <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($player['sport_type'] ?? '-'); ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -208,6 +234,11 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 4px 8px;
     border-radius: 50%;
     font-size: 12px;
+}
+.alert-warning {
+    background: rgba(249, 168, 38, 0.1);
+    border-left: 4px solid var(--warning);
+    color: var(--warning);
 }
 .text-center { text-align: center; }
 .mt-4 { margin-top: 1.5rem; }
