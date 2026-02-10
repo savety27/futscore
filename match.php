@@ -77,6 +77,7 @@ if (!$match && $source !== 'challenge') {
 
 $matchNotFound = false;
 $lineups = ['team1' => [], 'team2' => []];
+$goals = [];
 
 if (!$match) {
     $matchNotFound = true;
@@ -100,6 +101,9 @@ if (!$match) {
         }
     }
     $stmtLineups->close();
+
+    // Get goals for this match
+    $goals = getMatchGoals($matchId);
 }
 
 $statusValue = '';
@@ -294,6 +298,47 @@ if (!$matchNotFound) {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <section class="section-container lineup-section">
+                    <div class="section-header">
+                        <h2 class="section-title">GOALS</h2>
+                    </div>
+
+                    <div class="goals-list pro-goals-container">
+                        <?php if (empty($goals)): ?>
+                            <div class="no-data">Belum ada gol tercipta</div>
+                        <?php else: ?>
+                            <?php foreach ($goals as $goal): ?>
+                                <?php $isTeam1 = ($goal['team_id'] == $match['team1_id']); ?>
+                                <div class="goal-row">
+                                    <div class="goal-side team-1-side <?php echo $isTeam1 ? 'active' : ''; ?>">
+                                        <?php if ($isTeam1): ?>
+                                            <div class="goal-details">
+                                                <span class="goal-player-name"><?php echo htmlspecialchars($goal['player_name'] ?? ''); ?></span>
+                                                <span class="goal-icon">⚽</span>
+                                                <?php if (!empty($goal['jersey_number'])): ?>
+                                                    <span class="goal-player-number">(<?php echo htmlspecialchars($goal['jersey_number']); ?>)</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="goal-time-pill"><?php echo htmlspecialchars(($goal['minute'] ?? '-') . '"'); ?></div>
+                                    <div class="goal-side team-2-side <?php echo !$isTeam1 ? 'active' : ''; ?>">
+                                        <?php if (!$isTeam1): ?>
+                                            <div class="goal-details">
+                                                <span class="goal-player-name"><?php echo htmlspecialchars($goal['player_name'] ?? ''); ?></span>
+                                                <span class="goal-icon">⚽</span>
+                                                <?php if (!empty($goal['jersey_number'])): ?>
+                                                    <span class="goal-player-number">(<?php echo htmlspecialchars($goal['jersey_number']); ?>)</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </section>
 

@@ -28,7 +28,9 @@ foreach ($goalsRaw as $g) {
         'player' => $g['player_name'],
         'number' => $g['jersey_number'],
         'time' => $g['minute'] . '"',
-        'team' => ($g['team_id'] == $challenge['challenger_id']) ? 'team1' : 'team2'
+        'team' => ($g['team_id'] == $challenge['challenger_id']) ? 'team1' : 'team2',
+        'team_name' => $g['team_name'],
+        'team_logo' => $g['team_logo']
     ];
 }
 
