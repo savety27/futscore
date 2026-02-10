@@ -1186,7 +1186,7 @@ body {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Jenis Olahraga</span>
+                    <span class="info-label">Event</span>
                     <div class="info-value">
                         <?php echo !empty($pelatih_data['sport_type']) ? htmlspecialchars($pelatih_data['sport_type']) : '-'; ?>
                     </div>
