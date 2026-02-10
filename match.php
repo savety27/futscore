@@ -17,7 +17,7 @@ if ($matchId <= 0) {
 $source = isset($_GET['source']) ? $_GET['source'] : 'match';
 
 // Sekarang baru require header
-require_once 'includes/header.php'; //multajab
+require_once 'includes/header.php'; 
 
 $conn = $db->getConnection();
 
