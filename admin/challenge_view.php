@@ -1208,7 +1208,7 @@ body {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Cabor</span>
+                    <span class="info-label">Event</span>
                     <div class="info-value">
                         <span style="padding: 4px 12px; background: var(--primary); color: white; border-radius: 12px; font-size: 14px;">
                             <?php echo htmlspecialchars($challenge_data['sport_type'] ?? ''); ?>

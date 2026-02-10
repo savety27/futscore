@@ -1186,7 +1186,7 @@ body {
                         <th>Venue</th>
                         <th>Date & Time</th>
                         <th>Expired</th>
-                        <th>Cabor</th>
+                        <th>Event</th>
                         <th>Match Status</th>
                         <th>Score</th>
                         <th>Action</th>

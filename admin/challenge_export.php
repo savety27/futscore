@@ -92,7 +92,7 @@ echo '<th>Opponent</th>';
 echo '<th>Venue</th>';
 echo '<th>Tanggal & Waktu</th>';
 echo '<th>Expiry Date</th>';
-echo '<th>Cabor</th>';
+echo '<th>Event</th>';
 echo '<th>Match Status</th>';
 echo '<th>Skor Challenger</th>';
 echo '<th>Skor Opponent</th>';
