@@ -10,7 +10,7 @@ $newPlayers = getPlayers(5);
 $recentTransfers = getPlayerTransfers(5);
 
 $recentWinners = getRecentWinners(5);
-$newTeams = getTeams(5);
+$newTeams = getTeams(5); // tes
 
 $pageTitle = "Home";
 ?>
