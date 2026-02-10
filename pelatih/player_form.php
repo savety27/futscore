@@ -137,15 +137,17 @@ if (isset($_GET['id'])) {
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Cabor</span>
+                            <span class="required-field">Event</span>
                             <span class="note">Wajib</span>
                         </label>
                         <select name="sport_type" class="form-control" required>
-                            <option value="">Pilih Cabor</option>
+                            <option value="">Pilih Event</option>
                             <?php 
-                            $sports = ['Futsal', 'Sepakbola', 'Panahan', 'Karate', 'Angkat Besi', 'Atletik', 'Dayung', 
-                                      'Pencak Silat', 'Taekwondo', 'Sepak Takraw', 'Bola Voli', 'Cricket', 
-                                      'Mini Soccer/Mini Football', 'Basket'];
+                            $sports = [
+                                'LIGA AAFI BATAM U-13 PUTRA 2026',
+                                'LIGA AAFI BATAM U-16 PUTRA 2026',
+                                'LIGA AAFI BATAM U-16 PUTRI 2026'
+                            ];
                             foreach ($sports as $sport): 
                                 $selected = ($player['sport_type'] == $sport) ? 'selected' : '';
                                 echo "<option value='$sport' $selected>$sport</option>";

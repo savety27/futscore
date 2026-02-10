@@ -643,7 +643,7 @@ try {
                         <div class="detail-group">
                             <div class="detail-label">
                                 <i class="fas fa-running"></i>
-                                Cabor
+                                Event
                             </div>
                             <div class="detail-value">
                                 <?php echo !empty($player['sport_type']) ? htmlspecialchars($player['sport_type']) : '-'; ?>
