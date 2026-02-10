@@ -7,7 +7,7 @@ require_once 'includes/header.php';
 <?php
 
 // Page Metadata
-$pageTitle = "Event & Pertandingan"; // tes
+$pageTitle = "Event & Pertandingan";
 
 // Logic for Search and Pagination
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
