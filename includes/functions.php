@@ -747,7 +747,13 @@ function getTeams($limit = 10) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM teams ORDER BY created_at DESC LIMIT ?";
+    $sql = "SELECT t.*, 
+            GROUP_CONCAT(DISTINCT te.event_name ORDER BY te.event_name SEPARATOR ', ') as event_list
+            FROM teams t
+            LEFT JOIN team_events te ON te.team_id = t.id
+            GROUP BY t.id
+            ORDER BY t.created_at DESC 
+            LIMIT ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $limit);
     $stmt->execute();
@@ -755,6 +761,10 @@ function getTeams($limit = 10) {
     
     $teams = [];
     while ($row = $result->fetch_assoc()) {
+        if (empty($row['event_list']) && !empty($row['sport_type'])) {
+            $row['event_list'] = $row['sport_type'];
+        }
+        $row['events_array'] = !empty($row['event_list']) ? explode(', ', $row['event_list']) : [];
         $teams[] = $row;
     }
     return $teams;
@@ -767,14 +777,24 @@ function getTeamById($id) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM teams WHERE id = ?";
+    $sql = "SELECT t.*, 
+            GROUP_CONCAT(DISTINCT te.event_name ORDER BY te.event_name SEPARATOR ', ') as event_list
+            FROM teams t
+            LEFT JOIN team_events te ON te.team_id = t.id
+            WHERE t.id = ?
+            GROUP BY t.id";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        return $result->fetch_assoc();
+        $team = $result->fetch_assoc();
+        if (empty($team['event_list']) && !empty($team['sport_type'])) {
+            $team['event_list'] = $team['sport_type'];
+        }
+        $team['events_array'] = !empty($team['event_list']) ? explode(', ', $team['event_list']) : [];
+        return $team;
     }
     return null;
 }
@@ -878,13 +898,23 @@ function getAllTeams() {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT * FROM teams WHERE is_active = 1 ORDER BY name ASC";
+    $sql = "SELECT t.*, 
+            GROUP_CONCAT(DISTINCT te.event_name ORDER BY te.event_name SEPARATOR ', ') as event_list
+            FROM teams t
+            LEFT JOIN team_events te ON te.team_id = t.id
+            WHERE t.is_active = 1 
+            GROUP BY t.id
+            ORDER BY t.name ASC";
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $result = $stmt->get_result();
     
     $teams = [];
     while ($row = $result->fetch_assoc()) {
+        if (empty($row['event_list']) && !empty($row['sport_type'])) {
+            $row['event_list'] = $row['sport_type'];
+        }
+        $row['events_array'] = !empty($row['event_list']) ? explode(', ', $row['event_list']) : [];
         $teams[] = $row;
     }
     return $teams;

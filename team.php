@@ -202,7 +202,20 @@ if ($teamId > 0) {
                             </div>
                             <?php endif; ?>
 
-                            <?php if (empty($team['manager']) && empty($team['coach']) && empty($team['basecamp']) && empty($team['contact'])): ?>
+                            <?php if (!empty($team['events_array'])): ?>
+                            <div class="team-meta-item">
+                                <div class="team-meta-label">Sport / Event</div>
+                                <div class="team-meta-value">
+                                    <div class="event-badges-container" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                        <?php foreach ($team['events_array'] as $event_name): ?>
+                                            <span class="event-badge"><?php echo htmlspecialchars($event_name); ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <?php if (empty($team['manager']) && empty($team['coach']) && empty($team['basecamp']) && empty($team['contact']) && empty($team['events_array'])): ?>
                             <div class="team-meta-item team-meta-empty">
                                 <div class="team-meta-label">Informasi Tim</div>
                                 <div class="team-meta-value">Belum ada data tambahan</div>
@@ -655,6 +668,16 @@ if ($teamId > 0) {
                                              onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                     </div>
                                     <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
+                                    <?php if (!empty($team['events_array'])): ?>
+                                        <div class="team-events-badges" style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-bottom: 10px;">
+                                            <?php foreach (array_slice($team['events_array'], 0, 2) as $event_name): ?>
+                                                <span class="event-badge" style="font-size: 10px; padding: 2px 8px;"><?php echo htmlspecialchars($event_name); ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count($team['events_array']) > 2): ?>
+                                                <span class="event-badge" style="font-size: 10px; padding: 2px 8px;">+<?php echo count($team['events_array']) - 2; ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                     <p class="team-label">View Profile</p>
                                 </a>
                             <?php endforeach; ?>
@@ -731,4 +754,3 @@ const SITE_URL = '<?php echo SITE_URL; ?>';
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
-

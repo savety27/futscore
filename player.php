@@ -62,6 +62,22 @@ if ($player_id > 0) {
     $detail_stmt->bind_param("i", $player_id);
     $detail_stmt->execute();
     $player_detail = $detail_stmt->get_result()->fetch_assoc();
+    
+    // Add team events if player has a team
+    $player_events = [];
+    if ($player_detail && !empty($player_detail['team_id'])) {
+        $team_info = getTeamById($player_detail['team_id']);
+        if ($team_info && !empty($team_info['events_array'])) {
+            $player_events = $team_info['events_array'];
+        }
+    }
+    
+    // Merge player specific sport_type if not already in list
+    if (!empty($player_detail['sport_type']) && !in_array($player_detail['sport_type'], $player_events)) {
+        $player_events[] = $player_detail['sport_type'];
+    }
+    
+    $player_detail['team_events_array'] = $player_events;
 }
 
 // Helper Functions
@@ -225,7 +241,17 @@ function maskNIK($nik) {
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Event</span>
-                                <span class="detail-value"><?php echo htmlspecialchars($player_detail['sport_type'] ?: '-'); ?></span>
+                                <span class="detail-value">
+                                    <?php if (!empty($player_detail['team_events_array'])): ?>
+                                        <div class="event-badges-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                                            <?php foreach ($player_detail['team_events_array'] as $event_name): ?>
+                                                <span class="event-badge" style="font-size: 11px;"><?php echo htmlspecialchars($event_name); ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <?php echo htmlspecialchars($player_detail['sport_type'] ?: '-'); ?>
+                                    <?php endif; ?>
+                                </span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Created At</span>
@@ -320,7 +346,37 @@ function maskNIK($nik) {
                                 <td class="col-center" data-label="JK"><?php echo $p['gender'] ?: '-'; ?></td>
                                 <td data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
                                 <td data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
-                                <td data-label="Event"><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
+                                <td data-label="Event">
+
+                                    <?php 
+                                    $p_events = [];
+                                    if (!empty($p['team_id'])) {
+                                        $p_team = getTeamById($p['team_id']);
+                                        if ($p_team && !empty($p_team['events_array'])) {
+                                            $p_events = $p_team['events_array'];
+                                        }
+                                    }
+                                    
+                                    // Merge player specific sport_type if not already in list
+                                    if (!empty($p['sport_type']) && !in_array($p['sport_type'], $p_events)) {
+                                        $p_events[] = $p['sport_type'];
+                                    }
+                                    ?>
+
+                                    <?php if (!empty($p_events)): ?>
+                                        <div class="team-events-badges" style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                            <?php foreach (array_slice($p_events, 0, 1) as $event_name): ?>
+                                                <span class="event-badge" style="font-size: 9px; padding: 1px 6px;"><?php echo htmlspecialchars($event_name); ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count($p_events) > 1): ?>
+                                                <span class="event-badge" style="font-size: 9px; padding: 1px 6px;">+<?php echo count($p_events) - 1; ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
+                                </td>
                                 <td data-label="Created At"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
                             </tr>
                             <?php endforeach; ?>
