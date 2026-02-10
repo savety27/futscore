@@ -306,7 +306,7 @@ usort($timeline_events, function($a, $b) {
                             <i class="fas fa-info-circle"></i> Informasi Event
                         </div>
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-running"></i> Cabang Olahraga</span>
+                            <span class="info-label"><i class="fas fa-running"></i> Event </span>
                             <div class="info-value"><?php echo htmlspecialchars($event['sport_type'] ?? ''); ?></div>
                         </div>
                         <div class="info-item">

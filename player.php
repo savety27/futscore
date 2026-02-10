@@ -224,7 +224,7 @@ function maskNIK($nik) {
                                 <span class="detail-value"><?php echo htmlspecialchars($player_detail['position'] ?: '-'); ?></span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Cabor</span>
+                                <span class="detail-label">Event</span>
                                 <span class="detail-value"><?php echo htmlspecialchars($player_detail['sport_type'] ?: '-'); ?></span>
                             </div>
                             <div class="detail-item">
@@ -270,7 +270,7 @@ function maskNIK($nik) {
                             <th class="col-center">JK</th>
                             <th>NISN</th>
                             <th>NIK</th>
-                            <th>Cabor</th>
+                            <th>Event</th>
                             <th>Created At</th>
                         </tr>
                     </thead>
@@ -320,7 +320,7 @@ function maskNIK($nik) {
                                 <td class="col-center" data-label="JK"><?php echo $p['gender'] ?: '-'; ?></td>
                                 <td data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
                                 <td data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
-                                <td data-label="Cabor"><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
+                                <td data-label="Event"><?php echo htmlspecialchars($p['sport_type'] ?: '-'); ?></td>
                                 <td data-label="Created At"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
                             </tr>
                             <?php endforeach; ?>

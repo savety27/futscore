@@ -277,9 +277,9 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                     
                     <!-- Sport Filter -->
                     <div class="filter-group">
-                        <label for="sport">Cabang Olahraga</label>
+                        <label for="sport">Event</label>
                         <select name="sport" id="sport">
-                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Cabor</option>
+                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Event</option>
                             <?php foreach ($sports as $sport): ?>
                                 <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" <?php echo $filter_sport == $sport ? 'selected' : ''; ?>><?php echo htmlspecialchars($sport ?? ''); ?></option>
                             <?php endforeach; ?>
@@ -326,7 +326,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                             <th style="width: 180px; text-align: center;">Pemenang</th>
                             <th style="width: 120px; text-align: center;">Status</th>
                             <th style="width: 140px; text-align: center;">Match Status</th>
-                            <th style="width: 110px; text-align: center;">Cabor</th>
+                            <th style="width: 110px; text-align: center;">Event</th>
                             <th style="width: 100px; text-align: center;">Action</th>
                         </tr>
                     </thead>
