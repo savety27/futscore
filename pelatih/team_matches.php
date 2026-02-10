@@ -103,7 +103,7 @@ try {
                 <thead>
                     <tr>
                         <th>Tanggal</th>
-                        <th>Acara</th>
+                        <th>Event</th>
                         <th>Lawan</th>
                         <th style="text-align: center;">Hasil</th>
                         <th style="text-align: center;">Status</th>

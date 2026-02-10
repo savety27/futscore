@@ -383,11 +383,18 @@ try {
                     <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
                     <select name="sport" onchange="document.getElementById('sportFilterForm').submit()" 
                             class="sport-select">
-                        <option value="">Semua Olahraga</option>
-                        <?php foreach ($sport_types as $sport): ?>
-                            <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" 
+                        <option value="">Semua Event</option>
+                        <?php
+                        $event_types = [
+                            'LIGA AAFI BATAM U-13 PUTRA 2026',
+                            'LIGA AAFI BATAM U-16 PUTRA 2026',
+                            'LIGA AAFI BATAM U-16 PUTRI 2026'
+                        ];
+                        foreach ($event_types as $sport):
+                        ?>
+                            <option value="<?php echo htmlspecialchars($sport); ?>" 
                                 <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars(ucwords($sport ?? '')); ?>
+                                <?php echo htmlspecialchars($sport); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -416,7 +423,7 @@ try {
                         <th>Kode Pertandingan</th>
                         <th>Tanggal</th>
                         <th>Tim</th>
-                        <th>Olahraga</th>
+                        <th>Event</th>
                         <th>Venue</th>
                         <th>Skor</th>
                         <th>Status</th>
