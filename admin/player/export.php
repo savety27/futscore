@@ -103,7 +103,7 @@ try {
     echo "<th>Tempat Lahir</th>";
     echo "<th>Tanggal Lahir</th>";
     echo "<th>Jenis Kelamin</th>";
-    echo "<th>Cabor</th>";
+    echo "<th>Event</th>";
     echo "<th>Tinggi (cm)</th>";
     echo "<th>Berat (kg)</th>";
     echo "<th>Email</th>";

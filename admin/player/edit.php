@@ -1501,17 +1501,18 @@ select.form-control {
                         </div>
 
                         <div class="form-group">
-                            <label for="sport_type">Cabor <span class="required">*</span></label>
+                            <label for="sport_type">Event <span class="required">*</span></label>
                             <select id="sport_type" name="sport_type" class="form-control" required>
-                                <option value="">Pilih Cabor</option>
+                                <option value="" selected>Pilih Event</option>
                                 <?php 
-                                $sports = ['Futsal', 'Sepakbola', 'Panahan', 'Karate', 'Angkat Besi', 'Atletik', 'Dayung', 
-                                          'Pencak Silat', 'Taekwondo', 'Sepak Takraw', 'Bola Voli', 'Cricket', 
-                                          'Mini Soccer/Mini Football', 'Basket'];
+                                $sports = [
+                                        'LIGA AAFI BATAM U-13 PUTRA 2026',
+                                        'LIGA AAFI BATAM U-16 PUTRA 2026',
+                                        'LIGA AAFI BATAM U-16 PUTRI 2026'
+                                    ];
                                 foreach ($sports as $sport_option): 
                                 ?>
-                                    <option value="<?php echo $sport_option; ?>" 
-                                        <?php echo $player['sport_type'] === $sport_option ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $sport_option; ?>">
                                         <?php echo $sport_option; ?>
                                     </option>
                                 <?php endforeach; ?>

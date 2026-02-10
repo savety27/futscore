@@ -1388,7 +1388,7 @@ body {
                         <th>JK</th>
                         <th>NISN</th>
                         <th>NIK</th>
-                        <th>Cabor</th>
+                        <th>Event</th>
                         <th>Tgl Daftar</th>
                         <th>Action</th>
                     </tr>
