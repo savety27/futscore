@@ -44,6 +44,22 @@ if ($teamId > 0) {
 
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
+<style>
+.event-badge {
+    color: #0f172a !important;
+    background: #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100%;
+    line-height: 1.3;
+}
+
+.event-meta-label {
+    color: #0f172a !important;
+}
+</style>
 
 <div class="dashboard-wrapper">
     <!-- Mobile Header -->
@@ -204,7 +220,7 @@ if ($teamId > 0) {
 
                             <?php if (!empty($team['events_array'])): ?>
                             <div class="team-meta-item">
-                                <div class="team-meta-label">Sport / Event</div>
+                                <div class="team-meta-label event-meta-label">Sport / Event</div>
                                 <div class="team-meta-value">
                                     <div class="event-badges-container" style="display: flex; flex-wrap: wrap; gap: 5px;">
                                         <?php foreach ($team['events_array'] as $event_name): ?>
