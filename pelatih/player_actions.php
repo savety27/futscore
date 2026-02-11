@@ -313,7 +313,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (Exception $e) {
         // Redirect back with error message
-        $error_msg = urlencode($e->getMessage());
+        $error_msg = $e->getMessage();
+        
+        // Check for foreign key constraint violation
+        if (strpos($error_msg, '1451') !== false || strpos($error_msg, 'foreign key constraint fails') !== false) {
+            $error_msg = 'Tidak dapat menghapus data player yang sudah pernah berkontribusi pada suatu team.';
+        }
+        
+        $error_msg = urlencode($error_msg);
         
         if ($action === 'add') {
             $redirect_url = 'player_form.php?error=' . $error_msg;

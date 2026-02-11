@@ -89,6 +89,13 @@ try {
     }
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    $message = $e->getMessage();
+    
+    // Check for foreign key constraint violation
+    if (strpos($message, '1451') !== false || strpos($message, 'foreign key constraint fails') !== false) {
+        $message = 'Tidak dapat menghapus data player yang sudah pernah berkontribusi pada suatu team.';
+    }
+    
+    echo json_encode(['success' => false, 'message' => $message]);
 }
 ?>
