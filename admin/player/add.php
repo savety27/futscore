@@ -98,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $jersey_number = trim($_POST['jersey_number'] ?? '');
         $dominant_foot = trim($_POST['dominant_foot'] ?? '');
         $position = trim($_POST['position'] ?? '');
+        $status = isset($_POST['status']) ? 'active' : 'inactive';
         
         // Skills data - PERBAIKAN DI SINI
         $dribbling = isset($_POST['dribbling']) ? (int)$_POST['dribbling'] : 5;
@@ -179,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 :street, :city, :province, :postal_code, :country, :dominant_foot, :position_detail,
                 :dribbling, :technique, :speed, :juggling, :shooting, :setplay_position, :passing, :control,
                 :photo, :ktp_image, :kk_image, :birth_cert_image, :diploma_image,
-                NOW(), NOW(), 'active'
+                NOW(), NOW(), :status
             )";
             
             $stmt = $conn->prepare($query);
@@ -215,6 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 ':setplay_position' => $setplay_position,
                 ':passing' => $passing,
                 ':control' => $control,
+                ':status' => $status,
                 ':photo' => $photo_file,
                 ':ktp_image' => $ktp_file,
                 ':kk_image' => $kk_file,
@@ -665,6 +667,13 @@ try {
         .radio-group {
             display: flex;
             gap: 20px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-top: 10px;
         }
 
@@ -1682,6 +1691,22 @@ try {
                                 </div>
                                 <?php endforeach; ?>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Section -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-check-circle"></i>
+                            Status Pemain
+                        </h2>
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="status_active" name="status" value="active"
+                                       <?php echo ($_SERVER['REQUEST_METHOD'] !== 'POST' || isset($_POST['status'])) ? 'checked' : ''; ?>>
+                                <label for="status_active" style="font-weight: normal;">Pemain Aktif</label>
+                            </div>
+                            <small style="color: #666;">Pemain aktif akan tampil dalam sistem</small>
                         </div>
                     </div>
 

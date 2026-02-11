@@ -1300,6 +1300,25 @@ body {
                             <?php echo !empty($player['position']) ? htmlspecialchars($player['position']) : '-'; ?>
                         </div>
                     </div>
+
+                    <div class="detail-group">
+                        <div class="detail-label">
+                            <i class="fas fa-check-circle"></i>
+                            Status
+                        </div>
+                        <div class="detail-value">
+                            <?php
+                            $status_map = [
+                                'active' => 'Aktif',
+                                'inactive' => 'Non-aktif',
+                                'injured' => 'Cedera',
+                                'suspended' => 'Skorsing'
+                            ];
+                            $status_key = strtolower($player['status'] ?? '');
+                            echo htmlspecialchars($status_map[$status_key] ?? ucfirst($status_key ?: '-'));
+                            ?>
+                        </div>
+                    </div>
                     
                     <div class="detail-group">
                         <div class="detail-label">

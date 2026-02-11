@@ -39,6 +39,7 @@ try {
                 p.jersey_number,
                 p.dominant_foot,
                 p.position,
+                p.status,
                 p.dribbling,
                 p.technique,
                 p.speed,
@@ -60,9 +61,6 @@ try {
         $query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ?)";
         $params = array_merge($params, [$search_term, $search_term, $search_term]);
     }
-    
-    // Filter hanya active players
-    $query .= " AND p.status = 'active'";
     
     // Order by name
     $query .= " ORDER BY p.name ASC";
@@ -117,6 +115,7 @@ try {
     echo "<th>No Punggung</th>";
     echo "<th>Kaki Dominan</th>";
     echo "<th>Posisi</th>";
+    echo "<th>Status</th>";
     echo "<th>Team</th>";
     echo "<th>Dribbling</th>";
     echo "<th>Technique</th>";
@@ -159,6 +158,14 @@ try {
         echo "<td>" . $player['jersey_number'] . "</td>";
         echo "<td>" . htmlspecialchars($player['dominant_foot']) . "</td>";
         echo "<td>" . htmlspecialchars($player['position']) . "</td>";
+        $status_map = [
+            'active' => 'Aktif',
+            'inactive' => 'Non-aktif',
+            'injured' => 'Cedera',
+            'suspended' => 'Skorsing'
+        ];
+        $status_key = strtolower($player['status'] ?? '');
+        echo "<td>" . htmlspecialchars($status_map[$status_key] ?? ucfirst($status_key)) . "</td>";
         echo "<td>" . htmlspecialchars($player['team_name']) . "</td>";
         
         // Skills

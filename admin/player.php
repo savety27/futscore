@@ -73,19 +73,35 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
+// Handle status filter (only active/inactive)
+$status_filter = isset($_GET['status']) ? strtolower(trim($_GET['status'])) : '';
+$status_options = [
+    'active' => 'Aktif',
+    'inactive' => 'Non-aktif'
+];
+if (!array_key_exists($status_filter, $status_options)) {
+    $status_filter = '';
+}
+
 // Query untuk mengambil data players
 $query = "SELECT p.*, t.name as team_name, t.logo as team_logo 
           FROM players p 
           LEFT JOIN teams t ON p.team_id = t.id 
-          WHERE p.status = 'active'";
+          WHERE 1=1";
 
-$count_query = "SELECT COUNT(*) as total FROM players p WHERE p.status = 'active'";
+$count_query = "SELECT COUNT(*) as total FROM players p WHERE 1=1";
 
 // Handle search
 if (!empty($search)) {
     $search_term = "%{$search}%";
     $query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ? OR p.email LIKE ?)";
     $count_query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ? OR p.email LIKE ?)";
+}
+
+// Handle status filter
+if (!empty($status_filter)) {
+    $query .= " AND p.status = ?";
+    $count_query .= " AND p.status = ?";
 }
 
 // Handle team filter
@@ -118,6 +134,9 @@ try {
     if (!empty($search)) {
         $stmt = $conn->prepare($count_query);
         $params = [$search_term, $search_term, $search_term, $search_term];
+        if (!empty($status_filter)) {
+            $params[] = $status_filter;
+        }
         if ($team_id > 0) {
             $params[] = $team_id;
         }
@@ -128,6 +147,9 @@ try {
     } else {
         $stmt = $conn->prepare($count_query);
         $params = [];
+        if (!empty($status_filter)) {
+            $params[] = $status_filter;
+        }
         if ($team_id > 0) {
             $params[] = $team_id;
         }
@@ -141,6 +163,9 @@ try {
     if (!empty($search)) {
         $stmt = $conn->prepare($query);
         $params = [$search_term, $search_term, $search_term, $search_term];
+        if (!empty($status_filter)) {
+            $params[] = $status_filter;
+        }
         if ($team_id > 0) {
             $params[] = $team_id;
         }
@@ -151,6 +176,9 @@ try {
     } else {
         $stmt = $conn->prepare($query);
         $params = [];
+        if (!empty($status_filter)) {
+            $params[] = $status_filter;
+        }
         if ($team_id > 0) {
             $params[] = $team_id;
         }
@@ -533,11 +561,18 @@ body {
 }
 
 .search-bar {
-    position: relative;
-    width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 520px;
 }
 
-.search-bar input {
+.search-input-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.search-input-wrap input {
     width: 100%;
     padding: 15px 50px 15px 20px;
     border: 2px solid #e0e0e0;
@@ -547,14 +582,14 @@ body {
     background: #f8f9fa;
 }
 
-.search-bar input:focus {
+.search-input-wrap input:focus {
     outline: none;
     border-color: var(--primary);
     background: white;
     box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
 }
 
-.search-bar button {
+.search-input-wrap button {
     position: absolute;
     right: 15px;
     top: 50%;
@@ -564,6 +599,24 @@ body {
     color: var(--primary);
     font-size: 18px;
     cursor: pointer;
+}
+
+.status-filter-select {
+    min-width: 140px;
+    padding: 13px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #f8f9fa;
+    color: var(--dark);
+    transition: var(--transition);
+}
+
+.status-filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
 }
 
 .action-buttons {
@@ -758,6 +811,44 @@ body {
     background: linear-gradient(135deg, var(--secondary), #FFEC8B);
     color: var(--primary);
     min-width: 80px;
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 90px;
+    text-transform: uppercase;
+}
+
+.status-badge.active {
+    background: rgba(46, 125, 50, 0.12);
+    color: #2E7D32;
+    border: 1px solid rgba(46, 125, 50, 0.25);
+}
+
+.status-badge.inactive {
+    background: rgba(108, 117, 125, 0.12);
+    color: #6C757D;
+    border: 1px solid rgba(108, 117, 125, 0.25);
+}
+
+.status-badge.injured {
+    background: rgba(211, 47, 47, 0.12);
+    color: #D32F2F;
+    border: 1px solid rgba(211, 47, 47, 0.25);
+}
+
+.status-badge.suspended {
+    background: rgba(249, 168, 38, 0.15);
+    color: #A76400;
+    border: 1px solid rgba(249, 168, 38, 0.25);
 }
 
 .date-cell {
@@ -1033,6 +1124,12 @@ body {
     }
 
     .search-bar {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .status-filter-select {
         width: 100%;
     }
 
@@ -1337,9 +1434,16 @@ body {
         <?php if ($team_id > 0): ?>
             <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
         <?php endif; ?>
-        <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
-        <button type="submit"><i class="fas fa-search"></i></button>
-            </form>
+        <select name="status" class="status-filter-select" onchange="this.form.submit()">
+            <option value="">Semua Status</option>
+            <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Aktif</option>
+            <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Non-aktif</option>
+        </select>
+        <div class="search-input-wrap">
+            <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </div>
+    </form>
             
             <div class="action-buttons">
                 <a href="player/add.php" class="btn btn-primary">
@@ -1389,6 +1493,7 @@ body {
                         <th>NISN</th>
                         <th>NIK</th>
                         <th>Event</th>
+                        <th>Status</th>
                         <th>Tgl Daftar</th>
                         <th>Action</th>
                     </tr>
@@ -1481,6 +1586,20 @@ body {
                                     -
                                 <?php endif; ?>
                             </td>
+                            <td class="status-cell">
+                                <?php
+                                $status = strtolower($player['status'] ?? 'inactive');
+                                $status_map = [
+                                    'active' => 'Aktif',
+                                    'inactive' => 'Non-aktif',
+                                    'injured' => 'Cedera',
+                                    'suspended' => 'Skorsing'
+                                ];
+                                ?>
+                                <span class="status-badge <?php echo htmlspecialchars($status); ?>">
+                                    <?php echo htmlspecialchars($status_map[$status] ?? ucfirst($status)); ?>
+                                </span>
+                            </td>
                             <td class="date-cell">
                                 <?php echo date('d/m/Y', strtotime($player['created_at'])); ?>
                             </td>
@@ -1507,7 +1626,7 @@ body {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="12" style="text-align: center; padding: 40px;">
+                            <td colspan="13" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
                                     <div class="empty-icon">
                                         <i class="fas fa-user-slash"></i>
@@ -1528,9 +1647,18 @@ body {
 
         <!-- PAGINATION -->
         <?php if ($total_pages > 1): ?>
+        <?php
+            $pagination_params = ['search' => $search];
+            if ($team_id > 0) {
+                $pagination_params['team_id'] = $team_id;
+            }
+            if (!empty($status_filter)) {
+                $pagination_params['status'] = $status_filter;
+            }
+        ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($pagination_params, ['page' => $page - 1])); ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-left"></i>
                 </a>
@@ -1546,14 +1674,14 @@ body {
             
             for ($i = $start_page; $i <= $end_page; $i++): 
             ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($pagination_params, ['page' => $i])); ?>" 
                    class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
                    <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($pagination_params, ['page' => $page + 1])); ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-right"></i>
                 </a>
@@ -1707,9 +1835,12 @@ function deletePlayer(playerId) {
 }
 
 function exportPlayers() {
-    // Create export URL with current search parameters
-    const search = new URLSearchParams(window.location.search).get('search') || '';
-    window.location.href = `player/export.php?search=${encodeURIComponent(search)}`;
+    // Create export URL with current filter parameters
+    const params = new URLSearchParams(window.location.search);
+    const search = params.get('search') || '';
+    const status = params.get('status') || '';
+    const teamId = params.get('team_id') || '';
+    window.location.href = `player/export.php?search=${encodeURIComponent(search)}&status=${encodeURIComponent(status)}&team_id=${encodeURIComponent(teamId)}`;
 }
 </script>
 </body>
