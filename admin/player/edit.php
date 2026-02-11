@@ -1502,17 +1502,23 @@ select.form-control {
 
                         <div class="form-group">
                             <label for="sport_type">Event <span class="required">*</span></label>
+                            <?php
+                            $selected_sport_type = $_POST['sport_type'] ?? ($player['sport_type'] ?? '');
+                            ?>
                             <select id="sport_type" name="sport_type" class="form-control" required>
-                                <option value="" selected>Pilih Event</option>
+                                <option value="" <?php echo $selected_sport_type === '' ? 'selected' : ''; ?>>Pilih Event</option>
                                 <?php 
                                 $sports = [
                                         'LIGA AAFI BATAM U-13 PUTRA 2026',
                                         'LIGA AAFI BATAM U-16 PUTRA 2026',
                                         'LIGA AAFI BATAM U-16 PUTRI 2026'
                                     ];
+                                if ($selected_sport_type !== '' && !in_array($selected_sport_type, $sports, true)) {
+                                    $sports[] = $selected_sport_type;
+                                }
                                 foreach ($sports as $sport_option): 
                                 ?>
-                                    <option value="<?php echo $sport_option; ?>">
+                                    <option value="<?php echo htmlspecialchars($sport_option); ?>" <?php echo $selected_sport_type === $sport_option ? 'selected' : ''; ?>>
                                         <?php echo $sport_option; ?>
                                     </option>
                                 <?php endforeach; ?>
