@@ -73,7 +73,7 @@ require_once 'includes/header.php';
                 <h1>Hubungi Kami</h1>
                 <p class="contact-subtitle">Tim MGP siap membantu operasional dan informasi event di seluruh Indonesia. Respons rata-rata 1x24 jam kerja.</p>
                 <div class="contact-actions">
-                    <a class="contact-action primary" href="mailto:info@futscore.com">
+                    <a class="contact-action primary" href="https://mail.google.com/mail/?view=cm&fs=1&to=info@mgp.com&su=Assalamualaikum%2C%20Pak." target="_blank" rel="noopener noreferrer">
                         <i class="fas fa-envelope"></i> Kirim Email
                     </a>
                 </div>
@@ -104,7 +104,7 @@ require_once 'includes/header.php';
                             <div>
                                 <h3>Email</h3>
                                 <p>info@mgp.com</p>
-                                <a href="mailto:info@mgp.com" class="contact-link">Kirim Email</a>
+                                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=info@mgp.com&su=Assalamualaikum%2C%20Pak." class="contact-link" target="_blank" rel="noopener noreferrer">Kirim Email</a>
                             </div>
                         </div>
                     </div>

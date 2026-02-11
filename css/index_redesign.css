@@ -1713,6 +1713,18 @@
     color: white;
 }
 
+.share-btn-modal.copy {
+    background: var(--navy);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.share-btn-modal.copy.copied {
+    background: var(--green);
+}
+
 .share-btn-modal:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

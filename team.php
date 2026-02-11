@@ -337,6 +337,8 @@ if ($teamId > 0) {
                     }
                 }
                 
+                const teamShareName = <?php echo json_encode($team['name'] ?? ''); ?>;
+
                 // Initialize on page load
                 document.addEventListener('DOMContentLoaded', function() {
                     // Load players by default
@@ -368,6 +370,37 @@ if ($teamId > 0) {
                                 loadPlayers();
                             }
                         });
+                    });
+
+                    // Share modal handlers
+                    const teamShareModal = document.getElementById('teamShareModal');
+                    const teamShareClose = document.getElementById('closeTeamShareModal');
+                    const teamShareCopy = document.getElementById('teamShareCopy');
+
+                    if (teamShareClose) {
+                        teamShareClose.addEventListener('click', closeTeamShareModal);
+                    }
+
+                    if (teamShareModal) {
+                        teamShareModal.addEventListener('click', function(event) {
+                            if (event.target === teamShareModal) {
+                                closeTeamShareModal();
+                            }
+                        });
+                    }
+
+                    if (teamShareCopy) {
+                        teamShareCopy.addEventListener('click', function() {
+                            copyTeamShareLink(teamShareCopy);
+                        });
+                    }
+
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            if (teamShareModal && teamShareModal.style.display === 'block') {
+                                closeTeamShareModal();
+                            }
+                        }
                     });
                 });
                 
@@ -613,18 +646,109 @@ if ($teamId > 0) {
                     `;
                 }
                 
-                function shareTeam() {
-                    if (navigator.share) {
-                        navigator.share({
-                            title: '<?php echo htmlspecialchars($team['name']); ?>',
-                            text: 'Check out <?php echo htmlspecialchars($team['name']); ?> on Futscore',
-                            url: window.location.href
+                function buildTeamShareText() {
+                    const name = teamShareName || 'this team';
+                    return `Check out ${name} on Futscore`;
+                }
+
+                function updateTeamShareLinks() {
+                    const shareUrl = window.location.href;
+                    const encodedUrl = encodeURIComponent(shareUrl);
+                    const encodedText = encodeURIComponent(buildTeamShareText());
+                    const encodedWhatsapp = encodeURIComponent(`${buildTeamShareText()}\n${shareUrl}`);
+
+                    const whatsappLink = document.getElementById('teamShareWhatsapp');
+                    const facebookLink = document.getElementById('teamShareFacebook');
+                    const telegramLink = document.getElementById('teamShareTelegram');
+                    const xLink = document.getElementById('teamShareX');
+
+                    if (whatsappLink) {
+                        whatsappLink.href = `https://wa.me/?text=${encodedWhatsapp}`;
+                    }
+                    if (facebookLink) {
+                        facebookLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+                    }
+                    if (telegramLink) {
+                        telegramLink.href = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+                    }
+                    if (xLink) {
+                        xLink.href = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+                    }
+                }
+
+                function openTeamShareModal() {
+                    const modal = document.getElementById('teamShareModal');
+                    if (!modal) return;
+                    updateTeamShareLinks();
+                    modal.style.display = 'block';
+                    modal.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeTeamShareModal() {
+                    const modal = document.getElementById('teamShareModal');
+                    if (!modal) return;
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = 'auto';
+                }
+
+                function showCopyFeedback(button) {
+                    if (!button) return;
+                    if (!button.dataset.defaultHtml) {
+                        button.dataset.defaultHtml = button.innerHTML;
+                    }
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        if (button.dataset.defaultHtml) {
+                            button.innerHTML = button.dataset.defaultHtml;
+                        }
+                        button.classList.remove('copied');
+                    }, 1800);
+                }
+
+                function fallbackCopyText(text) {
+                    const tempInput = document.createElement('textarea');
+                    tempInput.value = text;
+                    tempInput.setAttribute('readonly', '');
+                    tempInput.style.position = 'absolute';
+                    tempInput.style.left = '-9999px';
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    let success = false;
+                    try {
+                        success = document.execCommand('copy');
+                    } catch (err) {
+                        success = false;
+                    }
+                    document.body.removeChild(tempInput);
+                    return success;
+                }
+
+                function copyTeamShareLink(button) {
+                    const shareUrl = window.location.href;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(shareUrl).then(() => {
+                            showCopyFeedback(button);
+                        }).catch(() => {
+                            if (fallbackCopyText(shareUrl)) {
+                                showCopyFeedback(button);
+                            } else {
+                                alert('Unable to copy link.');
+                            }
                         });
                     } else {
-                        // Fallback: copy to clipboard
-                        navigator.clipboard.writeText(window.location.href);
-                        alert('Link copied to clipboard!');
+                        if (fallbackCopyText(shareUrl)) {
+                            showCopyFeedback(button);
+                        } else {
+                            alert('Unable to copy link.');
+                        }
                     }
+                }
+
+                function shareTeam() {
+                    openTeamShareModal();
                 }
                 
                 function escapeHtml(text) {
@@ -702,6 +826,41 @@ if ($teamId > 0) {
                 </div>
             <?php endif; ?>
         </div>
+
+        <?php if ($teamId > 0): ?>
+        <!-- Team Share Modal -->
+        <div class="schedule-modal team-share-modal" id="teamShareModal" aria-hidden="true" role="dialog" aria-modal="true">
+            <div class="schedule-modal-content">
+                <div class="schedule-modal-header">
+                    <h3>Share Team</h3>
+                    <button class="schedule-modal-close" id="closeTeamShareModal">&times;</button>
+                </div>
+                <div class="schedule-modal-body">
+                    <div class="schedule-detail-content">
+                        <h4 class="schedule-event-title"><?php echo htmlspecialchars($team['name'] ?? ''); ?></h4>
+                        <p class="schedule-round">Pilih platform untuk berbagi profil tim ini.</p>
+                        <div class="share-buttons-grid">
+                            <a href="#" target="_blank" class="share-btn-modal whatsapp" id="teamShareWhatsapp">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="#" target="_blank" class="share-btn-modal facebook" id="teamShareFacebook">
+                                <i class="fab fa-facebook"></i> Facebook
+                            </a>
+                            <a href="#" target="_blank" class="share-btn-modal telegram" id="teamShareTelegram">
+                                <i class="fab fa-telegram"></i> Telegram
+                            </a>
+                            <a href="#" target="_blank" class="share-btn-modal twitter" id="teamShareX">
+                                <i class="fab fa-twitter"></i> X
+                            </a>
+                            <button type="button" class="share-btn-modal copy" id="teamShareCopy">
+                                <i class="far fa-copy"></i> Copy Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <footer class="dashboard-footer">
             <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
