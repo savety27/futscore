@@ -17,8 +17,6 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $player_id = (int)$_GET['id'];
 
 try {
-    $conn->beginTransaction();
-
     // First get player data to delete files
     $stmt = $conn->prepare("SELECT photo, ktp_image, kk_image, birth_cert_image, diploma_image FROM players WHERE id = ?");
     $stmt->execute([$player_id]);
@@ -65,21 +63,6 @@ try {
         // Table mungkin tidak ada, tidak perlu khawatir
     }
 
-    // Hapus relasi yang memiliki FK langsung ke players
-    try {
-        $stmt = $conn->prepare("DELETE FROM goals WHERE player_id = ?");
-        $stmt->execute([$player_id]);
-    } catch (Exception $e) {
-        // Table mungkin tidak ada, tidak perlu khawatir
-    }
-
-    try {
-        $stmt = $conn->prepare("DELETE FROM lineups WHERE player_id = ?");
-        $stmt->execute([$player_id]);
-    } catch (Exception $e) {
-        // Table mungkin tidak ada, tidak perlu khawatir
-    }
-
     // Juga hapus dari tabel player_documents dan player_skills jika ada
     try {
         $stmt = $conn->prepare("DELETE FROM player_documents WHERE player_id = ?");
@@ -100,16 +83,11 @@ try {
     $stmt->execute([$player_id]);
     
     if ($stmt->rowCount() > 0) {
-        $conn->commit();
         echo json_encode(['success' => true, 'message' => 'Player berhasil dihapus permanen']);
     } else {
-        $conn->commit();
         echo json_encode(['success' => false, 'message' => 'Player tidak ditemukan']);
     }
 } catch (Exception $e) {
-    if ($conn->inTransaction()) {
-        $conn->rollBack();
-    }
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
