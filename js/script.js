@@ -737,15 +737,19 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('JavaScript initialization complete');
 });
 
-// Smooth scrolling for anchor links
+// Smooth scrolling only for in-page anchor links (do not block external share links)
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
+        const targetId = this.getAttribute('href') || '';
+
+        // Ignore placeholder (#) and non-anchor targets.
+        if (targetId === '#' || !targetId.startsWith('#')) {
+            return;
+        }
 
         const targetElement = document.querySelector(targetId);
         if (targetElement) {
+            e.preventDefault();
             window.scrollTo({
                 top: targetElement.offsetTop - 100,
                 behavior: 'smooth'
