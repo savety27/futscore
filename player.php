@@ -142,7 +142,7 @@ function maskNIK($nik) {
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
                     <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
@@ -245,7 +245,7 @@ function maskNIK($nik) {
                                     <?php if (!empty($player_detail['team_events_array'])): ?>
                                         <div class="event-badges-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
                                             <?php foreach ($player_detail['team_events_array'] as $event_name): ?>
-                                                <span class="event-badge" style="font-size: 11px;"><?php echo htmlspecialchars($event_name); ?></span>
+                                                <span class="event-badge" style="font-size: 11px; background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd;"><?php echo htmlspecialchars($event_name); ?></span>
                                             <?php endforeach; ?>
                                         </div>
                                     <?php else: ?>
@@ -356,21 +356,12 @@ function maskNIK($nik) {
                                             $p_events = $p_team['events_array'];
                                         }
                                     }
-                                    
-                                    // Merge player specific sport_type if not already in list
-                                    if (!empty($p['sport_type']) && !in_array($p['sport_type'], $p_events)) {
-                                        $p_events[] = $p['sport_type'];
-                                    }
+                                    $eventLabel = !empty($p['sport_type']) ? $p['sport_type'] : (!empty($p_events[0]) ? $p_events[0] : '');
                                     ?>
 
-                                    <?php if (!empty($p_events)): ?>
+                                    <?php if (!empty($eventLabel)): ?>
                                         <div class="team-events-badges" style="display: flex; flex-wrap: wrap; gap: 4px;">
-                                            <?php foreach (array_slice($p_events, 0, 1) as $event_name): ?>
-                                                <span class="event-badge" style="font-size: 9px; padding: 1px 6px;"><?php echo htmlspecialchars($event_name); ?></span>
-                                            <?php endforeach; ?>
-                                            <?php if (count($p_events) > 1): ?>
-                                                <span class="event-badge" style="font-size: 9px; padding: 1px 6px;">+<?php echo count($p_events) - 1; ?></span>
-                                            <?php endif; ?>
+                                            <span class="event-badge" style="font-size: 9px; padding: 1px 6px; background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd;"><?php echo htmlspecialchars($eventLabel); ?></span>
                                         </div>
                                     <?php else: ?>
                                         -
