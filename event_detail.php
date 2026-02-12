@@ -48,12 +48,12 @@ if (!$event) {
 function getStatusBadge($status) {
     $status = strtolower($status ?? '');
     $badges = [
-        'open' => '<span class="status-badge status-open">Open</span>',
-        'accepted' => '<span class="status-badge status-accepted">Accepted</span>',
-        'completed' => '<span class="status-badge status-completed">Completed</span>',
-        'rejected' => '<span class="status-badge status-rejected">Rejected</span>',
-        'expired' => '<span class="status-badge status-expired">Expired</span>',
-        'cancelled' => '<span class="status-badge status-cancelled">Cancelled</span>'
+        'open' => '<span class="status-badge status-open">Terbuka</span>',
+        'accepted' => '<span class="status-badge status-accepted">Diterima</span>',
+        'completed' => '<span class="status-badge status-completed">Selesai</span>',
+        'rejected' => '<span class="status-badge status-rejected">Ditolak</span>',
+        'expired' => '<span class="status-badge status-expired">Kedaluwarsa</span>',
+        'cancelled' => '<span class="status-badge status-cancelled">Dibatalkan</span>'
     ];
     return $badges[$status] ?? '<span class="status-badge status-default">' . ucfirst($status ?? '') . '</span>';
 }
@@ -61,14 +61,14 @@ function getStatusBadge($status) {
 function getMatchStatusBadge($match_status) {
     $match_status = strtolower($match_status ?? '');
     $badges = [
-        'scheduled' => '<span class="status-badge match-scheduled">Scheduled</span>',
-        'ongoing' => '<span class="status-badge match-ongoing">Ongoing</span>',
-        'completed' => '<span class="status-badge match-completed">Completed</span>',
-        'postponed' => '<span class="status-badge match-postponed">Postponed</span>',
-        'cancelled' => '<span class="status-badge match-cancelled">Cancelled</span>',
-        'abandoned' => '<span class="status-badge match-abandoned">Abandoned</span>'
+        'scheduled' => '<span class="status-badge match-scheduled">Terjadwal</span>',
+        'ongoing' => '<span class="status-badge match-ongoing">Berlangsung</span>',
+        'completed' => '<span class="status-badge match-completed">Selesai</span>',
+        'postponed' => '<span class="status-badge match-postponed">Ditunda</span>',
+        'cancelled' => '<span class="status-badge match-cancelled">Dibatalkan</span>',
+        'abandoned' => '<span class="status-badge match-abandoned">Dihentikan</span>'
     ];
-    return $badges[$match_status] ?? '<span class="status-badge match-default">' . ucfirst($match_status ?? 'Not Set') . '</span>';
+    return $badges[$match_status] ?? '<span class="status-badge match-default">' . ucfirst($match_status ?? 'Belum Diatur') . '</span>';
 }
 
 // Build timeline data
@@ -149,7 +149,7 @@ usort($timeline_events, function($a, $b) {
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -165,37 +165,37 @@ usort($timeline_events, function($a, $b) {
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -207,7 +207,7 @@ usort($timeline_events, function($a, $b) {
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>Event Detail</h1>
+                    <h1>Detail Event</h1>
                     <p class="header-subtitle">Rangkuman lengkap detail pertandingan, status, dan timeline event.</p>
                 </div>
                 <div class="header-actions">
@@ -292,7 +292,7 @@ usort($timeline_events, function($a, $b) {
                         <div class="draw-title">Pertandingan Berakhir Seri</div>
                         <div class="draw-text">
                             <i class="fas fa-handshake"></i>
-                            DRAW
+                            SERI
                             <i class="fas fa-handshake"></i>
                         </div>
                     </div>
@@ -300,7 +300,7 @@ usort($timeline_events, function($a, $b) {
 
                 <!-- Information Grid -->
                 <div class="info-grid">
-                    <!-- Event Information -->
+                    <!-- Informasi Event -->
                     <div class="info-card">
                         <div class="info-title">
                             <i class="fas fa-info-circle"></i> Informasi Event
@@ -348,17 +348,17 @@ usort($timeline_events, function($a, $b) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Status Information -->
+                    <!-- Informasi Status -->
                     <div class="info-card">
                         <div class="info-title">
                             <i class="fas fa-flag"></i> Status Pertandingan
                         </div>
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-tasks"></i> Challenge Status</span>
+                            <span class="info-label"><i class="fas fa-tasks"></i> Status Tantangan</span>
                             <div class="info-value"><?php echo getStatusBadge($event['status']); ?></div>
                         </div>
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-play-circle"></i> Match Status</span>
+                            <span class="info-label"><i class="fas fa-play-circle"></i> Status Pertandingan</span>
                             <div class="info-value"><?php echo getMatchStatusBadge($event['match_status']); ?></div>
                         </div>
                         <?php if ($event['result_entered_at']): ?>
@@ -422,10 +422,10 @@ usort($timeline_events, function($a, $b) {
                 </div>
                 <?php endif; ?>
 
-                <!-- Timeline -->
+                <!-- Linimasa -->
                 <div class="timeline-section">
                     <div class="timeline-header">
-                        <i class="fas fa-history"></i> Timeline Event
+                        <i class="fas fa-history"></i> Linimasa Event
                     </div>
                     
                     <div class="timeline">
@@ -451,8 +451,8 @@ usort($timeline_events, function($a, $b) {
          <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

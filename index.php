@@ -24,7 +24,7 @@ $pageTitle = "Home";
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -40,37 +40,37 @@ $pageTitle = "Home";
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>" class="active"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>" class="active"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -82,12 +82,12 @@ $pageTitle = "Home";
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>Home Dashboard</h1>
-                    <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan tim terbaru dalam satu tampilan yang rapi.</p>
+                    <h1>Beranda</h1>
+                    <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan tim terbaru dalam satu tampilan.</p>
                 </div>
                 <div class="header-actions">
                     <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Lihat Event</a>
-                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Team</a>
+                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
                 </div>
             </div>
         </header>
@@ -97,12 +97,12 @@ $pageTitle = "Home";
 <!-- Match Summary Cards dengan Horizontal Scroll -->
 <div class="container section-container section-elevated">
     <div class="section-header">
-        <h2 class="section-title">LATEST MATCHES</h2>
+        <h2 class="section-title">PERTANDINGAN TERBARU</h2>
         <div class="scroll-controls">
-            <button class="scroll-btn scroll-prev" aria-label="Scroll left">
+            <button class="scroll-btn scroll-prev" aria-label="Gulir ke kiri">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <button class="scroll-btn scroll-next" aria-label="Scroll right">
+            <button class="scroll-btn scroll-next" aria-label="Gulir ke kanan">
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
@@ -166,7 +166,7 @@ $pageTitle = "Home";
                     
                     <div class="match-details">
                         <span class="match-venue"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
-                        <button class="btn-details" data-match-id="<?php echo $match['id']; ?>">View Details</button>
+                        <button class="btn-details" data-match-id="<?php echo $match['id']; ?>">Lihat Detail</button>
                     </div>
                 </div>
             </div>
@@ -178,10 +178,10 @@ $pageTitle = "Home";
 <!-- News Section -->
 <div class="container section-container">
     <div class="section-header">
-        <h2 class="section-title">NEWS</h2>
+        <h2 class="section-title">BERITA</h2>
         <div class="section-tabs">
-            <button class="tab-button active" data-tab="new-news">New</button>
-            <button class="tab-button" data-tab="popular-news">Popular</button>
+            <button class="tab-button active" data-tab="new-news">Baru</button>
+            <button class="tab-button" data-tab="popular-news">Populer</button>
         </div>
     </div>
     
@@ -353,10 +353,10 @@ $pageTitle = "Home";
 <!-- Match Section - IMPROVED -->
 <div class="container section-container match-section">
     <div class="section-header">
-        <h2 class="section-title">MATCHES</h2>
+        <h2 class="section-title">PERTANDINGAN</h2>
         <div class="section-tabs">
-            <button class="tab-button active" data-tab="match-schedule">Schedule</button>
-            <button class="tab-button" data-tab="match-result">Results</button>
+            <button class="tab-button active" data-tab="match-schedule">Jadwal</button>
+            <button class="tab-button" data-tab="match-result">Hasil</button>
         </div>
     </div>
     
@@ -421,7 +421,7 @@ $pageTitle = "Home";
                 
                 <div class="match-card-action">
                     <button class="btn-view-premium btn-view-schedule" data-match-id="<?php echo $match['id']; ?>">
-                        <i class="fas fa-eye"></i> View Match
+                        <i class="fas fa-eye"></i> Lihat Detail
                     </button>
                 </div>
             </div>
@@ -431,7 +431,7 @@ $pageTitle = "Home";
         
         <div class="see-more-section">
             <a href="all.php?status=schedule" class="btn-see-more-premium">
-                <span>See All Schedule</span>
+                <span>Lihat Semua Jadwal</span>
                 <i class="fas fa-arrow-right"></i>
             </a>
         </div>
@@ -493,7 +493,7 @@ $pageTitle = "Home";
                 
                 <div class="match-card-action">
                     <button class="btn-view-premium btn-view-result" data-match-id="<?php echo $match['id']; ?>">
-                        <i class="fas fa-chart-bar"></i> Match Report
+                        <i class="fas fa-chart-bar"></i> Laporan Pertandingan
                     </button>
                 </div>
             </div>
@@ -503,7 +503,7 @@ $pageTitle = "Home";
         
         <div class="see-more-section">
             <a href="all.php?status=result" class="btn-see-more-premium">
-                <span>See All Results</span>
+                <span>Lihat Semua Hasil</span>
                 <i class="fas fa-arrow-right"></i>
             </a>
         </div>
@@ -513,9 +513,9 @@ $pageTitle = "Home";
 <!-- Player Section -->
 <div class="container section-container">
     <div class="section-header">
-        <h2 class="section-title">PLAYERS</h2>
+        <h2 class="section-title">PEMAIN</h2>
         <div class="section-tabs">
-            <button class="tab-button active" data-tab="new-added">New Added</button>
+            <button class="tab-button active" data-tab="new-added">Baru Ditambahkan</button>
             <button class="tab-button" data-tab="transfer">Transfer</button>
 
         </div>
@@ -552,7 +552,7 @@ $pageTitle = "Home";
                     <?php echo htmlspecialchars($player['team_name']); ?> #<?php echo htmlspecialchars($player['jersey_number']); ?>
                 </p>
                 <p class="player-info">
-                    <?php echo htmlspecialchars($player['position']); ?> | <?php echo htmlspecialchars($player['age']); ?> years
+                    <?php echo htmlspecialchars($player['position']); ?> | <?php echo htmlspecialchars($player['age']); ?> Tahun
                 </p>
             </div>
             <?php endforeach; ?>
@@ -574,8 +574,8 @@ $pageTitle = "Home";
                 $playerPhoto = !empty($transfer['player_photo']) ? $transfer['player_photo'] : 'default-player.jpg';
                 $fromLogo = !empty($transfer['from_team_logo']) ? $transfer['from_team_logo'] : null;
                 $toLogo = !empty($transfer['to_team_logo']) ? $transfer['to_team_logo'] : null;
-                $fromTeam = $transfer['from_team_name'] ?? 'Free Agent';
-                $toTeam = $transfer['to_team_name'] ?? 'Free Agent';
+                $fromTeam = $transfer['from_team_name'] ?? 'Tanpa Klub';
+                $toTeam = $transfer['to_team_name'] ?? 'Tanpa Klub';
                 $transferDate = $transfer['transfer_date'] ?? ($transfer['created_at'] ?? null);
                 
                 $playerPhotoPath = SITE_URL . '/images/players/' . $playerPhoto;
@@ -587,7 +587,7 @@ $pageTitle = "Home";
                         <div class="transfer-player-photo">
                             <?php if (!empty($transfer['player_photo'])): ?>
                                 <img src="<?php echo $playerPhotoPath; ?>" 
-                                     alt="<?php echo htmlspecialchars($transfer['player_name'] ?? 'Player'); ?>"
+                                     alt="<?php echo htmlspecialchars($transfer['player_name'] ?? 'Pemain'); ?>"
                                      class="transfer-player-img"
                                      onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="default-photo" style="display: none;">
@@ -600,7 +600,7 @@ $pageTitle = "Home";
                             <?php endif; ?>
                         </div>
                         <div class="transfer-player-details">
-                            <h3 class="transfer-player-name"><?php echo htmlspecialchars($transfer['player_name'] ?? 'Unknown Player'); ?></h3>
+                            <h3 class="transfer-player-name"><?php echo htmlspecialchars($transfer['player_name'] ?? 'Pemain Tidak Diketahui'); ?></h3>
                             <?php if (!empty($transferDate)): ?>
                                 <div class="transfer-date-badge">
                                     <i class="far fa-calendar-alt"></i> <?php echo formatDate($transferDate); ?>
@@ -611,7 +611,7 @@ $pageTitle = "Home";
                     
                     <div class="transfer-flow">
                         <div class="transfer-team">
-                            <span class="transfer-team-label">From</span>
+                            <span class="transfer-team-label">Dari</span>
                             <img src="<?php echo $fromLogoPath; ?>" 
                                  alt="<?php echo htmlspecialchars($fromTeam ?? ''); ?>" 
                                  class="transfer-team-logo"
@@ -624,7 +624,7 @@ $pageTitle = "Home";
                         </div>
                         
                         <div class="transfer-team">
-                            <span class="transfer-team-label">To</span>
+                            <span class="transfer-team-label">Ke</span>
                             <img src="<?php echo $toLogoPath; ?>" 
                                  alt="<?php echo htmlspecialchars($toTeam ?? ''); ?>" 
                                  class="transfer-team-logo"
@@ -634,7 +634,7 @@ $pageTitle = "Home";
                     </div>
                     
                     <div class="transfer-footer">
-                        <span class="transfer-status">Confirmed</span>
+                        <span class="transfer-status">Dikonfirmasi</span>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -648,10 +648,10 @@ $pageTitle = "Home";
 <!-- Team Section -->
 <div class="container section-container">
     <div class="section-header">
-        <h2 class="section-title">TEAMS</h2>
+        <h2 class="section-title">TIM</h2>
         <div class="section-tabs">
-            <button class="tab-button active" data-tab="recent-winner">Recent Winners</button>
-            <button class="tab-button" data-tab="new-team">New Added</button>
+            <button class="tab-button active" data-tab="recent-winner">Menang Terbaru</button>
+            <button class="tab-button" data-tab="new-team">Tim Baru</button>
         </div>
     </div>
     
@@ -687,7 +687,7 @@ $pageTitle = "Home";
                     </div>
                 </div>
                 <div class="winner-footer">
-                    <span class="view-profile">View Profile <i class="fas fa-arrow-right"></i></span>
+                    <span class="view-profile">Lihat Profil <i class="fas fa-arrow-right"></i></span>
                 </div>
             </a>
             <?php endforeach; ?>
@@ -716,7 +716,7 @@ $pageTitle = "Home";
                          onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                 </div>
                 <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
-                <p class="team-label">New Team</p>
+                <p class="team-label">Tim Baru</p>
             </a>
             <?php endforeach; ?>
         </div>
@@ -730,7 +730,7 @@ $pageTitle = "Home";
         <div class="match-modal-header premium-header">
             <div class="header-content">
                 <i class="fas fa-trophy header-icon"></i>
-                <h3 id="matchModalTitle">Match Details</h3>
+                <h3 id="matchModalTitle">Detail Pertandingan</h3>
             </div>
             <button class="match-modal-close" id="closeMatchModal">
                 <i class="fas fa-times"></i>
@@ -740,10 +740,10 @@ $pageTitle = "Home";
         <div class="match-modal-body">
             <div class="match-tabs-premium">
                 <button class="match-tab active" data-tab="goals">
-                    <i class="fas fa-futbol"></i> Goals
+                    <i class="fas fa-futbol"></i> Gol
                 </button>
                 <button class="match-tab" data-tab="lineups">
-                    <i class="fas fa-users"></i> Lineups
+                    <i class="fas fa-users"></i> Susunan Pemain
                 </button>
             </div>
             
@@ -782,13 +782,13 @@ $pageTitle = "Home";
             </div>
             
             <div class="match-tab-content active" id="goalsContent">
-                <h4>Goals</h4>
+                <h4>Gol</h4>
                 <div class="goals-list" id="goalsList"></div>
             </div>
             
             
             <div class="match-tab-content" id="lineupsContent">
-                <h4>Lineups</h4>
+                <h4>Susunan Pemain</h4>
                 <div class="lineups-container">
                     <div class="team-lineup" id="team1Lineup">
                         <h5 id="team1NameLineup"></h5>
@@ -802,8 +802,8 @@ $pageTitle = "Home";
                 </div>
                 
                 <div class="player-search">
-                    <input type="text" id="playerSearch" placeholder="Search by Player ID">
-                    <button id="searchPlayerBtn">Search</button>
+                    <input type="text" id="playerSearch" placeholder="Cari berdasarkan ID Pemain">
+                    <button id="searchPlayerBtn">Cari</button>
                 </div>
             </div>
         </div>
@@ -814,7 +814,7 @@ $pageTitle = "Home";
 <div class="schedule-modal" id="scheduleModal">
     <div class="schedule-modal-content">
         <div class="schedule-modal-header">
-            <h3 id="scheduleModalTitle">Schedule Details</h3>
+            <h3 id="scheduleModalTitle">Detail Jadwal</h3>
             <button class="schedule-modal-close" id="closeScheduleModal">&times;</button>
         </div>
         
@@ -826,8 +826,8 @@ $pageTitle = "Home";
         <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

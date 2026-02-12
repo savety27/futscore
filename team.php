@@ -67,7 +67,7 @@ if ($teamId > 0) {
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -83,37 +83,37 @@ if ($teamId > 0) {
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php" class="active"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php" class="active"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -129,7 +129,7 @@ if ($teamId > 0) {
                         <?php if ($teamId > 0): ?>
                             <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                         <?php else: ?>
-                            Team Directory
+                            Direktori Tim
                         <?php endif; ?>
                     </h1>
                     <p class="header-subtitle">
@@ -143,7 +143,7 @@ if ($teamId > 0) {
                 <div class="header-actions">
                     <?php if ($teamId > 0): ?>
                         <a href="team.php" class="btn-secondary"><i class="fas fa-arrow-left"></i> Semua Tim</a>
-                        <button class="btn-primary" type="button" onclick="shareTeam()"><i class="fas fa-share-alt"></i> Share Team</button>
+                        <button class="btn-primary" type="button" onclick="shareTeam()"><i class="fas fa-share-alt"></i> Bagikan Tim</button>
                     <?php else: ?>
                         <a href="event.php" class="btn-secondary"><i class="fas fa-calendar-alt"></i> Lihat Event</a>
                         <a href="player.php" class="btn-primary"><i class="fas fa-users"></i> Lihat Player</a>
@@ -157,13 +157,13 @@ if ($teamId > 0) {
                 <!-- TEAM DETAIL VIEW -->
                 <div class="container section-container section-elevated team-profile-section">
                     <div class="section-header">
-                        <h2 class="section-title">TEAM PROFILE</h2>
+                        <h2 class="section-title">PROFIL TIM</h2>
                         <div class="section-tabs">
-                            <span class="team-status-pill"><i class="fas fa-shield-alt"></i> Verified</span>
-                            <span class="team-status-pill"><i class="fas fa-users"></i> <?php echo count($players); ?> Players</span>
-                            <span class="team-status-pill"><i class="fas fa-user-tie"></i> <?php echo count($staff); ?> Staff</span>
+                            <span class="team-status-pill"><i class="fas fa-shield-alt"></i> Terverifikasi</span>
+                            <span class="team-status-pill"><i class="fas fa-users"></i> <?php echo count($players); ?> Pemain</span>
+                            <span class="team-status-pill"><i class="fas fa-user-tie"></i> <?php echo count($staff); ?> Staf</span>
                             <?php if (!empty($events)): ?>
-                                <span class="team-status-pill"><i class="fas fa-calendar-alt"></i> <?php echo count($events); ?> Events</span>
+                                <span class="team-status-pill"><i class="fas fa-calendar-alt"></i> <?php echo count($events); ?> Event</span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -220,7 +220,7 @@ if ($teamId > 0) {
 
                             <?php if (!empty($team['events_array'])): ?>
                             <div class="team-meta-item">
-                                <div class="team-meta-label event-meta-label">Sport / Event</div>
+                                <div class="team-meta-label event-meta-label">Cabor / Event</div>
                                 <div class="team-meta-value">
                                     <div class="event-badges-container" style="display: flex; flex-wrap: wrap; gap: 5px;">
                                         <?php foreach ($team['events_array'] as $event_name): ?>
@@ -243,15 +243,15 @@ if ($teamId > 0) {
                 
                 <div class="container section-container team-roster-section">
                     <div class="section-header">
-                        <h2 class="section-title">ROSTER</h2>
+                        <h2 class="section-title">DAFTAR</h2>
                         <div class="section-tabs team-roster-tabs">
                             <?php foreach ($events as $event): ?>
                                 <button class="tab-button player-tab" data-event="<?php echo $event['id']; ?>">
                                     <?php echo htmlspecialchars($event['name'] ?? ''); ?>
                                 </button>
                             <?php endforeach; ?>
-                            <button class="tab-button player-tab active" data-tab="players">Players</button>
-                            <button class="tab-button player-tab" data-tab="staff">Pelatih / Staff</button>
+                            <button class="tab-button player-tab active" data-tab="players">Pemain</button>
+                            <button class="tab-button player-tab" data-tab="staff">Pelatih / Staf</button>
                         </div>
                     </div>
                     
@@ -769,17 +769,17 @@ if ($teamId > 0) {
                 <!-- TEAM LISTING VIEW -->
                 <div class="container section-container section-elevated">
                     <div class="section-header">
-                        <h2 class="section-title">TEAMS</h2>
+                        <h2 class="section-title">TIM</h2>
                         <div class="section-tabs">
-                            <span class="team-count-pill"><i class="fas fa-users"></i> <?php echo count($allTeams); ?> Teams</span>
+                            <span class="team-count-pill"><i class="fas fa-users"></i> <?php echo count($allTeams); ?> Tim</span>
                         </div>
                     </div>
 
                     <div class="team-filter-card">
-                        <label class="team-filter-label" for="teamSelector">Pilih Team</label>
+                        <label class="team-filter-label" for="teamSelector">Pilih Tim</label>
                         <div class="team-selector">
                             <select id="teamSelector" onchange="if(this.value) window.location.href='team.php?id=' + this.value">
-                                <option value="">Pilih team dari dropdown atau daftar di bawah</option>
+                                <option value="">Pilih tim dari dropdown atau daftar di bawah</option>
                                 <?php foreach ($allTeams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>">
                                         <?php echo htmlspecialchars($team['name']); ?>
@@ -818,7 +818,7 @@ if ($teamId > 0) {
                                             <?php endif; ?>
                                         </div>
                                     <?php endif; ?>
-                                    <p class="team-label">View Profile</p>
+                                    <p class="team-label">Lihat Profil</p>
                                 </a>
                             <?php endforeach; ?>
                         </div>
@@ -832,7 +832,7 @@ if ($teamId > 0) {
         <div class="schedule-modal team-share-modal" id="teamShareModal" aria-hidden="true" role="dialog" aria-modal="true">
             <div class="schedule-modal-content">
                 <div class="schedule-modal-header">
-                    <h3>Share Team</h3>
+                    <h3>Bagikan Tim</h3>
                     <button class="schedule-modal-close" id="closeTeamShareModal">&times;</button>
                 </div>
                 <div class="schedule-modal-body">
@@ -853,7 +853,7 @@ if ($teamId > 0) {
                                 <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" aria-hidden="true" focusable="false"><title>X</title><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg> X
                             </a>
                             <button type="button" class="share-btn-modal copy" id="teamShareCopy">
-                                <i class="far fa-copy"></i> Copy Link
+                                <i class="far fa-copy"></i> Salin Tautan
                             </button>
                         </div>
                     </div>
@@ -865,8 +865,8 @@ if ($teamId > 0) {
          <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
