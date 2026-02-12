@@ -194,7 +194,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
     <!-- Mobile Header -->
     <header class="mobile-dashboard-header">
         <div class="mobile-logo">
-            <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Logo">
+            <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
         <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
@@ -208,7 +208,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
     <aside class="sidebar" id="sidebar" aria-hidden="true">
         <div class="sidebar-logo">
             <a href="<?php echo SITE_URL; ?>">
-                <img src="<?php echo SITE_URL; ?>/images/verykscorebg.png" alt="Logo">
+                <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
             </a>
         </div>
         <nav class="sidebar-nav">

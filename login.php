@@ -10,7 +10,9 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $input_username = trim($_POST['username'] ?? '');
-    $input_password = trim($_POST['password'] ?? '');
+    // Keep password input as-is: password comparison is case-sensitive
+    // and should not ignore leading/trailing spaces.
+    $input_password = $_POST['password'] ?? '';
     
     // Validasi input
     if (empty($input_username) || empty($input_password)) {
@@ -81,8 +83,8 @@ $db_status = $db ? "connected" : "disconnected";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0F172A">
-    <meta name="description" content="MGP Admin Dashboard - Sistem manajemen pertandingan futsal">
-    <title>Login - MGP</title>
+    <meta name="description" content="Alvetrix Admin Dashboard - Sistem manajemen pertandingan futsal">
+    <title>Login - Alvetrix</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1596,9 +1598,9 @@ $db_status = $db ? "connected" : "disconnected";
             <!-- Brand Header -->
             <header class="brand">
                 <div class="logo-mark">
-                    MGP
+                    AVX
                 </div>
-                <h1>Admin Login</h1>
+                <h1>Login</h1>
                 <p class="tagline">Secure Access Portal</p>
             </header>
             
@@ -1704,7 +1706,7 @@ $db_status = $db ? "connected" : "disconnected";
                     <span class="status-dot <?php echo $db_status; ?>"></span>
                     <span>Database <?php echo strtoupper($db_status); ?></span>
                 </div>
-                <p class="copyright">&copy; <?php echo date('Y'); ?> MGP. All rights reserved.</p>
+                <p class="copyright">&copy; <?php echo date('Y'); ?> ALVETRIX. Semua hak dilindungi.</p>
             </footer>
         </div>
     </main>
