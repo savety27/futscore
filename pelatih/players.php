@@ -72,7 +72,15 @@ if ($team_id) {
                 if ($_GET['msg'] == 'updated') echo "<i class='fas fa-check-circle'></i> Pemain berhasil diperbarui!";
                 if ($_GET['msg'] == 'deleted') echo "<i class='fas fa-check-circle'></i> Pemain berhasil dihapus!";
                 if ($_GET['msg'] == 'no_changes_or_unauthorized') echo "<i class='fas fa-exclamation-triangle'></i> Tidak ada perubahan yang dilakukan atau tindakan tidak berwenang.";
+                if ($_GET['msg'] == 'no_changes') echo "<i class='fas fa-exclamation-triangle'></i> Tidak ada perubahan yang dilakukan.";
             ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['error']) && $_GET['error'] !== ''): ?>
+        <div class="message-alert" style="background: #fff3cd; color: #856404; border-left: 4px solid #f0ad4e;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <?php echo htmlspecialchars($_GET['error']); ?>
         </div>
     <?php endif; ?>
 
@@ -338,13 +346,31 @@ if ($team_id) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const currentUrl = new URL(window.location.href);
+    const errorMsg = currentUrl.searchParams.get('error');
+
+    if (errorMsg && typeof Swal !== 'undefined') {
+        let detail = '';
+        const lowerError = errorMsg.toLowerCase();
+        if (lowerError.includes('tidak dapat menghapus') || lowerError.includes('foreign key') || lowerError.includes('1451')) {
+            detail = 'Pemain ini sudah tercatat di data pertandingan (mis. lineup, gol, atau event terkait), jadi tidak bisa dihapus.';
+        }
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Penghapusan Gagal',
+            html: `<p style="margin:0 0 8px 0;">${errorMsg}</p>${detail ? `<p style="margin:0; color:#666; font-size:13px;">${detail}</p>` : ''}`,
+            confirmButtonText: 'Mengerti',
+            confirmButtonColor: '#f0ad4e'
+        });
+    }
+
     // Remove flash message query params after first load
-    const url = new URL(window.location.href);
-    if (url.searchParams.has('msg') || url.searchParams.has('error')) {
-        url.searchParams.delete('msg');
-        url.searchParams.delete('error');
-        const query = url.searchParams.toString();
-        window.history.replaceState({}, document.title, url.pathname + (query ? '?' + query : ''));
+    if (currentUrl.searchParams.has('msg') || currentUrl.searchParams.has('error')) {
+        currentUrl.searchParams.delete('msg');
+        currentUrl.searchParams.delete('error');
+        const query = currentUrl.searchParams.toString();
+        window.history.replaceState({}, document.title, currentUrl.pathname + (query ? '?' + query : ''));
     }
 
     // Initialize skill scores
