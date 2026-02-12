@@ -1172,6 +1172,11 @@ body {
         </div>
         <?php endif; ?>
 
+        <div class="alert alert-danger" id="deleteErrorAlert" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="deleteErrorText"></span>
+        </div>
+
         <!-- CHALLENGE TABLE -->
         <div class="table-container">
             <table class="data-table" id="challengesTable">
@@ -1419,7 +1424,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function deleteChallenge(challengeId, challengeCode) {
+    const deleteErrorAlert = document.getElementById('deleteErrorAlert');
+    const deleteErrorText = document.getElementById('deleteErrorText');
+
+    const clearDeleteError = () => {
+        if (deleteErrorAlert) {
+            deleteErrorAlert.style.display = 'none';
+        }
+        if (deleteErrorText) {
+            deleteErrorText.textContent = '';
+        }
+    };
+
+    const showDeleteError = (message) => {
+        if (!deleteErrorAlert || !deleteErrorText) {
+            return;
+        }
+        deleteErrorText.textContent = message;
+        deleteErrorAlert.style.display = 'flex';
+        deleteErrorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
     if (confirm(`Apakah Anda yakin ingin menghapus challenge "${challengeCode}"?`)) {
+        clearDeleteError();
         fetch(`challenge_delete.php?id=${challengeId}`, {
             method: 'GET',
             headers: {
@@ -1434,12 +1461,12 @@ function deleteChallenge(challengeId, challengeCode) {
                     window.location.reload();
                 }, 1000);
             } else {
-                toastr.error('Error: ' + data.message);
+                showDeleteError(data.message || 'Gagal menghapus challenge.');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            toastr.error('Terjadi kesalahan saat menghapus challenge.');
+            showDeleteError('Terjadi kesalahan saat menghapus challenge.');
         });
     }
 }

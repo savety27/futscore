@@ -46,6 +46,15 @@ try {
     
 } catch (PDOException $e) {
     $conn->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    $message = $e->getMessage();
+
+    // Constraint: challenge already referenced by lineup/score/event related tables.
+    if (strpos($message, '1451') !== false || strpos(strtolower($message), 'foreign key constraint fails') !== false) {
+        $message = 'Challenge tidak dapat dihapus karena sudah dipakai di data pertandingan (mis. lineup, skor, atau event terkait).';
+    } else {
+        $message = 'Terjadi kesalahan saat menghapus challenge.';
+    }
+
+    echo json_encode(['success' => false, 'message' => $message]);
 }
 ?>
