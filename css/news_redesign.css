@@ -1026,6 +1026,26 @@
 }
 
 @media (max-width: 992px) {
+    .dashboard-wrapper > .sidebar {
+        transform: translateX(-110%);
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .dashboard-wrapper > .sidebar.active {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .dashboard-wrapper > .sidebar-overlay {
+        pointer-events: none;
+    }
+
+    .dashboard-wrapper > .sidebar-overlay.active {
+        pointer-events: auto;
+    }
+
     .news-content-layout {
         grid-template-columns: 1fr;
     }
