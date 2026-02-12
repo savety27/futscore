@@ -107,7 +107,8 @@ body.sidebar-open {
 }
 
 .mobile-logo img {
-    height: 32px;
+    height: 62px;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
 }
 
 .sidebar-toggle {
@@ -155,16 +156,18 @@ body.sidebar-open {
 }
 
 .sidebar-logo {
-    padding: 30px 24px 40px;
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-bottom: 10px;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     margin-bottom: 10px;
 }
 
 .sidebar-logo img {
-    max-width: 140px;
-    filter: brightness(1.1);
-    transition: transform var(--transition-normal);
+    max-width: 200px;
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1));
+    transition: transform var(--transition-normal), filter var(--transition-normal);
 }
 
 .sidebar-logo img:hover {
