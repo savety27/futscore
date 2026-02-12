@@ -160,7 +160,7 @@ function maskNIK($nik) {
         <header class="dashboard-header player-header">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">MGP</div>
+                    <div class="header-eyebrow">ALVETRIX</div>
                     <h1>Player Directory</h1>
                     <p class="header-subtitle">Daftar pemain aktif lengkap dengan informasi dasar dan statistik.</p>
                 </div>
@@ -438,11 +438,11 @@ function maskNIK($nik) {
         </div>
 
         <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> | 
-                <a href="contact.php">Contact</a> | 
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="<?php echo SITE_URL; ?>">Home</a> |
+                <a href="contact.php">Contact</a> |
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </main>

@@ -124,7 +124,7 @@ if ($teamId > 0) {
         <header class="dashboard-header dashboard-header-home dashboard-header-team">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">MGP</div>
+                    <div class="header-eyebrow">ALVETRIX</div>
                     <h1>
                         <?php if ($teamId > 0): ?>
                             <?php echo htmlspecialchars($team['name'] ?? ''); ?>
@@ -862,12 +862,12 @@ if ($teamId > 0) {
         </div>
         <?php endif; ?>
 
-        <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+         <footer class="dashboard-footer">
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> | 
-                <a href="contact.php">Contact</a> | 
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="<?php echo SITE_URL; ?>">Home</a> |
+                <a href="contact.php">Contact</a> |
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </div>

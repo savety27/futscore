@@ -81,7 +81,7 @@ $pageTitle = "Home";
         <header class="dashboard-header dashboard-header-home">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">MGP</div>
+                    <div class="header-eyebrow">ALVETRIX</div>
                     <h1>Home Dashboard</h1>
                     <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan tim terbaru dalam satu tampilan yang rapi.</p>
                 </div>
@@ -131,7 +131,7 @@ $pageTitle = "Home";
                                 <img src="<?php echo $logo1Path; ?>" 
                                      alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
                                      class="team-logo"
-                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                             </div>
                             <span class="team-name"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                         </div>
@@ -148,7 +148,7 @@ $pageTitle = "Home";
                                 <img src="<?php echo $logo2Path; ?>" 
                                      alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
                                      class="team-logo"
-                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                             </div>
                             <span class="team-name"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                         </div>
@@ -384,7 +384,7 @@ $pageTitle = "Home";
                         <div class="m-team-logo">
                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
                                  alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                         </div>
                         <span class="m-team-name"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                     </div>
@@ -397,7 +397,7 @@ $pageTitle = "Home";
                         <div class="m-team-logo">
                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
                                  alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                         </div>
                         <span class="m-team-name"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                     </div>
@@ -461,7 +461,7 @@ $pageTitle = "Home";
                         <div class="m-team-logo">
                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['challenger_logo']; ?>" 
                                  alt="<?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?>" 
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                         </div>
                         <span class="m-team-name"><?php echo htmlspecialchars($match['challenger_name'] ?? ''); ?></span>
                     </div>
@@ -474,7 +474,7 @@ $pageTitle = "Home";
                         <div class="m-team-logo">
                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['opponent_logo']; ?>" 
                                  alt="<?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?>" 
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                         </div>
                         <span class="m-team-name"><?php echo htmlspecialchars($match['opponent_name'] ?? ''); ?></span>
                     </div>
@@ -579,8 +579,8 @@ $pageTitle = "Home";
                 $transferDate = $transfer['transfer_date'] ?? ($transfer['created_at'] ?? null);
                 
                 $playerPhotoPath = SITE_URL . '/images/players/' . $playerPhoto;
-                $fromLogoPath = $fromLogo ? SITE_URL . '/images/teams/' . $fromLogo : SITE_URL . '/images/MGP FC.jpeg';
-                $toLogoPath = $toLogo ? SITE_URL . '/images/teams/' . $toLogo : SITE_URL . '/images/MGP FC.jpeg';
+                $fromLogoPath = $fromLogo ? SITE_URL . '/images/teams/' . $fromLogo : SITE_URL . '/images/alvetrix.png';
+                $toLogoPath = $toLogo ? SITE_URL . '/images/teams/' . $toLogo : SITE_URL . '/images/alvetrix.png';
                 ?>
                 <div class="transfer-card">
                     <div class="transfer-header">
@@ -615,7 +615,7 @@ $pageTitle = "Home";
                             <img src="<?php echo $fromLogoPath; ?>" 
                                  alt="<?php echo htmlspecialchars($fromTeam ?? ''); ?>" 
                                  class="transfer-team-logo"
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                             <span class="transfer-team-name"><?php echo htmlspecialchars($fromTeam ?? ''); ?></span>
                         </div>
                         
@@ -628,7 +628,7 @@ $pageTitle = "Home";
                             <img src="<?php echo $toLogoPath; ?>" 
                                  alt="<?php echo htmlspecialchars($toTeam ?? ''); ?>" 
                                  class="transfer-team-logo"
-                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                             <span class="transfer-team-name"><?php echo htmlspecialchars($toTeam ?? ''); ?></span>
                         </div>
                     </div>
@@ -672,12 +672,12 @@ $pageTitle = "Home";
                 </div>
                 <div class="team-logo-container">
                     <?php 
-                    $teamLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/MGP FC.jpeg';
+                    $teamLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/alvetrix.png';
                     ?>
                     <img src="<?php echo $teamLogo; ?>" 
                          alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                          class="team-logo-premium"
-                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                 </div>
                 <div class="winner-info">
                     <h3 class="team-name"><?php echo htmlspecialchars($team['name'] ?? ''); ?></h3>
@@ -708,12 +708,12 @@ $pageTitle = "Home";
             <a href="team.php?id=<?php echo $team['id']; ?>" class="team-card" data-team-id="<?php echo $team['id']; ?>">
                 <div class="team-logo-container">
                     <?php 
-                    $tLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/MGP FC.jpeg';
+                    $tLogo = !empty($team['logo']) ? SITE_URL . '/images/teams/' . $team['logo'] : SITE_URL . '/images/alvetrix.png';
                     ?>
                     <img src="<?php echo $tLogo; ?>" 
                          alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                          class="team-logo-lg"
-                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/MGP FC.jpeg'">
+                         onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                 </div>
                 <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
                 <p class="team-label">New Team</p>
@@ -824,11 +824,11 @@ $pageTitle = "Home";
         </div>
 
         <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> | 
-                <a href="contact.php">Contact</a> | 
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="<?php echo SITE_URL; ?>">Home</a> |
+                <a href="contact.php">Contact</a> |
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </div>

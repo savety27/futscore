@@ -437,12 +437,12 @@ if (!$matchNotFound) {
             <?php endif; ?>
         </div>
 
-        <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+         <footer class="dashboard-footer">
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> | 
-                <a href="contact.php">Contact</a> | 
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="<?php echo SITE_URL; ?>">Home</a> |
+                <a href="contact.php">Contact</a> |
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </main>

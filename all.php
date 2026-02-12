@@ -127,7 +127,7 @@ $offset = ($page - 1) * $perPage;
         <header class="dashboard-header dashboard-header-all">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">MGP</div>
+                    <div class="header-eyebrow">ALVETRIX</div>
                     <h1>All Matches</h1>
                     <p class="header-subtitle">Daftar lengkap jadwal dan hasil pertandingan yang bisa kamu filter sesuai kebutuhan.</p>
                 </div>
@@ -329,11 +329,11 @@ $offset = ($page - 1) * $perPage;
         </div>
 
         <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> | 
-                <a href="contact.php">Contact</a> | 
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="<?php echo SITE_URL; ?>">Home</a> |
+                <a href="contact.php">Contact</a> |
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </main>

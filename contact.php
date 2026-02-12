@@ -144,12 +144,12 @@ $contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixoffic
             </div>
         </div>
 
-        <footer class="dashboard-footer">
+         <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
                 <a href="<?php echo SITE_URL; ?>">Home</a> |
                 <a href="contact.php">Contact</a> |
-                <a href="contact.php">Privacy Policy</a>
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </main>

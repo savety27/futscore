@@ -921,7 +921,7 @@ $pageTitle = "Staff List";
         <header class="dashboard-header dashboard-header-staff">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">MGP</div>
+                    <div class="header-eyebrow">ALVETRIX</div>
                     <h1>TEAM STAFF</h1>
                     <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi tim untuk memantau peran kunci di setiap skuad.</p>
                 </div>
@@ -1158,11 +1158,11 @@ $pageTitle = "Staff List";
         </div>
 
         <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> | 
-                <a href="contact.php">Contact</a> | 
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="<?php echo SITE_URL; ?>">Home</a> |
+                <a href="contact.php">Contact</a> |
+                <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
     </div>
