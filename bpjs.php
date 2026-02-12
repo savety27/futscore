@@ -15,7 +15,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -31,37 +31,37 @@ $pageTitle = "BPJS Ketenagakerjaan";
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php" class="active"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
 
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -210,7 +210,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
 
             <!-- Image Modal -->
             <div id="imageModal" class="image-modal" aria-hidden="true">
-                <button class="modal-close" onclick="closeModal()" aria-label="Close">&times;</button>
+                <button class="modal-close" onclick="closeModal()" aria-label="Tutup">&times;</button>
                 <div class="modal-content">
                     <img id="modalImage" src="" alt="">
                 </div>
@@ -269,7 +269,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
                         <div class="contact-icon">
                             <i class="fas fa-phone"></i>
                         </div>
-                        <h3>Call Center BPJS</h3>
+                        <h3>Pusat Layanan BPJS</h3>
                         <p><strong>165</strong> (24 Jam)</p>
                     </div>
                     <div class="contact-item">
@@ -293,8 +293,8 @@ $pageTitle = "BPJS Ketenagakerjaan";
         <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

@@ -70,7 +70,7 @@ $offset = ($page - 1) * $perPage;
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -86,37 +86,37 @@ $offset = ($page - 1) * $perPage;
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -128,7 +128,7 @@ $offset = ($page - 1) * $perPage;
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>All Matches</h1>
+                    <h1>Semua Pertandingan</h1>
                     <p class="header-subtitle">Daftar lengkap jadwal dan hasil pertandingan yang bisa kamu filter sesuai kebutuhan.</p>
                 </div>
             </div>
@@ -138,17 +138,17 @@ $offset = ($page - 1) * $perPage;
             <div class="filter-card">
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label for="statusFilter">Show</label>
+                        <label for="statusFilter">Tampilkan</label>
                         <select id="statusFilter" class="filter-select">
-                            <option value="result" <?php echo $status === 'result' ? 'selected' : ''; ?>>Result</option>
-                            <option value="schedule" <?php echo $status === 'schedule' ? 'selected' : ''; ?>>Schedule</option>
+                            <option value="result" <?php echo $status === 'result' ? 'selected' : ''; ?>>Hasil</option>
+                            <option value="schedule" <?php echo $status === 'schedule' ? 'selected' : ''; ?>>Jadwal</option>
                         </select>
                     </div>
                     
                     <div class="filter-group">
                         <label for="eventFilter">Event</label>
                         <select id="eventFilter" class="filter-select">
-                            <option value="0">All Events</option>
+                            <option value="0">Semua Event</option>
                             <?php foreach ($events as $event): ?>
                             <option value="<?php echo htmlspecialchars($event ?? ''); ?>" <?php echo $eventId === $event ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($event ?? ''); ?>
@@ -158,9 +158,9 @@ $offset = ($page - 1) * $perPage;
                     </div>
                     
                     <div class="filter-group">
-                        <label for="teamFilter">Team</label>
+                        <label for="teamFilter">Tim</label>
                         <select id="teamFilter" class="filter-select">
-                            <option value="0">All Teams</option>
+                            <option value="0">Semua Tim</option>
                             <?php foreach ($teams as $team): ?>
                             <option value="<?php echo $team['id']; ?>" <?php echo $teamId == $team['id'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($team['name'] ?? ''); ?>
@@ -171,10 +171,10 @@ $offset = ($page - 1) * $perPage;
                     
                     <div class="filter-actions-new">
                         <button class="btn-filter-apply" id="applyFilter">
-                            <i class="fas fa-filter"></i> Apply Filter
+                            <i class="fas fa-filter"></i> Terapkan Filter
                         </button>
                         <button class="btn-filter-reset" id="resetFilter">
-                            <i class="fas fa-redo"></i> Reset
+                            <i class="fas fa-redo"></i> Atur Ulang
                         </button>
                     </div>
                 </div>
@@ -183,8 +183,8 @@ $offset = ($page - 1) * $perPage;
             <?php if (empty($paginatedMatches)): ?>
             <div class="empty-state">
                 <i class="fas fa-futbol"></i>
-                <h3>No matches found</h3>
-                <p>No matches available with the current filters</p>
+                <h3>Tidak ada pertandingan ditemukan</h3>
+                <p>Tidak ada pertandingan yang tersedia dengan filter saat ini</p>
             </div>
             <?php else: ?>
             <div class="table-container-new">
@@ -193,12 +193,12 @@ $offset = ($page - 1) * $perPage;
                         <thead>
                             <tr>
                                 <th class="col-no">No</th>
-                                <th class="col-match">Match</th>
-                                <th class="col-score">Score</th>
-                                <th class="col-datetime">Date & Time</th>
-                                <th class="col-venue">Venue</th>
+                                <th class="col-match">Pertandingan</th>
+                                <th class="col-score">Skor</th>
+                                <th class="col-datetime">Tanggal & Waktu</th>
+                                <th class="col-venue">Lokasi</th>
                                 <th class="col-event">Event</th>
-                                <th class="col-action">Action</th>
+                                <th class="col-action">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -208,7 +208,7 @@ $offset = ($page - 1) * $perPage;
                             ?>
                             <tr class="match-row" data-match-id="<?php echo $match['id']; ?>">
                                 <td class="match-number" data-label="No"><?php echo $matchNumber; ?></td>
-                                <td class="match-teams-cell" data-label="Match">
+                                <td class="match-teams-cell" data-label="Pertandingan">
                                     <div class="match-teams-info">
                                         <div class="team-info">
                                             <div class="team-logo-wrapper">
@@ -231,9 +231,9 @@ $offset = ($page - 1) * $perPage;
                                         </div>
                                     </div>
                                 </td>
-                                <td class="match-score-cell" data-label="Score">
+                                <td class="match-score-cell" data-label="Skor">
                                     <?php if ($isScheduled): ?>
-                                    <div class="match-status-badge scheduled">SCHEDULE</div>
+                                    <div class="match-status-badge scheduled">JADWAL</div>
                                     <?php else: ?>
                                     <div class="score-info">
                                         <span class="score-team"><?php echo $match['challenger_score']; ?></span>
@@ -243,12 +243,12 @@ $offset = ($page - 1) * $perPage;
                                     <div class="match-status-badge completed">FT</div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="match-datetime-cell" data-label="Date & Time">
+                                <td class="match-datetime-cell" data-label="Tanggal & Waktu">
                                     <div class="datetime-info">
                                         <span class="date-info"><?php echo formatDateTime($match['challenge_date']); ?></span>
                                     </div>
                                 </td>
-                                <td class="match-venue-cell" data-label="Venue">
+                                <td class="match-venue-cell" data-label="Lokasi">
                                     <div class="venue-info">
                                         <i class="fas fa-map-marker-alt"></i>
                                         <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
@@ -257,14 +257,14 @@ $offset = ($page - 1) * $perPage;
                                 <td class="match-event-cell" data-label="Event">
                                     <span class="event-badge"><?php echo htmlspecialchars($match['sport_type'] ?? ''); ?></span>
                                 </td>
-                                <td class="match-actions-cell" data-label="Action">
+                                <td class="match-actions-cell" data-label="Aksi">
                                     <?php if ($isScheduled): ?>
                                     <a href="match.php?id=<?php echo $match['id']; ?>" class="btn-view">
-                                        <i class="fas fa-eye"></i> View
+                                        <i class="fas fa-eye"></i> Lihat
                                     </a>
                                     <?php else: ?>
                                     <a href="match.php?id=<?php echo $match['id']; ?>" class="btn-view">
-                                        <i class="fas fa-chart-bar"></i> Report
+                                        <i class="fas fa-chart-bar"></i> Laporan
                                     </a>
                                     <?php endif; ?>
                                 </td>
@@ -278,16 +278,16 @@ $offset = ($page - 1) * $perPage;
             <?php if ($totalPages > 1): ?>
             <div class="pagination-wrapper">
                 <div class="pagination-info">
-                    Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $perPage, $totalMatches); ?> of <?php echo $totalMatches; ?> entries
+                    Menampilkan <?php echo $offset + 1; ?> sampai <?php echo min($offset + $perPage, $totalMatches); ?> dari <?php echo $totalMatches; ?> data
                 </div>
                 
                 <nav class="pagination-nav">
                     <?php if ($page > 1): ?>
-                    <a href="?page=1&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="First Page">
+                    <a href="?page=1&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="Halaman Pertama">
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                     <a href="?page=<?php echo $page - 1; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link">
-                        <i class="fas fa-chevron-left"></i> Previous
+                        <i class="fas fa-chevron-left"></i> Sebelumnya
                     </a>
                     <?php endif; ?>
                     
@@ -305,23 +305,23 @@ $offset = ($page - 1) * $perPage;
                     
                     <?php if ($page < $totalPages): ?>
                     <a href="?page=<?php echo $page + 1; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link">
-                        Next <i class="fas fa-chevron-right"></i>
+                        Berikutnya <i class="fas fa-chevron-right"></i>
                     </a>
-                    <a href="?page=<?php echo $totalPages; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="Last Page">
+                    <a href="?page=<?php echo $totalPages; ?>&status=<?php echo $status; ?>&event=<?php echo urlencode($eventId); ?>&team=<?php echo $teamId; ?>&per_page=<?php echo $perPage; ?>" class="pagination-link" title="Halaman Terakhir">
                         <i class="fas fa-angle-double-right"></i>
                     </a>
                     <?php endif; ?>
                 </nav>
                 
                 <div class="entries-per-page">
-                    <label>Show</label>
+                    <label>Tampilkan</label>
                     <select id="entriesPerPage" class="entries-select">
                         <option value="20" <?php echo $perPage == 20 ? 'selected' : ''; ?>>20</option>
                         <option value="40" <?php echo $perPage == 40 ? 'selected' : ''; ?>>40</option>
                         <option value="60" <?php echo $perPage == 60 ? 'selected' : ''; ?>>60</option>
                         <option value="100" <?php echo $perPage == 100 ? 'selected' : ''; ?>>100</option>
                     </select>
-                    <label>entries</label>
+                    <label>data</label>
                 </div>
             </div>
             <?php endif; ?>
@@ -331,8 +331,8 @@ $offset = ($page - 1) * $perPage;
         <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

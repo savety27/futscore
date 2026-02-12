@@ -138,7 +138,7 @@ if (!$matchNotFound) {
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -154,37 +154,37 @@ if (!$matchNotFound) {
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -196,12 +196,12 @@ if (!$matchNotFound) {
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">FUTSCORE</div>
-                    <h1><?php echo $matchNotFound ? 'Match Not Found' : 'Match Details'; ?></h1>
+                    <h1><?php echo $matchNotFound ? 'Pertandingan Tidak Ditemukan' : 'Detail Pertandingan'; ?></h1>
                     <p class="header-subtitle">Detail pertandingan, status, dan susunan pemain dalam tampilan yang rapi dan modern.</p>
                 </div>
                 <div class="header-actions">
-                    <a href="all.php?status=result" class="btn-secondary"><i class="fas fa-list"></i> All Matches</a>
-                    <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Explore Events</a>
+                    <a href="all.php?status=result" class="btn-secondary"><i class="fas fa-list"></i> Semua Pertandingan</a>
+                    <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Jelajahi Event</a>
                 </div>
             </div>
             <?php if (!$matchNotFound): ?>
@@ -224,7 +224,7 @@ if (!$matchNotFound) {
                 <section class="section-container">
                     <div class="empty-state">
                         <i class="fas fa-futbol"></i>
-                        <h4>Match not found</h4>
+                        <h4>Pertandingan tidak ditemukan</h4>
                         <p>Match ID yang kamu cari tidak tersedia.</p>
                     </div>
                 </section>
@@ -255,7 +255,7 @@ if (!$matchNotFound) {
                         <div class="match-score-block">
                             <?php if ($scoreAvailable): ?>
                                 <div class="score-pill"><?php echo $match['score1']; ?> - <?php echo $match['score2']; ?></div>
-                                <div class="score-subtext">Final Score</div>
+                                <div class="score-subtext">Skor Akhir</div>
                             <?php else: ?>
                                 <div class="vs-pill">VS</div>
                                 <div class="score-subtext"><?php echo htmlspecialchars($matchTime ?? ''); ?></div>
@@ -276,14 +276,14 @@ if (!$matchNotFound) {
                         <div class="match-meta-card">
                             <div class="match-meta-icon"><i class="far fa-calendar-alt"></i></div>
                             <div>
-                                <div class="match-meta-label">Date & Time</div>
+                                <div class="match-meta-label">Tanggal & Waktu</div>
                                 <div class="match-meta-value"><?php echo formatDateTime($match['match_date']); ?></div>
                             </div>
                         </div>
                         <div class="match-meta-card">
                             <div class="match-meta-icon"><i class="fas fa-map-marker-alt"></i></div>
                             <div>
-                                <div class="match-meta-label">Location</div>
+                                <div class="match-meta-label">Lokasi</div>
                                 <div class="match-meta-value"><?php echo htmlspecialchars($locationLabel ?? 'TBA'); ?></div>
                             </div>
                         </div>
@@ -303,7 +303,7 @@ if (!$matchNotFound) {
 
                 <section class="section-container lineup-section">
                     <div class="section-header">
-                        <h2 class="section-title">GOALS</h2>
+                        <h2 class="section-title">GOL</h2>
                     </div>
 
                     <div class="goals-list pro-goals-container">
@@ -344,9 +344,9 @@ if (!$matchNotFound) {
 
                 <section class="section-container lineup-section">
                     <div class="section-header">
-                        <h2 class="section-title">TEAM LINEUPS</h2>
+                        <h2 class="section-title">SUSUNAN PEMAIN TIM</h2>
                         <div class="lineup-legend">
-                            <span class="legend-pill"><i class="fas fa-star"></i> Starter</span>
+                            <span class="legend-pill"><i class="fas fa-star"></i> Pemain Utama</span>
                         </div>
                     </div>
 
@@ -364,11 +364,11 @@ if (!$matchNotFound) {
                                         <span class="lineup-count"><?php echo count($lineups['team1']); ?> pemain</span>
                                     </div>
                                 </div>
-                                <span class="team-side-badge">Home</span>
+                                <span class="team-side-badge">Kandang</span>
                             </div>
 
                             <?php if (empty($lineups['team1'])): ?>
-                                <div class="empty-state">No lineup submitted yet.</div>
+                                <div class="empty-state">Belum ada susunan pemain.</div>
                             <?php else: ?>
                                 <div class="lineup-list">
                                     <?php foreach ($lineups['team1'] as $player): ?>
@@ -382,7 +382,7 @@ if (!$matchNotFound) {
                                                     <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
                                                     <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
                                                     <?php if ($player['is_starting']): ?>
-                                                        <span class="lineup-badge">Starter</span>
+                                                        <span class="lineup-badge">Pemain Utama</span>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -405,11 +405,11 @@ if (!$matchNotFound) {
                                         <span class="lineup-count"><?php echo count($lineups['team2']); ?> pemain</span>
                                     </div>
                                 </div>
-                                <span class="team-side-badge away">Away</span>
+                                <span class="team-side-badge away">Tandang</span>
                             </div>
 
                             <?php if (empty($lineups['team2'])): ?>
-                                <div class="empty-state">No lineup submitted yet.</div>
+                                <div class="empty-state">Belum ada susunan pemain.</div>
                             <?php else: ?>
                                 <div class="lineup-list">
                                     <?php foreach ($lineups['team2'] as $player): ?>
@@ -423,7 +423,7 @@ if (!$matchNotFound) {
                                                     <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
                                                     <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
                                                     <?php if ($player['is_starting']): ?>
-                                                        <span class="lineup-badge">Starter</span>
+                                                        <span class="lineup-badge">Pemain Utama</span>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -440,8 +440,8 @@ if (!$matchNotFound) {
          <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

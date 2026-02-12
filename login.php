@@ -83,7 +83,7 @@ $db_status = $db ? "connected" : "disconnected";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0F172A">
-    <meta name="description" content="Alvetrix Admin Dashboard - Sistem manajemen pertandingan futsal">
+    <meta name="description" content="Alvetrix - Sistem manajemen pertandingan futsal">
     <title>Login - Alvetrix</title>
     
     <!-- Fonts -->
@@ -1600,8 +1600,8 @@ $db_status = $db ? "connected" : "disconnected";
                 <div class="logo-mark">
                     AVX
                 </div>
-                <h1>Login</h1>
-                <p class="tagline">Secure Access Portal</p>
+                <h1>LOGIN</h1>
+                <p class="tagline">Portal Akses</p>
             </header>
             
             <!-- Form Container -->
@@ -1665,7 +1665,7 @@ $db_status = $db ? "connected" : "disconnected";
                             <span class="input-icon" aria-hidden="true">
                                 <i class="fas fa-key"></i>
                             </span>
-                            <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
+                            <button type="button" class="toggle-password" id="togglePassword" aria-label="Tampilkan atau sembunyikan password">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
@@ -1677,7 +1677,7 @@ $db_status = $db ? "connected" : "disconnected";
                         
                         <div class="password-notes">
                             <ul>
-                                <li><i class="fas fa-circle"></i> Password bersifat case-sensitive</li>
+                                <li><i class="fas fa-circle"></i> Password peka huruf besar/kecil</li>
                                 <li><i class="fas fa-circle"></i> Huruf besar/kecil berpengaruh</li>
                             </ul>
                         </div>
@@ -1702,10 +1702,10 @@ $db_status = $db ? "connected" : "disconnected";
             
             <!-- Footer -->
             <footer class="card-footer">
-                <div class="db-indicator">
-                    <span class="status-dot <?php echo $db_status; ?>"></span>
-                    <span>Database <?php echo strtoupper($db_status); ?></span>
-                </div>
+                    <div class="db-indicator">
+                        <span class="status-dot <?php echo $db_status; ?>"></span>
+                        <span>Database <?php echo $db_status === 'connected' ? 'TERHUBUNG' : 'TERPUTUS'; ?></span>
+                    </div>
                 <p class="copyright">&copy; <?php echo date('Y'); ?> ALVETRIX. Semua hak dilindungi.</p>
             </footer>
         </div>

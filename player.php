@@ -103,7 +103,7 @@ function maskNIK($nik) {
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -119,37 +119,37 @@ function maskNIK($nik) {
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown open active" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown show">
-                    <a href="player.php" class="active">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php" class="active">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -161,15 +161,15 @@ function maskNIK($nik) {
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>Player Directory</h1>
+                    <h1>Direktori Pemain</h1>
                     <p class="header-subtitle">Daftar pemain aktif lengkap dengan informasi dasar dan statistik.</p>
                 </div>
                 <div class="header-stats">
                     <div class="header-pill">
-                        <i class="fas fa-users"></i> <?php echo number_format($total_records); ?> Players
+                        <i class="fas fa-users"></i> <?php echo number_format($total_records); ?> Pemain
                     </div>
                     <div class="header-pill header-pill-light">
-                        <i class="fas fa-check-circle"></i> Active
+                        <i class="fas fa-check-circle"></i> Aktif
                     </div>
                 </div>
             </div>
@@ -182,7 +182,7 @@ function maskNIK($nik) {
                         <div class="empty-state">
                             <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
                             <h3>Player tidak ditemukan</h3>
-                            <p>Player dengan ID tersebut tidak tersedia.</p>
+                            <p>Pemain dengan ID tersebut tidak tersedia.</p>
                         </div>
 
                     <?php else: ?>
@@ -209,7 +209,7 @@ function maskNIK($nik) {
                                             <div class="team-logo-lg team-logo-placeholder"></div>
                                         <?php endif; ?>
                                         <div>
-                                            <div class="team-label">Team</div>
+                                            <div class="team-label">Tim</div>
                                             <div class="team-name"><?php echo htmlspecialchars($player_detail['team_name'] ?: '-'); ?></div>
                                         </div>
                                     </div>
@@ -217,7 +217,7 @@ function maskNIK($nik) {
                             </div>
                             <div class="player-detail-actions">
                                 <a href="player.php?<?php echo http_build_query(['page' => $page ?: 1, 'search' => $search ?: null]); ?>" class="btn-filter-reset">
-                                    <i class="fas fa-arrow-left"></i> Back to list
+                                    <i class="fas fa-arrow-left"></i> Kembali ke daftar
                                 </a>
                             </div>
                         </div>
@@ -254,7 +254,7 @@ function maskNIK($nik) {
                                 </span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Created At</span>
+                                <span class="detail-label">Dibuat Pada</span>
                                 <span class="detail-value"><?php echo date('d M Y, H:i', strtotime($player_detail['created_at'])); ?></span>
                             </div>
                         </div>
@@ -272,10 +272,10 @@ function maskNIK($nik) {
                     </div>
                     <div class="filter-actions-new">
                         <button type="submit" class="btn-filter-apply">
-                            <i class="fas fa-search"></i> Search
+                            <i class="fas fa-search"></i> Cari
                         </button>
                         <a href="player.php" class="btn-filter-reset">
-                            <i class="fas fa-redo"></i> Reset
+                            <i class="fas fa-redo"></i> Atur Ulang
                         </a>
                     </div>
                 </form>
@@ -287,9 +287,9 @@ function maskNIK($nik) {
                     <thead>
                         <tr>
                             <th class="col-no">No</th>
-                            <th class="col-photo">Photo</th>
+                            <th class="col-photo">Foto</th>
                             <th>Nama</th>
-                            <th>Team</th>
+                            <th>Tim</th>
                             <th class="col-center">No Punggung</th>
                             <th class="col-center">Tgl Lahir</th>
                             <th class="col-center">Usia</th>
@@ -297,7 +297,7 @@ function maskNIK($nik) {
                             <th>NISN</th>
                             <th>NIK</th>
                             <th>Event</th>
-                            <th>Created At</th>
+                            <th>Dibuat Pada</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -306,7 +306,7 @@ function maskNIK($nik) {
                                 <td colspan="12">
                                     <div class="empty-state">
                                         <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
-                                        <h3>Player tidak ditemukan</h3>
+                                        <h3>Pemain tidak ditemukan</h3>
                                         <p>Coba kata kunci lain atau reset filter pencarian.</p>
                                     </div>
                                 </td>
@@ -318,7 +318,7 @@ function maskNIK($nik) {
                             ?>
                             <tr>
                                 <td class="col-no cell-no" data-label="No"><?php echo $no++; ?></td>
-                                <td class="col-photo cell-photo" data-label="Photo">
+                                <td class="col-photo cell-photo" data-label="Foto">
                                     <?php if (!empty($p['photo']) && file_exists('images/players/' . $p['photo'])): ?>
                                         <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $p['photo']; ?>" class="player-photo-sm" alt="">
                                     <?php else: ?>
@@ -330,7 +330,7 @@ function maskNIK($nik) {
                                         <?php echo htmlspecialchars($p['name'] ?? ''); ?>
                                     </a>
                                 </td>
-                                <td class="cell-team" data-label="Team">
+                                <td class="cell-team" data-label="Tim">
                                     <div class="col-team">
                                         <?php if (!empty($p['team_logo']) && file_exists('images/teams/' . $p['team_logo'])): ?>
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $p['team_logo']; ?>" class="team-logo-small" alt="">
@@ -377,7 +377,7 @@ function maskNIK($nik) {
                                     <?php endif; ?>
                                 </td>
                                 </td>
-                                <td data-label="Created At"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
+                                <td data-label="Dibuat Pada"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -388,16 +388,16 @@ function maskNIK($nik) {
             <!-- Pagination -->
             <div class="pagination-info">
                 <div class="info-text">
-                    Showing <?php echo min($offset + 1, $total_records); ?> to <?php echo min($offset + $limit, $total_records); ?> of <?php echo number_format($total_records); ?> entries
+                    Menampilkan <?php echo min($offset + 1, $total_records); ?> sampai <?php echo min($offset + $limit, $total_records); ?> dari <?php echo number_format($total_records); ?> data
                 </div>
                 
                 <?php if ($total_pages > 1): ?>
                     <div class="pagination-controls">
                         <!-- Previous -->
                         <?php if ($page > 1): ?>
-                            <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Previous</a>
+                            <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Sebelumnya</a>
                         <?php else: ?>
-                            <span class="disabled">Previous</span>
+                            <span class="disabled">Sebelumnya</span>
                         <?php endif; ?>
 
                         <!-- Page Numbers -->
@@ -428,9 +428,9 @@ function maskNIK($nik) {
 
                         <!-- Next -->
                         <?php if ($page < $total_pages): ?>
-                            <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Next</a>
+                            <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Berikutnya</a>
                         <?php else: ?>
-                            <span class="disabled">Next</span>
+                            <span class="disabled">Berikutnya</span>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -440,8 +440,8 @@ function maskNIK($nik) {
         <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

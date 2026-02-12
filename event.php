@@ -196,7 +196,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -212,37 +212,37 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -251,7 +251,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
     <!-- Main Content -->
     <main class="main-content-dashboard">
         <header class="dashboard-header">
-            <h1>EVENTS & MATCHES</h1>
+            <h1>EVENT & PERTANDINGAN</h1>
         </header>
 
         <div class="dashboard-body">
@@ -325,9 +325,9 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                             <th style="width: 100px; text-align: center;">Skor</th>
                             <th style="width: 180px; text-align: center;">Pemenang</th>
                             <th style="width: 120px; text-align: center;">Status</th>
-                            <th style="width: 140px; text-align: center;">Match Status</th>
+                        <th style="width: 140px; text-align: center;">Status Pertandingan</th>
                             <th style="width: 110px; text-align: center;">Event</th>
-                            <th style="width: 100px; text-align: center;">Action</th>
+                            <th style="width: 100px; text-align: center;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -399,7 +399,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                             <td data-label="Status" style="text-align: center;">
                                 <?php echo getStatusBadge($e['status']); ?>
                             </td>
-                            <td data-label="Match Status" style="text-align: center;">
+                            <td data-label="Status Pertandingan" style="text-align: center;">
                                 <?php echo getMatchStatusBadge($e['match_status']); ?>
                             </td>
                             <td data-label="Cabor" style="text-align: center;">
@@ -407,9 +407,9 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                                     <?php echo htmlspecialchars($e['sport_type']); ?>
                                 </span>
                             </td>
-                            <td data-label="Action" style="text-align: center;">
+                            <td data-label="Aksi" style="text-align: center;">
                                 <a href="event_detail.php?id=<?php echo $e['id']; ?>" class="btn-filter-reset" style="padding: 5px 12px; border-color: #002d62; color: #002d62;">
-                                    <i class="fas fa-eye"></i> View
+                                    <i class="fas fa-eye"></i> Lihat
                                 </a>
                             </td>
                         </tr>
@@ -429,9 +429,9 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                 <div class="pagination-controls">
                     <!-- Previous -->
                     <?php if ($page > 1): ?>
-                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo $filter_status; ?>&sport=<?php echo $filter_sport; ?>&match_status=<?php echo $filter_match_status; ?>">Previous</a>
+                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo $filter_status; ?>&sport=<?php echo $filter_sport; ?>&match_status=<?php echo $filter_match_status; ?>">Sebelumnya</a>
                     <?php else: ?>
-                        <span class="disabled">Previous</span>
+                        <span class="disabled">Sebelumnya</span>
                     <?php endif; ?>
 
                     <!-- Page Numbers -->
@@ -461,9 +461,9 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
 
                     <!-- Next -->
                     <?php if ($page < $total_pages): ?>
-                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo $filter_status; ?>&sport=<?php echo $filter_sport; ?>&match_status=<?php echo $filter_match_status; ?>">Next</a>
+                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo $filter_status; ?>&sport=<?php echo $filter_sport; ?>&match_status=<?php echo $filter_match_status; ?>">Berikutnya</a>
                     <?php else: ?>
-                        <span class="disabled">Next</span>
+                        <span class="disabled">Berikutnya</span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -471,8 +471,8 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
          <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>

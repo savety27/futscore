@@ -840,7 +840,7 @@ $pageTitle = "Staff List";
 <div class="modal-overlay" id="certificateModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title"><i class="fas fa-certificate"></i> <span id="modalStaffName">Lisensi Staff</span></h2>
+            <h2 class="modal-title"><i class="fas fa-certificate"></i> <span id="modalStaffName">Lisensi Staf</span></h2>
             <button class="close-modal" onclick="closeCertificateModal()">&times;</button>
         </div>
         <div class="modal-body">
@@ -864,7 +864,7 @@ $pageTitle = "Staff List";
         <div class="mobile-logo">
             <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar" aria-controls="sidebar" aria-expanded="false">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
         </button>
     </header>
@@ -880,37 +880,37 @@ $pageTitle = "Staff List";
             </a>
         </div>
         <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>HOME</span></a>
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown active" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PLAYER</span>
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown show">
-                    <a href="player.php">Player</a>
-                    <a href="staff.php" class="active">Team Staff</a>
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php" class="active">Staf Tim</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>NEWS</span></a>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
             <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>CONTACT</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>LOGOUT</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
                 <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>LOGIN</span>
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
         </nav>
@@ -922,12 +922,12 @@ $pageTitle = "Staff List";
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>TEAM STAFF</h1>
+                    <h1>STAF TIM</h1>
                     <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi tim untuk memantau peran kunci di setiap skuad.</p>
                 </div>
                 <div class="header-actions">
                     <div class="header-stat">
-                        <span class="stat-label">Total Staff Aktif</span>
+                        <span class="stat-label">Total Staf Aktif</span>
                         <span class="stat-value"><?php echo number_format($total_records); ?></span>
                     </div>
                     <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
@@ -939,16 +939,16 @@ $pageTitle = "Staff List";
             <div class="filter-card staff-filter-card">
                 <form action="" method="GET" class="filter-row">
                     <div class="filter-group">
-                        <label for="search">Pencarian Staff</label>
+                        <label for="search">Pencarian Staf</label>
                         <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" 
-                               placeholder="Cari staff (nama, email, telepon, jabatan)...">
+                               placeholder="Cari staf (nama, email, telepon, jabatan)...">
                     </div>
                     <div class="filter-actions-new">
                         <button type="submit" class="btn-filter-apply">
                             <i class="fas fa-search"></i> Cari
                         </button>
                         <a href="staff.php" class="btn-filter-reset">
-                            <i class="fas fa-redo"></i> Reset
+                            <i class="fas fa-redo"></i> Atur Ulang
                         </a>
                     </div>
                     <?php if ($page > 1): ?>
@@ -961,7 +961,7 @@ $pageTitle = "Staff List";
                         <span class="summary-value"><?php echo min($offset + 1, $total_records); ?> - <?php echo min($offset + $limit, $total_records); ?></span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Total Staff</span>
+                        <span class="summary-label">Total Staf</span>
                         <span class="summary-value"><?php echo number_format($total_records); ?></span>
                     </div>
                 </div>
@@ -973,7 +973,7 @@ $pageTitle = "Staff List";
                         <tr>
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
-                            <th>Nama Staff</th>
+                            <th>Nama Staf</th>
                             <th>Tim</th>
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
@@ -986,7 +986,7 @@ $pageTitle = "Staff List";
                             <tr>
                                 <td colspan="8" class="no-data">
                                     <i class="fas fa-user-slash"></i>
-                                    <p>Tidak ada staff ditemukan</p>
+                                    <p>Tidak ada staf ditemukan</p>
                                     <?php if (!empty($search)): ?>
                                         <p class="no-data-keyword">
                                             Kata kunci: "<?php echo htmlspecialchars($search); ?>"
@@ -1110,16 +1110,16 @@ $pageTitle = "Staff List";
             <div class="pagination-bar">
                 <div class="pagination-info">
                     <div class="info-text">
-                        Showing <?php echo min($offset + 1, $total_records); ?> to <?php echo min($offset + $limit, $total_records); ?> of <?php echo number_format($total_records); ?> entries
+                        Menampilkan <?php echo min($offset + 1, $total_records); ?> sampai <?php echo min($offset + $limit, $total_records); ?> dari <?php echo number_format($total_records); ?> data
                     </div>
                 </div>
                 <?php if ($total_pages > 1): ?>
                 <div class="pagination-controls">
-                    <!-- Previous -->
+                    <!-- Sebelumnya -->
                     <?php if ($page > 1): ?>
-                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Previous</a>
+                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">Sebelumnya</a>
                     <?php else: ?>
-                        <span class="disabled">Previous</span>
+                        <span class="disabled">Sebelumnya</span>
                     <?php endif; ?>
 
                     <!-- Page Numbers -->
@@ -1146,11 +1146,11 @@ $pageTitle = "Staff List";
                     }
                     ?>
 
-                    <!-- Next -->
+                    <!-- Berikutnya -->
                     <?php if ($page < $total_pages): ?>
-                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Next</a>
+                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">Berikutnya</a>
                     <?php else: ?>
-                        <span class="disabled">Next</span>
+                        <span class="disabled">Berikutnya</span>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
@@ -1160,8 +1160,8 @@ $pageTitle = "Staff List";
         <footer class="dashboard-footer">
             <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
-                <a href="<?php echo SITE_URL; ?>">Home</a> |
-                <a href="contact.php">Contact</a> |
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
                 <a href="bpjs.php">BPJSTK</a>
             </p>
         </footer>
