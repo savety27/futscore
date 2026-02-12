@@ -14,20 +14,14 @@ $offset = ($page - 1) * $limit;
 $team_id = $_SESSION['team_id'] ?? 0;
 
 // Base Query (Filtered by team_id)
-$base_query = "SELECT 
-    ts.id,
-    ts.team_id,
-    ts.name,
-    ts.position,
-    ts.email,
-    ts.phone,
-    ts.photo,
-    ts.birth_date,
-    t.name as team_name,
-    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
+$base_query = "
+    SELECT ts.id, ts.name, ts.photo, ts.position, ts.birth_date, ts.is_active,
+           t.name as team_name, t.alias as team_alias,
+           (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
     FROM team_staff ts
     LEFT JOIN teams t ON ts.team_id = t.id
-    WHERE ts.team_id = ?";
+    WHERE ts.team_id = ?
+";
 
 $count_query = "SELECT COUNT(DISTINCT ts.id) as total FROM team_staff ts 
                 LEFT JOIN teams t ON ts.team_id = t.id
@@ -150,6 +144,7 @@ try {
                         <th style="text-align: center;">Jabatan</th>
                         <th style="text-align: center;">Umur</th>
                         <th style="text-align: center;">Sertifikat</th>
+                        <th style="text-align: center;">Status</th>
                         <th style="text-align: center;">Aksi</th>
                     </tr>
                 </thead>
@@ -188,6 +183,13 @@ try {
                                 <span style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%);">▶</span>
                             </span>
                             </a>
+                        </td>
+                        <td class="status-cell" style="text-align: center;">
+                            <?php if ($staff['is_active']): ?>
+                                <span class="badge badge-success">Aktif</span>
+                            <?php else: ?>
+                                <span class="badge badge-danger">Non-Aktif</span>
+                            <?php endif; ?>
                         </td>
                         <td class="action-cell" style="text-align: center;">
                             <a href="staff_view.php?id=<?php echo $staff['id']; ?>" 
@@ -460,6 +462,25 @@ function deleteStaff(staffId, staffName) {
     align-items: center;
     gap: 10px;
     font-weight: 500;
+}
+
+/* Badge styles */
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success);
+}
+
+.badge-danger {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--danger);
 }
 </style>
 
