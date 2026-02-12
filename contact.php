@@ -2,6 +2,7 @@
 $hideNavbars = true;
 $pageTitle = "Contact";
 require_once 'includes/header.php';
+$contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixofficial@gmail.com&su=Halo%20ALVETRIX";
 ?>
 
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
@@ -69,11 +70,11 @@ require_once 'includes/header.php';
     <main class="main-content-dashboard">
         <header class="dashboard-header contact-header">
             <div class="contact-hero">
-                <span class="contact-eyebrow">MGP</span>
+                <span class="contact-eyebrow">ALVETRIX</span>
                 <h1>Hubungi Kami</h1>
-                <p class="contact-subtitle">Tim MGP siap membantu operasional dan informasi event di seluruh Indonesia. Respons rata-rata 1x24 jam kerja.</p>
+                <p class="contact-subtitle">Silakan menghubungi kami melalui Email resmi atau WhatsApp layanan sesuai kebutuhan Anda.</p>
                 <div class="contact-actions">
-                    <a class="contact-action primary" href="https://mail.google.com/mail/?view=cm&fs=1&to=info@mgp.com&su=Assalamualaikum%2C%20Pak." target="_blank" rel="noopener noreferrer">
+                    <a class="contact-action primary" href="<?php echo $contactEmailLink; ?>" target="_blank" rel="noopener noreferrer">
                         <i class="fas fa-envelope"></i> Kirim Email
                     </a>
                 </div>
@@ -85,26 +86,19 @@ require_once 'includes/header.php';
                 <section class="contact-card">
                     <div class="contact-card-header">
                         <div>
-                            <span class="contact-label">Kontak Pusat</span>
-                            <h2 class="contact-card-title">MGP</h2>
+                            <span class="contact-label">Email Resmi</span>
+                            <h2 class="contact-card-title">Kontak Administrasi</h2>
                         </div>
-                        <p class="contact-card-subtitle">Pusat layanan resmi untuk kebutuhan operasional, informasi event, dan koordinasi nasional.</p>
+                        <p class="contact-card-subtitle">Gunakan email resmi untuk administrasi, kerja sama, dan komunikasi formal.</p>
                     </div>
 
                     <div class="contact-info-grid">
                         <div class="contact-info-item">
-                            <i class="fas fa-building"></i>
-                            <div>
-                                <h3>Alamat Kantor</h3>
-                                <p>Jalan Kebagusan 1 No. 50, Kec. Pasar Minggu<br>Jakarta Selatan 12520</p>
-                            </div>
-                        </div>
-                        <div class="contact-info-item">
                             <i class="fas fa-envelope"></i>
                             <div>
                                 <h3>Email</h3>
-                                <p>info@mgp.com</p>
-                                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=info@mgp.com&su=Assalamualaikum%2C%20Pak." class="contact-link" target="_blank" rel="noopener noreferrer">Kirim Email</a>
+                                <p>alvetrixofficial@gmail.com</p>
+                                <a href="<?php echo $contactEmailLink; ?>" class="contact-link" target="_blank" rel="noopener noreferrer">Kirim Email</a>
                             </div>
                         </div>
                     </div>
@@ -113,66 +107,27 @@ require_once 'includes/header.php';
                 <section class="contact-card">
                     <div class="contact-card-header">
                         <div>
-                            <span class="contact-label">DC Wilayah</span>
-                            <h2 class="contact-card-title">Daftar DC Wilayah</h2>
+                            <span class="contact-label">Layanan Cepat</span>
+                            <h2 class="contact-card-title">WhatsApp Layanan</h2>
                         </div>
-                        <p class="contact-card-subtitle">Tim Data Center (DC) MGP siap membantu operasional dan informasi event di area masing-masing.</p>
+                        <p class="contact-card-subtitle">Gunakan WhatsApp untuk pertanyaan umum dan informasi cepat terkait layanan ALVETRIX.</p>
                     </div>
 
                     <div class="dc-grid">
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('628117757222', 'Alfin', 'DC Batam')">
+                        
+                        <div class="dc-card" role="button" tabindex="0" data-contact-context="Layanan ALVETRIX" onclick="openWhatsApp('6282186582328', 'Detang', 'Layanan ALVETRIX')">
                             <div class="dc-header">
-                                <h3>DC Batam</h3>
+                                <h3>Kontak WhatsApp</h3>
                                 <span class="dc-badge">Aktif</span>
                             </div>
                             <div class="dc-content">
                                 <div class="dc-person">
                                     <i class="fas fa-user"></i>
-                                    <span>Alfin</span>
+                                    <span>Savety</span>
                                 </div>
                                 <div class="dc-phone">
                                     <i class="fas fa-phone"></i>
-                                    <span>+62 811-7757-222</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6282125434723', 'Agus', 'DC Banten')">
-                            <div class="dc-header">
-                                <h3>DC Banten</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Agus</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 821-2543-4723</span>
-                                </div>
-                                <button class="dc-whatsapp" type="button">
-                                    <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="dc-card" role="button" tabindex="0" onclick="openWhatsApp('6282186582328', 'Detang', 'DC DKI Jakarta')">
-                            <div class="dc-header">
-                                <h3>DC DKI Jakarta</h3>
-                                <span class="dc-badge">Aktif</span>
-                            </div>
-                            <div class="dc-content">
-                                <div class="dc-person">
-                                    <i class="fas fa-user"></i>
-                                    <span>Detang</span>
-                                </div>
-                                <div class="dc-phone">
-                                    <i class="fas fa-phone"></i>
-                                    <span>+62 821-8658-2328</span>
+                                    <span>+62 878-9895-4988</span>
                                 </div>
                                 <button class="dc-whatsapp" type="button">
                                     <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
@@ -183,18 +138,18 @@ require_once 'includes/header.php';
 
                     <div class="dc-note">
                         <i class="fas fa-info-circle"></i>
-                        <p><strong>Catatan:</strong> Jika area Anda belum tersedia, silakan hubungi siapa pun dari daftar DC di atas atau kontak pusat.</p>
+                        <p><strong>Catatan:</strong> Untuk respons lebih cepat, kirim pesan melalui WhatsApp. Layanan ini hanya menerima chat.</p>
                     </div>
                 </section>
             </div>
         </div>
 
         <footer class="dashboard-footer">
-            <p>&copy; 2026 MGP Indonesia. All rights reserved.</p>
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
             <p>
                 <a href="<?php echo SITE_URL; ?>">Home</a> |
                 <a href="contact.php">Contact</a> |
-                <a href="privacy.php">Privacy Policy</a>
+                <a href="contact.php">Privacy Policy</a>
             </p>
         </footer>
     </main>
@@ -203,7 +158,7 @@ require_once 'includes/header.php';
 <script>
 function openWhatsApp(phoneNumber, personName, region) {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
-    const message = `Halo ${personName} (${region}),\n\nSaya ingin bertanya terkait informasi yang ada di wilayah ${region}.\n\nTerima kasih.`;
+    const message = `Halo ${personName},\nSaya ingin bertanya terkait ${region}.\nTerima kasih.`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
     window.open(whatsappURL, '_blank');
@@ -215,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             e.stopPropagation();
             const card = this.closest('.dc-card');
-            const region = card.querySelector('h3').textContent;
+            const region = card.dataset.contactContext || 'layanan ALVETRIX';
             const person = card.querySelector('.dc-person span').textContent;
             const phone = card.querySelector('.dc-phone span').textContent.replace(/\D/g, '');
             openWhatsApp(phone, person, region);
