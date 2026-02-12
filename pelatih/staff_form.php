@@ -330,6 +330,32 @@ if ($is_edit) {
             margin-top: 15px;
         }
         
+        .photo-preview-container {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .photo-preview-container.active {
+            display: block;
+        }
+        
+        .new-photo-preview {
+            max-width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border: 3px solid var(--success);
+        }
+        
+        .preview-label {
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -439,6 +465,15 @@ if ($is_edit) {
                     <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
                     <div class="file-upload-text">Klik untuk upload foto<?php echo $is_edit ? ' baru' : ''; ?></div>
                     <div class="file-upload-subtext">Format: JPG, PNG, GIF | Maks: 5MB</div>
+                </div>
+                
+                <!-- Preview for newly selected photo -->
+                <div id="photoPreviewContainer" class="photo-preview-container">
+                    <div class="preview-label">
+                        <i class="fas fa-image"></i>
+                        Preview Foto Baru:
+                    </div>
+                    <img id="photoPreview" class="new-photo-preview" alt="Preview">
                 </div>
             </div>
         </div>
@@ -593,6 +628,48 @@ if ($is_edit) {
 </div>
 
 <script>
+// Photo preview handler
+document.getElementById('photo').addEventListener('change', function(e) {
+    const file = this.files[0];
+    const previewContainer = document.getElementById('photoPreviewContainer');
+    const preview = document.getElementById('photoPreview');
+    
+    if (file) {
+        // Check file size (5MB max)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('Ukuran file terlalu besar! Maksimal 5MB');
+            this.value = '';
+            previewContainer.classList.remove('active');
+            return;
+        }
+        
+        // Check file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            alert('Format file tidak valid! Gunakan JPG, PNG, atau GIF');
+            this.value = '';
+            previewContainer.classList.remove('active');
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.classList.add('active');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.classList.remove('active');
+    }
+});
+
+// Prevent file input click from bubbling to container
+document.getElementById('photo').addEventListener('click', function(e) {
+    e.stopPropagation();
+});
+
 function addCertificateField() {
     const container = document.getElementById('certificateContainer');
     const isEdit = <?php echo $is_edit ? 'true' : 'false'; ?>;
