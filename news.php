@@ -315,15 +315,14 @@ function getQueryString($exclude = []) {
         <div class="dashboard-body">
             <div class="container news-page-shell">
                 <?php if ($isSingleNews): ?>
-                    <div class="news-breadcrumb">
-                        <a href="index.php">Beranda</a>
-                        <span class="breadcrumb-separator">&rsaquo;</span>
-                        <a href="news.php">Berita</a>
-                        <span class="breadcrumb-separator">&rsaquo;</span>
-                        <span><?php echo htmlspecialchars($news['judul'] ?? ''); ?></span>
-                    </div>
-
                     <div class="news-detail section-container section-elevated">
+                        <div class="news-breadcrumb">
+                            <a href="index.php">Beranda</a>
+                            <span class="breadcrumb-separator">&rsaquo;</span>
+                            <a href="news.php">Berita</a>
+                            <span class="breadcrumb-separator">&rsaquo;</span>
+                            <span><?php echo htmlspecialchars($news['judul'] ?? ''); ?></span>
+                        </div>
                         <div class="news-header-detail">
                             <h1><?php echo htmlspecialchars($news['judul'] ?? ''); ?></h1>
                             <div class="news-meta-detail">
