@@ -17,43 +17,12 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $player_id = (int)$_GET['id'];
 
 try {
-    // First get player data to delete files
+    // First get player data (files are deleted only after DB delete succeeds)
     $stmt = $conn->prepare("SELECT photo, ktp_image, kk_image, birth_cert_image, diploma_image FROM players WHERE id = ?");
     $stmt->execute([$player_id]);
     $player = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($player) {
-        // Delete files from server
-        $upload_dir = '../../images/players/';
-        
-        $files_to_delete = [
-            $player['photo'],
-            $player['ktp_image'],
-            $player['kk_image'],
-            $player['birth_cert_image'],
-            $player['diploma_image']
-        ];
-        
-        foreach ($files_to_delete as $file) {
-            if (!empty($file)) {
-                // Cek berbagai kemungkinan lokasi file
-                $possible_paths = [
-                    $upload_dir . $file,
-                    '../../' . $file,
-                    'images/players/' . $file,
-                    'uploads/players/' . $file,
-                    $file
-                ];
-                
-                foreach ($possible_paths as $file_path) {
-                    if (file_exists($file_path)) {
-                        @unlink($file_path);
-                        break;
-                    }
-                }
-            }
-        }
-    }
+
+    $conn->beginTransaction();
     
     // Hapus data terkait lebih dulu untuk menghindari constraint FK
     try {
@@ -81,13 +50,50 @@ try {
     // HARD DELETE (benar-benar hapus dari database)
     $stmt = $conn->prepare("DELETE FROM players WHERE id = ?");
     $stmt->execute([$player_id]);
-    
+
     if ($stmt->rowCount() > 0) {
+        $conn->commit();
+
+        if ($player) {
+            // Delete files from server only after DB delete succeeds
+            $upload_dir = '../../images/players/';
+            $files_to_delete = [
+                $player['photo'],
+                $player['ktp_image'],
+                $player['kk_image'],
+                $player['birth_cert_image'],
+                $player['diploma_image']
+            ];
+
+            foreach ($files_to_delete as $file) {
+                if (!empty($file)) {
+                    $possible_paths = [
+                        $upload_dir . $file,
+                        '../../' . $file,
+                        'images/players/' . $file,
+                        'uploads/players/' . $file,
+                        $file
+                    ];
+
+                    foreach ($possible_paths as $file_path) {
+                        if (file_exists($file_path)) {
+                            @unlink($file_path);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         echo json_encode(['success' => true, 'message' => 'Player berhasil dihapus permanen']);
     } else {
+        $conn->rollBack();
         echo json_encode(['success' => false, 'message' => 'Player tidak ditemukan']);
     }
 } catch (Exception $e) {
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
     http_response_code(500);
     $message = $e->getMessage();
     

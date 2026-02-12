@@ -58,6 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return $filename;
     }
     
+    // Track newly uploaded files so we can clean them up if DB write fails.
+    $uploaded_files_to_cleanup = [];
+
     try {
         if (!$team_id) {
             throw new Exception('Tim belum terhubung ke akun pelatih. Silakan set tim terlebih dulu.');
@@ -239,16 +242,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $new_filename = uploadPlayerFile($_FILES[$file_key], '../images/players/', $prefix);
                     
                     if ($new_filename) {
+                        $uploaded_files_to_cleanup[] = $new_filename;
                         $sql .= ", $db_field = ?";
                         $params[] = $new_filename;
-                        
-                        // Delete old file if exists
-                        if ($current_files && !empty($current_files[$db_field])) {
-                            $old_file = '../images/players/' . $current_files[$db_field];
-                            if (file_exists($old_file)) {
-                                unlink($old_file);
-                            }
-                        }
                     }
                 }
             }
@@ -263,8 +259,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $affectedRows = $stmt->rowCount();
             
             if ($affectedRows > 0) {
+                // Delete replaced old files only after DB update succeeds.
+                foreach ($files_to_check as $file_key => $db_field) {
+                    if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] == 0) {
+                        if ($current_files && !empty($current_files[$db_field])) {
+                            $old_file = '../images/players/' . $current_files[$db_field];
+                            if (file_exists($old_file)) {
+                                unlink($old_file);
+                            }
+                        }
+                    }
+                }
                 header("Location: players.php?msg=updated");
             } else {
+                // No DB row changed (e.g. unauthorized id/team): remove newly uploaded files.
+                foreach ($uploaded_files_to_cleanup as $new_file) {
+                    $new_file_path = '../images/players/' . $new_file;
+                    if (file_exists($new_file_path)) {
+                        unlink($new_file_path);
+                    }
+                }
                 header("Location: players.php?msg=no_changes");
             }
             exit;
@@ -312,6 +326,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } catch (Exception $e) {
+        // Roll back uploaded files when operation fails.
+        foreach ($uploaded_files_to_cleanup as $new_file) {
+            $new_file_path = '../images/players/' . $new_file;
+            if (file_exists($new_file_path)) {
+                unlink($new_file_path);
+            }
+        }
+
         // Redirect back with error message
         $error_msg = $e->getMessage();
         
