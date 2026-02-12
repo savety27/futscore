@@ -74,7 +74,6 @@ $pageTitle = "BPJS Ketenagakerjaan";
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
                     <h1>BPJS Ketenagakerjaan</h1>
-                    <p class="header-subtitle">Futscore bekerja sama dengan BPJS Ketenagakerjaan untuk memudahkan pendaftaran atlet usia muda.</p>
                 </div>
                 <div class="header-actions">
                     <a href="#bpjs-form" class="btn-primary"><i class="fas fa-file-contract"></i> Daftar BPJS</a>
@@ -107,16 +106,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
                             </div>
                         </div>
                     </div>
-                    <div class="bpjs-alert-card">
-                        <div class="alert-icon">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div class="alert-content">
-                            <h3>Catatan Singkat</h3>
-                            <p>Untuk program Bakat dan Minat, pendaftaran online saat ini hanya melalui Futscore. Jika ingin mendaftar langsung, silakan ke kantor cabang BPJS Ketenagakerjaan terdekat.</p>
-                        </div>
-                    </div>
-                </div>
+                    
             </section>
 
             <!-- Program Info Cards -->
@@ -158,7 +148,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
                     <article class="faq-item">
                         <h3>1. Siapa yang bisa mendaftar?</h3>
                         <p>BPJS Ketenagakerjaan Bakat dan Minat ditujukan untuk atlet muda usia minimal 6 tahun dan belum 15 tahun (6-14 tahun) pada saat pendaftaran. Artinya, per hari ini yang bisa mendaftar adalah anak yang lahir pada tanggal <strong>27 Januari 2011 s.d. 26 Januari 2020</strong>.</p>
-                        <p class="faq-note">Pendaftaran terbuka untuk seluruh Indonesia, tidak terbatas pada anak yang sudah/akan mengikuti event di Futscore.</p>
+                        <p class="faq-note">Pendaftaran terbuka untuk seluruh Indonesia.</p>
                     </article>
                     <article class="faq-item">
                         <h3>2. Perlindungan dan Layanan</h3>
@@ -225,10 +215,6 @@ $pageTitle = "BPJS Ketenagakerjaan";
                     <h2 class="section-title">
                         <i class="fas fa-file-contract"></i> Formulir Pendaftaran
                     </h2>
-                </div>
-                <div class="form-notice">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Formulir pendaftaran tampil di bawah ini. Jika tampilan bermasalah di perangkat Anda, <a href="https://bpjstk.co/futscore" target="_blank">buka langsung di sini</a>.</p>
                 </div>
                 <div class="form-wrapper">
                     <iframe 

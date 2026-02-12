@@ -647,8 +647,8 @@ if ($teamId > 0) {
                 }
                 
                 function buildTeamShareText() {
-                    const name = teamShareName || 'this team';
-                    return `Check out ${name} on Futscore`;
+                    const name = teamShareName || 'tim ini';
+                    return `Lihat ${name} di ALVETRIX`;
                 }
 
                 function updateTeamShareLinks() {
