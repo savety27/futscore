@@ -106,7 +106,7 @@ if ($teamId > 0) {
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
                     <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
@@ -647,8 +647,8 @@ if ($teamId > 0) {
                 }
                 
                 function buildTeamShareText() {
-                    const name = teamShareName || 'this team';
-                    return `Check out ${name} on Futscore`;
+                    const name = teamShareName || 'tim ini';
+                    return `Lihat ${name} di ALVETRIX`;
                 }
 
                 function updateTeamShareLinks() {

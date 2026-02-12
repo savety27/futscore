@@ -38,10 +38,10 @@ $latestNews = getLatestNews(3);
                     </div>
                 </div>
                 <div class="social-icons">
-                    <a href="https://www.youtube.com/@futscoreindonesia4634" target="_blank" class="social-icon youtube">
+                    <a href="https://www.youtube.com/@alvetrix" target="_blank" class="social-icon youtube">
                         <i class="fab fa-youtube"></i>
                     </a>
-                    <a href="https://www.instagram.com/futscore.id/" target="_blank" class="social-icon instagram">
+                    <a href="https://www.instagram.com/alvetrix.id/" target="_blank" class="social-icon instagram">
                         <i class="fab fa-instagram"></i>
                     </a>
                 </div>
@@ -57,7 +57,7 @@ $latestNews = getLatestNews(3);
             <div class="navbar-content">
                 <div class="logo">
                     <a href="<?php echo SITE_URL; ?>">
-                        <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Futscore Logo">
+                        <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="ALVETRIX Logo">
                     </a>
                 </div>
                 <ul class="nav-menu">

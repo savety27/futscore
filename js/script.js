@@ -253,7 +253,7 @@ function openScheduleMatchModal(matchId) {
             scheduleModalData = scheduleData;
 
             // Populate modal
-            document.getElementById('scheduleModalTitle').textContent = 'Match Details';
+            document.getElementById('scheduleModalTitle').textContent = 'Detail Pertandingan';
 
             const modalContent = document.getElementById('scheduleModalContent');
             modalContent.innerHTML = `
@@ -262,8 +262,8 @@ function openScheduleMatchModal(matchId) {
                     <p class="schedule-round">${scheduleData.round}</p>
                     
                     <div class="schedule-date-venue">
-                        <p><i class="fas fa-calendar-alt"></i> <strong>Date & Time:</strong> ${scheduleData.date}, ${scheduleData.time}</p>
-                        <p><i class="fas fa-map-marker-alt"></i> <strong>Venue:</strong> ${scheduleData.location}</p>
+                        <p><i class="fas fa-calendar-alt"></i> <strong>Tanggal & Waktu:</strong> ${scheduleData.date}, ${scheduleData.time}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> <strong>Lokasi:</strong> ${scheduleData.location}</p>
                     </div>
                     
                     <div class="schedule-teams-large">
@@ -287,7 +287,7 @@ function openScheduleMatchModal(matchId) {
                     </div>
                     
                     <div class="schedule-share">
-                        <h4>Share This Match</h4>
+                        <h4>Share Pertandingan</h4>
                         <div class="share-buttons-grid">
                             <a href="https://wa.me/?text=Check out this match: ${scheduleData.team1} vs ${scheduleData.team2} on ${scheduleData.date} at ${scheduleData.location}" 
                                target="_blank" class="share-btn-modal whatsapp">

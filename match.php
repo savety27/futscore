@@ -177,7 +177,7 @@ if (!$matchNotFound) {
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
                 <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASBOR</span>
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
                     <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
@@ -195,7 +195,7 @@ if (!$matchNotFound) {
         <header class="dashboard-header dashboard-header-match">
             <div class="dashboard-header-inner">
                 <div>
-                    <div class="header-eyebrow">FUTSCORE</div>
+                    <div class="header-eyebrow">ALVETRIX</div>
                     <h1><?php echo $matchNotFound ? 'Pertandingan Tidak Ditemukan' : 'Detail Pertandingan'; ?></h1>
                     <p class="header-subtitle">Detail pertandingan, status, dan susunan pemain dalam tampilan yang rapi dan modern.</p>
                 </div>

@@ -424,7 +424,7 @@ try {
                         <th>Tanggal</th>
                         <th>Tim</th>
                         <th>Event</th>
-                        <th>Venue</th>
+                        <th>Lokasi</th>
                         <th>Skor</th>
                         <th>Status</th>
                         <th>Status Pertandingan</th>
