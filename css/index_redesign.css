@@ -963,6 +963,14 @@
     color: var(--navy);
     box-shadow: var(--shadow-md);
     overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.winner-premium-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--blue-primary);
+    box-shadow: 0 16px 40px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(0, 0, 0, 0.06);
+    background: linear-gradient(135deg, var(--white) 0%, #e8f0fe 100%);
 }
 
 .winner-bg-glow {
@@ -970,6 +978,11 @@
     inset: 0;
     background: radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent 60%);
     opacity: 0.6;
+}
+
+.winner-premium-card:hover .winner-bg-glow {
+    opacity: 1;
+    background: radial-gradient(circle at top, rgba(59, 130, 246, 0.3), transparent 65%);
 }
 
 .winner-trophy-icon {
@@ -984,6 +997,14 @@
     box-shadow: var(--shadow-sm);
     position: relative;
     z-index: 1;
+    transition: all 0.4s ease;
+}
+
+.winner-premium-card:hover .winner-trophy-icon {
+    transform: scale(1.15) rotate(-8deg);
+    box-shadow: 0 6px 16px rgba(255, 193, 7, 0.3);
+    background: var(--gold);
+    color: var(--navy-dark);
 }
 
 .team-logo-premium {
@@ -996,6 +1017,13 @@
     padding: 6px;
     position: relative;
     z-index: 1;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.winner-premium-card:hover .team-logo-premium {
+    transform: scale(1.08);
+    border-color: var(--blue-primary);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
 }
 
 .winner-info {
@@ -1008,6 +1036,11 @@
     font-size: 16px;
     font-weight: 800;
     color: var(--navy);
+    transition: color 0.3s ease;
+}
+
+.winner-premium-card:hover .winner-info .team-name {
+    color: var(--blue-primary);
 }
 
 .achievement-badge {
@@ -1023,6 +1056,13 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    transition: all 0.4s ease;
+}
+
+.winner-premium-card:hover .achievement-badge {
+    background: var(--blue-primary);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transform: scale(1.05);
 }
 
 .winner-footer {
@@ -1033,6 +1073,19 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
+    transition: all 0.3s ease;
+}
+
+.winner-premium-card:hover .winner-footer {
+    color: var(--blue-primary);
+}
+
+.view-profile i {
+    transition: transform 0.3s ease;
+}
+
+.winner-premium-card:hover .view-profile i {
+    transform: translateX(4px);
 }
 
 .team-card {
@@ -1047,6 +1100,13 @@
     text-decoration: none;
     color: var(--navy);
     box-shadow: var(--shadow-md);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.team-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--blue-primary);
+    box-shadow: 0 16px 40px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .team-logo-lg {
@@ -1057,6 +1117,17 @@
     background: var(--gray-50);
     border: 1px solid var(--gray-200);
     padding: 6px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.team-card:hover .team-logo-lg {
+    transform: scale(1.08);
+    border-color: var(--blue-primary);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.2);
+}
+
+.team-card:hover .team-name {
+    color: var(--blue-primary);
 }
 
 .team-label {
