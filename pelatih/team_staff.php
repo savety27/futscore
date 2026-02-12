@@ -10,7 +10,10 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
-// Base Query (Read Only - Lists all staff)
+// Get team_id from session
+$team_id = $_SESSION['team_id'] ?? 0;
+
+// Base Query (Filtered by team_id)
 $base_query = "SELECT 
     ts.id,
     ts.team_id,
@@ -24,11 +27,11 @@ $base_query = "SELECT
     (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
     FROM team_staff ts
     LEFT JOIN teams t ON ts.team_id = t.id
-    WHERE 1=1";
+    WHERE ts.team_id = ?";
 
 $count_query = "SELECT COUNT(DISTINCT ts.id) as total FROM team_staff ts 
                 LEFT JOIN teams t ON ts.team_id = t.id
-                WHERE 1=1";
+                WHERE ts.team_id = ?";
 
 if (!empty($search)) {
     $search_term = "%{$search}%";
@@ -45,10 +48,10 @@ $staff_list = [];
 try {
     if (!empty($search)) {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term, $search_term]);
+        $stmt->execute([$team_id, $search_term, $search_term, $search_term, $search_term, $search_term]);
     } else {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute();
+        $stmt->execute([$team_id]);
     }
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $total_data = $result['total'];
@@ -59,16 +62,18 @@ try {
     $stmt = $conn->prepare($query);
     
     if (!empty($search)) {
-        $stmt->bindValue(1, $search_term);
+        $stmt->bindValue(1, $team_id, PDO::PARAM_INT);
         $stmt->bindValue(2, $search_term);
         $stmt->bindValue(3, $search_term);
         $stmt->bindValue(4, $search_term);
         $stmt->bindValue(5, $search_term);
-        $stmt->bindValue(6, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(7, $offset, PDO::PARAM_INT);
+        $stmt->bindValue(6, $search_term);
+        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
     } else {
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->bindValue(1, $team_id, PDO::PARAM_INT);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
     }
     
     $stmt->execute();
