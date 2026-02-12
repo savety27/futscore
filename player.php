@@ -53,6 +53,7 @@ $players = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Optional Player Detail (by ID)
 $player_detail = null;
+$player_detail_event_label = '-';
 if ($player_id > 0) {
     $detail_query = "SELECT p.*, t.name as team_name, t.logo as team_logo 
                      FROM players p 
@@ -63,21 +64,17 @@ if ($player_id > 0) {
     $detail_stmt->execute();
     $player_detail = $detail_stmt->get_result()->fetch_assoc();
     
-    // Add team events if player has a team
-    $player_events = [];
-    if ($player_detail && !empty($player_detail['team_id'])) {
-        $team_info = getTeamById($player_detail['team_id']);
-        if ($team_info && !empty($team_info['events_array'])) {
-            $player_events = $team_info['events_array'];
+    // Single event label: prioritize player sport_type (same behavior as admin player page)
+    if ($player_detail) {
+        if (!empty($player_detail['sport_type'])) {
+            $player_detail_event_label = $player_detail['sport_type'];
+        } elseif (!empty($player_detail['team_id'])) {
+            $team_info = getTeamById($player_detail['team_id']);
+            if ($team_info && !empty($team_info['events_array'][0])) {
+                $player_detail_event_label = $team_info['events_array'][0];
+            }
         }
     }
-    
-    // Merge player specific sport_type if not already in list
-    if (!empty($player_detail['sport_type']) && !in_array($player_detail['sport_type'], $player_events)) {
-        $player_events[] = $player_detail['sport_type'];
-    }
-    
-    $player_detail['team_events_array'] = $player_events;
 }
 
 // Helper Functions
@@ -86,7 +83,7 @@ function calculateAgeV2($birth_date) {
     $birth = new DateTime($birth_date);
     $today = new DateTime();
     $diff = $today->diff($birth);
-    return $diff->y . 'y ' . $diff->m . 'm';
+    return $diff->y . ' tahun ' . $diff->m . ' bulan';
 }
 
 function maskNIK($nik) {
@@ -242,15 +239,7 @@ function maskNIK($nik) {
                             <div class="detail-item">
                                 <span class="detail-label">Event</span>
                                 <span class="detail-value">
-                                    <?php if (!empty($player_detail['team_events_array'])): ?>
-                                        <div class="event-badges-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-                                            <?php foreach ($player_detail['team_events_array'] as $event_name): ?>
-                                                <span class="event-badge" style="font-size: 11px; background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd;"><?php echo htmlspecialchars($event_name); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <?php echo htmlspecialchars($player_detail['sport_type'] ?: '-'); ?>
-                                    <?php endif; ?>
+                                    <span class="event-badge" style="font-size: 11px; background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; white-space: normal; overflow: visible; text-overflow: clip; max-width: none; word-break: break-word; overflow-wrap: anywhere;"><?php echo htmlspecialchars($player_detail_event_label ?: '-'); ?></span>
                                 </span>
                             </div>
                             <div class="detail-item">
@@ -361,7 +350,7 @@ function maskNIK($nik) {
 
                                     <?php if (!empty($eventLabel)): ?>
                                         <div class="team-events-badges" style="display: flex; flex-wrap: wrap; gap: 4px;">
-                                            <span class="event-badge" style="font-size: 9px; padding: 1px 6px; background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd;"><?php echo htmlspecialchars($eventLabel); ?></span>
+                                            <span class="event-badge" style="font-size: 9px; padding: 1px 6px; background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; white-space: normal; overflow: visible; text-overflow: clip; max-width: none; word-break: break-word; overflow-wrap: anywhere;"><?php echo htmlspecialchars($eventLabel); ?></span>
                                         </div>
                                     <?php else: ?>
                                         -
