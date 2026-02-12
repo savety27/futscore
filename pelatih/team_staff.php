@@ -109,9 +109,25 @@ try {
 </div>
 
 <div class="card">
+    <?php if (isset($_SESSION['success_message'])): ?>
+    <div class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
+    </div>
+    <?php endif; ?>
+    
+    <?php if (isset($_SESSION['error_message'])): ?>
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
+    </div>
+    <?php endif; ?>
+    
     <div class="section-header">
         <h2 class="section-title">Staf Tim</h2>
-         <!-- Read Only: No Add Button -->
+        <a href="staff_form.php" class="btn-add">
+            <i class="fas fa-plus"></i> Tambah Staf Baru
+        </a>
     </div>
 
     <div class="search-bar" style="margin-bottom: 20px;">
@@ -126,7 +142,7 @@ try {
     <?php else: ?>
         <div style="overflow-x: auto;">
             <table class="data-table">
-                <thead>
+                                <thead>
                     <tr>
                         <th class="photo-cell">Foto</th>
                         <th>Nama</th>
@@ -134,6 +150,7 @@ try {
                         <th style="text-align: center;">Jabatan</th>
                         <th style="text-align: center;">Umur</th>
                         <th style="text-align: center;">Sertifikat</th>
+                        <th style="text-align: center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -171,6 +188,23 @@ try {
                                 <span style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%);">▶</span>
                             </span>
                             </a>
+                        </td>
+                        <td class="action-cell" style="text-align: center;">
+                            <a href="staff_view.php?id=<?php echo $staff['id']; ?>" 
+                               class="btn-action btn-view" 
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="staff_form.php?id=<?php echo $staff['id']; ?>" 
+                               class="btn-action btn-edit" 
+                               title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button onclick="deleteStaff(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'])); ?>')" 
+                                    class="btn-action btn-delete" 
+                                    title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -263,6 +297,30 @@ document.addEventListener('DOMContentLoaded', function() {
         xhr.send();
     }
 });
+
+// Delete staff function
+function deleteStaff(staffId, staffName) {
+    if (confirm(`Apakah Anda yakin ingin menghapus staff "${staffName}"?\n\nSemua data termasuk foto dan sertifikat akan dihapus permanen.`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'staff_actions.php';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'delete';
+        
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = staffId;
+        
+        form.appendChild(actionInput);
+        form.appendChild(idInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 
 <style>
@@ -306,6 +364,102 @@ document.addEventListener('DOMContentLoaded', function() {
     color: var(--gray);
     font-size: 14px;
     margin: 3px 0;
+}
+
+/* Action buttons */
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 0 5px;
+    font-size: 14px;
+}
+
+.btn-view {
+    background: rgba(76, 201, 240, 0.1);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.btn-view:hover {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-edit {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success);
+    text-decoration: none;
+}
+
+.btn-edit:hover {
+    background: var(--success);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--danger);
+}
+
+.btn-delete:hover {
+    background: var(--danger);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--success), #4CAF50);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
+}
+
+.btn-add:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
+}
+
+/* Success and Error Messages */
+.success-message {
+    background: rgba(46, 125, 50, 0.1);
+    border-left: 4px solid var(--success);
+    color: var(--success);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.error-message {
+    background: rgba(211, 47, 47, 0.1);
+    border-left: 4px solid var(--danger);
+    color: var(--danger);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
 }
 </style>
 
