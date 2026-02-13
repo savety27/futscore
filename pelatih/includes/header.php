@@ -17,11 +17,12 @@ $team_name = 'FutScore';
 
 if ($team_id && isset($conn)) {
     try {
-        $stmt = $conn->prepare("SELECT name FROM teams WHERE id = ?");
+        $stmt = $conn->prepare("SELECT name, logo FROM teams WHERE id = ?");
         $stmt->execute([$team_id]);
         $team = $stmt->fetch();
         if ($team) {
             $team_name = $team['name'];
+            $team_logo = $team['logo'];
         }
     } catch (PDOException $e) {
         $team_name = 'FutScore';
@@ -54,7 +55,11 @@ if ($team_id && isset($conn)) {
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
-                <div class="logo"></div>
+                <div class="logo">
+                    <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
+                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="<?php echo htmlspecialchars($team_name); ?>" class="sidebar-team-logo">
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="academy-info">
                 <div class="academy-name"><?php echo htmlspecialchars($team_name); ?></div>

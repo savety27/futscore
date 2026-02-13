@@ -73,16 +73,54 @@ body {
     transition: var(--transition);
 }
 
-.logo:hover {
+.logo:hover:not(:has(.sidebar-team-logo)) {
     transform: rotate(15deg) scale(1.05);
     box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+}
+
+/* Floating Crest Mode (When Team Logo Exists) */
+.logo:has(.sidebar-team-logo) {
+    width: 140px;
+    height: 140px;
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+    margin-bottom: 25px; /* Extra space due to larger size */
+}
+
+.sidebar-team-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Premium Gold Glow following the shape of the logo */
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.logo:has(.sidebar-team-logo):hover .sidebar-team-logo {
+    transform: scale(1.15) rotate(5deg);
+    filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.7));
 }
 
 .logo::before {
     content: "⚽";
     font-size: 48px;
     color: var(--primary);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
 }
+
+.logo:has(img)::before {
+    display: none;
+}
+
+/* Remove earlier .sidebar-team-logo styles that conflicted */
+/* .sidebar-team-logo { ... } removed */
 
 .academy-info {
     text-align: center;
@@ -634,6 +672,12 @@ body {
     .logo {
         width: 80px;
         height: 80px;
+    }
+
+    .logo:has(.sidebar-team-logo) {
+        width: 110px;
+        height: 110px;
+        margin-bottom: 20px;
     }
 
     .logo::before {
