@@ -364,7 +364,7 @@ if (!$matchNotFound) {
                                         <span class="lineup-count"><?php echo count($lineups['team1']); ?> pemain</span>
                                     </div>
                                 </div>
-                                <span class="team-side-badge">Kandang</span>
+                                <span class="team-side-badge">Home</span>
                             </div>
 
                             <?php if (empty($lineups['team1'])): ?>
@@ -405,7 +405,7 @@ if (!$matchNotFound) {
                                         <span class="lineup-count"><?php echo count($lineups['team2']); ?> pemain</span>
                                     </div>
                                 </div>
-                                <span class="team-side-badge away">Tandang</span>
+                                <span class="team-side-badge away">Away</span>
                             </div>
 
                             <?php if (empty($lineups['team2'])): ?>
