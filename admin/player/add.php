@@ -118,6 +118,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // TAMBAHKAN VALIDASI NIK 16 DIGIT DI SINI
             $error = "NIK harus terdiri dari tepat 16 digit angka!";
         } else {
+            // Validasi duplicate nama pemain (global lintas semua tim)
+            $stmt_check_name = $conn->prepare("SELECT id FROM players WHERE TRIM(name) = TRIM(?) LIMIT 1");
+            $stmt_check_name->execute([$name]);
+            if ($stmt_check_name->fetchColumn()) {
+                throw new Exception("Nama pemain sudah terdaftar. Gunakan nama yang berbeda.");
+            }
+
             // Konversi gender ke format database (L/P)
             $gender_db = ($gender == 'Laki-laki') ? 'L' : 'P';
             
@@ -232,6 +239,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     } catch (PDOException $e) {
         $error = "Terjadi kesalahan: " . $e->getMessage();
+        $driver_code = (int)($e->errorInfo[1] ?? 0);
+        $message_lc = strtolower($e->getMessage());
+        if ($driver_code === 1062) {
+            if (strpos($message_lc, 'uq_players_name') !== false || strpos($message_lc, 'name') !== false) {
+                $error = "Nama pemain sudah terdaftar. Gunakan nama yang berbeda.";
+            } elseif (strpos($message_lc, 'nik') !== false) {
+                $error = "NIK sudah terdaftar. Gunakan NIK yang berbeda.";
+            } else {
+                $error = "Data duplikat terdeteksi. Periksa kembali input Anda.";
+            }
+        }
         error_log("Database Error: " . $e->getMessage());
     } catch (Exception $e) {
         $error = "Terjadi kesalahan: " . $e->getMessage();

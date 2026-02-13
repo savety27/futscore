@@ -57,6 +57,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         return $filename;
     }
+
+    // Check duplicate player name globally across all teams.
+    function isDuplicatePlayerName($conn, $name, $exclude_id = 0) {
+        $sql = "SELECT id FROM players WHERE TRIM(name) = TRIM(?)";
+        $params = [$name];
+
+        if ($exclude_id > 0) {
+            $sql .= " AND id <> ?";
+            $params[] = $exclude_id;
+        }
+
+        $sql .= " LIMIT 1";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        return (bool)$stmt->fetchColumn();
+    }
     
     // Track newly uploaded files so we can clean them up if DB write fails.
     $uploaded_files_to_cleanup = [];
@@ -114,6 +131,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // --- ADD PLAYER ---
         if ($action === 'add') {
+            if (isDuplicatePlayerName($conn, $name)) {
+                throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
+            }
+
             // Generate slug
             $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
             $slug = trim($slug, '-');
@@ -188,6 +209,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($id <= 0) {
                 throw new Exception('Invalid player ID.');
+            }
+
+            if (isDuplicatePlayerName($conn, $name, $id)) {
+                throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
             }
             
             // Build update query
@@ -340,6 +365,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check for foreign key constraint violation
         if (strpos($error_msg, '1451') !== false || strpos($error_msg, 'foreign key constraint fails') !== false) {
             $error_msg = 'Tidak dapat menghapus data player yang sudah pernah berkontribusi pada suatu team.';
+        }
+
+        // Check duplicate key violation from DB (e.g. NIK or global name unique)
+        if ($e instanceof PDOException) {
+            $driver_code = (int)($e->errorInfo[1] ?? 0);
+            $message_lc = strtolower($e->getMessage());
+
+            if ($driver_code === 1062) {
+                if (strpos($message_lc, 'nik') !== false) {
+                    $error_msg = 'NIK sudah terdaftar. Gunakan NIK yang berbeda.';
+                } elseif (
+                    strpos($message_lc, 'uq_players_name') !== false ||
+                    strpos($message_lc, 'name') !== false
+                ) {
+                    $error_msg = 'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.';
+                } else {
+                    $error_msg = 'Data duplikat terdeteksi. Periksa kembali input Anda.';
+                }
+            }
         }
         
         $error_msg = urlencode($error_msg);
