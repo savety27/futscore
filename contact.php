@@ -86,7 +86,7 @@ $contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixoffic
                 <section class="contact-card">
                     <div class="contact-card-header">
                         <div>
-                            <span class="contact-label">Surel Resmi</span>
+                            <span class="contact-label">Email Resmi</span>
                             <h2 class="contact-card-title">Kontak Administrasi</h2>
                         </div>
                         <p class="contact-card-subtitle">Gunakan email resmi untuk administrasi, kerja sama, dan komunikasi formal.</p>
@@ -96,7 +96,7 @@ $contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixoffic
                         <div class="contact-info-item">
                             <i class="fas fa-envelope"></i>
                             <div>
-                                <h3>Surel</h3>
+                                <h3>Email</h3>
                                 <p>alvetrixofficial@gmail.com</p>
                                 <a href="<?php echo $contactEmailLink; ?>" class="contact-link" target="_blank" rel="noopener noreferrer">Kirim Email</a>
                             </div>

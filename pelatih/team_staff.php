@@ -197,16 +197,6 @@ try {
                                title="Lihat Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="staff_form.php?id=<?php echo $staff['id']; ?>" 
-                               class="btn-action btn-edit" 
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="deleteStaff(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'])); ?>')" 
-                                    class="btn-action btn-delete" 
-                                    title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -300,29 +290,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Delete staff function
-function deleteStaff(staffId, staffName) {
-    if (confirm(`Apakah Anda yakin ingin menghapus staff "${staffName}"?\n\nSemua data termasuk foto dan sertifikat akan dihapus permanen.`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'staff_actions.php';
-        
-        const actionInput = document.createElement('input');
-        actionInput.type = 'hidden';
-        actionInput.name = 'action';
-        actionInput.value = 'delete';
-        
-        const idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = 'id';
-        idInput.value = staffId;
-        
-        form.appendChild(actionInput);
-        form.appendChild(idInput);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 </script>
 
 <style>
@@ -384,39 +351,17 @@ function deleteStaff(staffId, staffName) {
 }
 
 .btn-view {
-    background: rgba(76, 201, 240, 0.1);
-    color: var(--accent);
+    background: #3b82f6;
+    color: white;
     text-decoration: none;
 }
 
 .btn-view:hover {
-    background: var(--accent);
+    background: #2563eb;
     color: white;
     transform: translateY(-2px);
 }
 
-.btn-edit {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success);
-    text-decoration: none;
-}
-
-.btn-edit:hover {
-    background: var(--success);
-    color: white;
-    transform: translateY(-2px);
-}
-
-.btn-delete {
-    background: rgba(211, 47, 47, 0.1);
-    color: var(--danger);
-}
-
-.btn-delete:hover {
-    background: var(--danger);
-    color: white;
-    transform: translateY(-2px);
-}
 
 .btn-add {
     display: inline-flex;

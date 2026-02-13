@@ -346,9 +346,6 @@ $position_labels = [
         <a href="team_staff.php" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
-        <a href="staff_form.php?id=<?php echo $staff_id; ?>" class="btn btn-primary">
-            <i class="fas fa-edit"></i> Edit
-        </a>
     </div>
 </div>
 
@@ -497,7 +494,7 @@ $position_labels = [
                        target="_blank" 
                        class="view-certificate-btn">
                         <i class="fas fa-download"></i>
-                        Download Sertifikat
+                        Lihat Sertifikat
                     </a>
                 </div>
                 <?php endif; ?>

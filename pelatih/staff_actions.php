@@ -34,6 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     
     try {
+        if ($action !== 'add') {
+            throw new Exception('Aksi ini tidak diizinkan. Pelatih hanya dapat menambah staf baru.');
+        }
+
         // Get form data
         $name = trim($_POST['name'] ?? '');
         $position = trim($_POST['position'] ?? '');
@@ -540,9 +544,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($action === 'add') {
             header("Location: staff_form.php");
-        } elseif ($action === 'edit') {
-            $staff_id = $_POST['id'] ?? '';
-            header("Location: staff_form.php?id=$staff_id");
         } else {
             header("Location: team_staff.php");
         }

@@ -1,5 +1,5 @@
 <?php
-$page_title = isset($_GET['id']) ? 'Edit Staf Tim' : 'Tambah Staf Tim';
+$page_title = 'Tambah Staf Tim';
 $current_page = 'team_staff';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -10,6 +10,13 @@ $staff_data = null;
 $certificates = [];
 $is_edit = isset($_GET['id']);
 $staff_id = $is_edit ? (int)$_GET['id'] : 0;
+
+// Coaches can only add. Edit is restricted to admin.
+if ($is_edit) {
+    $_SESSION['error_message'] = 'Aksi edit staf hanya dapat dilakukan oleh admin.';
+    header("Location: team_staff.php");
+    exit;
+}
 
 // Handle edit mode - fetch staff data
 if ($is_edit) {
@@ -168,6 +175,34 @@ if ($is_edit) {
         .file-upload-container:hover {
             border-color: var(--primary);
             background: rgba(10, 36, 99, 0.02);
+        }
+
+        .file-upload-container.has-file {
+            border-color: var(--success);
+            border-style: solid;
+            background: rgba(46, 125, 50, 0.04);
+            position: relative;
+        }
+
+        .file-upload-container.has-file .file-upload-icon,
+        .file-upload-container.has-file .file-upload-text {
+            color: var(--success);
+        }
+
+        .file-selected-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--success);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
         }
         
         .file-upload-input {
@@ -485,7 +520,7 @@ if ($is_edit) {
                         <label for="delete_photo">Hapus foto saat ini</label>
                     </div>
                 <?php endif; ?>
-                <div class="file-upload-container" onclick="document.getElementById('photo').click()">
+                <div id="photoUploadContainer" class="file-upload-container" onclick="document.getElementById('photo').click()">
                     <input type="file" id="photo" name="photo" class="file-upload-input" 
                            accept="image/jpeg,image/png,image/gif">
                     <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
@@ -621,7 +656,7 @@ if ($is_edit) {
                         <div class="form-group">
                             <label class="form-label">File Sertifikat</label>
                             <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
-                                <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="file-upload-input" 
+                                <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="file-upload-input certificate-file-input" 
                                        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
                                 <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
                                 <div class="file-upload-text">Klik untuk upload sertifikat</div>
@@ -662,8 +697,36 @@ if ($is_edit) {
 // Photo preview handler
 document.getElementById('photo').addEventListener('change', function(e) {
     const file = this.files[0];
+    const uploadContainer = document.getElementById('photoUploadContainer');
+    const uploadText = uploadContainer.querySelector('.file-upload-text');
     const previewContainer = document.getElementById('photoPreviewContainer');
     const preview = document.getElementById('photoPreview');
+    const defaultUploadText = 'Klik untuk upload foto';
+    
+    function clearSelectedIndicator() {
+        const indicator = uploadContainer.querySelector('.file-selected-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+    
+    function markAsSelected(fileName) {
+        clearSelectedIndicator();
+        uploadContainer.classList.add('has-file');
+        uploadText.textContent = `File dipilih: ${fileName}`;
+        
+        const indicator = document.createElement('div');
+        indicator.className = 'file-selected-indicator';
+        indicator.innerHTML = '<i class="fas fa-check"></i>';
+        indicator.title = `File dipilih: ${fileName}`;
+        uploadContainer.appendChild(indicator);
+    }
+    
+    function resetUploadState() {
+        clearSelectedIndicator();
+        uploadContainer.classList.remove('has-file');
+        uploadText.textContent = defaultUploadText;
+    }
     
     if (file) {
         // Check file size (5MB max)
@@ -672,6 +735,7 @@ document.getElementById('photo').addEventListener('change', function(e) {
             alert('Ukuran file terlalu besar! Maksimal 5MB');
             this.value = '';
             previewContainer.classList.remove('active');
+            resetUploadState();
             return;
         }
         
@@ -681,9 +745,12 @@ document.getElementById('photo').addEventListener('change', function(e) {
             alert('Format file tidak valid! Gunakan JPG, PNG, atau GIF');
             this.value = '';
             previewContainer.classList.remove('active');
+            resetUploadState();
             return;
         }
         
+        markAsSelected(file.name);
+
         // Show preview
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -693,6 +760,7 @@ document.getElementById('photo').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     } else {
         previewContainer.classList.remove('active');
+        resetUploadState();
     }
 });
 
@@ -732,7 +800,7 @@ function addCertificateField() {
             <div class="form-group">
                 <label class="form-label">File Sertifikat</label>
                 <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
-                    <input type="file" name="${certPrefix}[]" class="file-upload-input" 
+                    <input type="file" name="${certPrefix}[]" class="file-upload-input certificate-file-input" 
                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
                     <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
                     <div class="file-upload-text">Klik untuk upload sertifikat</div>
@@ -746,7 +814,57 @@ function addCertificateField() {
     `;
     
     container.appendChild(newField);
+    const newInput = newField.querySelector('.certificate-file-input');
+    if (newInput) {
+        initCertificateUpload(newInput);
+    }
 }
+
+function initCertificateUpload(fileInput) {
+    const uploadContainer = fileInput.closest('.file-upload-container');
+    if (!uploadContainer) return;
+
+    const uploadText = uploadContainer.querySelector('.file-upload-text');
+    const defaultText = 'Klik untuk upload sertifikat';
+
+    function clearIndicator() {
+        const indicator = uploadContainer.querySelector('.file-selected-indicator');
+        if (indicator) indicator.remove();
+    }
+
+    function markSelected(fileName) {
+        clearIndicator();
+        uploadContainer.classList.add('has-file');
+        if (uploadText) {
+            uploadText.textContent = `File dipilih: ${fileName}`;
+        }
+
+        const indicator = document.createElement('div');
+        indicator.className = 'file-selected-indicator';
+        indicator.innerHTML = '<i class="fas fa-check"></i>';
+        indicator.title = `File dipilih: ${fileName}`;
+        uploadContainer.appendChild(indicator);
+    }
+
+    function resetState() {
+        clearIndicator();
+        uploadContainer.classList.remove('has-file');
+        if (uploadText) {
+            uploadText.textContent = defaultText;
+        }
+    }
+
+    fileInput.addEventListener('change', function() {
+        const file = this.files && this.files[0] ? this.files[0] : null;
+        if (!file) {
+            resetState();
+            return;
+        }
+        markSelected(file.name);
+    });
+}
+
+document.querySelectorAll('.certificate-file-input').forEach(initCertificateUpload);
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
