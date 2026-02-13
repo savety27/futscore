@@ -143,12 +143,21 @@ html {
     box-shadow: var(--shadow-lg);
     margin-bottom: 24px;
     min-width: 0;
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
 }
 
 .section-container.section-elevated {
     margin-top: -36px;
     position: relative;
     z-index: 5;
+}
+
+.section-container:hover {
+    transform: translateY(-2px);
+    border-color: #9fcbff;
+    box-shadow: 0 16px 34px rgba(30, 64, 175, 0.14);
 }
 
 .section-header {
@@ -185,6 +194,15 @@ html {
     border-radius: 16px;
     padding: 20px;
     box-shadow: var(--shadow-sm);
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
+}
+
+.bpjs-intro-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    border-color: var(--blue-primary);
+    box-shadow: 0 16px 30px rgba(30, 64, 175, 0.15);
 }
 
 .bpjs-intro-card p {
@@ -229,6 +247,15 @@ html {
     display: flex;
     gap: 14px;
     align-items: flex-start;
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
+}
+
+.bpjs-alert-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(245, 158, 11, 0.22);
+    border-color: rgba(245, 158, 11, 0.55);
 }
 
 .alert-icon {
@@ -275,11 +302,13 @@ html {
     text-align: left;
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+    position: relative;
+    isolation: isolate;
 }
 
 .program-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 16px 32px rgba(30, 64, 175, 0.16);
     border-color: var(--blue-primary);
 }
 
@@ -322,6 +351,15 @@ html {
     border-radius: 16px;
     padding: 20px;
     box-shadow: var(--shadow-sm);
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
+}
+
+.faq-item:hover {
+    transform: translateY(-5px) scale(1.01);
+    border-color: var(--blue-primary);
+    box-shadow: 0 15px 30px rgba(30, 64, 175, 0.14);
 }
 
 .faq-item h3 {
@@ -390,11 +428,13 @@ html {
     border: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
     aspect-ratio: 4 / 5;
+    isolation: isolate;
 }
 
 .gallery-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 18px 34px rgba(30, 64, 175, 0.16);
+    border-color: var(--blue-primary);
 }
 
 .gallery-item img {
@@ -543,6 +583,15 @@ html {
     margin-bottom: 18px;
     border: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
+}
+
+.form-wrapper:hover {
+    transform: translateY(-3px);
+    border-color: var(--blue-primary);
+    box-shadow: 0 14px 30px rgba(30, 64, 175, 0.14);
 }
 
 .bpjs-iframe {
@@ -557,6 +606,15 @@ html {
     border-radius: 16px;
     padding: 18px;
     border: 1px solid var(--gray-200);
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
+}
+
+.form-instructions:hover {
+    transform: translateY(-3px);
+    border-color: var(--blue-primary);
+    box-shadow: 0 12px 24px rgba(30, 64, 175, 0.12);
 }
 
 .form-instructions h3 {
@@ -598,11 +656,47 @@ html {
     transition: transform var(--transition-normal), box-shadow var(--transition-normal);
     border: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
+    position: relative;
+    isolation: isolate;
 }
 
 .contact-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 16px 30px rgba(30, 64, 175, 0.14);
+    border-color: var(--blue-primary);
+}
+
+/* Decorative hover ring like home/news */
+.section-container::after,
+.bpjs-intro-card::after,
+.bpjs-alert-card::after,
+.program-item::after,
+.faq-item::after,
+.gallery-item::after,
+.form-wrapper::after,
+.form-instructions::after,
+.contact-item::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(147, 197, 253, 0.22));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: -1;
+}
+
+.section-container:hover::after,
+.bpjs-intro-card:hover::after,
+.bpjs-alert-card:hover::after,
+.program-item:hover::after,
+.faq-item:hover::after,
+.gallery-item:hover::after,
+.form-wrapper:hover::after,
+.form-instructions:hover::after,
+.contact-item:hover::after {
+    opacity: 1;
 }
 
 .contact-icon {
@@ -788,5 +882,20 @@ html {
 
     .modal-content {
         height: calc(100vh - 170px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .section-container,
+    .bpjs-intro-card,
+    .bpjs-alert-card,
+    .program-item,
+    .faq-item,
+    .gallery-item,
+    .form-wrapper,
+    .form-instructions,
+    .contact-item {
+        transition: none !important;
+        transform: none !important;
     }
 }
