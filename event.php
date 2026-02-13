@@ -261,7 +261,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                     <!-- Search -->
                     <div class="filter-group">
                         <label for="search">Pencarian</label>
-                        <input type="text" name="search" id="search" placeholder="Cari event..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
+                        <input type="text" name="search" id="search" placeholder="Cari..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
                     </div>
                     
                     <!-- Status Filter -->
