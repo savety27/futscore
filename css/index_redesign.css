@@ -4,6 +4,14 @@
    ================================================ */
 
 /* Header */
+.dashboard-wrapper,
+.main-content-dashboard {
+    --green: #2563eb;
+    --primary-green: #2563eb;
+    --dark-green: #1e40af;
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
+}
+
 .dashboard-header-home {
     background:
         linear-gradient(135deg, rgba(10, 22, 40, 0.76) 0%, rgba(15, 39, 68, 0.62) 55%, rgba(10, 22, 40, 0.82) 100%),
@@ -136,10 +144,10 @@
 
 /* Section shell */
 .section-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.96);
     border-radius: 18px;
     padding: 18px;
-    border: 1px solid var(--gray-100);
+    border: 1px solid #cfe5ff;
     box-shadow: var(--shadow-lg);
     margin-bottom: 22px;
     min-width: 0;
@@ -158,6 +166,13 @@
     gap: 12px;
     align-items: flex-start;
     margin-bottom: 12px;
+    border-bottom: 2px solid #b9dcff;
+    padding-bottom: 10px;
+}
+
+/* Keep first section line a bit stronger */
+.section-container.section-elevated .section-header {
+    border-bottom-color: #9fcbff;
 }
 
 .section-title {
@@ -193,6 +208,14 @@
     color: white;
     border-color: transparent;
     box-shadow: 0 4px 12px rgba(15, 39, 68, 0.2);
+}
+
+/* Keep tab controls readable after green -> black override from legacy stylesheet */
+.dashboard-wrapper .tab-button:hover,
+.dashboard-wrapper .tab-button.active {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--blue-primary) 100%);
+    border-color: var(--blue-primary);
+    color: #ffffff;
 }
 
 .tab-content {
@@ -286,7 +309,7 @@
 }
 
 .match-date {
-    color: var(--gray-500);
+    color: var(--navy);
     font-weight: 700;
 }
 
@@ -441,6 +464,10 @@
     font-weight: 700;
 }
 
+.news-date {
+    color: var(--navy);
+}
+
 .news-popular-badge {
     background: var(--gold);
     color: var(--navy-dark);
@@ -573,7 +600,7 @@
 }
 
 .m-match-status {
-    background: var(--green);
+    background: var(--blue-primary);
     color: white;
     padding: 2px 8px;
     border-radius: 4px;
@@ -665,7 +692,7 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: var(--gray-600);
+    color: var(--navy);
     font-weight: 600;
 }
 
@@ -679,12 +706,12 @@
     justify-content: center;
     gap: 8px;
     font-size: 12px;
-    color: var(--gray-500);
+    color: var(--navy);
     text-align: center;
 }
 
 .match-card-venue i {
-    color: var(--green);
+    color: #f59e0b;
 }
 
 .btn-view-premium {
@@ -772,6 +799,16 @@
     padding: 16px;
     text-align: center;
     box-shadow: var(--shadow-sm);
+}
+
+.player-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--blue-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.player-card:hover .player-photo-container {
+    border-color: var(--blue-primary);
 }
 
 .player-photo-container {
@@ -1792,6 +1829,11 @@
     color: white;
 }
 
+.transfer-date-badge,
+.transfer-date-badge i {
+    color: var(--navy);
+}
+
 .share-btn-modal.facebook {
     background: #1877F2;
     color: white;
@@ -1816,7 +1858,7 @@
 }
 
 .share-btn-modal.copy.copied {
-    background: var(--green);
+    background: var(--blue-primary);
 }
 
 .share-btn-modal:hover {
@@ -2018,7 +2060,7 @@
 }
 
 .team-roster-section .position-badge.staff {
-    background: var(--green);
+    background: var(--blue-primary);
 }
 
 .team-roster-section .player-item-info {
@@ -2865,6 +2907,31 @@
 
 .player-search button:hover {
     background: var(--blue-primary);
+}
+
+/* Match detail modal content tone (avoid flat white on Goals/Lineups panels) */
+.match-modal-content.premium-modal .match-tab-content.active {
+    background: linear-gradient(155deg, #f7fbff 0%, #edf5ff 100%);
+    border: 1px solid #d5e4f8;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.match-modal-content.premium-modal .goals-list {
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid #deebfa;
+    border-radius: 12px;
+    padding: 14px 10px;
+}
+
+.match-modal-content.premium-modal .team-lineup {
+    background: linear-gradient(150deg, #f9fcff 0%, #eef5ff 100%);
+    border: 1px solid #d9e7f8;
+}
+
+.match-modal-content.premium-modal .player-lineup-item {
+    background: #f2f8ff;
+    border-color: #d6e4f5;
 }
 
 /* Animations */

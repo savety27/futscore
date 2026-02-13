@@ -354,7 +354,7 @@ usort($timeline_events, function($a, $b) {
                             <i class="fas fa-flag"></i> Status Pertandingan
                         </div>
                         <div class="info-item">
-                            <span class="info-label"><i class="fas fa-tasks"></i> Status Tantangan</span>
+                            <span class="info-label"><i class="fas fa-tasks"></i> Status</span>
                             <div class="info-value"><?php echo getStatusBadge($event['status']); ?></div>
                         </div>
                         <div class="info-item">

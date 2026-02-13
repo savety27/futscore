@@ -8,6 +8,13 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Neutralize legacy green accents on BPJS page */
+.dashboard-wrapper {
+    --green: #111111;
+    --primary-green: #111111;
+    --dark-green: #1e3a5f;
+}
+
 /* Header */
 .dashboard-header.dashboard-header-bpjs {
     background:
@@ -150,6 +157,8 @@ html {
     gap: 10px;
     align-items: flex-start;
     margin-bottom: 16px;
+    border-bottom: 2px solid #b9dcff;
+    padding-bottom: 10px;
 }
 
 .section-title {

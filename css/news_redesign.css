@@ -773,6 +773,21 @@
     color: var(--blue-primary);
 }
 
+/* Force all date text on news page to non-green tone */
+.news-page-shell .news-date,
+.news-page-shell .related-date,
+.news-page-shell .popular-date,
+.news-page-shell .news-item-meta .meta-item span,
+.news-page-shell .popular-meta,
+.news-page-shell .related-meta {
+    color: var(--navy) !important;
+}
+
+/* On single-news detail, date tone should match views text ("... dilihat") */
+.news-page-shell .news-meta-detail .news-date {
+    color: var(--gray-500) !important;
+}
+
 .news-image-detail-container {
     border-radius: 16px;
     overflow: hidden;
