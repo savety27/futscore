@@ -74,6 +74,11 @@ $admin_email = $_SESSION['admin_email'] ?? '';
 
 $academy_name = "Hi, Welcome...";
 $email = $admin_email;
+$event_types = [
+    'LIGA AAFI BATAM U-13 PUTRA 2026',
+    'LIGA AAFI BATAM U-16 PUTRA 2026',
+    'LIGA AAFI BATAM U-16 PUTRI 2026'
+];
 
 // Initialize variables
 $errors = [];
@@ -93,6 +98,22 @@ try {
     $teams_stmt = $conn->prepare("SELECT id, name, sport_type FROM teams WHERE is_active = 1 ORDER BY name ASC");
     $teams_stmt->execute();
     $teams = $teams_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $team_events_stmt = $conn->prepare("SELECT team_id, event_name FROM team_events ORDER BY team_id ASC");
+    $team_events_stmt->execute();
+    $team_events_rows = $team_events_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $team_events_map = [];
+    foreach ($team_events_rows as $row) {
+        $team_id = (int)($row['team_id'] ?? 0);
+        $event_name = trim((string)($row['event_name'] ?? ''));
+        if ($team_id <= 0 || $event_name === '') {
+            continue;
+        }
+        if (!isset($team_events_map[$team_id])) {
+            $team_events_map[$team_id] = [];
+        }
+        $team_events_map[$team_id][] = $event_name;
+    }
     
     // Fetch venues for dropdown
     $venues_stmt = $conn->prepare("SELECT id, name, location FROM venues WHERE is_active = 1 ORDER BY name ASC");
@@ -111,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'venue_id' => trim($_POST['venue_id'] ?? ''),
         'challenge_date' => trim($_POST['challenge_date'] ?? ''),
         'challenge_time' => trim($_POST['challenge_time'] ?? '18:00'),
-        'sport_type' => trim($_POST['sport_type'] ?? ''),
+        'sport_type' => in_array(trim($_POST['sport_type'] ?? ''), $event_types, true) ? trim($_POST['sport_type'] ?? '') : '',
         'notes' => trim($_POST['notes'] ?? ''),
         'expiry_hours' => intval($_POST['expiry_hours'] ?? 24)
     ];
@@ -143,6 +164,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if (empty($form_data['sport_type'])) {
         $errors['sport_type'] = "Event harus dipilih";
+    }
+
+    if (empty($errors['sport_type']) && !empty($form_data['challenger_id'])) {
+        $challenger_events = $team_events_map[(int)$form_data['challenger_id']] ?? [];
+        if (!in_array($form_data['sport_type'], $challenger_events, true)) {
+            $errors['challenger_id'] = "Challenger tidak terdaftar pada event yang dipilih";
+        }
+    }
+
+    if (empty($errors['sport_type']) && !empty($form_data['opponent_id'])) {
+        $opponent_events = $team_events_map[(int)$form_data['opponent_id']] ?? [];
+        if (!in_array($form_data['sport_type'], $opponent_events, true)) {
+            $errors['opponent_id'] = "Opponent tidak terdaftar pada event yang dipilih";
+        }
     }
     
     // Generate challenge code
@@ -1159,7 +1194,7 @@ body {
                                     <option value="<?php echo $team['id']; ?>" 
                                             data-sport="<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>"
                                             <?php echo $form_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>)
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1179,7 +1214,7 @@ body {
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>"
                                             <?php echo $form_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?> (<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>)
+                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -1239,13 +1274,16 @@ body {
                                     class="form-select <?php echo isset($errors['sport_type']) ? 'is-invalid' : ''; ?>" 
                                     required>
                                 <option value="">Pilih Event</option>
-                                <option value="LIGA AAFI BATAM U-13 PUTRA 2026" <?php echo $form_data['sport_type'] == 'LIGA AAFI BATAM U-13 PUTRA 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-13 PUTRA 2026</option>
-                                <option value="LIGA AAFI BATAM U-16 PUTRA 2026" <?php echo $form_data['sport_type'] == 'LIGA AAFI BATAM U-16 PUTRA 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-16 PUTRA 2026</option>
-                                <option value="LIGA AAFI BATAM U-16 PUTRI 2026" <?php echo $form_data['sport_type'] == 'LIGA AAFI BATAM U-16 PUTRI 2026' ? 'selected' : ''; ?>>LIGA AAFI BATAM U-16 PUTRI 2026</option>
+                                <?php foreach ($event_types as $event_option): ?>
+                                    <option value="<?php echo htmlspecialchars($event_option); ?>" <?php echo $form_data['sport_type'] == $event_option ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($event_option); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                             <?php if (isset($errors['sport_type'])): ?>
                                 <span class="error"><?php echo $errors['sport_type']; ?></span>
                             <?php endif; ?>
+                            <span class="error" id="teamEventWarning" style="display: none;"></span>
                         </div>
                     </div>
                     
@@ -1329,6 +1367,7 @@ body {
 <script>
 // Simpan data teams untuk JavaScript
 const teamsData = <?php echo json_encode($teams); ?>;
+const teamEventsMap = <?php echo json_encode($team_events_map ?? []); ?>;
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1383,9 +1422,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateVSDisplay() {
         const challengerId = document.getElementById('challenger_id').value;
         const opponentId = document.getElementById('opponent_id').value;
+        const selectedEvent = document.getElementById('sport_type').value;
         const vsDisplay = document.getElementById('vsDisplay');
         const challengerBox = document.getElementById('challengerBox');
         const opponentBox = document.getElementById('opponentBox');
+        const teamEventWarning = document.getElementById('teamEventWarning');
         
         // Find selected teams
         const challenger = teamsData.find(team => team.id == challengerId);
@@ -1397,13 +1438,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update challenger box
             challengerBox.innerHTML = `
                 <h4>${challenger.name}</h4>
-                <p>${challenger.sport_type}</p>
             `;
             
             // Update opponent box
             opponentBox.innerHTML = `
                 <h4>${opponent.name}</h4>
-                <p>${opponent.sport_type}</p>
             `;
             
             // Auto-set sport type if not set
@@ -1413,11 +1452,36 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             vsDisplay.style.display = 'none';
         }
+
+        if (teamEventWarning) {
+            const warningMessages = [];
+            if (selectedEvent && challengerId) {
+                const challengerEvents = teamEventsMap[challengerId] || [];
+                if (!challengerEvents.includes(selectedEvent)) {
+                    warningMessages.push('Challenger tidak terdaftar di event yang dipilih.');
+                }
+            }
+            if (selectedEvent && opponentId) {
+                const opponentEvents = teamEventsMap[opponentId] || [];
+                if (!opponentEvents.includes(selectedEvent)) {
+                    warningMessages.push('Opponent tidak terdaftar di event yang dipilih.');
+                }
+            }
+
+            if (warningMessages.length > 0) {
+                teamEventWarning.style.display = 'block';
+                teamEventWarning.textContent = warningMessages.join(' ');
+            } else {
+                teamEventWarning.style.display = 'none';
+                teamEventWarning.textContent = '';
+            }
+        }
     }
     
     // Attach event listeners
     document.getElementById('challenger_id').addEventListener('change', updateVSDisplay);
     document.getElementById('opponent_id').addEventListener('change', updateVSDisplay);
+    document.getElementById('sport_type').addEventListener('change', updateVSDisplay);
     
     // Initial update
     updateVSDisplay();
@@ -1441,6 +1505,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (challengerId === opponentId) {
             e.preventDefault();
             toastr.error('Challenger dan Opponent tidak boleh sama');
+            return;
+        }
+
+        const challengerEvents = teamEventsMap[challengerId] || [];
+        if (!challengerEvents.includes(sportType)) {
+            e.preventDefault();
+            toastr.error('Challenger tidak terdaftar pada event yang dipilih');
+            return;
+        }
+
+        const opponentEvents = teamEventsMap[opponentId] || [];
+        if (!opponentEvents.includes(sportType)) {
+            e.preventDefault();
+            toastr.error('Opponent tidak terdaftar pada event yang dipilih');
             return;
         }
         
