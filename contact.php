@@ -69,11 +69,13 @@ $contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixoffic
     <!-- Main Content -->
     <main class="main-content-dashboard">
         <header class="dashboard-header contact-header">
-            <div class="contact-hero">
-                <span class="contact-eyebrow">ALVETRIX</span>
-                <h1>Hubungi Kami</h1>
-                <p class="contact-subtitle">Silakan menghubungi kami melalui email resmi atau WhatsApp layanan sesuai kebutuhan Anda.</p>
-                <div class="contact-actions">
+            <div class="dashboard-header-inner">
+                <div>
+                    <span class="header-eyebrow">ALVETRIX</span>
+                    <h1>Hubungi Kami</h1>
+                    <p class="header-subtitle">Silakan menghubungi kami melalui email resmi atau WhatsApp layanan sesuai kebutuhan Anda.</p>
+                </div>
+                <div class="header-actions">
                     <a class="contact-action primary" href="<?php echo $contactEmailLink; ?>" target="_blank" rel="noopener noreferrer">
                         <i class="fas fa-envelope"></i> Kirim Email
                     </a>

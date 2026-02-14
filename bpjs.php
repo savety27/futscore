@@ -74,6 +74,7 @@ $pageTitle = "BPJS Ketenagakerjaan";
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
                     <h1>BPJS Ketenagakerjaan</h1>
+                    <p class="header-subtitle">Informasi program, alur layanan, dan formulir pendaftaran BPJS Ketenagakerjaan.</p>
                 </div>
                 <div class="header-actions">
                     <a href="#bpjs-form" class="btn-primary"><i class="fas fa-file-contract"></i> Daftar BPJS</a>

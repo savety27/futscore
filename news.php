@@ -301,15 +301,17 @@ function getQueryString($exclude = []) {
     <main class="main-content-dashboard">
         <header class="dashboard-header dashboard-header-news">
             <div class="dashboard-header-inner">
-                <div class="header-eyebrow">ALVETRIX</div>
-                <h1><?php echo $isSingleNews ? 'Detail Berita' : 'Berita Terbaru'; ?></h1>
-                <p class="header-subtitle">
-                    <?php if ($isSingleNews): ?>
-                        Dibaca <?php echo number_format($news['views']); ?> kali pada <?php echo date('d F Y', strtotime($news['created_at'])); ?>
-                    <?php else: ?>
-                        Ikuti berita terbaru futsal, laporan pertandingan, dan update pemain.
-                    <?php endif; ?>
-                </p>
+                <div>
+                    <div class="header-eyebrow">ALVETRIX</div>
+                    <h1><?php echo $isSingleNews ? 'Detail Berita' : 'Berita Terbaru'; ?></h1>
+                    <p class="header-subtitle">
+                        <?php if ($isSingleNews): ?>
+                            Dibaca <?php echo number_format($news['views']); ?> kali pada <?php echo date('d F Y', strtotime($news['created_at'])); ?>
+                        <?php else: ?>
+                            Ikuti berita terbaru futsal, laporan pertandingan, dan update pemain.
+                        <?php endif; ?>
+                    </p>
+                </div>
             </div>
         </header>
         <div class="dashboard-body">

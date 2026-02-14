@@ -251,7 +251,13 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
     <!-- Main Content -->
     <main class="main-content-dashboard">
         <header class="dashboard-header">
-            <h1>EVENT & PERTANDINGAN</h1>
+            <div class="dashboard-header-inner">
+                <div>
+                    <div class="header-eyebrow">ALVETRIX</div>
+                    <h1>EVENT & PERTANDINGAN</h1>
+                    <p class="header-subtitle">Pantau jadwal, status pertandingan, dan hasil terbaru.</p>
+                </div>
+            </div>
         </header>
 
         <div class="dashboard-body">

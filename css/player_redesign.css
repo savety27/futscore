@@ -6,13 +6,14 @@
 /* Header */
 .dashboard-header {
     background:
-        linear-gradient(135deg, rgba(10, 22, 40, 0.76) 0%, rgba(15, 39, 68, 0.62) 55%, rgba(10, 22, 40, 0.82) 100%),
-        url("../images/vectorized-barelang.svg"),
-        linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--blue-primary) 100%);
-    background-size: cover, cover, auto;
-    background-position: center, center 40%, center;
+        linear-gradient(135deg, rgba(10, 22, 40, 0.28) 0%, rgba(15, 39, 68, 0.20) 55%, rgba(10, 22, 40, 0.34) 100%),
+        url("../images/Jembatan Barelang.png"),
+        linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 45%, var(--blue-primary) 100%);
+    background-size: cover, 106%, cover;
+    background-position: center, 26% 54%, center;
     background-repeat: no-repeat;
-    padding: 70px 50px 90px;
+    padding: 72px 50px 96px;
+    min-height: 360px;
     position: relative;
     overflow: hidden;
     isolation: isolate;
@@ -23,10 +24,14 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 36%),
-        linear-gradient(180deg, rgba(10, 22, 40, 0.02) 0%, rgba(10, 22, 40, 0.38) 100%);
-    opacity: 0.9;
+        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 36%),
+        linear-gradient(180deg, rgba(10, 22, 40, 0.18) 0%, rgba(10, 22, 40, 0.30) 100%),
+        linear-gradient(110deg, rgba(255, 255, 255, 0) 33%, rgba(255, 255, 255, 0.46) 50%, rgba(255, 255, 255, 0) 67%);
+    background-size: auto, auto, 220% 100%;
+    background-position: center, center, -160% 0;
+    opacity: 1;
     pointer-events: none;
+    animation: barelangReveal 4.4s ease-in-out infinite alternate, barelangShimmer 6.2s linear infinite;
 }
 
 .dashboard-header::after {
@@ -58,9 +63,9 @@
 
 .dashboard-header h1 {
     color: white;
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     margin: 0;
     text-transform: uppercase;
     text-shadow: 0 6px 22px rgba(10, 22, 40, 0.55);
@@ -69,7 +74,7 @@
 .header-subtitle {
     color: rgba(255, 255, 255, 0.93);
     font-size: 14px;
-    max-width: 640px;
+    max-width: 560px;
     line-height: 1.6;
     text-shadow: 0 3px 14px rgba(10, 22, 40, 0.5);
 }
@@ -735,6 +740,11 @@
    RESPONSIVE DESIGN
    ================================================ */
 @media (min-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 38px;
+        letter-spacing: 2px;
+    }
+
     .dashboard-header-inner {
         flex-direction: row;
         justify-content: space-between;
@@ -764,8 +774,9 @@
     }
 
     .dashboard-header {
-        padding: 50px 30px 80px;
-        background-position: center, center 38%, center;
+        padding: 60px 30px 80px;
+        background-size: cover, 106%, cover;
+        background-position: center, 28% 56%, center;
     }
 
     .filter-group {
@@ -775,8 +786,10 @@
 
 @media (max-width: 992px) {
     .dashboard-header {
-        padding: 36px 16px 52px;
-        background-position: center, center 45%, center;
+        padding: 44px 16px 64px;
+        min-height: 360px;
+        background-size: cover, 146%, cover;
+        background-position: center, 34% 62%, center;
     }
 
     .player-detail-card {
@@ -800,19 +813,6 @@
 }
 
 @media (max-width: 768px) {
-    .dashboard-header {
-        background-position: center, center 48%, center;
-    }
-
-    .dashboard-header h1 {
-        font-size: 26px;
-        letter-spacing: 1.5px;
-    }
-
-    .header-subtitle {
-        font-size: 13px;
-    }
-
     .filter-row {
         flex-direction: column;
         align-items: stretch;
@@ -986,16 +986,6 @@
 }
 
 @media (max-width: 480px) {
-    .dashboard-header {
-        padding: 28px 12px 42px;
-        background-position: center, center 52%, center;
-    }
-
-    .dashboard-header h1 {
-        font-size: 22px;
-        letter-spacing: 1px;
-    }
-
     .filter-card {
         margin: -18px 12px 18px;
         padding: 16px;
@@ -1029,7 +1019,38 @@
     }
 }
 
+@keyframes barelangReveal {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.10;
+    }
+}
+
+@keyframes barelangShimmer {
+    0% {
+        background-position: center, center, -130% 0;
+    }
+
+    100% {
+        background-position: center, center, 145% 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .dashboard-header {
+        animation: none !important;
+        background-size: cover, 106%, cover;
+        background-position: center, 26% 54%, center;
+    }
+
+    .dashboard-header::before {
+        animation: none !important;
+        opacity: 0.1;
+    }
+
     .filter-card,
     .player-detail-card,
     .detail-item,

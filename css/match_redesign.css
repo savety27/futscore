@@ -3,19 +3,34 @@
    ================================================ */
 
 .dashboard-header-match {
-    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 45%, var(--blue-primary) 100%);
-    padding: 52px 16px 80px;
+    background:
+        linear-gradient(135deg, rgba(10, 22, 40, 0.28) 0%, rgba(15, 39, 68, 0.20) 55%, rgba(10, 22, 40, 0.34) 100%),
+        url("../images/Jembatan Barelang.png"),
+        linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 45%, var(--blue-primary) 100%);
+    background-size: cover, 106%, cover;
+    background-position: center, 26% 54%, center;
+    background-repeat: no-repeat;
+    padding: 72px 50px 96px;
+    min-height: 360px;
     position: relative;
     overflow: hidden;
     color: white;
+    isolation: isolate;
 }
 
 .dashboard-header-match::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    opacity: 0.75;
+    background:
+        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 36%),
+        linear-gradient(180deg, rgba(10, 22, 40, 0.18) 0%, rgba(10, 22, 40, 0.30) 100%),
+        linear-gradient(110deg, rgba(255, 255, 255, 0) 33%, rgba(255, 255, 255, 0.46) 50%, rgba(255, 255, 255, 0) 67%);
+    background-size: auto, auto, 220% 100%;
+    background-position: center, center, -160% 0;
+    opacity: 1;
+    pointer-events: none;
+    animation: barelangReveal 4.4s ease-in-out infinite alternate, barelangShimmer 6.2s linear infinite;
 }
 
 .dashboard-header-match::after {
@@ -37,7 +52,11 @@
 }
 
 .dashboard-header-match .header-subtitle {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.93);
+    font-size: 14px;
+    max-width: 560px;
+    line-height: 1.6;
+    text-shadow: 0 3px 14px rgba(10, 22, 40, 0.5);
 }
 
 .header-meta {
@@ -478,14 +497,38 @@
 }
 
 @media (min-width: 768px) {
+    .dashboard-header-match h1 {
+        font-size: 38px;
+        letter-spacing: 2px;
+    }
+
     .dashboard-header-match {
-        padding: 64px 30px 96px;
+        padding: 60px 30px 80px;
+        background-size: cover, 106%, cover;
+        background-position: center, 28% 56%, center;
     }
 
     .dashboard-header-match .dashboard-header-inner {
         flex-direction: row;
-        align-items: center;
+        align-items: flex-end;
         justify-content: space-between;
+    }
+}
+
+@media (min-width: 992px) {
+    .dashboard-header-match {
+        padding: 72px 50px 96px;
+        background-size: cover, 106%, cover;
+        background-position: center, 26% 54%, center;
+    }
+}
+
+@media (max-width: 992px) {
+    .dashboard-header-match {
+        padding: 44px 16px 64px;
+        min-height: 360px;
+        background-size: cover, 146%, cover;
+        background-position: center, 34% 62%, center;
     }
 }
 
@@ -523,11 +566,47 @@
 
 @media (max-width: 480px) {
     .dashboard-header-match {
-        padding: 44px 16px 80px;
+        padding: 44px 16px 64px;
+        min-height: 360px;
+        background-size: cover, 146%, cover;
+        background-position: center, 34% 62%, center;
     }
 
     .match-team-name {
         max-width: 120px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-header-match {
+        animation: none !important;
+        background-size: cover, 106%, cover;
+        background-position: center, 26% 54%, center;
+    }
+
+    .dashboard-header-match::before {
+        animation: none !important;
+        opacity: 0.1;
+    }
+}
+
+@keyframes barelangReveal {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.10;
+    }
+}
+
+@keyframes barelangShimmer {
+    0% {
+        background-position: center, center, -130% 0;
+    }
+
+    100% {
+        background-position: center, center, 145% 0;
     }
 }
 

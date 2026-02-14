@@ -5,13 +5,14 @@
 
 .dashboard-header.contact-header {
     background:
-        linear-gradient(135deg, rgba(10, 22, 40, 0.76) 0%, rgba(15, 39, 68, 0.62) 55%, rgba(10, 22, 40, 0.82) 100%),
-        url("../images/vectorized-barelang.svg"),
-        linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--blue-primary) 100%);
-    background-size: cover, cover, auto;
-    background-position: center, center 40%, center;
+        linear-gradient(135deg, rgba(10, 22, 40, 0.28) 0%, rgba(15, 39, 68, 0.20) 55%, rgba(10, 22, 40, 0.34) 100%),
+        url("../images/Jembatan Barelang.png"),
+        linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 45%, var(--blue-primary) 100%);
+    background-size: cover, 106%, cover;
+    background-position: center, 26% 54%, center;
     background-repeat: no-repeat;
-    padding: 70px 50px 110px;
+    padding: 72px 50px 96px;
+    min-height: 360px;
     position: relative;
     overflow: hidden;
     isolation: isolate;
@@ -22,10 +23,14 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 36%),
-        linear-gradient(180deg, rgba(10, 22, 40, 0.02) 0%, rgba(10, 22, 40, 0.38) 100%);
-    opacity: 0.9;
+        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 36%),
+        linear-gradient(180deg, rgba(10, 22, 40, 0.18) 0%, rgba(10, 22, 40, 0.30) 100%),
+        linear-gradient(110deg, rgba(255, 255, 255, 0) 33%, rgba(255, 255, 255, 0.46) 50%, rgba(255, 255, 255, 0) 67%);
+    background-size: auto, auto, 220% 100%;
+    background-position: center, center, -160% 0;
+    opacity: 1;
     pointer-events: none;
+    animation: barelangReveal 4.4s ease-in-out infinite alternate, barelangShimmer 6.2s linear infinite;
 }
 
 .dashboard-header.contact-header::after {
@@ -38,44 +43,48 @@
     background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
 }
 
-.contact-hero {
+.dashboard-header-inner {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    max-width: 720px;
+    gap: 18px;
 }
 
-.contact-eyebrow {
+.header-eyebrow {
+    margin: 0;
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.86);
+    text-shadow: 0 2px 10px rgba(10, 22, 40, 0.55);
 }
 
-.contact-hero h1 {
-    font-size: 36px;
+.dashboard-header.contact-header h1 {
+    font-size: 30px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     margin: 0;
     color: white;
     text-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-.contact-subtitle {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 14px;
-    line-height: 1.7;
+.header-subtitle {
     margin: 0;
+    color: rgba(255, 255, 255, 0.93);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 560px;
+    text-shadow: 0 3px 14px rgba(10, 22, 40, 0.5);
 }
 
-.contact-actions {
+.header-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
 }
 
 .contact-action {
@@ -439,7 +448,9 @@
 
 @media (max-width: 1200px) {
     .dashboard-header.contact-header {
-        padding: 64px 36px 100px;
+        padding: 60px 30px 80px;
+        background-size: cover, 106%, cover;
+        background-position: center, 28% 56%, center;
     }
 
     .dashboard-body {
@@ -449,11 +460,10 @@
 
 @media (max-width: 992px) {
     .dashboard-header.contact-header {
-        padding: 56px 24px 90px;
-    }
-
-    .contact-hero {
-        max-width: 100%;
+        padding: 44px 16px 64px;
+        min-height: 360px;
+        background-size: cover, 146%, cover;
+        background-position: center, 34% 62%, center;
     }
 
     .dashboard-body {
@@ -462,15 +472,7 @@
 }
 
 @media (max-width: 768px) {
-    .dashboard-header.contact-header {
-        padding: 48px 20px 80px;
-    }
-
-    .contact-hero h1 {
-        font-size: 28px;
-    }
-
-    .contact-actions {
+    .header-actions {
         width: 100%;
     }
 
@@ -490,11 +492,10 @@
 
 @media (max-width: 480px) {
     .dashboard-header.contact-header {
-        padding: 40px 16px 70px;
-    }
-
-    .contact-hero h1 {
-        font-size: 24px;
+        padding: 44px 16px 64px;
+        min-height: 360px;
+        background-size: cover, 146%, cover;
+        background-position: center, 34% 62%, center;
     }
 
     .contact-card {
@@ -502,12 +503,54 @@
     }
 }
 
+@media (min-width: 768px) {
+    .dashboard-header.contact-header h1 {
+        font-size: 38px;
+        letter-spacing: 2px;
+    }
+
+    .header-actions {
+        flex-direction: row;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .dashboard-header.contact-header {
+        animation: none !important;
+        background-size: cover, 106%, cover;
+        background-position: center, 26% 54%, center;
+    }
+
+    .dashboard-header.contact-header::before {
+        animation: none !important;
+        opacity: 0.1;
+    }
+
     .contact-card,
     .contact-info-item,
     .dc-card,
     .dc-note {
         transition: none !important;
         transform: none !important;
+    }
+}
+
+@keyframes barelangReveal {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.10;
+    }
+}
+
+@keyframes barelangShimmer {
+    0% {
+        background-position: center, center, -130% 0;
+    }
+
+    100% {
+        background-position: center, center, 145% 0;
     }
 }

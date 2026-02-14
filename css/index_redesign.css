@@ -14,28 +14,35 @@
 
 .dashboard-header-home {
     background:
-        linear-gradient(135deg, rgba(10, 22, 40, 0.76) 0%, rgba(15, 39, 68, 0.62) 55%, rgba(10, 22, 40, 0.82) 100%),
-        url("../images/vectorized-barelang.svg"),
+        linear-gradient(135deg, rgba(10, 22, 40, 0.28) 0%, rgba(15, 39, 68, 0.20) 55%, rgba(10, 22, 40, 0.34) 100%),
+        url("../images/Jembatan Barelang.png"),
         linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 45%, var(--blue-primary) 100%);
-    background-size: cover, cover, auto;
-    background-position: center, center 40%, center;
+    background-size: cover, 106%, cover;
+    background-position: center, 30% 56%, center;
     background-repeat: no-repeat;
     padding: 44px 16px 64px;
+    min-height: 360px;
     position: relative;
     overflow: hidden;
     isolation: isolate;
+    will-change: auto;
 }
 
 .dashboard-header-home::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 36%),
-        linear-gradient(180deg, rgba(10, 22, 40, 0.02) 0%, rgba(10, 22, 40, 0.38) 100%);
-    opacity: 0.9;
+        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 36%),
+        linear-gradient(180deg, rgba(10, 22, 40, 0.18) 0%, rgba(10, 22, 40, 0.30) 100%),
+        linear-gradient(110deg, rgba(255, 255, 255, 0) 33%, rgba(255, 255, 255, 0.46) 50%, rgba(255, 255, 255, 0) 67%);
+    background-size: auto, auto, 220% 100%;
+    background-position: center, center, -160% 0;
+    opacity: 1;
     pointer-events: none;
+    animation: barelangReveal 4.4s ease-in-out infinite alternate, barelangShimmer 6.2s linear infinite;
 }
+
 
 .dashboard-header-home::after {
     content: '';
@@ -53,6 +60,7 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
+    animation: headerFloatIn 0.9s ease-out both;
 }
 
 .header-eyebrow {
@@ -1895,7 +1903,7 @@
    TEAM PAGE
    ================================================ */
 .dashboard-header-team .header-subtitle {
-    max-width: 640px;
+    max-width: 560px;
 }
 
 .team-status-pill,
@@ -2257,6 +2265,8 @@
 @media (min-width: 768px) {
     .dashboard-header-home {
         padding: 60px 30px 80px;
+        background-size: cover, 106%, cover;
+        background-position: center, 28% 56%, center;
     }
 
     .dashboard-header-home h1 {
@@ -2318,7 +2328,8 @@
 @media (min-width: 992px) {
     .dashboard-header-home {
         padding: 72px 50px 96px;
-        background-position: center, center 34%, center;
+        background-size: cover, 106%, cover;
+        background-position: center, 26% 54%, center;
     }
 
     .dashboard-body {
@@ -2358,7 +2369,8 @@
 
 @media (max-width: 768px) {
     .dashboard-header-home {
-        background-position: center, center 48%, center;
+        background-size: cover, 146%, cover;
+        background-position: center, 34% 62%, center;
     }
 
     .team-roster-section .player-list {
@@ -3003,6 +3015,38 @@
 }
 
 /* Animations */
+@keyframes barelangReveal {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.10;
+    }
+}
+
+@keyframes barelangShimmer {
+    0% {
+        background-position: center, center, -130% 0;
+    }
+
+    100% {
+        background-position: center, center, 145% 0;
+    }
+}
+
+@keyframes headerFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -3062,6 +3106,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .dashboard-header-home {
+        animation: none !important;
+        background-size: cover, 106%, cover;
+        background-position: center, 30% 56%, center;
+    }
+
+    .dashboard-header-home::before {
+        animation: none !important;
+        opacity: 0.1;
+    }
+
+    .dashboard-header-inner {
+        animation: none !important;
+    }
+
     .section-container,
     .match-card,
     .news-item-large,
@@ -3073,3 +3132,5 @@
         transform: none !important;
     }
 }
+
+
