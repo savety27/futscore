@@ -164,14 +164,29 @@ function getMatchStatusBadge($match_status) {
     return $badges[$match_status] ?? '<span class="badge-new badge-pending">' . ucfirst($match_status ?? 'Not Set') . '</span>';
 }
 
-function formatScore($challenger_score, $opponent_score) {
+function isFinalMatchState($match_status, $challenge_status) {
+    $match_status = strtolower(trim((string) ($match_status ?? '')));
+    $challenge_status = strtolower(trim((string) ($challenge_status ?? '')));
+    $final_match_statuses = ['completed', 'finished', 'fulltime', 'ft'];
+    return in_array($match_status, $final_match_statuses, true) || $challenge_status === 'completed';
+}
+
+function formatScore($challenger_score, $opponent_score, $match_status, $challenge_status) {
+    if (!isFinalMatchState($match_status, $challenge_status)) {
+        return '<span class="score-pending">&mdash;</span>';
+    }
+
     if ($challenger_score === null || $opponent_score === null) {
-        return '<span class="score-pending">—</span>';
+        return '<span class="score-pending">&mdash;</span>';
     }
     return '<span class="score-display" style="font-weight: 800; color: #002d62;">' . $challenger_score . ' : ' . $opponent_score . '</span>';
 }
 
-function getWinner($challenger_name, $opponent_name, $challenger_score, $opponent_score, $winner_team_id, $challenger_id, $opponent_id) {
+function getWinner($challenger_name, $opponent_name, $challenger_score, $opponent_score, $winner_team_id, $challenger_id, $opponent_id, $match_status, $challenge_status) {
+    if (!isFinalMatchState($match_status, $challenge_status)) {
+        return '<span class="no-winner">&mdash;</span>';
+    }
+
     if ($winner_team_id == $challenger_id) {
         return '<span class="btn-winner-new">' . htmlspecialchars($challenger_name) . ' <i class="fas fa-trophy"></i></span>';
     } elseif ($winner_team_id == $opponent_id) {
@@ -185,7 +200,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
             return '<span class="badge-new badge-pending">DRAW</span>';
         }
     }
-    return '<span class="no-winner">—</span>';
+        return '<span class="no-winner">&mdash;</span>';
 }
 ?>
 
@@ -389,7 +404,7 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                                 </div>
                             </td>
                             <td data-label="Skor" style="text-align: center;">
-                                <?php echo formatScore($e['challenger_score'], $e['opponent_score']); ?>
+                                <?php echo formatScore($e['challenger_score'], $e['opponent_score'], $e['match_status'], $e['status']); ?>
                             </td>
                             <td data-label="Pemenang" style="text-align: center;">
                                 <?php echo getWinner(
@@ -399,7 +414,9 @@ function getWinner($challenger_name, $opponent_name, $challenger_score, $opponen
                                     $e['opponent_score'],
                                     $e['winner_team_id'],
                                     $e['challenger_id'],
-                                    $e['opponent_id']
+                                    $e['opponent_id'],
+                                    $e['match_status'],
+                                    $e['status']
                                 ); ?>
                             </td>
                             <td data-label="Status" style="text-align: center;">
@@ -560,4 +577,5 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
+
 
