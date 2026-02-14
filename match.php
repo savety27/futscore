@@ -12,7 +12,7 @@ $matchId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($matchId <= 0) {
     header("Location: index.php");
     exit();
-}
+}   
 
 $source = isset($_GET['source']) ? $_GET['source'] : 'match';
 
