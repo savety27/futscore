@@ -37,8 +37,8 @@ foreach ($goalsRaw as $g) {
 // Get lineups
 $lineupsRaw = getMatchLineups($challengeId);
 $lineups = [
-    'team1' => [],
-    'team2' => []
+    'team1' => ['half1' => [], 'half2' => []],
+    'team2' => ['half1' => [], 'half2' => []]
 ];
 
 foreach ($lineupsRaw as $l) {
@@ -46,13 +46,16 @@ foreach ($lineupsRaw as $l) {
         'id' => $l['player_id'],
         'name' => $l['player_name'],
         'number' => $l['jersey_number'],
-        'photo' => $l['player_photo'] ?: 'default-player.jpg'
+        'photo' => $l['player_photo'] ?: 'default-player.jpg',
+        'is_starting' => $l['is_starting'] // Add starting status
     ];
     
+    $half = isset($l['half']) && $l['half'] == 2 ? 'half2' : 'half1';
+
     if ($l['team_id'] == $challenge['challenger_id']) {
-        $lineups['team1'][] = $player;
+        $lineups['team1'][$half][] = $player;
     } else {
-        $lineups['team2'][] = $player;
+        $lineups['team2'][$half][] = $player;
     }
 }
 

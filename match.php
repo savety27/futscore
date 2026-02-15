@@ -76,28 +76,44 @@ if (!$match && $source !== 'challenge') {
 }
 
 $matchNotFound = false;
-$lineups = ['team1' => [], 'team2' => []];
+$lineups = [
+    'team1' => ['half1' => [], 'half2' => []], 
+    'team2' => ['half1' => [], 'half2' => []]
+];
 $goals = [];
 
 if (!$match) {
     $matchNotFound = true;
 } else {
     // Get lineups for this match
+    // Note: Added 'l.half' to the selection. 
+    // IF 'half' column doesn't exist yet in production, this might fail unless migration run. 
+    // Assuming migration is done as per previous steps.
+    // However, to be safe, we should check if column exists or handle potential error? 
+    // But this is user request implementation, assuming DB is updated.
+    
     $sqlLineups = "SELECT l.*, p.name as player_name, p.photo, p.jersey_number, t.id as team_id, t.name as team_name
                    FROM lineups l
                    LEFT JOIN players p ON l.player_id = p.id
                    LEFT JOIN teams t ON l.team_id = t.id
                    WHERE l.match_id = ?
                    ORDER BY l.is_starting DESC, p.jersey_number ASC";
+    
+    // Check if half column exists or just run query and handle if it returns it
+    // It's safer to just run it. If column missing, standard query won't fetch it, but SELECT * (l.*) will fail if I explicitly select it? 
+    // l.* will select all columns. If half exists it will be there.
+    
     $stmtLineups = $conn->prepare($sqlLineups);
     $stmtLineups->bind_param('i', $matchId);
     $stmtLineups->execute();
     $resultLineups = $stmtLineups->get_result();
     while ($lineup = $resultLineups->fetch_assoc()) {
+        $half = isset($lineup['half']) && $lineup['half'] == 2 ? 'half2' : 'half1';
+        
         if ($lineup['team_id'] == $match['team1_id']) {
-            $lineups['team1'][] = $lineup;
+            $lineups['team1'][$half][] = $lineup;
         } else if ($lineup['team_id'] == $match['team2_id']) {
-            $lineups['team2'][] = $lineup;
+            $lineups['team2'][$half][] = $lineup;
         }
     }
     $stmtLineups->close();
@@ -131,6 +147,48 @@ if (!$matchNotFound) {
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/match_redesign.css?v=<?php echo time(); ?>">
+
+<style>
+/* Custom Tabs for Match Lineup */
+.lineup-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.lineup-tab-btn {
+    padding: 10px 30px;
+    border-radius: 30px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.lineup-tab-btn.active {
+    background: var(--primary-color, #0f172a);
+    color: white;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+.lineup-content-half {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.lineup-content-half.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 
 <div class="dashboard-wrapper">
     <!-- Mobile Header -->
@@ -350,87 +408,186 @@ if (!$matchNotFound) {
                         </div>
                     </div>
 
-                    <div class="lineups-grid">
-                        <div class="lineup-card">
-                            <div class="lineup-card-header">
-                                <div class="lineup-team">
-                                    <div class="lineup-team-logo">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
-                                             alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
-                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
-                                    </div>
-                                    <div class="lineup-team-info">
-                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
-                                        <span class="lineup-count"><?php echo count($lineups['team1']); ?> pemain</span>
-                                    </div>
-                                </div>
-                                <span class="team-side-badge">Home</span>
-                            </div>
+                    <!-- TABS FOR HALF SELECTION -->
+                    <div class="lineup-tabs">
+                        <button class="lineup-tab-btn active" onclick="switchLineupTab(1)">BABAK 1</button>
+                        <button class="lineup-tab-btn" onclick="switchLineupTab(2)">BABAK 2</button>
+                    </div>
 
-                            <?php if (empty($lineups['team1'])): ?>
-                                <div class="empty-state">Belum ada susunan pemain.</div>
-                            <?php else: ?>
-                                <div class="lineup-list">
-                                    <?php foreach ($lineups['team1'] as $player): ?>
-                                        <div class="lineup-player">
-                                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                                                 class="lineup-avatar"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                                            <div class="lineup-info">
-                                                <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
-                                                <div class="lineup-meta">
-                                                    <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
-                                                    <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
-                                                    <?php if ($player['is_starting']): ?>
-                                                        <span class="lineup-badge">Pemain Utama</span>
-                                                    <?php endif; ?>
+                    <!-- CONTENT WRAPPER FOR HALVES -->
+                    <div id="lineup-half-1" class="lineup-content-half active">
+                        <div class="lineups-grid">
+                            <!-- Team 1 Half 1 -->
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        </div>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($lineups['team1']['half1']); ?> pemain</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge">Home</span>
+                                </div>
+
+                                <?php if (empty($lineups['team1']['half1'])): ?>
+                                    <div class="empty-state">Belum ada susunan pemain babak 1.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($lineups['team1']['half1'] as $player): ?>
+                                            <div class="lineup-player">
+                                                <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                                     class="lineup-avatar"
+                                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
+                                                        <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
+                                                        <?php if ($player['is_starting']): ?>
+                                                            <span class="lineup-badge">Pemain Utama</span>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Team 2 Half 1 -->
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                         </div>
-                                    <?php endforeach; ?>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($lineups['team2']['half1']); ?> pemain</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge away">Away</span>
                                 </div>
-                            <?php endif; ?>
+
+                                <?php if (empty($lineups['team2']['half1'])): ?>
+                                    <div class="empty-state">Belum ada susunan pemain babak 1.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($lineups['team2']['half1'] as $player): ?>
+                                            <div class="lineup-player">
+                                                <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                                     class="lineup-avatar"
+                                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
+                                                        <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
+                                                        <?php if ($player['is_starting']): ?>
+                                                            <span class="lineup-badge">Pemain Utama</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="lineup-card">
-                            <div class="lineup-card-header">
-                                <div class="lineup-team">
-                                    <div class="lineup-team-logo">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
-                                             alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
-                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                    <div id="lineup-half-2" class="lineup-content-half">
+                         <div class="lineups-grid">
+                            <!-- Team 1 Half 2 -->
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        </div>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($lineups['team1']['half2']); ?> pemain</span>
+                                        </div>
                                     </div>
-                                    <div class="lineup-team-info">
-                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
-                                        <span class="lineup-count"><?php echo count($lineups['team2']); ?> pemain</span>
-                                    </div>
+                                    <span class="team-side-badge">Home</span>
                                 </div>
-                                <span class="team-side-badge away">Away</span>
-                            </div>
 
-                            <?php if (empty($lineups['team2'])): ?>
-                                <div class="empty-state">Belum ada susunan pemain.</div>
-                            <?php else: ?>
-                                <div class="lineup-list">
-                                    <?php foreach ($lineups['team2'] as $player): ?>
-                                        <div class="lineup-player">
-                                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
-                                                 class="lineup-avatar"
-                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                                            <div class="lineup-info">
-                                                <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
-                                                <div class="lineup-meta">
-                                                    <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
-                                                    <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
-                                                    <?php if ($player['is_starting']): ?>
-                                                        <span class="lineup-badge">Pemain Utama</span>
-                                                    <?php endif; ?>
+                                <?php if (empty($lineups['team1']['half2'])): ?>
+                                    <div class="empty-state">Belum ada susunan pemain babak 2.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($lineups['team1']['half2'] as $player): ?>
+                                            <div class="lineup-player">
+                                                <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                                     class="lineup-avatar"
+                                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
+                                                        <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
+                                                        <?php if ($player['is_starting']): ?>
+                                                            <span class="lineup-badge">Pemain Utama</span>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Team 2 Half 2 -->
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>" 
+                                                 alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                         </div>
-                                    <?php endforeach; ?>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($lineups['team2']['half2']); ?> pemain</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge away">Away</span>
                                 </div>
-                            <?php endif; ?>
+
+                                <?php if (empty($lineups['team2']['half2'])): ?>
+                                    <div class="empty-state">Belum ada susunan pemain babak 2.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($lineups['team2']['half2'] as $player): ?>
+                                            <div class="lineup-player">
+                                                <img src="<?php echo SITE_URL; ?>/images/players/<?php echo $player['photo']; ?>" 
+                                                     class="lineup-avatar"
+                                                     onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($player['player_name'] ?? ''); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-number"><?php echo '#' . $player['jersey_number']; ?></span>
+                                                        <span class="lineup-position"><?php echo htmlspecialchars($player['position'] ?? ''); ?></span>
+                                                        <?php if ($player['is_starting']): ?>
+                                                            <span class="lineup-badge">Pemain Utama</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -494,6 +651,19 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
             setSidebarOpen(false);
         }
     });
+}
+
+// Lineup Tab Switching
+function switchLineupTab(half) {
+    // Hide all contents
+    document.querySelectorAll('.lineup-content-half').forEach(el => el.classList.remove('active'));
+    // Show selected
+    document.getElementById('lineup-half-' + half).classList.add('active');
+    
+    // Update buttons
+    const btns = document.querySelectorAll('.lineup-tab-btn');
+    btns.forEach(btn => btn.classList.remove('active'));
+    btns[half-1].classList.add('active');
 }
 </script>
 

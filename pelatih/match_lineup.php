@@ -69,12 +69,31 @@ if ($my_team_id == 0) {
         exit;
     }
 
-    // Determine current lineup
-    $current_lineup = [];
-    $stmtLineup = $conn->prepare("SELECT player_id, is_starting FROM lineups WHERE match_id = ? AND team_id = ?");
-    $stmtLineup->execute([$challenge_id, $my_team_id]);
-    while ($row = $stmtLineup->fetch(PDO::FETCH_ASSOC)) {
-        $current_lineup[$row['player_id']] = $row['is_starting'];
+    // Initial Filter: If user hasn't selected an event filter, force it to match the challenge event
+    if ($filter_event === '' && !empty($challenge['sport_type'])) {
+        $filter_event = $challenge['sport_type'];
+    }
+
+    // Determine current lineup (Babak 1 & 2)
+    $current_lineup_h1 = [];
+    $current_lineup_h2 = [];
+    
+    // Check if 'half' column exists to avoid errors during migration
+    try {
+        $stmtLineup = $conn->prepare("SELECT player_id, is_starting, half FROM lineups WHERE match_id = ? AND team_id = ?");
+        $stmtLineup->execute([$challenge_id, $my_team_id]);
+        while ($row = $stmtLineup->fetch(PDO::FETCH_ASSOC)) {
+            if ($row['half'] == 1) {
+                $current_lineup_h1[$row['player_id']] = $row['is_starting'];
+            } elseif ($row['half'] == 2) {
+                $current_lineup_h2[$row['player_id']] = $row['is_starting'];
+            } else {
+                // Fallback for old data (assume half 1)
+                $current_lineup_h1[$row['player_id']] = $row['is_starting'];
+            }
+        }
+    } catch (PDOException $e) {
+        // Handle case where 'half' column might not exist yet (though we added it)
     }
 
     // Get all players (with optional filters)
@@ -84,6 +103,13 @@ if ($my_team_id == 0) {
     if ($filter_event !== '') {
         $player_query .= " AND sport_type = ?";
         $player_params[] = $filter_event;
+    } else {
+        // Strict restriction: If no filter selected, still ONLY show players matching challenge event
+        // Unless user explicitly clears it (but we forced it above).
+        if (!empty($challenge['sport_type'])) {
+             $player_query .= " AND sport_type = ?";
+             $player_params[] = $challenge['sport_type'];
+        }
     }
 
     if ($filter_position !== '') {
@@ -116,17 +142,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtDelete = $conn->prepare("DELETE FROM lineups WHERE match_id = ? AND team_id = ?");
         $stmtDelete->execute([$challenge_id, $my_team_id]);
 
-        // 2. Insert new lineup
-        if (isset($_POST['players']) && is_array($_POST['players'])) {
-            $stmtInsert = $conn->prepare("INSERT INTO lineups (match_id, player_id, team_id, is_starting, position) VALUES (?, ?, ?, ?, ?)");
-            
-            foreach ($_POST['players'] as $player_id) {
-                $is_starting = isset($_POST['starters'][$player_id]) ? 1 : 0;
-                // Find player position from array (optimization: could map earlier, but loop is small)
+        $stmtInsert = $conn->prepare("INSERT INTO lineups (match_id, player_id, team_id, is_starting, position, half) VALUES (?, ?, ?, ?, ?, ?)");
+
+        // 2. Insert new lineup - Babak 1
+        if (isset($_POST['players_h1']) && is_array($_POST['players_h1'])) {
+            foreach ($_POST['players_h1'] as $player_id) {
+                $is_starting = isset($_POST['starters_h1'][$player_id]) ? 1 : 0; // "Starter" here means "Playing in this half" effectively, or actual starter? 
+                // Let's assume checkbox 'players_h1' means they are IN THE LINEUP for Half 1.
+                // And 'starters_h1' means they are starting (vs bench).
+                // Actually usually lineup = squad. But here distinct checkboxes for halves suggest:
+                // Checkbox = Player is available/playing in this half.
+                
                 $pos = '';
                 foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
                 
-                $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos]);
+                $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 1]);
+            }
+        }
+
+        // 3. Insert new lineup - Babak 2
+        if (isset($_POST['players_h2']) && is_array($_POST['players_h2'])) {
+            foreach ($_POST['players_h2'] as $player_id) {
+                 $is_starting = isset($_POST['starters_h2'][$player_id]) ? 1 : 0;
+                 $pos = '';
+                 foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
+                 
+                 $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 2]);
             }
         }
 
@@ -148,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="section-header">
         <div>
             <h2 class="section-title">Atur Lineup: <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?> vs <?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?></h2>
-            <p class="text-muted">Pilih pemain yang akan bertanding.</p>
+            <p class="text-muted">Event: <strong><?php echo htmlspecialchars($challenge['sport_type']); ?></strong></p>
         </div>
         <a href="schedule.php" class="btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali
@@ -170,15 +211,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="hidden" name="id" value="<?php echo $challenge_id; ?>">
             <div class="filter-grid">
                 <div class="filter-group">
-                    <label>Event</label>
-                    <select name="event" class="form-control">
-                        <option value="">Semua Event</option>
-                        <?php foreach ($event_types as $event_option): ?>
-                            <option value="<?php echo htmlspecialchars($event_option); ?>" <?php echo $filter_event === $event_option ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($event_option); ?>
-                            </option>
-                        <?php endforeach; ?>
+                    <label>Event (Otomatis)</label>
+                    <select name="event" class="form-control" disabled>
+                        <option value="<?php echo htmlspecialchars($challenge['sport_type']); ?>" selected>
+                            <?php echo htmlspecialchars($challenge['sport_type']); ?>
+                        </option>
                     </select>
+                     <!-- Sent hidden for logic consistency if needed, though we force it in PHP -->
+                    <input type="hidden" name="event" value="<?php echo htmlspecialchars($challenge['sport_type']); ?>">
                 </div>
                 <div class="filter-group">
                     <label>Posisi</label>
@@ -208,45 +248,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <form method="POST" action="">
-        <div class="table-responsive">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width: 50px;">Main</th>
-                        <th style="width: 50px;">Starter</th>
-                        <th>No</th>
-                        <th>Nama</th>
-                        <th>Posisi</th>
-                        <th>Event</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($players as $player): 
-                        $is_selected = isset($current_lineup[$player['id']]);
-                        $is_starting = $is_selected && $current_lineup[$player['id']] == 1;
-                    ?>
-                    <tr>
-                        <td class="text-center">
-                            <input type="checkbox" name="players[]" value="<?php echo $player['id']; ?>" 
-                                   class="form-check-input player-select" 
-                                   data-id="<?php echo $player['id']; ?>"
-                                   <?php echo $is_selected ? 'checked' : ''; ?>>
-                        </td>
-                        <td class="text-center">
-                            <input type="checkbox" name="starters[<?php echo $player['id']; ?>]" value="1" 
-                                   class="form-check-input starter-select" 
-                                   id="starter-<?php echo $player['id']; ?>"
-                                   <?php echo $is_starting ? 'checked' : ''; ?>
-                                   <?php echo !$is_selected ? 'disabled' : ''; ?>>
-                        </td>
-                        <td><span class="badge badge-primary"><?php echo $player['jersey_number']; ?></span></td>
-                        <td><?php echo htmlspecialchars($player['name'] ?? ''); ?></td>
-                        <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
-                        <td><?php echo htmlspecialchars($player['sport_type'] ?? '-'); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <!-- TABS for Halves -->
+        <div class="tabs">
+            <button type="button" class="tab-btn active" onclick="openTab(event, 'half1')">Babak 1</button>
+            <button type="button" class="tab-btn" onclick="openTab(event, 'half2')">Babak 2</button>
+        </div>
+
+        <!-- Half 1 Content -->
+        <div id="half1" class="tab-content active">
+            <h4 class="mb-3">Lineup Babak 1</h4>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Main</th>
+                            <th style="width: 50px;">Starter</th>
+                            <th>No</th>
+                            <th>Nama</th>
+                            <th>Posisi</th>
+                            <th>Event</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($players as $player): 
+                            $is_selected = isset($current_lineup_h1[$player['id']]);
+                            $is_starting = $is_selected && $current_lineup_h1[$player['id']] == 1;
+                            
+                            // Check restriction (visual mainly, as query already filters)
+                            $is_valid = ($player['sport_type'] == $challenge['sport_type']);
+                        ?>
+                        <tr class="<?php echo !$is_valid ? 'opacity-50' : ''; ?>">
+                            <td class="text-center">
+                                <input type="checkbox" name="players_h1[]" value="<?php echo $player['id']; ?>" 
+                                       class="form-check-input player-select-h1" 
+                                       data-id="<?php echo $player['id']; ?>"
+                                       <?php echo $is_selected ? 'checked' : ''; ?>
+                                       <?php echo !$is_valid ? 'disabled' : ''; ?>>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" name="starters_h1[<?php echo $player['id']; ?>]" value="1" 
+                                       class="form-check-input starter-select-h1" 
+                                       id="starter-h1-<?php echo $player['id']; ?>"
+                                       <?php echo $is_starting ? 'checked' : ''; ?>
+                                       <?php echo !$is_selected ? 'disabled' : ''; ?>
+                                       <?php echo !$is_valid ? 'disabled' : ''; ?>>
+                            </td>
+                            <td><span class="badge badge-primary"><?php echo $player['jersey_number']; ?></span></td>
+                            <td><?php echo htmlspecialchars($player['name'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
+                            <td>
+                                <?php if($is_valid): ?>
+                                    <span class="badge badge-success" style="font-size: 10px;">Sesuai</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger" style="font-size: 10px;">Beda Kategori</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Half 2 Content -->
+        <div id="half2" class="tab-content">
+            <h4 class="mb-3">Lineup Babak 2</h4>
+             <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Main</th>
+                            <th style="width: 50px;">Starter</th>
+                            <th>No</th>
+                            <th>Nama</th>
+                            <th>Posisi</th>
+                            <th>Event</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($players as $player): 
+                            $is_selected = isset($current_lineup_h2[$player['id']]);
+                            $is_starting = $is_selected && $current_lineup_h2[$player['id']] == 1;
+                            
+                             $is_valid = ($player['sport_type'] == $challenge['sport_type']);
+                        ?>
+                        <tr class="<?php echo !$is_valid ? 'opacity-50' : ''; ?>">
+                            <td class="text-center">
+                                <input type="checkbox" name="players_h2[]" value="<?php echo $player['id']; ?>" 
+                                       class="form-check-input player-select-h2" 
+                                       data-id="<?php echo $player['id']; ?>"
+                                       <?php echo $is_selected ? 'checked' : ''; ?>
+                                       <?php echo !$is_valid ? 'disabled' : ''; ?>>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" name="starters_h2[<?php echo $player['id']; ?>]" value="1" 
+                                       class="form-check-input starter-select-h2" 
+                                       id="starter-h2-<?php echo $player['id']; ?>"
+                                       <?php echo $is_starting ? 'checked' : ''; ?>
+                                       <?php echo !$is_selected ? 'disabled' : ''; ?>
+                                       <?php echo !$is_valid ? 'disabled' : ''; ?>>
+                            </td>
+                            <td><span class="badge badge-primary"><?php echo $player['jersey_number']; ?></span></td>
+                            <td><?php echo htmlspecialchars($player['name'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
+                            <td>
+                                <?php if($is_valid): ?>
+                                    <span class="badge badge-success" style="font-size: 10px;">Sesuai</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger" style="font-size: 10px;">Beda Kategori</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="form-actions mt-4">
@@ -258,13 +374,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+        tabcontent[i].classList.remove("active");
+    }
+    tablinks = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.className += " active";
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    const playerChecks = document.querySelectorAll('.player-select');
-    
-    playerChecks.forEach(check => {
+    // Logic for Half 1
+    const playerChecksH1 = document.querySelectorAll('.player-select-h1');
+    playerChecksH1.forEach(check => {
         check.addEventListener('change', function() {
             const id = this.dataset.id;
-            const starterCheck = document.getElementById('starter-' + id);
+            const starterCheck = document.getElementById('starter-h1-' + id);
+            
+            if (this.checked) {
+                starterCheck.disabled = false;
+            } else {
+                starterCheck.disabled = true;
+                starterCheck.checked = false;
+            }
+        });
+    });
+
+    // Logic for Half 2
+    const playerChecksH2 = document.querySelectorAll('.player-select-h2');
+    playerChecksH2.forEach(check => {
+        check.addEventListener('change', function() {
+            const id = this.dataset.id;
+            const starterCheck = document.getElementById('starter-h2-' + id);
             
             if (this.checked) {
                 starterCheck.disabled = false;
@@ -278,6 +426,50 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* Tabs Styling */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: var(--primary);
+    background: #f8f9fa;
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.5s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 .form-check-input {
     width: 20px;
     height: 20px;
@@ -290,8 +482,13 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 50%;
     font-size: 12px;
 }
+.badge-success { background-color: var(--success); color: white; padding: 2px 6px; border-radius: 4px; }
+.badge-danger { background-color: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; }
+
 .text-center { text-align: center; }
 .mt-4 { margin-top: 1.5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.opacity-50 { opacity: 0.5; }
 
 .filter-container {
     margin: 20px 0 14px;

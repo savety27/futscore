@@ -147,7 +147,40 @@ function populateGoals(goals) {
 }
 
 
+
+// Store lineups globally for switching
+let currentMatchLineups = { team1: {}, team2: {} };
+let currentLineupHalf = "half1";
+
 function populateLineups(lineups) {
+    currentMatchLineups = lineups;
+    currentLineupHalf = "half1";
+    
+    // Add event listeners for half tabs
+    const halfTabs = document.querySelectorAll('.lineup-half-btn');
+    halfTabs.forEach(tab => {
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+        
+        newTab.addEventListener('click', function() {
+            document.querySelectorAll('.lineup-half-btn').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentLineupHalf = "half" + this.dataset.half;
+            renderLineups(currentLineupHalf);
+        });
+    });
+    
+    // Reset to Half 1
+    const btn1 = document.querySelector('.lineup-half-btn[data-half="1"]');
+    const btn2 = document.querySelector('.lineup-half-btn[data-half="2"]');
+    if(btn1 && btn2) {
+        btn1.classList.add('active');
+        btn2.classList.remove('active');
+    }
+    renderLineups("half1");
+}
+
+function renderLineups(half) {
     const team1Players = document.getElementById('team1Players');
     const team2Players = document.getElementById('team2Players');
 
@@ -156,26 +189,31 @@ function populateLineups(lineups) {
     team1Players.innerHTML = '';
     team2Players.innerHTML = '';
 
+    const lineups = currentMatchLineups;
+
     // Team 1 players
-    if (lineups && lineups.team1 && lineups.team1.length > 0) {
-        lineups.team1.forEach(player => {
+    if (lineups && lineups.team1 && lineups.team1[half] && lineups.team1[half].length > 0) {
+        lineups.team1[half].forEach(player => {
             const playerDiv = createPlayerLineupItem(player);
             if (playerDiv) team1Players.appendChild(playerDiv);
         });
     } else {
-        team1Players.innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> No lineup data submitted for this team</div>';
+        const halfLabel = half === 'half1' ? 'Babak 1' : 'Babak 2';
+        team1Players.innerHTML = `<div class="no-data"><i class="fas fa-info-circle"></i> Belum ada lineup ${halfLabel}</div>`;
     }
 
     // Team 2 players
-    if (lineups && lineups.team2 && lineups.team2.length > 0) {
-        lineups.team2.forEach(player => {
+    if (lineups && lineups.team2 && lineups.team2[half] && lineups.team2[half].length > 0) {
+        lineups.team2[half].forEach(player => {
             const playerDiv = createPlayerLineupItem(player);
             if (playerDiv) team2Players.appendChild(playerDiv);
         });
     } else {
-        team2Players.innerHTML = '<div class="no-data"><i class="fas fa-info-circle"></i> No lineup data submitted for this team</div>';
+        const halfLabel = half === 'half1' ? 'Babak 1' : 'Babak 2';
+        team2Players.innerHTML = `<div class="no-data"><i class="fas fa-info-circle"></i> Belum ada lineup ${halfLabel}</div>`;
     }
 }
+
 
 function createPlayerLineupItem(player) {
     if (!player) return null;

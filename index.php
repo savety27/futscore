@@ -789,6 +789,73 @@ $pageTitle = "Home";
             
             <div class="match-tab-content" id="lineupsContent">
                 <h4>Susunan Pemain</h4>
+                
+                <style>
+                    .lineup-half-tabs {
+                        display: flex;
+                        justify-content: center;
+                        gap: 0;
+                        margin-bottom: 20px;
+                        background: linear-gradient(135deg, #58688fff 0%, #4a6a9cff 100%);
+                        border-radius: 16px;
+                        padding: 6px;
+                        max-width: 320px;
+                        margin-left: auto;
+                        margin-right: auto;
+                        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.25);
+                    }
+                    .lineup-half-btn {
+                        flex: 1;
+                        padding: 10px 20px;
+                        border-radius: 12px;
+                        border: none;
+                        background: transparent;
+                        color: rgba(255,255,255,0.5);
+                        font-weight: 700;
+                        font-size: 13px;
+                        letter-spacing: 0.5px;
+                        cursor: pointer;
+                        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        position: relative;
+                        overflow: hidden;
+                        text-transform: uppercase;
+                    }
+                    .lineup-half-btn i {
+                        font-size: 14px;
+                        transition: transform 0.3s ease;
+                    }
+                    .lineup-half-btn:hover:not(.active) {
+                        color: rgba(255,255,255,0.75);
+                        background: rgba(255,255,255,0.08);
+                    }
+                    .lineup-half-btn.active {
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+                        color: #fff;
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+                        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                    }
+                    .lineup-half-btn.active i {
+                        transform: scale(1.15);
+                        animation: pulseIcon 2s ease-in-out infinite;
+                    }
+                    @keyframes pulseIcon {
+                        0%, 100% { transform: scale(1.15); }
+                        50% { transform: scale(1.3); }
+                    }
+                </style>
+                <div class="lineup-half-tabs">
+                    <button class="lineup-half-btn active" data-half="1">
+                        <i class="fas fa-futbol"></i> Babak 1
+                    </button>
+                    <button class="lineup-half-btn" data-half="2">
+                        <i class="fas fa-futbol"></i> Babak 2
+                    </button>
+                </div>
+
                 <div class="lineups-container">
                     <div class="team-lineup" id="team1Lineup">
                         <h5 id="team1NameLineup"></h5>
