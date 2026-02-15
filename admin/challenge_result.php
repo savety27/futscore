@@ -1413,6 +1413,7 @@ body {
                                     class="form-select <?php echo isset($errors['match_status']) ? 'is-invalid' : ''; ?>" 
                                     required>
                                 <option value="completed" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'completed') || $challenge_data['match_status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                <option value="scheduled" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'scheduled') || $challenge_data['match_status'] == 'scheduled' ? 'selected' : ''; ?>>Scheduled</option>
                                 <option value="ongoing" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'ongoing') || $challenge_data['match_status'] == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
                                 <option value="coming_soon" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'coming_soon') || $challenge_data['match_status'] == 'coming_soon' ? 'selected' : ''; ?>>Coming Soon</option>
                                 <option value="postponed" <?php echo (isset($form_data['match_status']) && $form_data['match_status'] == 'postponed') || $challenge_data['match_status'] == 'postponed' ? 'selected' : ''; ?>>Postponed</option>
@@ -1587,6 +1588,25 @@ document.addEventListener('DOMContentLoaded', function() {
         return html;
     }
     
+    // Function to calculate score based on goal entries
+    function calculateScore() {
+        let score1 = 0;
+        let score2 = 0;
+        
+        document.querySelectorAll('.goal-team-select').forEach(select => {
+            if (select.value == team1Id) {
+                score1++;
+            } else if (select.value == team2Id) {
+                score2++;
+            }
+        });
+        
+        document.getElementById('challenger_score').value = score1;
+        document.getElementById('opponent_score').value = score2;
+        
+        updateResultPreview();
+    }
+
     // Function to add a goal row
     function addGoalRow(data = null) {
         const row = document.createElement('div');
@@ -1617,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
             </div>
             
-            <button type="button" class="btn-remove-goal" onclick="this.parentElement.remove()">
+            <button type="button" class="btn-remove-goal">
                 <i class="fas fa-trash"></i>
             </button>
         `;
@@ -1630,13 +1650,21 @@ document.addEventListener('DOMContentLoaded', function() {
             playerSelect.value = goalPlayerId;
         }
         
-        // Add event listener to team select to update players
+        // Add event listener to team select to update players AND calculate score
         const teamSelect = row.querySelector('.goal-team-select');
         const playerSelect = row.querySelector('.goal-player-select');
         
         teamSelect.addEventListener('change', function() {
             const selectedTeamId = this.value;
             playerSelect.innerHTML = getPlayerOptions(selectedTeamId);
+            calculateScore();
+        });
+        
+        // Add event listener to remove button
+        const removeBtn = row.querySelector('.btn-remove-goal');
+        removeBtn.addEventListener('click', function() {
+            row.remove();
+            calculateScore();
         });
     }
     

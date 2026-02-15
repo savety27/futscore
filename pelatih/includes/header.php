@@ -24,8 +24,21 @@ if ($team_id && isset($conn)) {
             $team_name = $team['name'];
             $team_logo = $team['logo'];
         }
+
+        // Otomatis expired challenge yang sudah lewat tanggal
+        $stmt_expire = $conn->prepare("UPDATE challenges SET status = 'expired' WHERE status = 'open' AND challenge_date < NOW()");
+        $stmt_expire->execute();
+        
     } catch (PDOException $e) {
         $team_name = 'FutScore';
+    }
+} elseif (isset($conn)) {
+    // Fallback jika tidak ada team_id tapi koneksi ada (jarang terjadi di pelatih area tapi untuk jaga-jaga)
+    try {
+        $stmt_expire = $conn->prepare("UPDATE challenges SET status = 'expired' WHERE status = 'open' AND challenge_date < NOW()");
+        $stmt_expire->execute();
+    } catch (PDOException $e) {
+        // Silent fail
     }
 }
 ?>

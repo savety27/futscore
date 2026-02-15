@@ -1538,5 +1538,72 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('challenge_date').setAttribute('min', today);
 });
 </script>
+    <script>
+        // Data from PHP
+        const teams = <?php echo json_encode($teams); ?>;
+        const teamEventsMap = <?php echo json_encode($team_events_map); ?>;
+        const selectedChallenger = "<?php echo $form_data['challenger_id']; ?>";
+        const selectedOpponent = "<?php echo $form_data['opponent_id']; ?>";
+
+        // Elements
+        const sportTypeSelect = document.getElementById('sport_type');
+        const challengerSelect = document.getElementById('challenger_id');
+        const opponentSelect = document.getElementById('opponent_id');
+
+        // Function to filter teams based on selected event
+        function filterTeams() {
+            const selectedEvent = sportTypeSelect.value;
+            
+            // Reset options (keep placeholder)
+            challengerSelect.innerHTML = '<option value="">-- Pilih Tim --</option>';
+            opponentSelect.innerHTML = '<option value="">-- Pilih Tim --</option>';
+
+            if (!selectedEvent) {
+                // If no event selected, show all teams (or maybe show none? Let's show all for flexibility but maybe that defeats the purpose. 
+                // Better: Show all but they will fail validation if mismatch. 
+                // OR: Show none until event selected. 
+                // Let's go with showing only valid teams for the event if event is selected. If not, show all.)
+                 teams.forEach(team => {
+                    addOption(challengerSelect, team, selectedChallenger);
+                    addOption(opponentSelect, team, selectedOpponent);
+                });
+                return;
+            }
+
+            // Filter teams
+            teams.forEach(team => {
+                // Check if team is registered for this event
+                const teamEvents = teamEventsMap[team.id] || [];
+                if (teamEvents.includes(selectedEvent)) {
+                    addOption(challengerSelect, team, selectedChallenger);
+                    addOption(opponentSelect, team, selectedOpponent);
+                }
+            });
+        }
+
+        function addOption(selectElement, team, selectedId) {
+            const option = document.createElement('option');
+            option.value = team.id;
+            option.textContent = team.name;
+            if (team.id == selectedId) {
+                option.selected = true;
+            }
+            selectElement.appendChild(option);
+        }
+
+        // Event Listeners
+        sportTypeSelect.addEventListener('change', filterTeams);
+
+        // Initial Filter (if event already selected, e.g. after validation error)
+        if (sportTypeSelect.value) {
+            filterTeams();
+        } else {
+             // Show all initially
+             teams.forEach(team => {
+                addOption(challengerSelect, team, selectedChallenger);
+                addOption(opponentSelect, team, selectedOpponent);
+            });
+        }
+    </script>
 </body>
 </html>
