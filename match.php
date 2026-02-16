@@ -86,23 +86,13 @@ if (!$match) {
     $matchNotFound = true;
 } else {
     // Get lineups for this match
-    // Note: Added 'l.half' to the selection. 
-    // IF 'half' column doesn't exist yet in production, this might fail unless migration run. 
-    // Assuming migration is done as per previous steps.
-    // However, to be safe, we should check if column exists or handle potential error? 
-    // But this is user request implementation, assuming DB is updated.
-    
     $sqlLineups = "SELECT l.*, p.name as player_name, p.photo, p.jersey_number, t.id as team_id, t.name as team_name
                    FROM lineups l
                    LEFT JOIN players p ON l.player_id = p.id
                    LEFT JOIN teams t ON l.team_id = t.id
                    WHERE l.match_id = ?
                    ORDER BY l.is_starting DESC, p.jersey_number ASC";
-    
-    // Check if half column exists or just run query and handle if it returns it
-    // It's safer to just run it. If column missing, standard query won't fetch it, but SELECT * (l.*) will fail if I explicitly select it? 
-    // l.* will select all columns. If half exists it will be there.
-    
+
     $stmtLineups = $conn->prepare($sqlLineups);
     $stmtLineups->bind_param('i', $matchId);
     $stmtLineups->execute();
@@ -112,7 +102,7 @@ if (!$match) {
         
         if ($lineup['team_id'] == $match['team1_id']) {
             $lineups['team1'][$half][] = $lineup;
-        } else if ($lineup['team_id'] == $match['team2_id']) {
+        } elseif ($lineup['team_id'] == $match['team2_id']) {
             $lineups['team2'][$half][] = $lineup;
         }
     }

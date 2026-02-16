@@ -9,6 +9,7 @@ $pelatih_id = $_SESSION['pelatih_id'] ?? 0;
 $filter_event = trim($_GET['event'] ?? '');
 $filter_position = trim($_GET['position'] ?? '');
 $filter_search = trim($_GET['q'] ?? '');
+$has_lineups_half_column = false;
 
 $event_types = [
     'LIGA AAFI BATAM U-13 PUTRA 2026',
@@ -74,26 +75,29 @@ if ($my_team_id == 0) {
         $filter_event = $challenge['sport_type'];
     }
 
+    $stmtHalfColumn = $conn->query("SHOW COLUMNS FROM lineups LIKE 'half'");
+    $has_lineups_half_column = $stmtHalfColumn && $stmtHalfColumn->fetch(PDO::FETCH_ASSOC) !== false;
+
     // Determine current lineup (Babak 1 & 2)
     $current_lineup_h1 = [];
     $current_lineup_h2 = [];
-    
-    // Check if 'half' column exists to avoid errors during migration
-    try {
+
+    if ($has_lineups_half_column) {
         $stmtLineup = $conn->prepare("SELECT player_id, is_starting, half FROM lineups WHERE match_id = ? AND team_id = ?");
         $stmtLineup->execute([$challenge_id, $my_team_id]);
         while ($row = $stmtLineup->fetch(PDO::FETCH_ASSOC)) {
-            if ($row['half'] == 1) {
-                $current_lineup_h1[$row['player_id']] = $row['is_starting'];
-            } elseif ($row['half'] == 2) {
+            if ((int)$row['half'] === 2) {
                 $current_lineup_h2[$row['player_id']] = $row['is_starting'];
             } else {
-                // Fallback for old data (assume half 1)
                 $current_lineup_h1[$row['player_id']] = $row['is_starting'];
             }
         }
-    } catch (PDOException $e) {
-        // Handle case where 'half' column might not exist yet (though we added it)
+    } else {
+        $stmtLineup = $conn->prepare("SELECT player_id, is_starting FROM lineups WHERE match_id = ? AND team_id = ?");
+        $stmtLineup->execute([$challenge_id, $my_team_id]);
+        while ($row = $stmtLineup->fetch(PDO::FETCH_ASSOC)) {
+            $current_lineup_h1[$row['player_id']] = $row['is_starting'];
+        }
     }
 
     // Get all players (with optional filters)
@@ -135,52 +139,51 @@ if ($my_team_id == 0) {
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $conn->beginTransaction();
+    if (!$has_lineups_half_column) {
+        $error_message = "Pembaruan database belum diterapkan. Jalankan migrations/migration_add_half_column_to_lineups.sql terlebih dahulu.";
+    } else {
+        try {
+            $conn->beginTransaction();
 
-        // 1. Clear existing lineup for this match & team
-        $stmtDelete = $conn->prepare("DELETE FROM lineups WHERE match_id = ? AND team_id = ?");
-        $stmtDelete->execute([$challenge_id, $my_team_id]);
+            // 1. Clear existing lineup for this match & team
+            $stmtDelete = $conn->prepare("DELETE FROM lineups WHERE match_id = ? AND team_id = ?");
+            $stmtDelete->execute([$challenge_id, $my_team_id]);
 
-        $stmtInsert = $conn->prepare("INSERT INTO lineups (match_id, player_id, team_id, is_starting, position, half) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtInsert = $conn->prepare("INSERT INTO lineups (match_id, player_id, team_id, is_starting, position, half) VALUES (?, ?, ?, ?, ?, ?)");
 
-        // 2. Insert new lineup - Babak 1
-        if (isset($_POST['players_h1']) && is_array($_POST['players_h1'])) {
-            foreach ($_POST['players_h1'] as $player_id) {
-                $is_starting = isset($_POST['starters_h1'][$player_id]) ? 1 : 0; // "Starter" here means "Playing in this half" effectively, or actual starter? 
-                // Let's assume checkbox 'players_h1' means they are IN THE LINEUP for Half 1.
-                // And 'starters_h1' means they are starting (vs bench).
-                // Actually usually lineup = squad. But here distinct checkboxes for halves suggest:
-                // Checkbox = Player is available/playing in this half.
-                
-                $pos = '';
-                foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
-                
-                $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 1]);
+            // 2. Insert new lineup - Babak 1
+            if (isset($_POST['players_h1']) && is_array($_POST['players_h1'])) {
+                foreach ($_POST['players_h1'] as $player_id) {
+                    $is_starting = isset($_POST['starters_h1'][$player_id]) ? 1 : 0;
+                    $pos = '';
+                    foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
+
+                    $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 1]);
+                }
             }
-        }
 
-        // 3. Insert new lineup - Babak 2
-        if (isset($_POST['players_h2']) && is_array($_POST['players_h2'])) {
-            foreach ($_POST['players_h2'] as $player_id) {
-                 $is_starting = isset($_POST['starters_h2'][$player_id]) ? 1 : 0;
-                 $pos = '';
-                 foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
-                 
-                 $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 2]);
+            // 3. Insert new lineup - Babak 2
+            if (isset($_POST['players_h2']) && is_array($_POST['players_h2'])) {
+                foreach ($_POST['players_h2'] as $player_id) {
+                     $is_starting = isset($_POST['starters_h2'][$player_id]) ? 1 : 0;
+                     $pos = '';
+                     foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
+
+                     $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 2]);
+                }
             }
+
+            $conn->commit();
+            $_SESSION['success_message'] = "Lineup berhasil disimpan!";
+
+            // Refresh check
+            header("Location: match_lineup.php?id=$challenge_id");
+            exit;
+
+        } catch (Exception $e) {
+            $conn->rollBack();
+            $error_message = "Gagal menyimpan lineup: " . $e->getMessage();
         }
-
-        $conn->commit();
-        $_SESSION['success_message'] = "Lineup berhasil disimpan!";
-        
-        // Refresh check
-        header("Location: match_lineup.php?id=$challenge_id");
-        exit;
-
-    } catch (Exception $e) {
-        $conn->rollBack();
-        $error_message = "Gagal menyimpan lineup: " . $e->getMessage();
     }
 }
 ?>
@@ -203,6 +206,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if (isset($_SESSION['success_message'])): ?>
         <div class="alert alert-success">
             <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!$has_lineups_half_column): ?>
+        <div class="alert alert-warning">
+            Simpan lineup dinonaktifkan sampai migrasi database dijalankan: <code>migrations/migration_add_half_column_to_lineups.sql</code>
         </div>
     <?php endif; ?>
 
@@ -366,7 +375,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="form-actions mt-4">
-            <button type="submit" class="btn-primary">
+            <button type="submit" class="btn-primary" <?php echo !$has_lineups_half_column ? 'disabled title="Migrasi database belum dijalankan"' : ''; ?>>
                 <i class="fas fa-save"></i> Simpan Lineup
             </button>
         </div>
