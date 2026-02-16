@@ -290,7 +290,7 @@ body {
     background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
     color: var(--dark);
     min-height: 100vh;
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 
 .wrapper {
