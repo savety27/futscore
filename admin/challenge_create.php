@@ -82,6 +82,7 @@ $event_types = [
 
 // Initialize variables
 $errors = [];
+$default_expiry_hours = 24;
 $form_data = [
     'challenger_id' => '',
     'opponent_id' => '',
@@ -89,8 +90,7 @@ $form_data = [
     'challenge_date' => '',
     'challenge_time' => '18:00',
     'sport_type' => '',
-    'notes' => '',
-    'expiry_hours' => 24
+    'notes' => ''
 ];
 
 // Fetch teams for dropdown
@@ -133,8 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'challenge_date' => trim($_POST['challenge_date'] ?? ''),
         'challenge_time' => trim($_POST['challenge_time'] ?? '18:00'),
         'sport_type' => in_array(trim($_POST['sport_type'] ?? ''), $event_types, true) ? trim($_POST['sport_type'] ?? '') : '',
-        'notes' => trim($_POST['notes'] ?? ''),
-        'expiry_hours' => intval($_POST['expiry_hours'] ?? 24)
+        'notes' => trim($_POST['notes'] ?? '')
     ];
     
     // Validation
@@ -183,9 +182,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Generate challenge code
     $challenge_code = 'CH' . date('Ymd') . strtoupper(substr(uniqid(), -6));
     
-    // Calculate expiry date
+    // Calculate expiry date automatically
     $challenge_datetime = $form_data['challenge_date'] . ' ' . $form_data['challenge_time'] . ':00';
-    $expiry_datetime = date('Y-m-d H:i:s', strtotime($challenge_datetime . ' -' . $form_data['expiry_hours'] . ' hours'));
+    $expiry_datetime = date('Y-m-d H:i:s', strtotime($challenge_datetime . ' -' . $default_expiry_hours . ' hours'));
     
     // If no errors, insert to database
     if (empty($errors)) {
@@ -1322,18 +1321,11 @@ body {
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="expiry_hours">
-                                Challenge Expiry (jam sebelum pertandingan)
+                            <label class="form-label" for="expiry_info">
+                                Challenge Expiry
                             </label>
-                            <select id="expiry_hours" name="expiry_hours" class="form-select">
-                                <option value="1" <?php echo $form_data['expiry_hours'] == 1 ? 'selected' : ''; ?>>1 Jam</option>
-                                <option value="6" <?php echo $form_data['expiry_hours'] == 6 ? 'selected' : ''; ?>>6 Jam</option>
-                                <option value="12" <?php echo $form_data['expiry_hours'] == 12 ? 'selected' : ''; ?>>12 Jam</option>
-                                <option value="24" <?php echo $form_data['expiry_hours'] == 24 ? 'selected' : ''; ?>>24 Jam (Default)</option>
-                                <option value="48" <?php echo $form_data['expiry_hours'] == 48 ? 'selected' : ''; ?>>48 Jam</option>
-                                <option value="72" <?php echo $form_data['expiry_hours'] == 72 ? 'selected' : ''; ?>>72 Jam</option>
-                            </select>
-                            <small style="color: #666;">Challenge akan expired setelah waktu ini sebelum pertandingan</small>
+                            <input type="text" id="expiry_info" class="form-input" value="Otomatis 24 jam sebelum pertandingan" readonly>
+                            <small style="color: #666;">Batas penerimaan ditetapkan otomatis oleh sistem.</small>
                         </div>
                         
                         <div class="form-group">

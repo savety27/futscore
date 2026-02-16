@@ -480,6 +480,8 @@ body {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    min-width: 0;
     transition: var(--transition);
 }
 
@@ -525,6 +527,7 @@ body {
     gap: 10px;
     transition: var(--transition);
     box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    white-space: nowrap;
 }
 
 .logout-btn:hover {
@@ -564,7 +567,9 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 520px;
+    width: 100%;
+    max-width: 520px;
+    min-width: 260px;
 }
 
 .search-input-wrap {
@@ -622,6 +627,8 @@ body {
 .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .btn {
@@ -636,6 +643,7 @@ body {
     transition: var(--transition);
     font-size: 15px;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .btn-primary {
@@ -668,6 +676,7 @@ body {
     box-shadow: var(--card-shadow);
     margin-bottom: 30px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
@@ -1013,6 +1022,48 @@ body {
     display: none;
 }
 
+/* ===== SMALL DESKTOP / LAPTOP (max-width: 1366px) ===== */
+@media screen and (max-width: 1366px) {
+    .main {
+        padding: 24px;
+    }
+
+    .topbar,
+    .page-header {
+        padding: 18px 20px;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .greeting {
+        min-width: 0;
+        flex: 1 1 360px;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .user-actions {
+        margin-left: auto;
+    }
+
+    .page-title {
+        font-size: 24px;
+        flex: 1 1 280px;
+        min-width: 0;
+    }
+
+    .search-bar {
+        flex: 1 1 420px;
+        max-width: none;
+    }
+
+    .action-buttons {
+        flex: 1 1 auto;
+    }
+}
+
 /* ===== TABLET (max-width: 1024px) ===== */
 @media screen and (max-width: 1024px) {
     .sidebar {
@@ -1021,6 +1072,7 @@ body {
 
     .main {
         margin-left: 240px;
+        width: calc(100% - 240px);
     }
 }
 
