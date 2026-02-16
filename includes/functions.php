@@ -2474,8 +2474,8 @@ function getHeadToHeadStats($team1Id, $team2Id) {
                    ELSE 0
                END) AS team1_goals,
                SUM(CASE
-                   WHEN challenger_id = ? THEN COALESCE(opponent_score, 0)
-                   WHEN opponent_id = ? THEN COALESCE(challenger_score, 0)
+                   WHEN challenger_id = ? THEN COALESCE(challenger_score, 0)
+                   WHEN opponent_id = ? THEN COALESCE(opponent_score, 0)
                    ELSE 0
                END) AS team2_goals
             FROM challenges
