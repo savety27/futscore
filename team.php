@@ -20,13 +20,22 @@ if ($teamId > 0) {
     
     // Get events this team participated in
     $conn = $db->getConnection();
-    $eventSql = "SELECT DISTINCT e.id, e.name, e.start_date 
-                 FROM events e
-                 INNER JOIN matches m ON e.id = m.event_id
-                 WHERE (m.team1_id = ? OR m.team2_id = ?)
-                 ORDER BY e.start_date DESC";
+    $eventSql = "SELECT ev.event_name AS event_key, ev.event_name
+                 FROM (
+                     SELECT te.event_name AS event_name
+                     FROM team_events te
+                     WHERE te.team_id = ?
+
+                     UNION
+
+                     SELECT c.sport_type AS event_name
+                     FROM challenges c
+                     WHERE c.challenger_id = ? OR c.opponent_id = ?
+                 ) ev
+                 WHERE ev.event_name IS NOT NULL AND ev.event_name <> ''
+                 ORDER BY ev.event_name ASC";
     $eventStmt = $conn->prepare($eventSql);
-    $eventStmt->bind_param("ii", $teamId, $teamId);
+    $eventStmt->bind_param("iii", $teamId, $teamId, $teamId);
     $eventStmt->execute();
     $eventsResult = $eventStmt->get_result();
     $events = [];
@@ -246,8 +255,8 @@ if ($teamId > 0) {
                         <h2 class="section-title">DAFTAR</h2>
                         <div class="section-tabs team-roster-tabs">
                             <?php foreach ($events as $event): ?>
-                                <button class="tab-button player-tab" data-event="<?php echo $event['id']; ?>">
-                                    <?php echo htmlspecialchars($event['name'] ?? ''); ?>
+                                <button class="tab-button player-tab" data-event="<?php echo htmlspecialchars($event['event_key'] ?? ''); ?>">
+                                    <?php echo htmlspecialchars($event['event_name'] ?? ''); ?>
                                 </button>
                             <?php endforeach; ?>
                             <button class="tab-button player-tab active" data-tab="players">Pemain</button>

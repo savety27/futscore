@@ -71,6 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Include database connection
 require_once '../config/database.php';
 
+$event_helper_path = __DIR__ . '/../includes/event_helpers.php';
+if (file_exists($event_helper_path)) {
+    require_once $event_helper_path;
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
@@ -303,6 +308,15 @@ function uploadFile($file, $upload_dir, $prefix) {
 
 // Get teams for dropdown
 $teams = [];
+$event_options = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
+
+$selected_sport = trim((string)($_POST['sport'] ?? ''));
+if ($selected_sport !== '' && !in_array($selected_sport, $event_options, true)) {
+    $event_options[] = $selected_sport;
+    natcasesort($event_options);
+    $event_options = array_values($event_options);
+}
+
 try {
     $team_query = "SELECT id, name FROM teams WHERE is_active = 1 ORDER BY name";
     $team_stmt = $conn->prepare($team_query);
@@ -1420,17 +1434,10 @@ try {
                                 </label>
                                 <select name="sport" class="form-control" required>
                                     <option value="">Pilih Event</option>
-                                    <?php 
-                                    $sports = [
-                                        'LIGA AAFI BATAM U-13 PUTRA 2026',
-                                        'LIGA AAFI BATAM U-16 PUTRA 2026',
-                                        'LIGA AAFI BATAM U-16 PUTRI 2026'
-                                    ];
-                                    foreach ($sports as $sport_option): 
-                                    ?>
-                                        <option value="<?php echo $sport_option; ?>" 
+                                    <?php foreach ($event_options as $sport_option): ?>
+                                        <option value="<?php echo htmlspecialchars($sport_option); ?>" 
                                             <?php echo (isset($_POST['sport']) && $_POST['sport'] == $sport_option) ? 'selected' : ''; ?>>
-                                            <?php echo $sport_option; ?>
+                                            <?php echo htmlspecialchars($sport_option); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>

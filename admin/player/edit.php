@@ -2,6 +2,11 @@
 session_start();
 require_once '../config/database.php';
 
+$event_helper_path = __DIR__ . '/../includes/event_helpers.php';
+if (file_exists($event_helper_path)) {
+    require_once $event_helper_path;
+}
+
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
     exit;
@@ -68,6 +73,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $player_id = (int)$_GET['id'];
 $player = null;
 $teams = [];
+$event_options = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 
 try {
     // Get player data
@@ -318,6 +324,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+}
+
+$selected_sport_type = $_POST['sport_type'] ?? ($player['sport_type'] ?? '');
+if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_options, true)) {
+    $event_options[] = $selected_sport_type;
+    natcasesort($event_options);
+    $event_options = array_values($event_options);
 }
 ?>
 <!DOCTYPE html>
@@ -1531,24 +1544,11 @@ select.form-control {
 
                         <div class="form-group">
                             <label for="sport_type">Event <span class="required">*</span></label>
-                            <?php
-                            $selected_sport_type = $_POST['sport_type'] ?? ($player['sport_type'] ?? '');
-                            ?>
                             <select id="sport_type" name="sport_type" class="form-control" required>
                                 <option value="" <?php echo $selected_sport_type === '' ? 'selected' : ''; ?>>Pilih Event</option>
-                                <?php 
-                                $sports = [
-                                        'LIGA AAFI BATAM U-13 PUTRA 2026',
-                                        'LIGA AAFI BATAM U-16 PUTRA 2026',
-                                        'LIGA AAFI BATAM U-16 PUTRI 2026'
-                                    ];
-                                if ($selected_sport_type !== '' && !in_array($selected_sport_type, $sports, true)) {
-                                    $sports[] = $selected_sport_type;
-                                }
-                                foreach ($sports as $sport_option): 
-                                ?>
+                                <?php foreach ($event_options as $sport_option): ?>
                                     <option value="<?php echo htmlspecialchars($sport_option); ?>" <?php echo $selected_sport_type === $sport_option ? 'selected' : ''; ?>>
-                                        <?php echo $sport_option; ?>
+                                        <?php echo htmlspecialchars($sport_option); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

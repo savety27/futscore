@@ -2,8 +2,14 @@
 require_once 'config/database.php';
 require_once 'includes/header.php';
 
+$event_helper_path = __DIR__ . '/../admin/includes/event_helpers.php';
+if (file_exists($event_helper_path)) {
+    require_once $event_helper_path;
+}
+
 $action = 'add';
 $player_id = 0;
+$event_options = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 $player = [
     'name' => '',
     'jersey_number' => '',
@@ -75,6 +81,13 @@ if (isset($_GET['id'])) {
         die("Error: " . $e->getMessage());
     }
 }
+
+$selected_sport_type = trim((string)($player['sport_type'] ?? ''));
+if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_options, true)) {
+    $event_options[] = $selected_sport_type;
+    natcasesort($event_options);
+    $event_options = array_values($event_options);
+}
 ?>
 
 <div class="container">
@@ -142,17 +155,12 @@ if (isset($_GET['id'])) {
                         </label>
                         <select name="sport_type" class="form-control" required>
                             <option value="">Pilih Event</option>
-                            <?php 
-                            $sports = [
-                                'LIGA AAFI BATAM U-13 PUTRA 2026',
-                                'LIGA AAFI BATAM U-16 PUTRA 2026',
-                                'LIGA AAFI BATAM U-16 PUTRI 2026'
-                            ];
-                            foreach ($sports as $sport): 
-                                $selected = ($player['sport_type'] == $sport) ? 'selected' : '';
-                                echo "<option value='$sport' $selected>$sport</option>";
-                            endforeach;
-                            ?>
+                            <?php foreach ($event_options as $sport): ?>
+                                <?php $selected = ($player['sport_type'] == $sport) ? 'selected' : ''; ?>
+                                <option value="<?php echo htmlspecialchars($sport); ?>" <?php echo $selected; ?>>
+                                    <?php echo htmlspecialchars($sport); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 

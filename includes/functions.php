@@ -259,16 +259,43 @@ function searchNews($keyword, $limit = 10) {
 // ========== FUNGSI MATCH ==========
 
 /**
+ * Resolve legacy event label from events.id (soft compatibility).
+ */
+function resolveLegacyEventNameFromEventId($eventId) {
+    global $db;
+    $conn = $db->getConnection();
+
+    $eventId = (int) $eventId;
+    if ($eventId <= 0) {
+        return '';
+    }
+
+    $stmt = $conn->prepare("SELECT name FROM events WHERE id = ? LIMIT 1");
+    if (!$stmt) {
+        return '';
+    }
+
+    $stmt->bind_param('i', $eventId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    return trim((string)($row['name'] ?? ''));
+}
+
+/**
  * Mendapatkan semua match dengan filter dan pagination
  */
 function getAllMatches($params = []) {
     global $db;
     $conn = $db->getConnection();
     
-    // Default parameters
+    // Default parameters (soft compatibility with legacy signature)
     $defaults = [
-        'status' => 'result', // 'schedule' or 'result'
+        'status' => 'result',
         'event_id' => 0,
+        'event' => '',
         'team_id' => 0,
         'week' => 0,
         'page' => 1,
@@ -286,21 +313,26 @@ function getAllMatches($params = []) {
     
     // Status filter
     if ($params['status'] === 'schedule') {
-        $whereConditions[] = "m.status = 'scheduled'";
+        $whereConditions[] = "(c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL))";
+        $whereConditions[] = "(c.challenger_score IS NULL AND c.opponent_score IS NULL)";
     } else {
-        $whereConditions[] = "m.status = 'completed'";
+        $whereConditions[] = "(c.match_status = 'completed' OR (c.challenger_score IS NOT NULL OR c.opponent_score IS NOT NULL))";
     }
-    
-    // Event filter
-    if ($params['event_id'] > 0) {
-        $whereConditions[] = "m.event_id = ?";
-        $bindParams[] = $params['event_id'];
-        $bindTypes .= 'i';
+
+    // Event filter (prefer event string; fallback from event_id -> event name)
+    $eventNameFilter = trim((string)($params['event'] ?? ''));
+    if ($eventNameFilter === '' && (int)($params['event_id'] ?? 0) > 0) {
+        $eventNameFilter = resolveLegacyEventNameFromEventId((int)$params['event_id']);
+    }
+    if ($eventNameFilter !== '') {
+        $whereConditions[] = "c.sport_type = ?";
+        $bindParams[] = $eventNameFilter;
+        $bindTypes .= 's';
     }
     
     // Team filter
     if ($params['team_id'] > 0) {
-        $whereConditions[] = "(m.team1_id = ? OR m.team2_id = ?)";
+        $whereConditions[] = "(c.challenger_id = ? OR c.opponent_id = ?)";
         $bindParams[] = $params['team_id'];
         $bindParams[] = $params['team_id'];
         $bindTypes .= 'ii';
@@ -308,7 +340,7 @@ function getAllMatches($params = []) {
     
     // Week filter
     if ($params['week'] > 0) {
-        $whereConditions[] = "WEEK(m.match_date) = ?";
+        $whereConditions[] = "WEEK(c.challenge_date) = ?";
         $bindParams[] = $params['week'];
         $bindTypes .= 'i';
     }
@@ -318,16 +350,40 @@ function getAllMatches($params = []) {
     // Calculate pagination
     $offset = ($params['page'] - 1) * $params['per_page'];
     
+    $allowedOrderColumns = [
+        'match_date' => 'c.challenge_date',
+        'challenge_date' => 'c.challenge_date',
+        'created_at' => 'c.created_at',
+        'updated_at' => 'c.updated_at',
+        'status' => 'c.status',
+        'score1' => 'c.challenger_score',
+        'score2' => 'c.opponent_score',
+        'event_name' => 'c.sport_type'
+    ];
+    $orderByParam = strtolower(trim((string)($params['order_by'] ?? 'match_date')));
+    $orderBy = $allowedOrderColumns[$orderByParam] ?? 'c.challenge_date';
+    $orderDir = strtoupper(trim((string)($params['order_dir'] ?? 'DESC'))) === 'ASC' ? 'ASC' : 'DESC';
+
     // Build main query
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, 
-                   e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
+                   COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                   c.sport_type AS event_name,
+                   v.name AS location,
+                   t1.name AS team1_name,
+                   t1.logo AS team1_logo,
+                   t2.name AS team2_name,
+                   t2.logo AS team2_logo
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
             $whereClause
-            ORDER BY m.{$params['order_by']} {$params['order_dir']}
+            ORDER BY {$orderBy} {$orderDir}
             LIMIT ? OFFSET ?";
     
     $bindParams[] = $params['per_page'];
@@ -348,7 +404,7 @@ function getAllMatches($params = []) {
     $stmt->close();
     
     // Get total count for pagination
-    $countSql = "SELECT COUNT(*) as total FROM matches m $whereClause";
+    $countSql = "SELECT COUNT(*) as total FROM challenges c $whereClause";
     $countStmt = $conn->prepare($countSql);
     
     if ($bindTypes && !empty($bindParams)) {
@@ -381,81 +437,111 @@ function getAllMatches($params = []) {
 function getMatchById($id) {
     global $db;
     $conn = $db->getConnection();
-    
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, 
-                   e.name as event_name, e.description as event_description
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.id = ?";
-    
-    $stmt = $conn->prepare($sql);
+
+    $id = (int) $id;
+    if ($id <= 0) {
+        return null;
+    }
+
+    $challengeSql = "SELECT c.*,
+                            c.challenge_date AS match_date,
+                            c.challenger_id AS team1_id,
+                            c.opponent_id AS team2_id,
+                            c.challenger_score AS score1,
+                            c.opponent_score AS score2,
+                            COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                            c.sport_type AS event_name,
+                            '' AS event_description,
+                            v.name AS location,
+                            t1.name AS team1_name,
+                            t1.logo AS team1_logo,
+                            t2.name AS team2_name,
+                            t2.logo AS team2_logo,
+                            'challenge' AS match_source
+                     FROM challenges c
+                     LEFT JOIN teams t1 ON c.challenger_id = t1.id
+                     LEFT JOIN teams t2 ON c.opponent_id = t2.id
+                     LEFT JOIN venues v ON c.venue_id = v.id
+                     WHERE c.id = ?
+                     LIMIT 1";
+
+    $stmt = $conn->prepare($challengeSql);
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        return $result->fetch_assoc();
+    $challenge = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    if ($challenge) {
+        return $challenge;
     }
-    return null;
+
+    $legacySql = "SELECT m.*,
+                         m.id,
+                         m.match_date,
+                         m.team1_id,
+                         m.team2_id,
+                         m.score1,
+                         m.score2,
+                         m.status,
+                         m.location,
+                         e.name AS event_name,
+                         e.description AS event_description,
+                         t1.name AS team1_name,
+                         t1.logo AS team1_logo,
+                         t2.name AS team2_name,
+                         t2.logo AS team2_logo,
+                         'match' AS match_source
+                  FROM matches m
+                  LEFT JOIN teams t1 ON m.team1_id = t1.id
+                  LEFT JOIN teams t2 ON m.team2_id = t2.id
+                  LEFT JOIN events e ON m.event_id = e.id
+                  WHERE m.id = ?
+                  LIMIT 1";
+
+    $stmt = $conn->prepare($legacySql);
+    if (!$stmt) {
+        return null;
+    }
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $legacy = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    return $legacy ?: null;
 }
 
 /**
  * Mendapatkan pertandingan yang dijadwalkan
  */
 function getScheduledMatches($limit = 10) {
-    global $db;
-    $conn = $db->getConnection();
-    
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'scheduled' 
-            ORDER BY m.match_date ASC 
-            LIMIT ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $limit);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $matches = [];
-    while ($row = $result->fetch_assoc()) {
-        $matches[] = $row;
-    }
-    return $matches;
+    $limit = max(1, (int) $limit);
+    $result = getAllMatches([
+        'status' => 'schedule',
+        'page' => 1,
+        'per_page' => $limit,
+        'order_by' => 'challenge_date',
+        'order_dir' => 'ASC'
+    ]);
+
+    return $result['matches'] ?? [];
 }
 
 /**
  * Mendapatkan pertandingan yang selesai
  */
 function getCompletedMatches($limit = 10) {
-    global $db;
-    $conn = $db->getConnection();
-    
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'completed' 
-            ORDER BY m.match_date DESC 
-            LIMIT ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $limit);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $matches = [];
-    while ($row = $result->fetch_assoc()) {
-        $matches[] = $row;
-    }
-    return $matches;
+    $limit = max(1, (int) $limit);
+    $result = getAllMatches([
+        'status' => 'result',
+        'page' => 1,
+        'per_page' => $limit,
+        'order_by' => 'challenge_date',
+        'order_dir' => 'DESC'
+    ]);
+
+    return $result['matches'] ?? [];
 }
 
 /**
@@ -837,37 +923,39 @@ function getRecentWinners($limit = 5) {
 function getTeamStats($teamId) {
     global $db;
     $conn = $db->getConnection();
-    
+
     $sql = "SELECT t.*,
-                   COUNT(DISTINCT m.id) as total_matches,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 > m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 > m.score1 THEN 1
+                   COUNT(DISTINCT c.id) AS total_matches,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id AND c.challenger_score > c.opponent_score THEN 1
+                       WHEN c.opponent_id = t.id AND c.opponent_score > c.challenger_score THEN 1
                        ELSE 0
-                   END) as wins,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 = m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 = m.score1 THEN 1
+                   END) AS wins,
+                   SUM(CASE
+                       WHEN c.challenger_score IS NOT NULL
+                            AND c.opponent_score IS NOT NULL
+                            AND c.challenger_score = c.opponent_score THEN 1
                        ELSE 0
-                   END) as draws,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 < m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 < m.score1 THEN 1
+                   END) AS draws,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id AND c.challenger_score < c.opponent_score THEN 1
+                       WHEN c.opponent_id = t.id AND c.opponent_score < c.challenger_score THEN 1
                        ELSE 0
-                   END) as losses,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id THEN m.score1
-                       WHEN m.team2_id = t.id THEN m.score2
+                   END) AS losses,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id THEN COALESCE(c.challenger_score, 0)
+                       WHEN c.opponent_id = t.id THEN COALESCE(c.opponent_score, 0)
                        ELSE 0
-                   END) as goals_for,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id THEN m.score2
-                       WHEN m.team2_id = t.id THEN m.score1
+                   END) AS goals_for,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id THEN COALESCE(c.opponent_score, 0)
+                       WHEN c.opponent_id = t.id THEN COALESCE(c.challenger_score, 0)
                        ELSE 0
-                   END) as goals_against
+                   END) AS goals_against
             FROM teams t
-            LEFT JOIN matches m ON (t.id = m.team1_id OR t.id = m.team2_id) 
-                               AND m.status = 'completed'
+            LEFT JOIN challenges c
+                   ON (t.id = c.challenger_id OR t.id = c.opponent_id)
+                  AND (c.match_status = 'completed' OR (c.challenger_score IS NOT NULL AND c.opponent_score IS NOT NULL))
             WHERE t.id = ?
             GROUP BY t.id";
     
@@ -926,18 +1014,29 @@ function getAllTeams() {
 function getPlayersByTeamId($teamId, $eventId = null) {
     global $db;
     $conn = $db->getConnection();
-    
-    if ($eventId) {
-        // Get players who participated in specific event
+
+    $eventNameFilter = '';
+    if ($eventId !== null && $eventId !== '') {
+        if (is_numeric($eventId) && (int)$eventId > 0) {
+            $eventNameFilter = resolveLegacyEventNameFromEventId((int)$eventId);
+        } else {
+            $eventNameFilter = trim((string)$eventId);
+        }
+    }
+
+    if ($eventNameFilter !== '') {
+        // Get players scoped to team and event label (challenge-centric, with player fallback).
         $sql = "SELECT DISTINCT p.*, t.name as team_name, t.logo as team_logo
                 FROM players p
                 LEFT JOIN teams t ON p.team_id = t.id
                 LEFT JOIN lineups l ON p.id = l.player_id
-                LEFT JOIN matches m ON l.match_id = m.id
-                WHERE p.team_id = ? AND m.event_id = ? AND p.status = 'active'
+                LEFT JOIN challenges c ON l.match_id = c.id
+                WHERE p.team_id = ?
+                  AND p.status = 'active'
+                  AND (c.sport_type = ? OR p.sport_type = ?)
                 ORDER BY p.position, p.jersey_number";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $teamId, $eventId);
+        $stmt->bind_param("iss", $teamId, $eventNameFilter, $eventNameFilter);
     } else {
         // Get all active players for the team
         $sql = "SELECT p.*, t.name as team_name, t.logo as team_logo
@@ -1258,22 +1357,29 @@ function getPlayerTransfers($limit = 5) {
 function getTopScorers($limit = 10, $eventId = 0) {
     global $db;
     $conn = $db->getConnection();
-    
+
+    $limit = max(1, (int) $limit);
+
     if ($eventId > 0) {
+        $eventName = resolveLegacyEventNameFromEventId((int)$eventId);
+        if ($eventName === '') {
+            return [];
+        }
+
         $sql = "SELECT p.id, p.name, p.photo, p.jersey_number,
                        t.name as team_name, t.logo as team_logo,
                        COUNT(g.id) as goals
                 FROM goals g
-                INNER JOIN matches m ON g.match_id = m.id
+                INNER JOIN challenges c ON g.match_id = c.id
                 INNER JOIN players p ON g.player_id = p.id
                 INNER JOIN teams t ON p.team_id = t.id
-                WHERE m.event_id = ?
+                WHERE c.sport_type = ?
                 GROUP BY p.id
                 ORDER BY goals DESC, p.name
                 LIMIT ?";
-        
+
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ii", $eventId, $limit);
+        $stmt->bind_param("si", $eventName, $limit);
     } else {
         $sql = "SELECT p.id, p.name, p.photo, p.jersey_number,
                        t.name as team_name, t.logo as team_logo,
@@ -1305,48 +1411,55 @@ function getTopScorers($limit = 10, $eventId = 0) {
 function getStandings($eventId) {
     global $db;
     $conn = $db->getConnection();
-    
+
+    $eventName = resolveLegacyEventNameFromEventId((int)$eventId);
+    if ($eventName === '') {
+        return [];
+    }
+
     $sql = "SELECT t.id, t.name, t.logo,
-                   COUNT(DISTINCT m.id) as matches_played,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 > m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 > m.score1 THEN 1
+                   COUNT(DISTINCT c.id) AS matches_played,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id AND c.challenger_score > c.opponent_score THEN 1
+                       WHEN c.opponent_id = t.id AND c.opponent_score > c.challenger_score THEN 1
                        ELSE 0
-                   END) as wins,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 = m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 = m.score1 THEN 1
+                   END) AS wins,
+                   SUM(CASE
+                       WHEN c.challenger_score IS NOT NULL
+                            AND c.opponent_score IS NOT NULL
+                            AND c.challenger_score = c.opponent_score THEN 1
                        ELSE 0
-                   END) as draws,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 < m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 < m.score1 THEN 1
+                   END) AS draws,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id AND c.challenger_score < c.opponent_score THEN 1
+                       WHEN c.opponent_id = t.id AND c.opponent_score < c.challenger_score THEN 1
                        ELSE 0
-                   END) as losses,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id THEN m.score1
-                       WHEN m.team2_id = t.id THEN m.score2
+                   END) AS losses,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id THEN COALESCE(c.challenger_score, 0)
+                       WHEN c.opponent_id = t.id THEN COALESCE(c.opponent_score, 0)
                        ELSE 0
-                   END) as goals_for,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id THEN m.score2
-                       WHEN m.team2_id = t.id THEN m.score1
+                   END) AS goals_for,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id THEN COALESCE(c.opponent_score, 0)
+                       WHEN c.opponent_id = t.id THEN COALESCE(c.challenger_score, 0)
                        ELSE 0
-                   END) as goals_against
+                   END) AS goals_against
             FROM teams t
-            LEFT JOIN matches m ON (t.id = m.team1_id OR t.id = m.team2_id) 
-                               AND m.event_id = ? 
-                               AND m.status = 'completed'
+            LEFT JOIN challenges c
+                   ON (t.id = c.challenger_id OR t.id = c.opponent_id)
+                  AND c.sport_type = ?
+                  AND (c.match_status = 'completed' OR (c.challenger_score IS NOT NULL AND c.opponent_score IS NOT NULL))
             WHERE EXISTS (
-                SELECT 1 FROM matches m2 
-                WHERE (m2.team1_id = t.id OR m2.team2_id = t.id) 
-                AND m2.event_id = ?
+                SELECT 1 FROM challenges c2
+                WHERE (c2.challenger_id = t.id OR c2.opponent_id = t.id)
+                  AND c2.sport_type = ?
             )
             GROUP BY t.id
             ORDER BY (wins * 3 + draws) DESC, (goals_for - goals_against) DESC, goals_for DESC";
-    
+
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $eventId, $eventId);
+    $stmt->bind_param("ss", $eventName, $eventName);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -1957,17 +2070,27 @@ function getSeoMetaTags($title, $description, $keywords = '', $image = '') {
 function getUpcomingMatches($limit = 5) {
     global $db;
     $conn = $db->getConnection();
-    
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, 
-                   e.name as event_name, e.color as event_color
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'scheduled' 
-            AND m.match_date > NOW()
-            ORDER BY m.match_date ASC 
+
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
+                   c.sport_type AS event_name,
+                   NULL AS event_color,
+                   COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                   t1.name AS team1_name,
+                   t1.logo AS team1_logo,
+                   t2.name AS team2_name,
+                   t2.logo AS team2_logo
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE (c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL))
+              AND (c.challenger_score IS NULL AND c.opponent_score IS NULL)
+              AND c.challenge_date > NOW()
+            ORDER BY c.challenge_date ASC
             LIMIT ?";
     
     $stmt = $conn->prepare($sql);
@@ -1988,16 +2111,25 @@ function getUpcomingMatches($limit = 5) {
 function getRecentResults($limit = 5) {
     global $db;
     $conn = $db->getConnection();
-    
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, 
-                   e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'completed' 
-            ORDER BY m.match_date DESC 
+
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
+                   c.sport_type AS event_name,
+                   COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                   t1.name AS team1_name,
+                   t1.logo AS team1_logo,
+                   t2.name AS team2_name,
+                   t2.logo AS team2_logo
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE c.match_status = 'completed'
+               OR (c.challenger_score IS NOT NULL OR c.opponent_score IS NOT NULL)
+            ORDER BY c.challenge_date DESC
             LIMIT ?";
     
     $stmt = $conn->prepare($sql);
@@ -2018,37 +2150,39 @@ function getRecentResults($limit = 5) {
 function getTeamStatistics() {
     global $db;
     $conn = $db->getConnection();
-    
+
     $sql = "SELECT t.id, t.name, t.logo,
-                   COUNT(DISTINCT m.id) as total_matches,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 > m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 > m.score1 THEN 1
+                   COUNT(DISTINCT c.id) AS total_matches,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id AND c.challenger_score > c.opponent_score THEN 1
+                       WHEN c.opponent_id = t.id AND c.opponent_score > c.challenger_score THEN 1
                        ELSE 0
-                   END) as wins,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 = m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 = m.score1 THEN 1
+                   END) AS wins,
+                   SUM(CASE
+                       WHEN c.challenger_score IS NOT NULL
+                            AND c.opponent_score IS NOT NULL
+                            AND c.challenger_score = c.opponent_score THEN 1
                        ELSE 0
-                   END) as draws,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id AND m.score1 < m.score2 THEN 1
-                       WHEN m.team2_id = t.id AND m.score2 < m.score1 THEN 1
+                   END) AS draws,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id AND c.challenger_score < c.opponent_score THEN 1
+                       WHEN c.opponent_id = t.id AND c.opponent_score < c.challenger_score THEN 1
                        ELSE 0
-                   END) as losses,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id THEN m.score1
-                       WHEN m.team2_id = t.id THEN m.score2
+                   END) AS losses,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id THEN COALESCE(c.challenger_score, 0)
+                       WHEN c.opponent_id = t.id THEN COALESCE(c.opponent_score, 0)
                        ELSE 0
-                   END) as goals_for,
-                   SUM(CASE 
-                       WHEN m.team1_id = t.id THEN m.score2
-                       WHEN m.team2_id = t.id THEN m.score1
+                   END) AS goals_for,
+                   SUM(CASE
+                       WHEN c.challenger_id = t.id THEN COALESCE(c.opponent_score, 0)
+                       WHEN c.opponent_id = t.id THEN COALESCE(c.challenger_score, 0)
                        ELSE 0
-                   END) as goals_against
+                   END) AS goals_against
             FROM teams t
-            LEFT JOIN matches m ON (t.id = m.team1_id OR t.id = m.team2_id) 
-                               AND m.status = 'completed'
+            LEFT JOIN challenges c
+                   ON (t.id = c.challenger_id OR t.id = c.opponent_id)
+                  AND (c.match_status = 'completed' OR (c.challenger_score IS NOT NULL AND c.opponent_score IS NOT NULL))
             GROUP BY t.id
             ORDER BY (wins * 3 + draws) DESC, (goals_for - goals_against) DESC
             LIMIT 10";
@@ -2132,17 +2266,26 @@ function getActiveEvents() {
 function getNextMatchCountdown() {
     global $db;
     $conn = $db->getConnection();
-    
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, 
-                   e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'scheduled' 
-            AND m.match_date > NOW()
-            ORDER BY m.match_date ASC 
+
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
+                   c.sport_type AS event_name,
+                   COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                   t1.name AS team1_name,
+                   t1.logo AS team1_logo,
+                   t2.name AS team2_name,
+                   t2.logo AS team2_logo
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE (c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL))
+              AND (c.challenger_score IS NULL AND c.opponent_score IS NULL)
+              AND c.challenge_date > NOW()
+            ORDER BY c.challenge_date ASC
             LIMIT 1";
     
     $result = $conn->query($sql);
@@ -2183,8 +2326,11 @@ function getWebsiteStats() {
     $result = $conn->query($sql);
     $stats['total_news'] = $result->fetch_assoc()['total'];
     
-    // Total matches
-    $sql = "SELECT COUNT(*) as total FROM matches WHERE status = 'completed'";
+    // Total matches (challenge-centric)
+    $sql = "SELECT COUNT(*) as total
+            FROM challenges
+            WHERE match_status = 'completed'
+               OR (challenger_score IS NOT NULL OR opponent_score IS NOT NULL)";
     $result = $conn->query($sql);
     $stats['total_matches'] = $result->fetch_assoc()['total'];
     
@@ -2198,8 +2344,10 @@ function getWebsiteStats() {
     $result = $conn->query($sql);
     $stats['total_players'] = $result->fetch_assoc()['total'];
     
-    // Total events
-    $sql = "SELECT COUNT(*) as total FROM events";
+    // Total events (distinct labels currently used in challenges)
+    $sql = "SELECT COUNT(DISTINCT sport_type) as total
+            FROM challenges
+            WHERE sport_type IS NOT NULL AND sport_type <> ''";
     $result = $conn->query($sql);
     $stats['total_events'] = $result->fetch_assoc()['total'];
     
@@ -2249,16 +2397,25 @@ function getLiveMatches() {
     $oneHourAgo = date('Y-m-d H:i:s', strtotime('-1 hour'));
     $twoHoursLater = date('Y-m-d H:i:s', strtotime('+2 hours'));
     
-    $sql = "SELECT m.*, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo, 
-                   e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.status = 'scheduled' 
-            AND m.match_date BETWEEN ? AND ?
-            ORDER BY m.match_date ASC";
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
+                   c.sport_type AS event_name,
+                   COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                   t1.name AS team1_name,
+                   t1.logo AS team1_logo,
+                   t2.name AS team2_name,
+                   t2.logo AS team2_logo
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE (c.match_status = 'scheduled' OR (c.status = 'accepted' AND c.match_status IS NULL))
+              AND (c.challenger_score IS NULL AND c.opponent_score IS NULL)
+              AND c.challenge_date BETWEEN ? AND ?
+            ORDER BY c.challenge_date ASC";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $oneHourAgo, $twoHoursLater);
@@ -2292,44 +2449,58 @@ function getLiveMatches() {
 function getHeadToHeadStats($team1Id, $team2Id) {
     global $db;
     $conn = $db->getConnection();
-    
-    $sql = "SELECT 
-               COUNT(*) as total_matches,
-               SUM(CASE 
-                   WHEN (team1_id = ? AND team2_id = ? AND score1 > score2) OR 
-                        (team1_id = ? AND team2_id = ? AND score2 > score1) THEN 1
+
+    $sql = "SELECT
+               COUNT(*) AS total_matches,
+               SUM(CASE
+                   WHEN (challenger_id = ? AND opponent_id = ? AND challenger_score > opponent_score)
+                     OR (challenger_id = ? AND opponent_id = ? AND opponent_score > challenger_score)
+                   THEN 1 ELSE 0
+               END) AS team1_wins,
+               SUM(CASE
+                   WHEN (challenger_id = ? AND opponent_id = ? AND opponent_score > challenger_score)
+                     OR (challenger_id = ? AND opponent_id = ? AND challenger_score > opponent_score)
+                   THEN 1 ELSE 0
+               END) AS team2_wins,
+               SUM(CASE
+                   WHEN challenger_score IS NOT NULL
+                    AND opponent_score IS NOT NULL
+                    AND challenger_score = opponent_score
+                   THEN 1 ELSE 0
+               END) AS draws,
+               SUM(CASE
+                   WHEN challenger_id = ? THEN COALESCE(challenger_score, 0)
+                   WHEN opponent_id = ? THEN COALESCE(opponent_score, 0)
                    ELSE 0
-               END) as team1_wins,
-               SUM(CASE 
-                   WHEN (team1_id = ? AND team2_id = ? AND score2 > score1) OR 
-                        (team1_id = ? AND team2_id = ? AND score1 > score2) THEN 1
+               END) AS team1_goals,
+               SUM(CASE
+                   WHEN challenger_id = ? THEN COALESCE(opponent_score, 0)
+                   WHEN opponent_id = ? THEN COALESCE(challenger_score, 0)
                    ELSE 0
-               END) as team2_wins,
-               SUM(CASE 
-                   WHEN score1 = score2 THEN 1
-                   ELSE 0
-               END) as draws,
-               SUM(CASE 
-                   WHEN team1_id = ? THEN score1
-                   WHEN team2_id = ? THEN score2
-                   ELSE 0
-               END) as team1_goals,
-               SUM(CASE 
-                   WHEN team1_id = ? THEN score2
-                   WHEN team2_id = ? THEN score1
-                   ELSE 0
-               END) as team2_goals
-            FROM matches 
-            WHERE ((team1_id = ? AND team2_id = ?) OR (team1_id = ? AND team2_id = ?))
-            AND status = 'completed'";
-    
+               END) AS team2_goals
+            FROM challenges
+            WHERE ((challenger_id = ? AND opponent_id = ?) OR (challenger_id = ? AND opponent_id = ?))
+              AND (match_status = 'completed' OR (challenger_score IS NOT NULL AND opponent_score IS NOT NULL))";
+
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iiiiiiiiiiiiii", 
-        $team1Id, $team2Id, $team2Id, $team1Id,
-        $team1Id, $team2Id, $team2Id, $team1Id,
-        $team1Id, $team1Id,
-        $team1Id, $team1Id,
-        $team1Id, $team2Id, $team2Id, $team1Id
+    $stmt->bind_param(
+        "iiiiiiiiiiiiiiii",
+        $team1Id,
+        $team2Id,
+        $team2Id,
+        $team1Id,
+        $team1Id,
+        $team2Id,
+        $team2Id,
+        $team1Id,
+        $team1Id,
+        $team1Id,
+        $team2Id,
+        $team2Id,
+        $team1Id,
+        $team2Id,
+        $team2Id,
+        $team1Id
     );
     
     $stmt->execute();
@@ -2372,19 +2543,19 @@ function getTeamLastFormation($teamId) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT m.id as match_id, m.match_date,
+    $sql = "SELECT c.id as match_id, c.challenge_date as match_date,
                    GROUP_CONCAT(DISTINCT p.position ORDER BY p.position) as positions,
                    COUNT(DISTINCT p.id) as player_count
-            FROM matches m
-            INNER JOIN lineups l ON m.id = l.match_id
+            FROM challenges c
+            INNER JOIN lineups l ON c.id = l.match_id
             INNER JOIN players p ON l.player_id = p.id
-            WHERE (m.team1_id = ? OR m.team2_id = ?)
-            AND m.status = 'completed'
+            WHERE (c.challenger_id = ? OR c.opponent_id = ?)
+            AND (c.match_status = 'completed' OR (c.challenger_score IS NOT NULL AND c.opponent_score IS NOT NULL))
             AND l.is_starting = 1
             AND p.position IS NOT NULL
             AND p.position != ''
-            GROUP BY m.id
-            ORDER BY m.match_date DESC
+            GROUP BY c.id
+            ORDER BY c.challenge_date DESC
             LIMIT 1";
     
     $stmt = $conn->prepare($sql);
@@ -2487,18 +2658,23 @@ function getTeamRecentForm($teamId, $limit = 5) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT m.*,
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
                    CASE 
-                       WHEN (m.team1_id = ? AND m.score1 > m.score2) OR 
-                            (m.team2_id = ? AND m.score2 > m.score1) THEN 'W'
-                       WHEN (m.team1_id = ? AND m.score1 < m.score2) OR 
-                            (m.team2_id = ? AND m.score2 < m.score1) THEN 'L'
+                       WHEN (c.challenger_id = ? AND c.challenger_score > c.opponent_score) OR 
+                            (c.opponent_id = ? AND c.opponent_score > c.challenger_score) THEN 'W'
+                       WHEN (c.challenger_id = ? AND c.challenger_score < c.opponent_score) OR 
+                            (c.opponent_id = ? AND c.opponent_score < c.challenger_score) THEN 'L'
                        ELSE 'D'
                    END as result
-            FROM matches m
-            WHERE (m.team1_id = ? OR m.team2_id = ?)
-            AND m.status = 'completed'
-            ORDER BY m.match_date DESC
+            FROM challenges c
+            WHERE (c.challenger_id = ? OR c.opponent_id = ?)
+              AND (c.match_status = 'completed' OR (c.challenger_score IS NOT NULL AND c.opponent_score IS NOT NULL))
+            ORDER BY c.challenge_date DESC
             LIMIT ?";
     
     $stmt = $conn->prepare($sql);
@@ -2734,13 +2910,20 @@ function getHistoricalMoments($team1Id, $team2Id) {
     global $db;
     $conn = $db->getConnection();
     
-    $sql = "SELECT m.*, t1.name as team1_name, t2.name as team2_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            WHERE ((m.team1_id = ? AND m.team2_id = ?) OR (m.team1_id = ? AND m.team2_id = ?))
-            AND m.status = 'completed'
-            ORDER BY ABS(m.score1 - m.score2) DESC, m.match_date DESC
+    $sql = "SELECT c.*,
+                   c.challenge_date AS match_date,
+                   c.challenger_id AS team1_id,
+                   c.opponent_id AS team2_id,
+                   c.challenger_score AS score1,
+                   c.opponent_score AS score2,
+                   t1.name as team1_name,
+                   t2.name as team2_name
+            FROM challenges c
+            LEFT JOIN teams t1 ON c.challenger_id = t1.id
+            LEFT JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE ((c.challenger_id = ? AND c.opponent_id = ?) OR (c.challenger_id = ? AND c.opponent_id = ?))
+              AND (c.match_status = 'completed' OR (c.challenger_score IS NOT NULL AND c.opponent_score IS NOT NULL))
+            ORDER BY ABS(COALESCE(c.challenger_score, 0) - COALESCE(c.opponent_score, 0)) DESC, c.challenge_date DESC
             LIMIT 5";
     
     $stmt = $conn->prepare($sql);
