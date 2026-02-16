@@ -259,11 +259,11 @@ $offset = ($page - 1) * $perPage;
                                 </td>
                                 <td class="match-actions-cell" data-label="Aksi">
                                     <?php if ($isScheduled): ?>
-                                    <a href="match.php?id=<?php echo $match['id']; ?>" class="btn-view">
+                                    <a href="match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view">
                                         <i class="fas fa-eye"></i> Lihat
                                     </a>
                                     <?php else: ?>
-                                    <a href="match.php?id=<?php echo $match['id']; ?>" class="btn-view">
+                                    <a href="match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view">
                                         <i class="fas fa-chart-bar"></i> Laporan
                                     </a>
                                     <?php endif; ?>
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const matchId = this.dataset.matchId;
             if (matchId) {
-                window.location.href = 'match.php?id=' + matchId;
+                window.location.href = 'match.php?id=' + matchId + '&source=challenge';
             }
         });
     });
