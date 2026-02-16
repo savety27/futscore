@@ -393,6 +393,7 @@ if (isset($_GET['id'])) {
                         </div>
                         <input type="hidden" name="nisn_verified" id="nisnVerified" value="0">
                         <div class="verify-feedback" id="nisnFeedback"></div>
+                        <div class="verify-details" id="nisnDetails" style="display:none;"></div>
                     </div>
                 </div>
             </div>
@@ -1259,6 +1260,8 @@ document.addEventListener('DOMContentLoaded', function() {
             nisnVerified.value = '0';
             nisnVerifyBtn.classList.remove('verified');
             nisnInput.style.borderColor = '#e1e5eb';
+            const nisnDetailsEl = document.getElementById('nisnDetails');
+            if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
 
             if (numericValue.length === 10) {
                 nisnFeedback.textContent = '10 digit — Klik "Verifikasi" untuk memvalidasi';
@@ -1320,6 +1323,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.classList.add('verified');
+
+                    // Show NISN details
+                    const nisnDetailsEl = document.getElementById('nisnDetails');
+                    if (data.details && nisnDetailsEl) {
+                        let html = '<strong>📋 Data NISN:</strong><br>';
+                        if (data.details.tahun_lahir) html += `<div class="detail-row"><span class="detail-label">Tahun Lahir</span><span class="detail-value">${data.details.tahun_lahir}</span></div>`;
+                        if (data.details.usia) html += `<div class="detail-row"><span class="detail-label">Usia</span><span class="detail-value">${data.details.usia}</span></div>`;
+                        if (data.details.perkiraan_jenjang) html += `<div class="detail-row"><span class="detail-label">Jenjang</span><span class="detail-value">${data.details.perkiraan_jenjang}</span></div>`;
+                        if (data.details.kode_tengah) html += `<div class="detail-row"><span class="detail-label">Kode Tengah</span><span class="detail-value">${data.details.kode_tengah}</span></div>`;
+                        if (data.details.nomor_urut) html += `<div class="detail-row"><span class="detail-label">No. Urut</span><span class="detail-value">${data.details.nomor_urut}</span></div>`;
+                        nisnDetailsEl.innerHTML = html;
+                        nisnDetailsEl.style.display = 'block';
+                    }
                 } else {
                     nisnVerified.value = '0';
                     nisnFeedback.textContent = '✗ ' + data.message;

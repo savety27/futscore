@@ -252,11 +252,92 @@ function verifyNISN($nisn, $conn, $exclude_player_id) {
         return [
             'verified' => false,
             'message' => 'NISN tidak valid — tidak boleh semua digit sama',
-            'details' => ['step' => 'pattern']
+            'details' => ['step' => 'pattern_same']
         ];
     }
 
-    // 3. Cek duplikasi di database
+    // 3. NISN tidak boleh angka berurutan naik/turun (e.g. 1234567890, 9876543210)
+    $sequential_asc = true;
+    $sequential_desc = true;
+    for ($i = 1; $i < 10; $i++) {
+        if (((int)$nisn[$i] - (int)$nisn[$i-1] + 10) % 10 !== 1) $sequential_asc = false;
+        if (((int)$nisn[$i-1] - (int)$nisn[$i] + 10) % 10 !== 1) $sequential_desc = false;
+    }
+    if ($sequential_asc || $sequential_desc) {
+        return [
+            'verified' => false,
+            'message' => 'NISN tidak valid — tidak boleh angka berurutan',
+            'details' => ['step' => 'pattern_sequential']
+        ];
+    }
+
+    // 4. NISN tidak boleh pola berulang (e.g. 1212121212, 123123123)
+    for ($len = 1; $len <= 3; $len++) {
+        $chunk = substr($nisn, 0, $len);
+        if ($chunk === str_repeat('0', $len)) continue; // skip all-zero chunks
+        $repeated = str_repeat($chunk, (int)ceil(10 / $len));
+        if (substr($repeated, 0, 10) === $nisn) {
+            return [
+                'verified' => false,
+                'message' => 'NISN tidak valid — pola angka berulang terdeteksi',
+                'details' => ['step' => 'pattern_repeated']
+            ];
+        }
+    }
+
+    // ============================================================
+    // 5. VALIDASI STRUKTUR NISN (standar Kemendikbud)
+    // Format NISN: AAABBBCCCC
+    //   AAA  = 3 digit terakhir tahun kelahiran
+    //   BBB  = Kode area/unik (3 digit)
+    //   CCCC = Nomor urut siswa (4 digit)
+    // ============================================================
+    $kode_tahun_raw = substr($nisn, 0, 3);
+    $kode_tengah = substr($nisn, 3, 3);
+    $nomor_urut = substr($nisn, 6, 4);
+
+    // Decode tahun lahir dari 3 digit pertama
+    $kode_thn_int = (int)$kode_tahun_raw;
+    
+    // Tentukan tahun lahir
+    // Asumsi: 900+ = 19xx, 000+ = 20xx
+    if ($kode_thn_int >= 900) {
+        $tahun_lahir = 1000 + $kode_thn_int; // 1990-1999
+    } else {
+        $tahun_lahir = 2000 + $kode_thn_int; // 2000-2099
+    }
+
+    $tahun_sekarang = (int)date('Y');
+    
+    // Validasi tahun lahir yang masuk akal (misal usia 4 - 25 tahun untuk siswa aktif)
+    // Atau sekadar validasi range tahun 1990 - sekarang
+    if ($tahun_lahir < 1990 || $tahun_lahir > $tahun_sekarang+1) { // +1 untuk toleransi bayi baru lahir tahun depan (?) atau typo user
+        return [
+            'verified' => false,
+            'message' => "Kode tahun lahir '$kode_tahun_raw' tidak valid (terdeteksi tahun $tahun_lahir)",
+            'details' => ['step' => 'tahun_lahir']
+        ];
+    }
+    
+    // Validasi kode tengah — tidak boleh 000
+    if ($kode_tengah === '000') {
+        return [
+            'verified' => false,
+            'message' => "Kode tengah NISN '000' tidak valid",
+            'details' => ['step' => 'kode_tengah']
+        ];
+    }
+
+    // Validasi nomor urut — tidak boleh 0000
+    if ($nomor_urut === '0000') {
+        return [
+            'verified' => false,
+            'message' => "Nomor urut siswa '0000' tidak valid",
+            'details' => ['step' => 'nomor_urut']
+        ];
+    }
+
+    // 6. Cek duplikasi di database
     try {
         $sql = "SELECT id, name FROM players WHERE nisn = ?";
         $params = [$nisn];
@@ -279,12 +360,36 @@ function verifyNISN($nisn, $conn, $exclude_player_id) {
         error_log("DB Error in NISN verification: " . $e->getMessage());
     }
 
-    // 4. Semua validasi lolos
+    // 7. Menentukan perkiraan jenjang pendidikan berdasarkan USIA
+    // Usia = Tahun Sekarang - Tahun Lahir
+    $usia = $tahun_sekarang - $tahun_lahir;
+    
+    // Estimasi jenjang berdasarkan usia (referensi umum Kemendikbud)
+    if ($usia < 6) {
+        $jenjang = 'PAUD/TK (Belum Masuk SD)';
+    } elseif ($usia <= 12) {
+        $jenjang = 'SD/MI (Sekolah Dasar)';
+    } elseif ($usia <= 15) {
+        $jenjang = 'SMP/MTs (Sekolah Menengah Pertama)';
+    } elseif ($usia <= 18) {
+        $jenjang = 'SMA/SMK/MA (Sekolah Menengah Atas)';
+    } elseif ($usia <= 22) {
+        $jenjang = 'Mahasiswa / Kuliah';
+    } else {
+        $jenjang = 'Alumni / Umum';
+    }
+
+    // 8. Semua validasi lolos → verified!
     return [
         'verified' => true,
         'message' => 'NISN terverifikasi ✓',
         'details' => [
-            'nisn' => $nisn
+            'nisn' => $nisn,
+            'tahun_lahir' => (string)$tahun_lahir,
+            'usia' => (string)$usia . ' Tahun',
+            'perkiraan_jenjang' => $jenjang,
+            'kode_tengah' => $kode_tengah,
+            'nomor_urut' => $nomor_urut
         ]
     ];
 }

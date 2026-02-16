@@ -1502,6 +1502,7 @@ try {
                                 </div>
                                 <input type="hidden" name="nisn_verified" id="nisnVerified" value="0">
                                 <div class="verify-feedback" id="nisnFeedback" style="margin-top: 5px; font-size: 12px;"></div>
+                                <div class="verify-details" id="nisnDetails" style="display:none;"></div>
                             </div>
 
                             <div class="form-group">
@@ -2131,6 +2132,7 @@ try {
             const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
             nisnInput.value = numericValue;
             nisnVerified.value = '0';
+            nisnDetails.style.display = 'none';
             nisnVerifyBtn.classList.remove('verified');
             nisnInput.style.borderColor = '#e1e5eb';
 
@@ -2186,6 +2188,20 @@ try {
                     nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.classList.add('verified');
+
+                    if (data.details) {
+                        let html = '<strong>📋 Data NISN:</strong><br>';
+                        if (data.details.tahun_lahir) html += `<div class="detail-row"><span class="detail-label">Tahun Lahir</span><span class="detail-value">${data.details.tahun_lahir}</span></div>`;
+                        if (data.details.usia) html += `<div class="detail-row"><span class="detail-label">Usia</span><span class="detail-value">${data.details.usia}</span></div>`;
+                        if (data.details.perkiraan_jenjang) html += `<div class="detail-row"><span class="detail-label">Jenjang</span><span class="detail-value">${data.details.perkiraan_jenjang}</span></div>`;
+                        if (data.details.kode_tengah) html += `<div class="detail-row"><span class="detail-label">Kode Tengah</span><span class="detail-value">${data.details.kode_tengah}</span></div>`;
+                        if (data.details.nomor_urut) html += `<div class="detail-row"><span class="detail-label">No. Urut</span><span class="detail-value">${data.details.nomor_urut}</span></div>`;
+                        const nisnDetails = document.getElementById('nisnDetails');
+                        if (nisnDetails) {
+                            nisnDetails.innerHTML = html;
+                            nisnDetails.style.display = 'block';
+                        }
+                    }
                 } else {
                     nisnVerified.value = '0';
                     nisnFeedback.textContent = '✗ ' + data.message;
@@ -2194,6 +2210,8 @@ try {
                     nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.disabled = false;
+                    const nisnDetails = document.getElementById('nisnDetails');
+                    if (nisnDetails) nisnDetails.style.display = 'none';
                 }
             })
             .catch(err => {
