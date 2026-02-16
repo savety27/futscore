@@ -73,35 +73,40 @@ body {
     transition: var(--transition);
 }
 
-.logo:hover:not(:has(.sidebar-team-logo)) {
+.logo:hover:not(.has-team-logo) {
     transform: rotate(15deg) scale(1.05);
     box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
 }
 
 /* Floating Crest Mode (When Team Logo Exists) */
-.logo:has(.sidebar-team-logo) {
-    width: 140px;
-    height: 140px;
-    background: none;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    overflow: visible;
-    margin-bottom: 25px; /* Extra space due to larger size */
+.logo.has-team-logo {
+    width: 112px;
+    height: 112px;
+    background: #ffffff;
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+    border-radius: 24px !important;
+    overflow: hidden;
+    padding: 10px;
+    margin-bottom: 20px;
 }
 
 .sidebar-team-logo {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    /* Premium Gold Glow following the shape of the logo */
-    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+    filter: none;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.logo:has(.sidebar-team-logo):hover .sidebar-team-logo {
+.logo.has-team-logo .sidebar-team-logo {
+    border-radius: 18px !important;
+    clip-path: inset(0 round 18px);
+}
+
+.logo.has-team-logo:hover .sidebar-team-logo {
     transform: scale(1.15) rotate(5deg);
-    filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.7));
+    filter: none;
 }
 
 .logo::before {
@@ -115,7 +120,7 @@ body {
     z-index: 1;
 }
 
-.logo:has(img)::before {
+.logo.has-team-logo::before {
     display: none;
 }
 
@@ -674,10 +679,11 @@ body {
         height: 80px;
     }
 
-    .logo:has(.sidebar-team-logo) {
-        width: 110px;
-        height: 110px;
-        margin-bottom: 20px;
+    .logo.has-team-logo {
+        width: 92px;
+        height: 92px;
+        border-radius: 20px;
+        padding: 8px;
     }
 
     .logo::before {

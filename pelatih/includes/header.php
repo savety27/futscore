@@ -49,7 +49,7 @@ if ($team_id && isset($conn)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Area Pelatih</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../css/style.css'); ?>">
     <style>
         /* Additional page specific styles can go here */
     </style>
@@ -68,7 +68,7 @@ if ($team_id && isset($conn)) {
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
-                <div class="logo">
+                <div class="logo <?php echo (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)) ? 'has-team-logo' : ''; ?>">
                     <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
                         <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="<?php echo htmlspecialchars($team_name); ?>" class="sidebar-team-logo">
                     <?php endif; ?>
