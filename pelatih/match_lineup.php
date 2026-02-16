@@ -11,12 +11,6 @@ $filter_position = trim($_GET['position'] ?? '');
 $filter_search = trim($_GET['q'] ?? '');
 $has_lineups_half_column = false;
 
-$event_types = [
-    'LIGA AAFI BATAM U-13 PUTRA 2026',
-    'LIGA AAFI BATAM U-16 PUTRA 2026',
-    'LIGA AAFI BATAM U-16 PUTRI 2026'
-];
-
 $position_options = [
     'GK' => 'Goalkeeper (GK)',
     'DF' => 'Defender (DF)',

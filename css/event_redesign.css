@@ -405,6 +405,25 @@
     box-shadow: none;
 }
 
+.event-link-badge {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    align-items: flex-start;
+}
+
+.event-link-badge:hover .badge-cabor {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.event-category-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -695,11 +714,11 @@
         color: var(--gray-500) !important;
     }
 
-    .event-table-new td[data-label="Kategori Event"] {
+    .event-table-new td[data-label="Event"] {
         background: linear-gradient(135deg, var(--white-blue) 0%, #ffffff 100%);
     }
 
-    .event-table-new td[data-label="Kategori Event"]::before {
+    .event-table-new td[data-label="Event"]::before {
         color: var(--navy);
     }
 
@@ -715,6 +734,15 @@
         background: var(--gray-200);
         color: var(--gray-700);
         font-weight: 700;
+    }
+
+    .event-link-badge {
+        align-items: flex-end;
+        text-align: right;
+    }
+
+    .event-category-count {
+        font-size: 10px;
     }
 
     /* Pagination */

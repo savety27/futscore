@@ -20,19 +20,50 @@ $offset = ($page - 1) * $limit;
 // Database connection
 $conn = $db->getConnection();
 
+function tableExistsMySQLi($conn, $table_name) {
+    $escaped_table = $conn->real_escape_string($table_name);
+    $result = $conn->query("SHOW TABLES LIKE '{$escaped_table}'");
+    return $result && $result->num_rows > 0;
+}
+
+function buildEventParticipantUrl($event_row) {
+    $group_slug = trim((string) ($event_row['event_group_slug'] ?? ''));
+    $event_name = trim((string) ($event_row['event_name'] ?? ''));
+
+    if ($group_slug !== '') {
+        return 'event_peserta.php?group=' . urlencode($group_slug);
+    }
+
+    return 'event_peserta.php?legacy_event=' . urlencode($event_name);
+}
+
+$has_event_taxonomy = tableExistsMySQLi($conn, 'event_taxonomy');
+$event_join_sql = '';
+$event_name_expr = 'c.sport_type';
+$event_slug_expr = "''";
+$category_name_expr = 'c.sport_type';
+
+if ($has_event_taxonomy) {
+    $event_join_sql = ' LEFT JOIN event_taxonomy et ON et.legacy_event_name = c.sport_type';
+    $event_name_expr = 'COALESCE(et.event_group_name, c.sport_type)';
+    $event_slug_expr = "COALESCE(et.event_group_slug, '')";
+    $category_name_expr = 'COALESCE(et.category_name, c.sport_type)';
+}
+
 // Build WHERE conditions
 $where_conditions = ["c.sport_type IS NOT NULL", "c.sport_type != ''"];
 $params = [];
 $types = '';
 
 if ($search !== '') {
-    $where_conditions[] = "c.sport_type LIKE ?";
+    $where_conditions[] = "({$event_name_expr} LIKE ? OR c.sport_type LIKE ?)";
     $params[] = '%' . $search . '%';
-    $types .= 's';
+    $params[] = '%' . $search . '%';
+    $types .= 'ss';
 }
 
 if ($filter_sport !== '' && $filter_sport !== 'all') {
-    $where_conditions[] = "c.sport_type = ?";
+    $where_conditions[] = "{$event_name_expr} = ?";
     $params[] = $filter_sport;
     $types .= 's';
 }
@@ -49,10 +80,11 @@ if ($filter_status === 'completed') {
 
 // Count grouped records for pagination
 $count_query = "SELECT COUNT(*) AS total FROM (
-    SELECT c.sport_type
+    SELECT {$event_name_expr} AS event_name
     FROM challenges c
+    {$event_join_sql}
     $where_sql
-    GROUP BY c.sport_type
+    GROUP BY event_name
     $having_sql
 ) grouped_events";
 
@@ -70,17 +102,20 @@ if ($page > $total_pages) {
     $offset = ($page - 1) * $limit;
 }
 
-// Fetch category-level event rows
+// Fetch group-level event rows
 $query = "SELECT
-    c.sport_type,
+    {$event_name_expr} AS event_name,
+    MAX({$event_slug_expr}) AS event_group_slug,
+    COUNT(DISTINCT {$category_name_expr}) AS total_categories,
     COUNT(*) AS total_matches,
     SUM(CASE WHEN LOWER(COALESCE(c.status, '')) = 'completed' THEN 1 ELSE 0 END) AS completed_matches,
     SUM(CASE WHEN LOWER(COALESCE(c.status, '')) <> 'completed' THEN 1 ELSE 0 END) AS pending_matches,
     MIN(c.challenge_date) AS first_match_date,
     MAX(c.challenge_date) AS last_match_date
 FROM challenges c
+{$event_join_sql}
 $where_sql
-GROUP BY c.sport_type
+GROUP BY event_name
 $having_sql
 ORDER BY last_match_date DESC
 LIMIT ? OFFSET ?";
@@ -95,12 +130,16 @@ $stmt->bind_param($query_types, ...$query_params);
 $stmt->execute();
 $events = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Distinct categories for dropdown
-$sport_query = "SELECT DISTINCT sport_type FROM challenges WHERE sport_type IS NOT NULL AND sport_type != '' ORDER BY sport_type";
+// Distinct event groups for dropdown
+$sport_query = "SELECT DISTINCT {$event_name_expr} AS event_name
+               FROM challenges c
+               {$event_join_sql}
+               WHERE c.sport_type IS NOT NULL AND c.sport_type != ''
+               ORDER BY event_name";
 $sport_result = $conn->query($sport_query);
 $sports = [];
 while ($row = $sport_result->fetch_assoc()) {
-    $sports[] = $row['sport_type'];
+    $sports[] = $row['event_name'];
 }
 
 function getEventStatusBadge($pending_matches) {
@@ -189,8 +228,8 @@ function formatEventDate($datetime) {
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>EVENT BERDASARKAN CABOR</h1>
-                    <p class="header-subtitle">Pantau kategori event berdasarkan cabor dan progres pertandingan tiap kategori.</p>
+                    <h1>EVENT & KATEGORI</h1>
+                    <p class="header-subtitle">Klik event untuk melihat daftar peserta berdasarkan kategori seperti U10, U12, U14, dan lainnya.</p>
                 </div>
             </div>
         </header>
@@ -217,9 +256,9 @@ function formatEventDate($datetime) {
                     
                     <!-- Sport Filter -->
                     <div class="filter-group">
-                        <label for="sport">Kategori Event (Cabor)</label>
+                        <label for="sport">Event</label>
                         <select name="sport" id="sport">
-                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Kategori</option>
+                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Event</option>
                             <?php foreach ($sports as $sport): ?>
                                 <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" <?php echo $filter_sport == $sport ? 'selected' : ''; ?>><?php echo htmlspecialchars($sport ?? ''); ?></option>
                             <?php endforeach; ?>
@@ -249,7 +288,7 @@ function formatEventDate($datetime) {
                     <thead>
                         <tr>
                             <th style="width: 50px; text-align: center;">No</th>
-                            <th>Kategori Event (Cabor)</th>
+                            <th>Event</th>
                             <th style="width: 120px; text-align: center;">Total Match</th>
                             <th style="width: 120px; text-align: center;">Completed</th>
                             <th style="width: 140px; text-align: center;">Belum Selesai</th>
@@ -267,7 +306,7 @@ function formatEventDate($datetime) {
                                     </div>
                                     <h3 style="font-size: 16px; margin-bottom: 10px;">Tidak Ada Event Ditemukan</h3>
                                     <p style="font-size: 14px; margin-bottom: 15px;">
-                                        Tidak ada kategori cabor yang sesuai dengan filter yang Anda pilih.
+                                        Tidak ada event yang sesuai dengan filter yang Anda pilih.
                                     </p>
                                 </div>
                             </td>
@@ -276,11 +315,17 @@ function formatEventDate($datetime) {
                         <?php 
                         $no = $offset + 1;
                         foreach ($events as $e): 
+                            $event_detail_url = buildEventParticipantUrl($e);
                         ?>
                         <tr class="match-row-new">
                             <td data-label="No" style="text-align: center; font-weight: 700; color: #666;"><?php echo $no++; ?></td>
-                            <td data-label="Kategori Event" style="font-weight: 700; color: #002d62;">
-                                <span class="badge-new badge-cabor"><?php echo htmlspecialchars($e['sport_type'] ?? '-'); ?></span>
+                            <td data-label="Event" style="font-weight: 700; color: #002d62;">
+                                <a href="<?php echo htmlspecialchars($event_detail_url); ?>" class="event-link-badge" title="Lihat peserta event ini">
+                                    <span class="badge-new badge-cabor"><?php echo htmlspecialchars($e['event_name'] ?? '-'); ?></span>
+                                    <?php if ((int) ($e['total_categories'] ?? 0) > 1): ?>
+                                        <span class="event-category-count"><?php echo number_format((int) ($e['total_categories'] ?? 0)); ?> kategori</span>
+                                    <?php endif; ?>
+                                </a>
                             </td>
                             <td data-label="Total Match" style="text-align: center; font-weight: 700; color: #002d62;">
                                 <?php echo number_format((int) ($e['total_matches'] ?? 0)); ?>
@@ -307,7 +352,7 @@ function formatEventDate($datetime) {
         <!-- Pagination -->
         <div class="pagination-info">
             <div class="info-text">
-                Menampilkan <?php echo $total_records > 0 ? min($offset + 1, $total_records) : 0; ?> sampai <?php echo min($offset + $limit, $total_records); ?> dari <?php echo number_format($total_records); ?> kategori event
+                Menampilkan <?php echo $total_records > 0 ? min($offset + 1, $total_records) : 0; ?> sampai <?php echo min($offset + $limit, $total_records); ?> dari <?php echo number_format($total_records); ?> event
             </div>
             
             <?php if ($total_pages > 1): ?>

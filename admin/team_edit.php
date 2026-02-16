@@ -9,6 +9,11 @@ if (file_exists($config_path)) {
     die("Database configuration file not found at: $config_path");
 }
 
+$event_helper_path = __DIR__ . '/includes/event_helpers.php';
+if (file_exists($event_helper_path)) {
+    require_once $event_helper_path;
+}
+
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
     exit;
@@ -69,11 +74,7 @@ $email = $admin_email;
 // Mendapatkan nama file saat ini untuk penanda menu 'Active'
 $current_page = basename($_SERVER['PHP_SELF']);
 
-$event_types = [
-    'LIGA AAFI BATAM U-13 PUTRA 2026',
-    'LIGA AAFI BATAM U-16 PUTRA 2026',
-    'LIGA AAFI BATAM U-16 PUTRI 2026'
-];
+$event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 
 // Get team ID
 $team_id = isset($_GET['id']) ? intval($_GET['id']) : 0;

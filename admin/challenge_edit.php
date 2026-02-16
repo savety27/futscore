@@ -9,6 +9,11 @@ if (file_exists($config_path)) {
     die("Database configuration file not found at: $config_path");
 }
 
+$event_helper_path = __DIR__ . '/includes/event_helpers.php';
+if (file_exists($event_helper_path)) {
+    require_once $event_helper_path;
+}
+
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
     exit;
@@ -73,11 +78,7 @@ $admin_email = $_SESSION['admin_email'] ?? '';
 
 $academy_name = "Hi, Welcome...";
 $email = $admin_email;
-$event_types = [
-    'LIGA AAFI BATAM U-13 PUTRA 2026',
-    'LIGA AAFI BATAM U-16 PUTRA 2026',
-    'LIGA AAFI BATAM U-16 PUTRI 2026'
-];
+$event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 
 // Get challenge ID
 $challenge_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -139,6 +140,10 @@ try {
             $team_events_map[$team_id] = [];
         }
         $team_events_map[$team_id][] = $event_name;
+    }
+
+    if (function_exists('mergeTeamPrimarySportsIntoEventsMap')) {
+        mergeTeamPrimarySportsIntoEventsMap($teams, $team_events_map);
     }
     
     // Fetch venues for dropdown
