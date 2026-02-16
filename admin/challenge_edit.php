@@ -150,6 +150,32 @@ try {
     die("Error fetching challenge data: " . $e->getMessage());
 }
 
+$default_expiry_seconds = 24 * 60 * 60;
+$preserved_expiry_seconds = $default_expiry_seconds;
+
+if (!empty($challenge_data['challenge_date']) && !empty($challenge_data['expiry_date'])) {
+    try {
+        $existing_challenge_datetime = new DateTime($challenge_data['challenge_date']);
+        $existing_expiry_datetime = new DateTime($challenge_data['expiry_date']);
+        $existing_offset_seconds = $existing_challenge_datetime->getTimestamp() - $existing_expiry_datetime->getTimestamp();
+
+        if ($existing_offset_seconds > 0) {
+            $preserved_expiry_seconds = $existing_offset_seconds;
+        }
+    } catch (Exception $e) {
+        $preserved_expiry_seconds = $default_expiry_seconds;
+    }
+}
+
+$preserved_hours = floor($preserved_expiry_seconds / 3600);
+$preserved_minutes = floor(($preserved_expiry_seconds % 3600) / 60);
+
+if ($preserved_minutes > 0) {
+    $preserved_expiry_label = $preserved_hours . ' jam ' . $preserved_minutes . ' menit';
+} else {
+    $preserved_expiry_label = $preserved_hours . ' jam';
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get and sanitize form data
@@ -161,8 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'challenge_time' => trim($_POST['challenge_time'] ?? '18:00'),
         'sport_type' => in_array(trim($_POST['sport_type'] ?? ''), $event_types, true) ? trim($_POST['sport_type'] ?? '') : '',
         'notes' => trim($_POST['notes'] ?? ''),
-        'status' => trim($_POST['status'] ?? 'open'),
-        'expiry_hours' => intval($_POST['expiry_hours'] ?? 24)
+        'status' => trim($_POST['status'] ?? 'open')
     ];
     
     // Validation
@@ -208,9 +233,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    // Calculate expiry date
+    // Calculate expiry date using preserved offset
     $challenge_datetime = $form_data['challenge_date'] . ' ' . $form_data['challenge_time'] . ':00';
-    $expiry_datetime = date('Y-m-d H:i:s', strtotime($challenge_datetime . ' -' . $form_data['expiry_hours'] . ' hours'));
+    $challenge_timestamp = strtotime($challenge_datetime);
+    $expiry_datetime = null;
+
+    if ($challenge_timestamp === false) {
+        if (!isset($errors['challenge_date']) && !isset($errors['challenge_time'])) {
+            $errors['challenge_date'] = "Tanggal atau waktu challenge tidak valid";
+        }
+    } else {
+        $expiry_datetime = date('Y-m-d H:i:s', $challenge_timestamp - $preserved_expiry_seconds);
+    }
     
     // If no errors, update database
     if (empty($errors)) {
@@ -1356,25 +1390,11 @@ body {
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="expiry_hours">
-                                Challenge Expiry (jam sebelum pertandingan)
+                            <label class="form-label" for="expiry_info">
+                                Challenge Expiry
                             </label>
-                            <?php 
-                            // Calculate expiry hours from expiry date
-                            $challenge_date = new DateTime($challenge_data['challenge_date']);
-                            $expiry_date = new DateTime($challenge_data['expiry_date']);
-                            $diff = $challenge_date->diff($expiry_date);
-                            $expiry_hours = ($diff->days * 24) + $diff->h;
-                            ?>
-                            <select id="expiry_hours" name="expiry_hours" class="form-select">
-                                <option value="1" <?php echo $expiry_hours == 1 ? 'selected' : ''; ?>>1 Jam</option>
-                                <option value="6" <?php echo $expiry_hours == 6 ? 'selected' : ''; ?>>6 Jam</option>
-                                <option value="12" <?php echo $expiry_hours == 12 ? 'selected' : ''; ?>>12 Jam</option>
-                                <option value="24" <?php echo $expiry_hours == 24 ? 'selected' : ''; ?>>24 Jam (Default)</option>
-                                <option value="48" <?php echo $expiry_hours == 48 ? 'selected' : ''; ?>>48 Jam</option>
-                                <option value="72" <?php echo $expiry_hours == 72 ? 'selected' : ''; ?>>72 Jam</option>
-                            </select>
-                            <small style="color: #666;">Challenge akan expired setelah waktu ini sebelum pertandingan</small>
+                            <input type="text" id="expiry_info" class="form-input" value="Diatur otomatis oleh sistem" readonly>
+                            <small style="color: #666;">Offset saat ini dipertahankan: <?php echo htmlspecialchars($preserved_expiry_label); ?> sebelum pertandingan.</small>
                         </div>
                     </div>
                     
