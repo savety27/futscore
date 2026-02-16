@@ -79,20 +79,20 @@ if ($team_id) {
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --premium-bg: #f8fafc;
+        --premium-bg: #eaf6ff;
         --premium-card: #ffffff;
-        --premium-border: #e2e8f0;
-        --premium-text: #1e293b;
-        --premium-text-muted: #64748b;
-        --premium-accent: #0A2463;
-        --premium-gold: #FFD700;
+        --premium-border: #cfe5ff;
+        --premium-text: #0f2744;
+        --premium-text-muted: #5f728a;
+        --premium-accent: #0f2744;
+        --premium-gold: #f59e0b;
         --font-outfit: 'Outfit', sans-serif;
-        --soft-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-        --hover-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        --soft-shadow: 0 6px 20px rgba(30, 64, 175, 0.08);
+        --hover-shadow: 0 14px 34px rgba(30, 64, 175, 0.16);
     }
 
     .main {
-        background: var(--premium-bg) !important;
+        background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
         color: var(--premium-text);
         font-family: var(--font-outfit);
         padding: 40px !important;
@@ -157,7 +157,7 @@ if ($team_id) {
     .premium-card:hover {
         transform: translateY(-5px);
         box-shadow: var(--hover-shadow);
-        border-color: var(--premium-accent);
+        border-color: #93c5fd;
     }
 
     .card-top {
@@ -175,7 +175,7 @@ if ($team_id) {
         align-items: center;
         justify-content: center;
         font-size: 24px;
-        background: #f1f5f9;
+        background: #eaf2ff;
         color: var(--premium-accent);
         transition: var(--transition);
     }
@@ -241,7 +241,7 @@ if ($team_id) {
         align-items: center;
         justify-content: center;
         gap: 80px;
-        background: radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%);
+        background: radial-gradient(circle at center, #ffffff 0%, #eef6ff 100%);
         position: relative;
     }
 
@@ -290,7 +290,7 @@ if ($team_id) {
 
     .match-footer {
         padding: 30px 40px;
-        background: #f1f5f9;
+        background: #eaf2ff;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 20px;
@@ -320,7 +320,7 @@ if ($team_id) {
         padding: 100px 40px;
         text-align: center;
         background: white;
-        border: 2px dashed var(--premium-border);
+        border: 2px dashed #bfdbfe;
         border-radius: 32px;
     }
 
