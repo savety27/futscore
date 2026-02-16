@@ -405,6 +405,25 @@
     box-shadow: none;
 }
 
+.event-link-badge {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    align-items: flex-start;
+}
+
+.event-link-badge:hover .badge-cabor {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.event-category-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -627,7 +646,7 @@
         min-height: 48px;
     }
 
-    /* Table Container - Remove Desktop Styling */
+    /* Table Container - Mobile cards */
     .table-container-new {
         background: transparent;
         box-shadow: none;
@@ -636,7 +655,6 @@
         border-radius: 0;
     }
 
-    /* Hide Table Header */
     .event-table-new thead {
         display: none;
     }
@@ -651,17 +669,13 @@
         gap: 16px;
     }
 
-    /* MATCH CARD - Sports App Style */
     .event-table-new tr {
-        display: flex;
-        flex-direction: column;
+        display: block;
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         border-radius: 18px;
         box-shadow: 0 2px 12px rgba(15, 39, 68, 0.08);
         border: 1px solid var(--gray-200);
         overflow: hidden;
-        padding: 0;
-        position: relative;
     }
 
     .event-table-new tr:hover {
@@ -670,214 +684,46 @@
         border-color: var(--blue-accent);
     }
 
-    /* Reset all TD defaults */
     .event-table-new td {
-        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--gray-100);
+        text-align: right !important;
+    }
+
+    .event-table-new td:last-child {
         border-bottom: none;
-        text-align: left !important;
     }
 
     .event-table-new td::before {
-        display: none;
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--gray-600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: left;
+        flex: 0 0 42%;
     }
 
-    /* Hide Row Number */
     .event-table-new td[data-label="No"] {
-        display: none;
+        background: linear-gradient(135deg, var(--gray-50) 0%, #ffffff 100%);
+        color: var(--gray-500) !important;
     }
 
-    /* CARD HEADER - Code + Status */
-    .event-table-new td:nth-child(2) {
-        padding: 14px 18px;
-        background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 12px;
-        width: 100%;
+    .event-table-new td[data-label="Event"] {
+        background: linear-gradient(135deg, var(--white-blue) 0%, #ffffff 100%);
     }
 
-    .event-table-new td:nth-child(2)::before {
-        content: '';
-        display: block;
-        width: 4px;
-        height: 20px;
-        background: var(--blue-accent);
-        border-radius: 2px;
-        flex-shrink: 0;
-    }
-
-    .event-table-new td:nth-child(2) {
-        font-weight: 700;
-        font-size: 12px;
+    .event-table-new td[data-label="Event"]::before {
         color: var(--navy);
-        letter-spacing: 0.3px;
-    }
-
-    .event-table-new td:nth-child(6) {
-        padding: 14px 18px;
-        background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 12px;
-        width: 100%;
-    }
-
-    /* Teams Display */
-    .event-table-new td:nth-child(3) {
-        padding: 24px 18px 20px;
-        display: block;
-    }
-
-    .match-cell-new {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .team-info-new {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        width: 100%;
-    }
-
-    .team-info-new span {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--navy-dark);
-        text-align: center;
-        flex: 1;
-    }
-
-    .team-logo-tiny {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        padding: 4px;
-        background: var(--gray-50);
-        border: 1px solid var(--gray-200);
-    }
-
-    .match-cell-new>div:nth-child(2) {
-        font-weight: 900;
-        font-size: 14px;
-        color: var(--red);
-        letter-spacing: 2px;
-        padding: 8px 0;
-    }
-
-    /* Score Zone */
-    .event-table-new td:nth-child(4) {
-        padding: 16px 18px;
-        background: linear-gradient(135deg, var(--white-blue) 0%, var(--gray-50) 100%);
-        border-top: 1px solid var(--gray-100);
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .score-display {
-        font-size: 28px !important;
-        font-weight: 900 !important;
-        letter-spacing: 3px;
-        color: var(--navy-dark) !important;
-    }
-
-    .score-pending {
-        font-size: 24px;
-        color: var(--gray-300);
-    }
-
-    /* Winner Section */
-    .event-table-new td:nth-child(5) {
-        padding: 14px 18px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-bottom: 1px solid var(--gray-100);
-    }
-
-    .btn-winner-new {
-        padding: 10px 20px;
-        font-size: 13px;
-        border-radius: 24px;
-        gap: 8px;
-    }
-
-    .btn-winner-new i {
-        font-size: 12px;
-    }
-
-    .no-winner {
-        font-size: 14px;
-        color: var(--gray-300);
-    }
-
-    /* Meta labels */
-    .event-table-new td:nth-child(6)::before {
-        content: 'Status:';
-        display: inline-block;
-        flex: 0 0 120px;
-        width: 120px;
-        font-weight: 700;
-        font-size: 11px;
-        color: var(--gray-600);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .event-table-new td:nth-child(7) {
-        padding: 14px 18px;
-        background: var(--gray-50);
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .event-table-new td:nth-child(7)::before {
-        content: 'Match Status:';
-        display: inline-block;
-        flex: 0 0 120px;
-        width: 120px;
-        font-weight: 700;
-        font-size: 11px;
-        color: var(--gray-600);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .event-table-new td:nth-child(8) {
-        padding: 14px 18px;
-        background: var(--gray-50);
-        border-bottom: 1px solid var(--gray-100);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .event-table-new td:nth-child(8)::before {
-        content: 'Cabor:';
-        display: inline-block;
-        flex: 0 0 120px;
-        width: 120px;
-        font-weight: 700;
-        font-size: 11px;
-        color: var(--gray-600);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .badge-new {
         min-width: 0;
-        flex-shrink: 0;
         width: auto;
         white-space: nowrap;
         padding: 8px 14px;
@@ -890,26 +736,13 @@
         font-weight: 700;
     }
 
-    /* Action Button */
-    .event-table-new td:nth-child(9) {
-        padding: 16px 18px;
-        display: flex;
-        justify-content: center;
+    .event-link-badge {
+        align-items: flex-end;
+        text-align: right;
     }
 
-    .event-table-new td:nth-child(9) a {
-        width: 100%;
-        min-height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        font-size: 14px;
-        font-weight: 700;
-        border-radius: 12px;
-        border: 2px solid var(--navy);
-        color: var(--navy);
-        background: white;
+    .event-category-count {
+        font-size: 10px;
     }
 
     /* Pagination */

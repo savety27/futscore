@@ -14,65 +14,96 @@ if ($matchId <= 0) {
     exit();
 }   
 
-$source = isset($_GET['source']) ? $_GET['source'] : 'match';
+$requestedSource = strtolower(trim((string) ($_GET['source'] ?? '')));
+$source = $requestedSource === 'match' ? 'match' : 'challenge';
 
 // Sekarang baru require header
 require_once 'includes/header.php'; 
 
 $conn = $db->getConnection();
 
-if ($source === 'challenge') {
-    // Get match details from challenges table
-    $sql = "SELECT c.id, c.challenge_code as match_code, c.challenge_date as match_date, 
-                   c.challenger_score as score1, c.opponent_score as score2,
-                   c.match_status as status, v.name as location,
-                   t1.id as team1_id, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.id as team2_id, t2.name as team2_name, t2.logo as team2_logo,
-                   c.sport_type as event_name
-            FROM challenges c
-            LEFT JOIN teams t1 ON c.challenger_id = t1.id
-            LEFT JOIN teams t2 ON c.opponent_id = t2.id
-            LEFT JOIN venues v ON c.venue_id = v.id
-            WHERE c.id = ?";
-} else {
-    // Get match details from matches table
-    $sql = "SELECT m.*, 
-                   t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.name as team2_name, t2.logo as team2_logo,
-                   e.name as event_name
-            FROM matches m
-            LEFT JOIN teams t1 ON m.team1_id = t1.id
-            LEFT JOIN teams t2 ON m.team2_id = t2.id
-            LEFT JOIN events e ON m.event_id = e.id
-            WHERE m.id = ?";
-}
+$challengeSql = "SELECT c.id,
+                        c.challenge_code AS match_code,
+                        c.challenge_date AS match_date,
+                        c.challenger_score AS score1,
+                        c.opponent_score AS score2,
+                        COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
+                        v.name AS location,
+                        t1.id AS team1_id,
+                        t1.name AS team1_name,
+                        t1.logo AS team1_logo,
+                        t2.id AS team2_id,
+                        t2.name AS team2_name,
+                        t2.logo AS team2_logo,
+                        c.sport_type AS event_name,
+                        '' AS event_description
+                 FROM challenges c
+                 LEFT JOIN teams t1 ON c.challenger_id = t1.id
+                 LEFT JOIN teams t2 ON c.opponent_id = t2.id
+                 LEFT JOIN venues v ON c.venue_id = v.id
+                 WHERE c.id = ?
+                 LIMIT 1";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('i', $matchId);
-$stmt->execute();
-$result = $stmt->get_result();
-$match = $result->fetch_assoc();
-$stmt->close();
+$legacySql = "SELECT m.id,
+                      '' AS match_code,
+                      m.match_date,
+                      m.score1,
+                      m.score2,
+                      m.status,
+                      m.location,
+                      t1.id AS team1_id,
+                      t1.name AS team1_name,
+                      t1.logo AS team1_logo,
+                      t2.id AS team2_id,
+                      t2.name AS team2_name,
+                      t2.logo AS team2_logo,
+                      e.name AS event_name,
+                      e.description AS event_description
+               FROM matches m
+               LEFT JOIN teams t1 ON m.team1_id = t1.id
+               LEFT JOIN teams t2 ON m.team2_id = t2.id
+               LEFT JOIN events e ON m.event_id = e.id
+               WHERE m.id = ?
+               LIMIT 1";
 
-// Fallback search in challenges if not found in matches and source not specified
-if (!$match && $source !== 'challenge') {
-    $sql = "SELECT c.id, c.challenge_code as match_code, c.challenge_date as match_date, 
-                   c.challenger_score as score1, c.opponent_score as score2,
-                   c.match_status as status, v.name as location,
-                   t1.id as team1_id, t1.name as team1_name, t1.logo as team1_logo, 
-                   t2.id as team2_id, t2.name as team2_name, t2.logo as team2_logo,
-                   c.sport_type as event_name
-            FROM challenges c
-            LEFT JOIN teams t1 ON c.challenger_id = t1.id
-            LEFT JOIN teams t2 ON c.opponent_id = t2.id
-            LEFT JOIN venues v ON c.venue_id = v.id
-            WHERE c.id = ?";
+$match = null;
+$resolvedSource = '';
+
+$runLookup = function ($sql) use ($conn, $matchId) {
     $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return null;
+    }
     $stmt->bind_param('i', $matchId);
     $stmt->execute();
     $result = $stmt->get_result();
-    $match = $result->fetch_assoc();
+    $row = $result ? $result->fetch_assoc() : null;
     $stmt->close();
+    return $row ?: null;
+};
+
+if ($source === 'match') {
+    $match = $runLookup($legacySql);
+    if ($match) {
+        $resolvedSource = 'match';
+    }
+    if (!$match) {
+        $match = $runLookup($challengeSql);
+        if ($match) {
+            $resolvedSource = 'challenge';
+        }
+    }
+} else {
+    $match = $runLookup($challengeSql);
+    if ($match) {
+        $resolvedSource = 'challenge';
+    }
+    if (!$match) {
+        $match = $runLookup($legacySql);
+        if ($match) {
+            $resolvedSource = 'match';
+        }
+    }
 }
 
 $matchNotFound = false;
@@ -85,31 +116,33 @@ $goals = [];
 if (!$match) {
     $matchNotFound = true;
 } else {
-    // Get lineups for this match
-    $sqlLineups = "SELECT l.*, p.name as player_name, p.photo, p.jersey_number, t.id as team_id, t.name as team_name
-                   FROM lineups l
-                   LEFT JOIN players p ON l.player_id = p.id
-                   LEFT JOIN teams t ON l.team_id = t.id
-                   WHERE l.match_id = ?
-                   ORDER BY l.is_starting DESC, p.jersey_number ASC";
+    if ($resolvedSource === 'challenge') {
+        // Get lineups for challenge-based match IDs only.
+        $sqlLineups = "SELECT l.*, p.name as player_name, p.photo, p.jersey_number, t.id as team_id, t.name as team_name
+                       FROM lineups l
+                       LEFT JOIN players p ON l.player_id = p.id
+                       LEFT JOIN teams t ON l.team_id = t.id
+                       WHERE l.match_id = ?
+                       ORDER BY l.is_starting DESC, p.jersey_number ASC";
 
-    $stmtLineups = $conn->prepare($sqlLineups);
-    $stmtLineups->bind_param('i', $matchId);
-    $stmtLineups->execute();
-    $resultLineups = $stmtLineups->get_result();
-    while ($lineup = $resultLineups->fetch_assoc()) {
-        $half = isset($lineup['half']) && $lineup['half'] == 2 ? 'half2' : 'half1';
-        
-        if ($lineup['team_id'] == $match['team1_id']) {
-            $lineups['team1'][$half][] = $lineup;
-        } elseif ($lineup['team_id'] == $match['team2_id']) {
-            $lineups['team2'][$half][] = $lineup;
+        $stmtLineups = $conn->prepare($sqlLineups);
+        $stmtLineups->bind_param('i', $matchId);
+        $stmtLineups->execute();
+        $resultLineups = $stmtLineups->get_result();
+        while ($lineup = $resultLineups->fetch_assoc()) {
+            $half = isset($lineup['half']) && $lineup['half'] == 2 ? 'half2' : 'half1';
+
+            if ($lineup['team_id'] == $match['team1_id']) {
+                $lineups['team1'][$half][] = $lineup;
+            } elseif ($lineup['team_id'] == $match['team2_id']) {
+                $lineups['team2'][$half][] = $lineup;
+            }
         }
-    }
-    $stmtLineups->close();
+        $stmtLineups->close();
 
-    // Get goals for this match
-    $goals = getMatchGoals($matchId);
+        // Get goals for this challenge match.
+        $goals = getMatchGoals($matchId);
+    }
 }
 
 $statusValue = '';

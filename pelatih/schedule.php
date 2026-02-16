@@ -384,14 +384,7 @@ try {
                     <select name="sport" onchange="document.getElementById('sportFilterForm').submit()" 
                             class="sport-select">
                         <option value="">Semua Event</option>
-                        <?php
-                        $event_types = [
-                            'LIGA AAFI BATAM U-13 PUTRA 2026',
-                            'LIGA AAFI BATAM U-16 PUTRA 2026',
-                            'LIGA AAFI BATAM U-16 PUTRI 2026'
-                        ];
-                        foreach ($event_types as $sport):
-                        ?>
+                        <?php foreach ($sport_types as $sport): ?>
                             <option value="<?php echo htmlspecialchars($sport); ?>" 
                                 <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($sport); ?>
