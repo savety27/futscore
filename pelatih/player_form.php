@@ -576,6 +576,10 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 
 <style>
 /* Additional styles for the form */
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;

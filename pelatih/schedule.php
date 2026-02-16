@@ -231,126 +231,278 @@ try {
 ?>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 .filter-container {
     margin-bottom: 25px;
 }
 
-.filter-row {
-    display: flex;
-    flex-wrap: wrap;
+.schedule-filter-card {
+    padding: 16px;
+    border: 1px solid #dbe5f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
+}
+
+.schedule-filter-form {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(210px, 0.72fr) auto;
     gap: 12px;
-    align-items: flex-end;
-}
-
-.filter-group {
-    flex: 1;
-    min-width: 250px;
-}
-
-.filter-form {
-    width: 100%;
-}
-
-.search-wrapper {
-    position: relative;
-    display: flex;
     align-items: center;
 }
 
-.search-input {
-    width: 100%;
-    padding: 10px 15px 10px 40px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    background-color: white;
-    color: var(--dark);
-    transition: border-color 0.3s ease;
+.schedule-search-group {
+    position: relative;
 }
 
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
-}
-
-.search-btn {
+.schedule-search-group i {
     position: absolute;
     left: 12px;
-    background: none;
-    border: none;
-    color: var(--gray);
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7b8797;
+    font-size: 13px;
+}
+
+.schedule-search-input,
+.schedule-custom-select-trigger {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.schedule-search-input {
+    padding: 0 12px 0 36px;
+}
+
+.schedule-select-wrap {
+    position: relative;
+}
+
+.schedule-custom-select {
+    position: relative;
+}
+
+.schedule-custom-select-trigger {
+    padding: 0 34px 0 12px;
+    text-align: left;
     cursor: pointer;
-    padding: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
 }
 
-.sport-filter-wrapper {
-    width: 200px;
-}
-
-.sport-select {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    background-color: white;
-    color: var(--dark);
-    cursor: pointer;
-    transition: border-color 0.3s ease;
-}
-
-.sport-select:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
-.clear-filter-btn {
+.schedule-custom-select-label {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 16px;
-    background-color: #f8f9fa;
-    color: var(--dark);
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    border: 1px solid #dee2e6;
-    transition: all 0.3s ease;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.schedule-custom-select-label i {
+    color: #7b8797;
+    font-size: 13px;
+    flex: 0 0 auto;
+}
+
+.schedule-custom-select-trigger span.schedule-custom-select-text {
+    display: block;
+    width: 100%;
     white-space: nowrap;
-    height: 40px;
-    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.clear-filter-btn:hover {
-    background-color: #e9ecef;
-    color: var(--dark);
+.schedule-custom-select-trigger .select-icon-right {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #7b8797;
+    transition: transform 0.2s ease;
+}
+
+.schedule-custom-select.open .schedule-custom-select-trigger .select-icon-right {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.schedule-custom-select-menu {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    background: #ffffff;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.16);
+    padding: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 20;
+}
+
+.schedule-custom-select.open .schedule-custom-select-menu {
+    display: block;
+}
+
+.schedule-custom-option {
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 9px 10px;
+    cursor: pointer;
+}
+
+.schedule-custom-option:hover {
+    background: #f2f6fc;
+}
+
+.schedule-custom-option.active {
+    background: #e8f0ff;
+    color: #0f3d8b;
+}
+
+.schedule-search-input:focus,
+.schedule-custom-select-trigger:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
+}
+
+.schedule-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.schedule-filter-actions .btn-filter,
+.schedule-filter-actions .clear-filter-btn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     text-decoration: none;
+    white-space: nowrap;
 }
 
-.clear-filter-btn i {
-    font-size: 12px;
+.schedule-filter-actions .btn-filter {
+    background: linear-gradient(135deg, var(--primary), #1a4f9e);
+    color: #ffffff;
+}
+
+.schedule-filter-actions .btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
+}
+
+.schedule-filter-actions .clear-filter-btn {
+    background: #ffffff;
+    border-color: #d3dcea;
+    color: #3b4a5f;
+}
+
+.schedule-filter-actions .clear-filter-btn:hover {
+    background: #f2f6fc;
 }
 
 @media (max-width: 768px) {
-    .filter-row {
-        flex-direction: column;
-        align-items: stretch;
+    .schedule-filter-form {
+        grid-template-columns: 1fr;
     }
-    
-    .filter-group,
-    .sport-filter-wrapper {
-        min-width: 100%;
-        width: 100%;
-    }
-    
-    .clear-filter-btn {
+
+    .schedule-filter-actions .btn-filter,
+    .schedule-filter-actions .clear-filter-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .schedule-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+        min-width: 1120px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px 9px;
+        font-size: 12px;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .data-table td:nth-child(3) > div {
+        min-width: 220px;
+    }
+
+    .event-badge {
+        font-size: 11px !important;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+}
+
+.data-table tbody tr {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    will-change: transform;
+}
+
+.event-badge {
+    display: inline-block;
+    max-width: none;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.25;
+    text-align: center;
+    word-break: normal;
+    vertical-align: middle;
+}
+
+.data-table tbody tr:hover,
+.data-table tbody tr:focus-within {
+    background: #eef5ff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
+    }
+}
+
+@media (hover: none) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: none;
+        box-shadow: none;
+        background: #f8f9fa;
     }
 }
 </style>
@@ -362,54 +514,58 @@ try {
     </div>
 
     <div class="filter-container">
-        <div class="filter-row">
-            <!-- Search Bar -->
-            <div class="filter-group">
-                <form action="" method="GET" class="filter-form">
-                    <div class="search-wrapper">
-                        <input type="text" name="search" placeholder="Cari pertandingan..." 
-                               value="<?php echo htmlspecialchars($search); ?>"
-                               class="search-input">
-                        <button type="submit" class="search-btn">
-                            <i class="fas fa-search"></i>
+        <div class="schedule-filter-card">
+            <form action="" method="GET" class="schedule-filter-form">
+                <div class="schedule-search-group">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        name="search"
+                        placeholder="Cari kode, tim, event, atau status pertandingan..."
+                        value="<?php echo htmlspecialchars($search); ?>"
+                        class="schedule-search-input"
+                    >
+                </div>
+
+                <div class="schedule-select-wrap">
+                    <div class="schedule-custom-select" id="scheduleSportSelect">
+                        <input type="hidden" name="sport" id="scheduleSportValue" value="<?php echo htmlspecialchars($sport_filter); ?>">
+                        <button type="button" class="schedule-custom-select-trigger" id="scheduleSportTrigger" aria-expanded="false">
+                            <span class="schedule-custom-select-label">
+                                <i class="fas fa-trophy"></i>
+                                <span id="scheduleSportLabel" class="schedule-custom-select-text"><?php echo $sport_filter !== '' ? htmlspecialchars($sport_filter) : 'Semua Event'; ?></span>
+                            </span>
+                            <i class="fas fa-chevron-down select-icon-right"></i>
                         </button>
+                        <div class="schedule-custom-select-menu" id="scheduleSportMenu">
+                            <button type="button" class="schedule-custom-option <?php echo $sport_filter === '' ? 'active' : ''; ?>" data-value="">Semua Event</button>
+                            <?php foreach ($sport_types as $sport): ?>
+                                <button type="button" class="schedule-custom-option <?php echo $sport_filter === $sport ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($sport); ?>">
+                                    <?php echo htmlspecialchars($sport); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                </form>
-            </div>
-            
-            <!-- Sport Filter -->
-            <div class="sport-filter-wrapper">
-                <form action="" method="GET" id="sportFilterForm" class="filter-form">
-                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                    <select name="sport" onchange="document.getElementById('sportFilterForm').submit()" 
-                            class="sport-select">
-                        <option value="">Semua Event</option>
-                        <?php foreach ($sport_types as $sport): ?>
-                            <option value="<?php echo htmlspecialchars($sport); ?>" 
-                                <?php echo $sport_filter == $sport ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($sport); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-            </div>
-            
-            <!-- Clear Filter Button -->
-            <?php if (!empty($search) || !empty($sport_filter)): ?>
-            <div class="filter-group" style="flex: 0 0 auto;">
-                <a href="schedule.php" class="clear-filter-btn">
-                    <i class="fas fa-times"></i> Hapus Filter
-                </a>
-            </div>
-            <?php endif; ?>
+                </div>
+
+                <div class="schedule-filter-actions">
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-filter"></i> Terapkan
+                    </button>
+                    <?php if (!empty($search) || !empty($sport_filter)): ?>
+                    <a href="schedule.php" class="clear-filter-btn">
+                        <i class="fas fa-times"></i> Reset
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </form>
         </div>
-    </div>
     </div>
 
     <?php if (empty($challenges)): ?>
         <p style="text-align: center; color: var(--gray); padding: 20px;">Pertandingan tidak ditemukan.</p>
     <?php else: ?>
-        <div style="overflow-x: auto;">
+        <div class="schedule-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -458,7 +614,7 @@ try {
                             </div>
                         </td>
                         <td>
-                            <span style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 600;">
+                            <span class="event-badge" title="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>" style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 600;">
                                 <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
                             </span>
                         </td>
@@ -564,5 +720,53 @@ try {
 
     <?php endif; ?>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectRoot = document.getElementById('scheduleSportSelect');
+    if (!selectRoot) return;
+
+    const trigger = document.getElementById('scheduleSportTrigger');
+    const menu = document.getElementById('scheduleSportMenu');
+    const hiddenInput = document.getElementById('scheduleSportValue');
+    const label = document.getElementById('scheduleSportLabel');
+    const options = menu.querySelectorAll('.schedule-custom-option');
+
+    function closeMenu() {
+        selectRoot.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+        selectRoot.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    trigger.addEventListener('click', function() {
+        if (selectRoot.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            const value = opt.getAttribute('data-value') || '';
+            hiddenInput.value = value;
+            label.textContent = opt.textContent.trim();
+            options.forEach(function(o) { o.classList.remove('active'); });
+            opt.classList.add('active');
+            closeMenu();
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!selectRoot.contains(e.target)) {
+            closeMenu();
+        }
+    });
+});
+</script>
 
 <?php require_once 'includes/footer.php'; ?>

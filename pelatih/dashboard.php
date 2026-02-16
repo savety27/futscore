@@ -148,16 +148,54 @@ if ($team_id) {
         border-radius: 24px;
         padding: 30px;
         box-shadow: var(--soft-shadow);
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+        will-change: transform;
     }
 
     .premium-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--hover-shadow);
-        border-color: #93c5fd;
+        transform: translateY(-11px) scale(1.017);
+        box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
+        border-color: #8ebeff;
+    }
+
+    .premium-card:active {
+        transform: translateY(-4px) scale(1.008);
+    }
+
+    .premium-card:focus-within {
+        transform: translateY(-11px) scale(1.017);
+        box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
+        border-color: #8ebeff;
+    }
+
+    /* Stronger pop-forward effect for Total Pemain card */
+    .premium-card.d-2:hover,
+    .premium-card.d-2:focus-within {
+        transform: perspective(900px) translateY(-13px) translateZ(18px) scale(1.032);
+        box-shadow: 0 30px 60px rgba(30, 64, 175, 0.3), 0 0 0 4px rgba(76, 138, 255, 0.28);
+        border-color: #79abf5;
+    }
+
+    .premium-card::before {
+        content: '';
+        position: absolute;
+        top: -120%;
+        left: -35%;
+        width: 35%;
+        height: 300%;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+        transform: rotate(14deg);
+        transition: transform 0.8s ease, left 0.8s ease;
+        pointer-events: none;
+    }
+
+    .premium-card:hover::before {
+        left: 120%;
     }
 
     .card-top {
@@ -177,12 +215,19 @@ if ($team_id) {
         font-size: 24px;
         background: #eaf2ff;
         color: var(--premium-accent);
-        transition: var(--transition);
+        transition: transform 0.28s ease, background-color 0.28s ease, color 0.28s ease;
     }
 
     .premium-card:hover .card-icon-box {
         background: var(--premium-accent);
         color: white;
+        transform: translateY(-3px) scale(1.06);
+    }
+
+    .premium-card:focus-within .card-icon-box {
+        background: var(--premium-accent);
+        color: white;
+        transform: translateY(-3px) scale(1.06);
     }
 
     .card-value {
@@ -190,6 +235,7 @@ if ($team_id) {
         font-weight: 800;
         color: var(--premium-text);
         margin-bottom: 4px;
+        font-variant-numeric: tabular-nums;
     }
 
     .card-label {
@@ -336,8 +382,19 @@ if ($team_id) {
         to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes cardPop {
+        0% { opacity: 0; transform: translateY(22px) scale(0.96); }
+        65% { opacity: 1; transform: translateY(-4px) scale(1.02); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
     .reveal {
         animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        opacity: 0;
+    }
+
+    .premium-card.reveal {
+        animation: cardPop 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         opacity: 0;
     }
 
@@ -348,6 +405,18 @@ if ($team_id) {
     .d-5 { animation-delay: 0.5s; }
 
     @media (max-width: 992px) {
+        .premium-card:hover,
+        .premium-card:focus-within {
+            transform: translateY(-4px) scale(1.006);
+            box-shadow: 0 14px 28px rgba(30, 64, 175, 0.16), 0 0 0 2px rgba(76, 138, 255, 0.18);
+        }
+
+        .premium-card.d-2:hover,
+        .premium-card.d-2:focus-within {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 16px 30px rgba(30, 64, 175, 0.18), 0 0 0 2px rgba(76, 138, 255, 0.2);
+        }
+
         .match-body {
             flex-direction: column;
             gap: 40px;
@@ -396,7 +465,7 @@ if ($team_id) {
                 <div class="card-icon-box"><i class="fas fa-users"></i></div>
             </div>
             <div>
-                <div class="card-value"><?php echo $player_count; ?></div>
+                <div class="card-value" data-count="<?php echo (int)$player_count; ?>"><?php echo (int)$player_count; ?></div>
                 <div class="card-label">Total Pemain</div>
             </div>
         </div>
@@ -407,7 +476,7 @@ if ($team_id) {
                 <div class="card-icon-box"><i class="fas fa-user-tie"></i></div>
             </div>
             <div>
-                <div class="card-value"><?php echo $staff_count; ?></div>
+                <div class="card-value" data-count="<?php echo (int)$staff_count; ?>"><?php echo (int)$staff_count; ?></div>
                 <div class="card-label">Ofisial Tim</div>
             </div>
         </div>
@@ -418,7 +487,7 @@ if ($team_id) {
                 <div class="card-icon-box" style="background: #ecfdf5; color: #059669;"><i class="fas fa-trophy"></i></div>
             </div>
             <div>
-                <div class="card-value"><?php echo $wins; ?></div>
+                <div class="card-value" data-count="<?php echo (int)$wins; ?>"><?php echo (int)$wins; ?></div>
                 <div class="card-label">Total Kemenangan</div>
             </div>
         </div>
@@ -432,7 +501,7 @@ if ($team_id) {
                 <div class="card-icon-box" style="background: #fef2f2; color: #dc2626;"><i class="fas fa-times-circle"></i></div>
             </div>
             <div>
-                <div class="card-value"><?php echo $losses; ?></div>
+                <div class="card-value" data-count="<?php echo (int)$losses; ?>"><?php echo (int)$losses; ?></div>
                 <div class="card-label">Total Kekalahan</div>
             </div>
         </div>
@@ -443,7 +512,7 @@ if ($team_id) {
                 <div class="card-icon-box" style="background: #f8fafc; color: #64748b;"><i class="fas fa-handshake"></i></div>
             </div>
             <div>
-                <div class="card-value"><?php echo $draws; ?></div>
+                <div class="card-value" data-count="<?php echo (int)$draws; ?>"><?php echo (int)$draws; ?></div>
                 <div class="card-label">Hasil Seri</div>
             </div>
         </div>
@@ -514,5 +583,28 @@ if ($team_id) {
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const counters = document.querySelectorAll('.card-value[data-count]');
+    counters.forEach((el) => {
+        const target = parseInt(el.getAttribute('data-count'), 10);
+        if (Number.isNaN(target)) return;
+
+        const duration = 850;
+        const start = performance.now();
+
+        function tick(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(target * eased).toString();
+            if (progress < 1) requestAnimationFrame(tick);
+        }
+
+        el.textContent = '0';
+        requestAnimationFrame(tick);
+    });
+});
+</script>
 
 <?php require_once 'includes/footer.php'; ?>

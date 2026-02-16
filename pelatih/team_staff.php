@@ -149,11 +149,35 @@ try {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($staff_list as $staff): ?>
+                    <?php foreach ($staff_list as $staff): 
+                        $staff_photo_url = '';
+                        if (!empty($staff['photo'])) {
+                            $photo_file = basename($staff['photo']);
+                            $possible_paths = [
+                                'uploads/staff/' . $photo_file,
+                                '../uploads/staff/' . $photo_file,
+                                '../../uploads/staff/' . $photo_file,
+                                '../../../uploads/staff/' . $photo_file,
+                                'images/staff/' . $photo_file,
+                                '../images/staff/' . $photo_file,
+                                '../../images/staff/' . $photo_file,
+                                '../../../images/staff/' . $photo_file,
+                                $staff['photo'],
+                                '../' . ltrim($staff['photo'], '/'),
+                            ];
+
+                            foreach ($possible_paths as $path) {
+                                if (file_exists($path)) {
+                                    $staff_photo_url = $path;
+                                    break;
+                                }
+                            }
+                        }
+                    ?>
                     <tr>
                          <td>
-                            <?php if (!empty($staff['photo'])): ?>
-                                <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
+                            <?php if (!empty($staff_photo_url)): ?>
+                                <img src="<?php echo htmlspecialchars($staff_photo_url); ?>" 
                                      alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" 
                                      class="staff-photo"
                                      onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
@@ -293,6 +317,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 /* Styling untuk modal */
 .modal-content {
     animation: fadeIn 0.3s ease-out;
@@ -426,6 +454,38 @@ document.addEventListener('DOMContentLoaded', function() {
 .badge-danger {
     background: rgba(211, 47, 47, 0.1);
     color: var(--danger);
+}
+
+/* Hover batas baris tabel */
+.data-table tbody tr {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    will-change: transform;
+}
+
+.data-table tbody tr:hover,
+.data-table tbody tr:focus-within {
+    background: #eef5ff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
+    }
+}
+
+@media (hover: none) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: none;
+        box-shadow: none;
+        background: #f8f9fa;
+    }
 }
 </style>
 

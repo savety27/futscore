@@ -57,6 +57,13 @@ if ($team_id) {
 }
 ?>
 
+<style>
+/* Background only: baby-blue like dashboard */
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+</style>
+
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Daftar Player</h2>
@@ -181,7 +188,13 @@ if ($team_id) {
                             </div>
                         </td>
                         <td class="name-cell">
-                            <strong><?php echo htmlspecialchars($player['name'] ?? ''); ?></strong>
+                            <a href="player_view.php?id=<?php echo $player['id']; ?>" 
+                               class="player-name-link"
+                               title="Klik untuk lihat detail pemain"
+                               aria-label="Lihat detail pemain <?php echo htmlspecialchars($player['name'] ?? ''); ?>">
+                                <strong><?php echo htmlspecialchars($player['name'] ?? ''); ?></strong>
+                                <span class="player-click-hint"><i class="fas fa-mouse-pointer"></i> Klik nama untuk lihat detail</span>
+                            </a>
                             <div class="player-info">
                                 <small><?php echo htmlspecialchars($player['height'] ?? '0'); ?> cm • <?php echo htmlspecialchars($player['weight'] ?? '0'); ?> kg</small>
                             </div>
@@ -341,7 +354,7 @@ if ($team_id) {
     <?php endif; ?>
 </div>
 
-<link rel="stylesheet" href="css/players.css">
+<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
 
 
 <script>

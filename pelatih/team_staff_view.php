@@ -271,6 +271,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 /* Reused Styles */
 .empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
 .empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }

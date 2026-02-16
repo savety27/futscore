@@ -72,6 +72,10 @@ try {
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 .player-view {
     margin-top: 20px;
 }

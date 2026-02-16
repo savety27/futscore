@@ -148,12 +148,17 @@ try {
                         // Photo path
                         $photo_url = '';
                         if (!empty($player['photo'])) {
-                            $photo_path = 'uploads/players/' . $player['photo'];
+                            $photo_path_images = 'images/players/' . $player['photo'];
+                            $photo_path_uploads = 'uploads/players/' . $player['photo'];
                             $possible_paths = [
-                                $photo_path,
-                                '../' . $photo_path,
-                                '../../' . $photo_path,
-                                '../../../' . $photo_path
+                                $photo_path_images,
+                                '../' . $photo_path_images,
+                                '../../' . $photo_path_images,
+                                '../../../' . $photo_path_images,
+                                $photo_path_uploads,
+                                '../' . $photo_path_uploads,
+                                '../../' . $photo_path_uploads,
+                                '../../../' . $photo_path_uploads
                             ];
                             
                             foreach ($possible_paths as $path) {
@@ -296,6 +301,10 @@ try {
 </div>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 /* Reusing styles from players.php mainly */
 .empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
 .empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
@@ -303,6 +312,18 @@ try {
 .data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }
 .data-table th { padding: 15px 12px; text-align: left; font-weight: 600; color: white; border: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
 .data-table td { padding: 15px 12px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
+.data-table tbody tr {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    will-change: transform;
+}
+.data-table tbody tr:hover,
+.data-table tbody tr:focus-within {
+    background: #eef5ff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
 .btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
 .btn-secondary:hover { background: #d5d5d5; color: #000; }
 
@@ -337,6 +358,23 @@ try {
 .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
 .page-link { padding: 8px 14px; background: white; border: 2px solid #e0e0e0; border-radius: 8px; color: var(--dark); text-decoration: none; font-weight: 600; }
 .page-link.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+@media (max-width: 768px) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
+    }
+}
+
+@media (hover: none) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: none;
+        box-shadow: none;
+        background: #f8f9fa;
+    }
+}
 </style>
 
 <?php require_once 'includes/footer.php'; ?>

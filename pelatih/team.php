@@ -84,7 +84,7 @@ try {
     <?php if (empty($teams)): ?>
         <p style="text-align: center; color: var(--gray); padding: 20px;">Tim tidak ditemukan.</p>
     <?php else: ?>
-        <div style="overflow-x: auto;">
+        <div class="team-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -168,6 +168,16 @@ try {
 </div>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
+.team-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 14px;
+}
+
 /* Clickable count styling */
 .count-link {
     text-decoration: none;
@@ -234,6 +244,107 @@ try {
 /* Make it clear it's clickable with cursor */
 .count-link {
     cursor: pointer;
+}
+
+/* Stronger row hover effect for team table */
+.data-table tbody tr {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    will-change: transform;
+}
+
+.data-table tbody tr:hover,
+.data-table tbody tr:focus-within {
+    background: #eef5ff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
+    }
+}
+
+/* Page-specific responsiveness */
+@media (max-width: 992px) {
+    .data-table {
+        min-width: 900px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .team-logo {
+        width: 44px;
+        height: 44px;
+    }
+
+    .count-cell {
+        padding: 6px 12px;
+        min-width: 36px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 16px 12px;
+    }
+
+    .search-bar {
+        margin-bottom: 14px !important;
+    }
+
+    .pagination {
+        gap: 6px;
+    }
+
+    .page-link {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 40px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .data-table {
+        min-width: 820px;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 9px 10px;
+        font-size: 12px;
+    }
+
+    .team-logo {
+        width: 38px;
+        height: 38px;
+    }
+
+    .count-cell {
+        padding: 5px 10px;
+        min-width: 32px;
+        font-size: 12px;
+    }
+}
+
+/* Avoid jumpy hover effects on touch devices */
+@media (hover: none) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: none;
+        box-shadow: none;
+        background: #f8f9fa;
+    }
 }
 </style>
 

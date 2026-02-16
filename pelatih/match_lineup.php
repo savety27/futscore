@@ -462,6 +462,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 .lineup-page {
     --lineup-panel-border: #dbe4f2;
     --lineup-surface-soft: #f5f9ff;

@@ -72,6 +72,10 @@ if ($is_edit) {
     <title><?php echo $page_title; ?> - Area Pelatih</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .main {
+            background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+        }
+
         .card {
             background: white;
             border-radius: 15px;

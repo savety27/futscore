@@ -64,6 +64,7 @@
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .data-table tbody tr:last-child {
@@ -71,9 +72,10 @@
 }
 
 .data-table tbody tr:hover {
-    background: #f8f9ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(10, 36, 99, 0.1);
+    background: #eef5ff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
 }
 
 .data-table td {
@@ -120,6 +122,63 @@
 /* Player Info */
 .name-cell {
     min-width: 180px;
+}
+
+.player-name-link {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.player-name-link strong {
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.player-name-link strong::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 2px;
+    background: #1e88e5;
+    transition: width 0.2s ease;
+}
+
+.player-click-hint {
+    font-size: 11px;
+    font-weight: 600;
+    color: #1e88e5;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.player-name-link:hover strong {
+    color: #0d47a1;
+}
+
+.player-name-link:hover strong::after {
+    width: 100%;
+}
+
+.player-name-link:hover .player-click-hint {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.player-name-link:focus-visible {
+    outline: 2px solid #1e88e5;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+.player-name-link:focus-visible .player-click-hint {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .player-info {
@@ -328,6 +387,36 @@
 .action-buttons {
     display: flex;
     gap: 10px;
+}
+
+.actions-cell {
+    min-width: 148px;
+}
+
+.actions-cell .action-buttons {
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.actions-cell .action-buttons .delete-form {
+    margin: 0;
+    display: inline-flex;
+}
+
+.actions-cell .action-buttons a,
+.actions-cell .action-buttons button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+}
+
+.actions-cell .action-buttons i {
+    font-size: 13px;
 }
 
 .btn-edit, .btn-delete {
@@ -658,16 +747,22 @@
         min-width: 1000px;
     }
     
-    .action-buttons {
-        flex-direction: column;
-        gap: 5px;
-        min-width: 120px;
+    .actions-cell {
+        min-width: 132px;
     }
-    
-    .btn-edit, .btn-delete {
-        font-size: 12px;
-        padding: 6px 12px;
-        width: 100%;
+
+    .actions-cell .action-buttons {
+        flex-direction: row;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .actions-cell .action-buttons a,
+    .actions-cell .action-buttons button {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-radius: 8px;
     }
     
     .stats-summary {

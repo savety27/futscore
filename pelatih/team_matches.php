@@ -190,6 +190,10 @@ try {
 </div>
 
 <style>
+.main {
+    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
 /* Reused & New Styles */
 .empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
 .empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
@@ -200,6 +204,18 @@ try {
 .data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }
 .data-table th { padding: 15px 12px; text-align: left; font-weight: 600; color: white; border: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
 .data-table td { padding: 15px 12px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
+.data-table tbody tr {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    will-change: transform;
+}
+.data-table tbody tr:hover,
+.data-table tbody tr:focus-within {
+    background: #eef5ff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
 
 .score-badge { display: inline-block; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; }
 .score-badge.win { background: #4CAF50; color: white; }
@@ -214,6 +230,23 @@ try {
 
 .btn-view { display: inline-block; padding: 6px 12px; background: var(--primary); color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; transition: transform 0.2s; }
 .btn-view:hover { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+@media (max-width: 768px) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
+    }
+}
+
+@media (hover: none) {
+    .data-table tbody tr:hover,
+    .data-table tbody tr:focus-within {
+        transform: none;
+        box-shadow: none;
+        background: #f8f9fa;
+    }
+}
 
 @keyframes pulse {
     0% { opacity: 1; }
