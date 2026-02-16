@@ -341,35 +341,58 @@ if (isset($_GET['id'])) {
             <div class="form-section">
                 <h2 class="section-title">
                     <i class="fas fa-id-card"></i>
-                    Identitas 
+                    Identitas & Verifikasi
                 </h2>
+                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
+                    NIK dan NISN wajib diverifikasi sebelum data dapat disimpan.
+                </p>
                 
                 <div class="form-grid">
+                    <!-- NIK -->
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">NIK</span>
                             <span class="note">Wajib (16 digit)</span>
                         </label>
-                        <input type="text" name="nik" class="form-control" 
-                               id="nikInput"
-                               placeholder="Masukkan 16-digit NIK" required
-                               maxlength="16"
-                               inputmode="numeric"
-                               pattern="[0-9]{16}"
-                               oninput="validateNIK(this.value)"
-                               title="NIK harus terdiri dari tepat 16 digit angka"
-                               value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
-                        <div class="nik-feedback" id="nikFeedback"></div>
+                        <div class="verify-input-wrapper">
+                            <input type="text" name="nik" class="form-control verify-input" 
+                                   id="nikInput"
+                                   placeholder="Masukkan 16-digit NIK" required
+                                   maxlength="16"
+                                   inputmode="numeric"
+                                   pattern="[0-9]{16}"
+                                   title="NIK harus terdiri dari tepat 16 digit angka"
+                                   value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
+                            <button type="button" class="verify-btn" id="nikVerifyBtn" onclick="verifyNIK()" disabled>
+                                <i class="fas fa-shield-alt"></i> Verifikasi
+                            </button>
+                        </div>
+                        <input type="hidden" name="nik_verified" id="nikVerified" value="0">
+                        <div class="verify-feedback" id="nikFeedback"></div>
+                        <div class="verify-details" id="nikDetails" style="display:none;"></div>
                     </div>
 
+                    <!-- NISN -->
                     <div class="form-group">
                         <label class="form-label">
-                            <span>NISN</span>
-                            <span class="note">Opsional</span>
+                            <span class="required-field">NISN</span>
+                            <span class="note">Wajib (10 digit)</span>
                         </label>
-                        <input type="text" name="nisn" class="form-control" 
-                               placeholder="Masukkan NISN"
-                               value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>">
+                        <div class="verify-input-wrapper">
+                            <input type="text" name="nisn" class="form-control verify-input" 
+                                   id="nisnInput"
+                                   placeholder="Masukkan 10-digit NISN" required
+                                   maxlength="10"
+                                   inputmode="numeric"
+                                   pattern="[0-9]{10}"
+                                   title="NISN harus terdiri dari tepat 10 digit angka"
+                                   value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>">
+                            <button type="button" class="verify-btn" id="nisnVerifyBtn" onclick="verifyNISN()" disabled>
+                                <i class="fas fa-shield-alt"></i> Verifikasi
+                            </button>
+                        </div>
+                        <input type="hidden" name="nisn_verified" id="nisnVerified" value="0">
+                        <div class="verify-feedback" id="nisnFeedback"></div>
                     </div>
                 </div>
             </div>
@@ -879,22 +902,105 @@ if (isset($_GET['id'])) {
     font-weight: bold;
 }
 
-.nik-feedback {
-    margin-top: 5px;
-    font-size: 12px;
-    color: var(--gray);
+.verify-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
 }
 
-.nik-feedback.warning {
+.verify-input-wrapper .verify-input {
+    flex: 1;
+}
+
+.verify-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--primary) 0%, #1a365d 100%);
+    color: white;
+    box-shadow: 0 3px 10px rgba(10, 36, 99, 0.2);
+}
+
+.verify-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.3);
+}
+
+.verify-btn:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.verify-btn.loading {
+    background: linear-gradient(135deg, #6C757D 0%, #495057 100%);
+    pointer-events: none;
+}
+
+.verify-btn.verified {
+    background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+}
+
+.verify-feedback {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--gray);
+    min-height: 18px;
+}
+
+.verify-feedback.warning {
     color: var(--warning);
 }
 
-.nik-feedback.error {
+.verify-feedback.error {
     color: var(--danger);
+    font-weight: 600;
 }
 
-.nik-feedback.success {
+.verify-feedback.success {
     color: var(--success);
+    font-weight: 600;
+}
+
+.verify-details {
+    margin-top: 10px;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+    border-radius: 10px;
+    border-left: 4px solid var(--success);
+    font-size: 13px;
+    line-height: 1.6;
+    animation: slideDown 0.3s ease-out;
+}
+
+.verify-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+}
+
+.verify-details .detail-label {
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.verify-details .detail-value {
+    color: var(--dark);
+    font-weight: 600;
+}
+
+@keyframes verifyPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 @keyframes slideDown {
@@ -969,25 +1075,17 @@ if (isset($_GET['id'])) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // File upload functionality
+    // ============================================================
+    // FILE UPLOAD FUNCTIONALITY
+    // ============================================================
     function setupFileUpload(uploadElement, fileInput, previewElement) {
         const uploadArea = uploadElement;
         const fileInputField = fileInput;
         const previewContainer = previewElement;
 
-        uploadArea.addEventListener('click', () => {
-            fileInputField.click();
-        });
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
+        uploadArea.addEventListener('click', () => fileInputField.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
@@ -996,25 +1094,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 handleFileSelect(e.dataTransfer.files[0], previewContainer);
             }
         });
-
         fileInputField.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleFileSelect(e.target.files[0], previewContainer);
-            }
+            if (e.target.files.length) handleFileSelect(e.target.files[0], previewContainer);
         });
     }
 
     function handleFileSelect(file, previewContainer) {
-        if (!file.type.startsWith('image/')) {
-            alert('Please select an image file!');
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) { // 5MB
-            alert('File size too large! Maximum 5MB allowed.');
-            return;
-        }
-
+        if (!file.type.startsWith('image/')) { alert('Harap pilih file gambar!'); return; }
+        if (file.size > 5 * 1024 * 1024) { alert('Ukuran file terlalu besar! Maksimal 5MB.'); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             previewContainer.innerHTML = `
@@ -1024,110 +1111,238 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div><strong>${file.name}</strong></div>
                         <div style="font-size: 12px; color: var(--gray);">${formatFileSize(file.size)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
         };
         reader.readAsDataURL(file);
     }
 
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     // Initialize file uploads
-    const uploads = [
-        ['photoUpload', 'photoFile', 'photoPreview'],
-        ['ktp_imageUpload', 'ktp_imageFile', 'ktp_imagePreview'],
-        ['kk_imageUpload', 'kk_imageFile', 'kk_imagePreview'],
-        ['birth_cert_imageUpload', 'birth_cert_imageFile', 'birth_cert_imagePreview'],
-        ['diploma_imageUpload', 'diploma_imageFile', 'diploma_imagePreview']
-    ];
-    
-    uploads.forEach(([uploadId, fileId, previewId]) => {
-        const uploadEl = document.getElementById(uploadId);
-        const fileEl = document.getElementById(fileId);
-        const previewEl = document.getElementById(previewId);
-        
-        if (uploadEl && fileEl && previewEl) {
-            setupFileUpload(uploadEl, fileEl, previewEl);
-        }
+    [['photoUpload','photoFile','photoPreview'],['ktp_imageUpload','ktp_imageFile','ktp_imagePreview'],
+     ['kk_imageUpload','kk_imageFile','kk_imagePreview'],['birth_cert_imageUpload','birth_cert_imageFile','birth_cert_imagePreview'],
+     ['diploma_imageUpload','diploma_imageFile','diploma_imagePreview']
+    ].forEach(([u,f,p]) => {
+        const ue=document.getElementById(u), fe=document.getElementById(f), pe=document.getElementById(p);
+        if(ue&&fe&&pe) setupFileUpload(ue,fe,pe);
     });
 
-    // NIK validation
+    // ============================================================
+    // NIK INPUT & VERIFICATION
+    // ============================================================
     const nikInput = document.getElementById('nikInput');
     const nikFeedback = document.getElementById('nikFeedback');
-
-    function validateNIK(value) {
-        if (!nikInput || !nikFeedback) {
-            return;
-        }
-
-        const numericValue = value.replace(/[^0-9]/g, '');
-        nikInput.value = numericValue.slice(0, 16);
-
-        const length = numericValue.length;
-
-        if (length === 0) {
-            nikFeedback.textContent = 'NIK harus diisi - 16 digit angka';
-            nikFeedback.className = 'nik-feedback warning';
-            nikInput.style.borderColor = '#e1e5eb';
-        } else if (length < 16) {
-            nikFeedback.textContent = `Kurang ${16 - length} digit (${length}/16)`;
-            nikFeedback.className = 'nik-feedback warning';
-            nikInput.style.borderColor = 'var(--warning)';
-        } else if (length > 16) {
-            nikFeedback.textContent = 'Terlalu panjang! Maksimal 16 digit';
-            nikFeedback.className = 'nik-feedback error';
-            nikInput.style.borderColor = 'var(--danger)';
-        } else {
-            const isValid = /^[0-9]{16}$/.test(numericValue);
-            if (isValid) {
-                nikFeedback.textContent = '✓ 16 digit valid';
-                nikFeedback.className = 'nik-feedback success';
-                nikInput.style.borderColor = 'var(--success)';
-            } else {
-                nikFeedback.textContent = 'Hanya boleh angka 0-9';
-                nikFeedback.className = 'nik-feedback error';
-                nikInput.style.borderColor = 'var(--danger)';
-            }
-        }
-
-        if (numericValue.length > 16) {
-            nikInput.value = numericValue.substring(0, 16);
-        }
-    }
-
-    window.validateNIK = validateNIK;
+    const nikVerifyBtn = document.getElementById('nikVerifyBtn');
+    const nikVerified = document.getElementById('nikVerified');
+    const nikDetails = document.getElementById('nikDetails');
+    const playerId = <?php echo (int)$player_id; ?>;
 
     if (nikInput) {
         nikInput.addEventListener('input', function(e) {
-            validateNIK(e.target.value);
+            const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 16);
+            nikInput.value = numericValue;
+            // Reset verification when value changes
+            nikVerified.value = '0';
+            nikDetails.style.display = 'none';
+            nikVerifyBtn.classList.remove('verified');
+            nikInput.style.borderColor = '#e1e5eb';
+
+            if (numericValue.length === 16) {
+                nikFeedback.textContent = '16 digit — Klik "Verifikasi" untuk memvalidasi';
+                nikFeedback.className = 'verify-feedback warning';
+                nikVerifyBtn.disabled = false;
+                nikInput.style.borderColor = 'var(--warning)';
+            } else if (numericValue.length > 0) {
+                nikFeedback.textContent = `Kurang ${16 - numericValue.length} digit (${numericValue.length}/16)`;
+                nikFeedback.className = 'verify-feedback warning';
+                nikVerifyBtn.disabled = true;
+            } else {
+                nikFeedback.textContent = 'NIK harus diisi — 16 digit angka';
+                nikFeedback.className = 'verify-feedback';
+                nikVerifyBtn.disabled = true;
+            }
         });
 
         nikInput.addEventListener('keypress', function(e) {
-            const char = String.fromCharCode(e.which || e.keyCode);
-            if (!/[0-9]/.test(char)) {
-                e.preventDefault();
-            }
+            if (!/[0-9]/.test(String.fromCharCode(e.which || e.keyCode))) e.preventDefault();
         });
-
         nikInput.addEventListener('paste', function(e) {
-            const pasted = (e.clipboardData || window.clipboardData).getData('text');
-            if (!/^[0-9]+$/.test(pasted)) {
-                e.preventDefault();
-            }
+            if (!/^[0-9]+$/.test((e.clipboardData || window.clipboardData).getData('text'))) e.preventDefault();
         });
 
-        if (nikInput.value) {
-            validateNIK(nikInput.value);
+        // Auto-trigger on page load for edit mode
+        if (nikInput.value && nikInput.value.length === 16) {
+            nikFeedback.textContent = '16 digit — Klik "Verifikasi" untuk memvalidasi';
+            nikFeedback.className = 'verify-feedback warning';
+            nikVerifyBtn.disabled = false;
         }
     }
 
-    // Form validation
+    // NIK Verify via AJAX
+    window.verifyNIK = function() {
+        const value = nikInput.value.trim();
+        if (value.length !== 16) return;
+
+        nikVerifyBtn.disabled = true;
+        nikVerifyBtn.classList.add('loading');
+        nikVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+        nikFeedback.textContent = 'Sedang memverifikasi NIK...';
+        nikFeedback.className = 'verify-feedback';
+        nikFeedback.style.animation = 'verifyPulse 1s infinite';
+
+        const formData = new FormData();
+        formData.append('type', 'nik');
+        formData.append('value', value);
+        if (playerId > 0) formData.append('exclude_player_id', playerId);
+
+        fetch('../api/verify_identity.php', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                nikFeedback.style.animation = '';
+                if (data.verified) {
+                    nikVerified.value = '1';
+                    nikFeedback.textContent = '✓ ' + data.message;
+                    nikFeedback.className = 'verify-feedback success';
+                    nikInput.style.borderColor = 'var(--success)';
+                    nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                    nikVerifyBtn.classList.remove('loading');
+                    nikVerifyBtn.classList.add('verified');
+
+                    // Show details
+                    if (data.details) {
+                        let html = '<strong>📋 Data NIK:</strong><br>';
+                        if (data.details.provinsi) html += `<div class="detail-row"><span class="detail-label">Provinsi</span><span class="detail-value">${data.details.provinsi}</span></div>`;
+                        if (data.details.tanggal_lahir) html += `<div class="detail-row"><span class="detail-label">Tgl Lahir</span><span class="detail-value">${data.details.tanggal_lahir}</span></div>`;
+                        if (data.details.jenis_kelamin) html += `<div class="detail-row"><span class="detail-label">Jenis Kelamin</span><span class="detail-value">${data.details.jenis_kelamin}</span></div>`;
+                        nikDetails.innerHTML = html;
+                        nikDetails.style.display = 'block';
+                    }
+                } else {
+                    nikVerified.value = '0';
+                    nikFeedback.textContent = '✗ ' + data.message;
+                    nikFeedback.className = 'verify-feedback error';
+                    nikInput.style.borderColor = 'var(--danger)';
+                    nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nikVerifyBtn.classList.remove('loading');
+                    nikVerifyBtn.disabled = false;
+                    nikDetails.style.display = 'none';
+                }
+            })
+            .catch(err => {
+                nikFeedback.style.animation = '';
+                nikFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
+                nikFeedback.className = 'verify-feedback error';
+                nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                nikVerifyBtn.classList.remove('loading');
+                nikVerifyBtn.disabled = false;
+            });
+    };
+
+    // ============================================================
+    // NISN INPUT & VERIFICATION
+    // ============================================================
+    const nisnInput = document.getElementById('nisnInput');
+    const nisnFeedback = document.getElementById('nisnFeedback');
+    const nisnVerifyBtn = document.getElementById('nisnVerifyBtn');
+    const nisnVerified = document.getElementById('nisnVerified');
+
+    if (nisnInput) {
+        nisnInput.addEventListener('input', function(e) {
+            const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+            nisnInput.value = numericValue;
+            // Reset verification
+            nisnVerified.value = '0';
+            nisnVerifyBtn.classList.remove('verified');
+            nisnInput.style.borderColor = '#e1e5eb';
+
+            if (numericValue.length === 10) {
+                nisnFeedback.textContent = '10 digit — Klik "Verifikasi" untuk memvalidasi';
+                nisnFeedback.className = 'verify-feedback warning';
+                nisnVerifyBtn.disabled = false;
+                nisnInput.style.borderColor = 'var(--warning)';
+            } else if (numericValue.length > 0) {
+                nisnFeedback.textContent = `Kurang ${10 - numericValue.length} digit (${numericValue.length}/10)`;
+                nisnFeedback.className = 'verify-feedback warning';
+                nisnVerifyBtn.disabled = true;
+            } else {
+                nisnFeedback.textContent = 'NISN harus diisi — 10 digit angka';
+                nisnFeedback.className = 'verify-feedback';
+                nisnVerifyBtn.disabled = true;
+            }
+        });
+
+        nisnInput.addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(String.fromCharCode(e.which || e.keyCode))) e.preventDefault();
+        });
+        nisnInput.addEventListener('paste', function(e) {
+            if (!/^[0-9]+$/.test((e.clipboardData || window.clipboardData).getData('text'))) e.preventDefault();
+        });
+
+        // Auto-trigger on page load for edit mode
+        if (nisnInput.value && nisnInput.value.length === 10) {
+            nisnFeedback.textContent = '10 digit — Klik "Verifikasi" untuk memvalidasi';
+            nisnFeedback.className = 'verify-feedback warning';
+            nisnVerifyBtn.disabled = false;
+        }
+    }
+
+    // NISN Verify via AJAX
+    window.verifyNISN = function() {
+        const value = nisnInput.value.trim();
+        if (value.length !== 10) return;
+
+        nisnVerifyBtn.disabled = true;
+        nisnVerifyBtn.classList.add('loading');
+        nisnVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+        nisnFeedback.textContent = 'Sedang memverifikasi NISN...';
+        nisnFeedback.className = 'verify-feedback';
+        nisnFeedback.style.animation = 'verifyPulse 1s infinite';
+
+        const formData = new FormData();
+        formData.append('type', 'nisn');
+        formData.append('value', value);
+        if (playerId > 0) formData.append('exclude_player_id', playerId);
+
+        fetch('../api/verify_identity.php', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                nisnFeedback.style.animation = '';
+                if (data.verified) {
+                    nisnVerified.value = '1';
+                    nisnFeedback.textContent = '✓ ' + data.message;
+                    nisnFeedback.className = 'verify-feedback success';
+                    nisnInput.style.borderColor = 'var(--success)';
+                    nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                    nisnVerifyBtn.classList.remove('loading');
+                    nisnVerifyBtn.classList.add('verified');
+                } else {
+                    nisnVerified.value = '0';
+                    nisnFeedback.textContent = '✗ ' + data.message;
+                    nisnFeedback.className = 'verify-feedback error';
+                    nisnInput.style.borderColor = 'var(--danger)';
+                    nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nisnVerifyBtn.classList.remove('loading');
+                    nisnVerifyBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                nisnFeedback.style.animation = '';
+                nisnFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
+                nisnFeedback.className = 'verify-feedback error';
+                nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                nisnVerifyBtn.classList.remove('loading');
+                nisnVerifyBtn.disabled = false;
+            });
+    };
+
+    // ============================================================
+    // FORM VALIDATION (SUBMIT HANDLER)
+    // ============================================================
     const playerForm = document.getElementById('playerForm');
     if (playerForm) {
         playerForm.addEventListener('submit', function(e) {
@@ -1139,17 +1354,40 @@ document.addEventListener('DOMContentLoaded', function() {
             const birthPlace = document.querySelector('input[name="birth_place"]').value.trim();
             const gender = document.querySelector('input[name="gender"]:checked');
             const nik = document.querySelector('input[name="nik"]').value.trim();
+            const nisn = document.querySelector('input[name="nisn"]').value.trim();
 
-            if (!name || !jerseyNumber || !position || !sportType || !birthDate || !birthPlace || !gender || !nik) {
+            if (!name || !jerseyNumber || !position || !sportType || !birthDate || !birthPlace || !gender || !nik || !nisn) {
                 e.preventDefault();
-                alert('Please fill all required fields!');
+                alert('Harap lengkapi semua field yang wajib diisi!');
                 return false;
             }
 
-            // Validate NIK (16 digits)
+            // Validate NIK format
             if (!/^[0-9]{16}$/.test(nik)) {
                 e.preventDefault();
-                alert('NIK must be exactly 16 digits!');
+                alert('NIK harus terdiri dari tepat 16 digit angka!');
+                return false;
+            }
+
+            // Validate NISN format
+            if (!/^[0-9]{10}$/.test(nisn)) {
+                e.preventDefault();
+                alert('NISN harus terdiri dari tepat 10 digit angka!');
+                return false;
+            }
+
+            // CHECK VERIFICATION STATUS
+            if (nikVerified.value !== '1') {
+                e.preventDefault();
+                alert('❌ NIK belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
+                nikInput.focus();
+                return false;
+            }
+
+            if (nisnVerified.value !== '1') {
+                e.preventDefault();
+                alert('❌ NISN belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
+                nisnInput.focus();
                 return false;
             }
 
@@ -1169,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
             if (birth > today) {
                 e.preventDefault();
-                alert('Birth date cannot be in the future!');
+                alert('Tanggal lahir tidak boleh di masa depan!');
                 return false;
             }
         });
