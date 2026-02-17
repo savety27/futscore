@@ -337,17 +337,20 @@ try {
     <style>
         /* CSS styles for sidebar and layout */
         :root {
-            --primary: #0A2463;
-            --secondary: #FFD700;
-            --accent: #4CC9F0;
-            --success: #2E7D32;
-            --warning: #F9A826;
-            --danger: #D32F2F;
+            --primary: #0f2744;
+            --secondary: #f59e0b;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
             --light: #F8F9FA;
-            --dark: #1A1A2E;
-            --gray: #6C757D;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --dark: #1e293b;
+            --gray: #64748b;
+            --sidebar-bg: rgba(15, 39, 68, 0.95);
+            --glass-white: rgba(255, 255, 255, 0.85);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+            --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
         }
 
         * {
@@ -357,8 +360,8 @@ try {
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
             color: var(--dark);
             min-height: 100vh;
             overflow-x: hidden;
@@ -372,15 +375,18 @@ try {
         /* ===== SIDEBAR ===== */
         .sidebar {
             width: 280px;
-            background: linear-gradient(180deg, var(--primary) 0%, #1a365d 100%);
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(15px) saturate(160%);
+            -webkit-backdrop-filter: blur(15px) saturate(160%);
             color: white;
             padding: 0;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
             z-index: 100;
-            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
             transition: var(--transition);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .sidebar-header {
@@ -416,10 +422,10 @@ try {
             box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
         }
 
-        .logo::before {
-            content: "⚽";
-            font-size: 48px;
-            color: var(--primary);
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .academy-info {
@@ -1295,7 +1301,9 @@ try {
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
-                <div class="logo"></div>
+                <div class="logo">
+                    <img src="../../images/alvetrix.png" alt="Logo">
+                </div>
             </div>
             <div class="academy-info">
                 <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
