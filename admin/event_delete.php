@@ -48,8 +48,6 @@ try {
     if ($stmt->rowCount() > 0) {
         $conn->commit();
 
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-
         if (!empty($event['image'])) {
             $image_path = __DIR__ . '/../images/events/' . $event['image'];
             if (file_exists($image_path)) {
@@ -57,7 +55,7 @@ try {
             }
         }
 
-        echo json_encode(['success' => true, 'message' => 'Event berhasil dihapus permanen', 'csrf_token' => $_SESSION['csrf_token']]);
+        echo json_encode(['success' => true, 'message' => 'Event berhasil dihapus permanen']);
     } else {
         $conn->rollBack();
         echo json_encode(['success' => false, 'message' => 'Event tidak ditemukan']);
