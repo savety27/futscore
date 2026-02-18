@@ -7,6 +7,12 @@
         "phpunit/phpunit": "^11.5"
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit -c phpunit.xml",
+        "test:unit": "phpunit -c phpunit.xml",
+        "db:test:reset": "php tests/scripts/reset_test_db.php",
+        "test:integration": [
+            "@db:test:reset",
+            "phpunit -c phpunit.integration.xml"
+        ]
     }
 }
