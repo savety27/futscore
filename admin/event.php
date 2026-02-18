@@ -17,6 +17,11 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
 function ensure_events_active_column(PDO $conn) {
     try {
         $check = $conn->query("SHOW COLUMNS FROM events LIKE 'is_active'");
@@ -70,6 +75,17 @@ if (!in_array($filter_active, ['', '1', '0'], true)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'])) {
+    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $_SESSION['error_message'] = 'Invalid security token. Please try again.';
+        $redirect_query = [];
+        if ($search !== '') $redirect_query['search'] = $search;
+        if ($filter_registration !== '') $redirect_query['registration'] = $filter_registration;
+        if ($filter_active !== '') $redirect_query['active'] = $filter_active;
+        if (!empty($_GET['page'])) $redirect_query['page'] = (int) $_GET['page'];
+        header("Location: event.php" . ($redirect_query ? ('?' . http_build_query($redirect_query)) : ''));
+        exit;
+    }
+
     $event_id = (int) $_POST['id'];
     $action = trim($_POST['action']);
 
@@ -546,6 +562,7 @@ body {
                                 <form method="POST" action="?<?php echo http_build_query(['search' => $search, 'registration' => $filter_registration, 'active' => $filter_active, 'page' => $page]); ?>">
                                     <input type="hidden" name="id" value="<?php echo (int) $event['id']; ?>">
                                     <input type="hidden" name="action" value="toggle_registration">
+                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                     <button type="submit" class="action-btn btn-registration" title="Toggle Open/Closed"><i class="fas fa-toggle-on"></i></button>
                                 </form>
                                 <button
@@ -605,6 +622,7 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let CSRF_TOKEN = <?php echo json_encode($csrf_token); ?>;
 let currentEventId = null;
 
 (function () {
@@ -639,13 +657,21 @@ let currentEventId = null;
 })();
 
 function deleteEvent(eventId) {
-    fetch('event_delete.php?id=' + encodeURIComponent(eventId), {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+    const formData = new URLSearchParams();
+    formData.append('id', eventId);
+    formData.append('csrf_token', CSRF_TOKEN);
+
+    fetch('event_delete.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
     })
     .then(function (response) { return response.json(); })
     .then(function (data) {
         if (data.success) {
+            if (data.csrf_token) {
+                CSRF_TOKEN = data.csrf_token;
+            }
             closeModal();
             toastr.success('Event berhasil dihapus!');
             setTimeout(function () { window.location.reload(); }, 900);

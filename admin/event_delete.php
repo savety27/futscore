@@ -10,13 +10,25 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
-if (!isset($_GET['id']) || empty($_GET['id'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+    exit;
+}
+
+if (!isset($_POST['id']) || empty($_POST['id'])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid request']);
     exit;
 }
 
-$event_id = (int) $_GET['id'];
+$event_id = (int) $_POST['id'];
 if ($event_id <= 0) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid event ID']);
@@ -36,6 +48,8 @@ try {
     if ($stmt->rowCount() > 0) {
         $conn->commit();
 
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
         if (!empty($event['image'])) {
             $image_path = __DIR__ . '/../images/events/' . $event['image'];
             if (file_exists($image_path)) {
@@ -43,7 +57,7 @@ try {
             }
         }
 
-        echo json_encode(['success' => true, 'message' => 'Event berhasil dihapus permanen']);
+        echo json_encode(['success' => true, 'message' => 'Event berhasil dihapus permanen', 'csrf_token' => $_SESSION['csrf_token']]);
     } else {
         $conn->rollBack();
         echo json_encode(['success' => false, 'message' => 'Event tidak ditemukan']);
