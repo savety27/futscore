@@ -1,0 +1,11 @@
+{
+    "name": "futscore/futscore",
+    "description": "FutScore test setup",
+    "type": "project",
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
