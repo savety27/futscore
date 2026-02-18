@@ -569,7 +569,8 @@ body {
                                     type="button"
                                     class="action-btn btn-delete"
                                     title="Hapus"
-                                    onclick="showDeleteModal(<?php echo (int) $event['id']; ?>, '<?php echo htmlspecialchars(addslashes($event['name'] ?? '-')); ?>')"
+                                    data-event-id="<?php echo (int) $event['id']; ?>"
+                                    data-event-name="<?php echo htmlspecialchars($event['name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
                                 ><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -608,7 +609,7 @@ body {
             <h3>Konfirmasi Hapus Event</h3>
         </div>
         <div class="modal-body">
-            <p id="deleteMessage">Apakah Anda yakin ingin menghapus event ini?</p>
+            <p>Apakah Anda yakin ingin menghapus event <strong>"<span id="deleteEventName"></span>"</strong>?</p>
             <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
                 <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
             </p>
@@ -627,15 +628,19 @@ let currentEventId = null;
 
 (function () {
     const modal = document.getElementById('deleteModal');
-    const deleteMessage = document.getElementById('deleteMessage');
+    const deleteEventName = document.getElementById('deleteEventName');
     const cancelBtn = document.getElementById('cancelDeleteBtn');
     const confirmBtn = document.getElementById('confirmDeleteBtn');
 
-    window.showDeleteModal = function (eventId, eventName) {
-        currentEventId = eventId || null;
-        deleteMessage.innerHTML = 'Apakah Anda yakin ingin menghapus event <strong>"' + eventName + '"</strong>?';
-        modal.style.display = 'flex';
-    };
+    document.querySelectorAll('.btn-delete[data-event-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const eventId = this.getAttribute('data-event-id');
+            const eventName = this.getAttribute('data-event-name');
+            currentEventId = eventId || null;
+            deleteEventName.textContent = eventName || '-';
+            modal.style.display = 'flex';
+        });
+    });
 
     window.closeModal = function () {
         modal.style.display = 'none';

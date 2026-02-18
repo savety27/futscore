@@ -1390,7 +1390,7 @@ body {
             <h3>Konfirmasi Hapus Player</h3>
         </div>
         <div class="modal-body">
-            <p id="deleteMessage">Apakah Anda yakin ingin menghapus player ini?</p>
+            <p>Apakah Anda yakin ingin menghapus player <strong>"<span id="deletePlayerName"></span>"</strong>?</p>
             <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
                 <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
             </p>
@@ -1685,7 +1685,8 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="showDeleteModal(<?php echo $player['id']; ?>, '<?php echo htmlspecialchars(addslashes($player['name'] ?? '')); ?>')"
+                                            data-player-id="<?php echo (int) $player['id']; ?>"
+                                            data-player-name="<?php echo htmlspecialchars($player['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                             title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -1769,7 +1770,6 @@ body {
 <script>
 let currentPlayerId = null;
 
-// Fungsi untuk menampilkan default photo jika image error
 function showDefaultPhoto(imgElement) {
     imgElement.style.display = 'none';
     let defaultPhoto = imgElement.nextElementSibling;
@@ -1778,15 +1778,28 @@ function showDefaultPhoto(imgElement) {
     }
 }
 
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile Menu Toggle Functionality
+    const deletePlayerName = document.getElementById('deletePlayerName');
+    const modal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-player-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentPlayerId = this.getAttribute('data-player-id');
+            if (deletePlayerName) {
+                deletePlayerName.textContent = this.getAttribute('data-player-name') || '-';
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    });
+
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.menu-overlay');
 
     if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
         menuToggle.addEventListener('click', function() {
             sidebar.classList.toggle('active');
             document.body.classList.toggle('menu-open');
@@ -1834,8 +1847,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Delete button functionality
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', function() {
             if (currentPlayerId) {
@@ -1844,19 +1855,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-function showDeleteModal(playerId, playerName) {
-    currentPlayerId = playerId;
-    const deleteMessage = document.getElementById('deleteMessage');
-    if (deleteMessage) {
-        deleteMessage.innerHTML = 
-            `Apakah Anda yakin ingin menghapus player <strong>"${playerName}"</strong>?`;
-    }
-    const modal = document.getElementById('deleteModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
-}
 
 function closeModal() {
     const modal = document.getElementById('deleteModal');
