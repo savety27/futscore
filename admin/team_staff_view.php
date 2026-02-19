@@ -178,10 +178,13 @@ body {
 }
 
 .sidebar-header {
-    padding: 30px 25px;
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-bottom: 10px;
     text-align: center;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 2px solid var(--secondary);
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 10px;
 }
 
 .logo-container {
@@ -190,30 +193,32 @@ body {
 }
 
 .logo {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--secondary) 0%, #FFEC8B 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    border: 4px solid white;
-    box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+    max-width: 200px;
+    background: transparent;
+    margin: 0 auto 12px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     transition: var(--transition);
 }
 
 .logo:hover {
-    transform: rotate(15deg) scale(1.05);
-    box-shadow: 0 0 35px rgba(255, 215, 0, 0.5);
+    transform: none;
+    box-shadow: none;
 }
 
 .logo img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    max-width: 200px;
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1));
+    transition: transform var(--transition), filter var(--transition);
+}
+
+.logo img:hover {
+    transform: scale(1.05);
 }
 
 .academy-info {
@@ -979,16 +984,12 @@ tbody tr:hover {
     }
 
     .sidebar-header {
-        padding: 20px 15px;
+        padding: 20px 18px 26px;
     }
 
-    .logo {
-        width: 80px;
-        height: 80px;
-    }
-
-    .logo::before {
-        font-size: 36px;
+    .logo,
+    .logo img {
+        max-width: 120px;
     }
 
     .academy-name {
