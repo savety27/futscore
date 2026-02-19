@@ -816,7 +816,7 @@ body {
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
+                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?>! 👋</h1>
                 <p>Dashboard admin - Sistem manajemen pertandingan futsal</p>
             </div>
             

@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Daftar Staf Tim';
+$page_title = 'Daftar Staf Team';
 $current_page = 'team_staff';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -118,7 +118,7 @@ try {
     <?php endif; ?>
     
     <div class="section-header">
-        <h2 class="section-title">Staf Tim</h2>
+        <h2 class="section-title">Staf Team</h2>
         <a href="staff_form.php" class="btn-add">
             <i class="fas fa-plus"></i> Tambah Staf Baru
         </a>
@@ -140,7 +140,7 @@ try {
                     <tr>
                         <th class="photo-cell">Foto</th>
                         <th>Nama</th>
-                        <th>Tim</th>
+                        <th>Team</th>
                         <th style="text-align: center;">Jabatan</th>
                         <th style="text-align: center;">Umur</th>
                         <th style="text-align: center;">Sertifikat</th>
