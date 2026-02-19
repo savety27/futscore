@@ -65,6 +65,63 @@
     gap: 18px;
 }
 
+.header-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy-dark);
+    border: none;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(10, 22, 40, 0.38);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.btn-secondary:hover {
+    background: rgba(10, 22, 40, 0.52);
+}
+
+/* Keep header secondary button color identical to EVENTS.PHP */
+.dashboard-header .btn-secondary {
+    background: rgba(10, 22, 40, 0.38);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+}
+
+.dashboard-header .btn-secondary:hover {
+    background: rgba(10, 22, 40, 0.52);
+}
+
 .header-eyebrow {
     font-size: 11px;
     letter-spacing: 2px;
@@ -80,6 +137,12 @@
     max-width: 560px;
     line-height: 1.6;
     text-shadow: 0 3px 14px rgba(10, 22, 40, 0.5);
+}
+
+@media (min-width: 993px) {
+    .header-actions {
+        flex-direction: row;
+    }
 }
 
 /* Dashboard Body */
