@@ -46,8 +46,14 @@ $menu_items = [
     'event' => [
         'icon' => '🏆',
         'name' => 'Event',
-        'url' => 'challenge.php',  // Langsung ke challenge.php
-        'submenu' => false         // Tidak ada submenu
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
+        'url' => 'challenge.php',
+        'submenu' => false
     ],
     'Venue' => [
         'icon' => '📍',
@@ -1208,9 +1214,9 @@ body {
                         }
                     }
                 } else {
-                    // Untuk menu Event, aktif jika di challenge_edit.php, challenge.php, atau challenge_create.php
-                    if ($key === 'event') {
-                        $isActive = in_array($current_page, ['challenge_edit.php', 'challenge.php', 'challenge_create.php']);
+                    // Untuk menu Challenge, aktif jika di halaman challenge
+                    if ($key === 'challenge') {
+                        $isActive = in_array($current_page, ['challenge_edit.php', 'challenge.php', 'challenge_create.php', 'challenge_view.php', 'challenge_result.php']);
                     } else {
                         $isActive = ($current_page === $item['url']);
                     }

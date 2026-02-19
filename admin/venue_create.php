@@ -41,9 +41,15 @@ $menu_items = [
             // HAPUS 'venue' DARI SINI
         ]
     ],
-    'Event' => [
+    'event' => [
         'icon' => '🏆',
         'name' => 'Event',
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
         'url' => 'challenge.php',
         'submenu' => false
     ],
@@ -1018,7 +1024,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Tambah Venue 🏟️</h1>
+                <h1>Tambah Venue Baru 🏟️</h1>
                 <p>Tambahkan data venue baru ke sistem</p>
             </div>
             

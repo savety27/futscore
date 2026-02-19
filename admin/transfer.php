@@ -36,9 +36,15 @@ $menu_items = [
             'transfer' => 'transfer.php'
         ]
     ],
-    'Event' => [
+    'event' => [
         'icon' => '🏆',
         'name' => 'Event',
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
         'url' => 'challenge.php',
         'submenu' => false
     ],
@@ -599,6 +605,8 @@ body {
     cursor: pointer;
     font-size: 14px;
     border-bottom: 1px solid #f1f4f8;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .search-item:last-child {
@@ -607,7 +615,8 @@ body {
 
 .search-item:hover,
 .search-item.active {
-    background: rgba(10, 36, 99, 0.08);
+    background: #eef5ff;
+    box-shadow: inset 0 0 0 1px rgba(76, 138, 255, 0.35);
 }
 
 .search-item-title {
@@ -692,6 +701,15 @@ body {
     border-radius: 16px;
     background: #f8f9fa;
     border: 1px solid #eef1f5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.transfer-item:hover {
+    background: #eef5ff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
 }
 
 .transfer-item-title {

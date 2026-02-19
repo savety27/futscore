@@ -41,7 +41,8 @@ $pageTitle = "Home";
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>" class="active"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="event.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
@@ -88,6 +89,7 @@ $pageTitle = "Home";
                 <div class="header-actions">
                     <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Lihat Event</a>
                     <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
+                    <a href="player.php" class="btn-primary"><i class="fas fa-running"></i> Lihat Player</a>
                 </div>
             </div>
         </header>

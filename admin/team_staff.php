@@ -38,9 +38,15 @@ $menu_items = [
             'transfer' => 'transfer.php',
         ]
     ],
-    'Event' => [
+    'event' => [
         'icon' => '🏆',
         'name' => 'Event',
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
         'url' => 'challenge.php',
         'submenu' => false
     ],
@@ -692,11 +698,20 @@ body {
 
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .data-table tbody tr:hover {
-    background: #f8f9fa;
+    background: #eef5ff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+/* Prevent first row hover from overlapping the yellow header border */
+.data-table tbody tr:first-child:hover {
+    transform: translateY(0);
 }
 
 .data-table td {
@@ -1198,14 +1213,81 @@ body {
         font-size: 14px;
     }
 
-    /* Stack action buttons vertically */
-    .action-buttons {
+    /* Stack header action buttons vertically */
+    .page-header .action-buttons {
         flex-direction: column;
     }
 
-    .btn {
+    .page-header .btn {
         width: 100%;
     }
+
+    /* Keep table action buttons horizontal */
+    .action-cell .action-buttons {
+        flex-direction: row;
+        width: auto;
+        flex-wrap: nowrap;
+    }
+
+    .action-cell .action-btn {
+        flex: 0 0 auto;
+    }
+}
+
+/* Delete Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--danger);
+}
+
+.modal-header i {
+    font-size: 24px;
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #B71C1C);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
 }
 
 @keyframes slideDown {
@@ -1228,6 +1310,26 @@ body {
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Staff</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus staff <strong>"<span id="deleteStaffName"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <!-- SIDEBAR -->
@@ -1374,10 +1476,10 @@ body {
                         <th>Team</th>
                         <th>Jabatan</th>
                         <th>Usia</th>
-                        <th class="certificate-cell">Cert</th>
+                        <th class="certificate-cell">Lisensi</th>
                         <th>Status</th>
-                        <th>Created At</th>
-                        <th width="120">Action</th>
+                        <th>Tanggal Dibuat</th>
+                        <th width="120">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1470,7 +1572,9 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteStaff(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'] ?? '')); ?>')">
+                                            data-staff-id="<?php echo (int) $staff['id']; ?>"
+                                            data-staff-name="<?php echo htmlspecialchars($staff['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1553,8 +1657,25 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let currentStaffId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const deleteStaffName = document.getElementById('deleteStaffName');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-staff-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentStaffId = this.getAttribute('data-staff-id');
+            if (deleteStaffName) {
+                deleteStaffName.textContent = this.getAttribute('data-staff-name') || '-';
+            }
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
+            }
+        });
+    });
+
     // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
@@ -1601,32 +1722,58 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-});
 
-function deleteStaff(staffId, staffName) {
-    if (confirm(`Apakah Anda yakin ingin menghapus staff "${staffName}"?`)) {
-        fetch(`team_staff_delete.php?id=${staffId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentStaffId) {
+                deleteStaff(currentStaffId);
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                toastr.success('Staff berhasil dihapus!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                toastr.error('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            toastr.error('Terjadi kesalahan saat menghapus staff.');
         });
     }
+});
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+    currentStaffId = null;
+}
+
+const deleteModalElement = document.getElementById('deleteModal');
+if (deleteModalElement) {
+    deleteModalElement.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+}
+
+function deleteStaff(staffId) {
+    fetch(`team_staff_delete.php?id=${staffId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeDeleteModal();
+            toastr.success('Staff berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            toastr.error('Error: ' + data.message);
+            closeDeleteModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toastr.error('Terjadi kesalahan saat menghapus staff.');
+        closeDeleteModal();
+    });
 }
 
 function exportStaff() {

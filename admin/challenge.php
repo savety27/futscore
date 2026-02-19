@@ -41,8 +41,14 @@ $menu_items = [
     'event' => [
         'icon' => '🏆',
         'name' => 'Event',
-        'url' => 'challenge.php',  // Langsung ke challenge.php
-        'submenu' => false         // Tidak ada submenu
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
+        'url' => 'challenge.php',
+        'submenu' => false
     ],
     'Venue' => [
         'icon' => '📍',
@@ -579,11 +585,20 @@ body {
 
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .data-table tbody tr:hover {
-    background: #f8f9fa;
+    background: #eef5ff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+/* Prevent first row hover from overlapping the yellow header border */
+.data-table tbody tr:first-child:hover {
+    transform: translateY(0);
 }
 
 .data-table td {
@@ -642,6 +657,56 @@ body {
     border: 2px solid #e0e0e0;
     vertical-align: middle;
     margin-right: 8px;
+}
+
+.challenger-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.challenger-stack .team-logo-small {
+    margin-right: 0;
+}
+
+.challenger-name {
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    max-width: 90px;
+    word-break: break-word;
+}
+
+.team-logo-fallback {
+    background: #f0f0f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 92px;
+    min-height: 34px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    line-height: 1.15;
+    text-align: center;
+}
+
+.event-badge-primary {
+    background: #f0f7ff;
+    color: var(--primary);
+}
+
+.event-badge-muted {
+    background: #f0f0f0;
+    color: #666;
 }
 
 /* Score Badge */
@@ -1048,10 +1113,67 @@ body {
         flex-direction: column;
     }
 
-    .btn {
+.btn {
         width: 100%;
     }
 }
+
+/* Delete Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--danger);
+}
+
+.modal-header i {
+    font-size: 24px;
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #B71C1C);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -1072,6 +1194,26 @@ body {
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Challenge</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus challenge <strong>"<span id="deleteChallengeCode"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <!-- SIDEBAR -->
@@ -1105,8 +1247,8 @@ body {
                         }
                     }
                 } else {
-                    // Untuk menu Event, aktif jika di challenge.php atau halaman challenge lainnya
-                    if ($key === 'event') {
+                    // Untuk menu Challenge, aktif jika di halaman challenge
+                    if ($key === 'challenge') {
                         $isActive = in_array($current_page, ['challenge.php', 'challenge_create.php', 'challenge_edit.php', 'challenge_view.php', 'challenge_result.php']);
                     } else {
                         $isActive = ($current_page === $item['url']);
@@ -1221,7 +1363,7 @@ body {
                         <th>Event</th>
                         <th>Match Status</th>
                         <th>Score</th>
-                        <th>Action</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1241,32 +1383,40 @@ body {
                                     <?php echo htmlspecialchars($challenge['status'] ?? ''); ?>
                                 </span>
                             </td>
-                            <td class="team-cell">
-                                <?php if (!empty($challenge['challenger_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo'] ?? ''); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
-                                         class="team-logo-small">
-                                <?php else: ?>
-                                    <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                            <td class="team-cell challenger-cell">
+                                <div class="challenger-stack">
+                                    <?php if (!empty($challenge['challenger_logo'])): ?>
+                                        <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo'] ?? ''); ?>" 
+                                             alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
+                                             class="team-logo-small">
+                                    <?php else: ?>
+                                        <div class="team-logo-small team-logo-fallback">
+                                            <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="challenger-name">
+                                        <?php echo nl2br(htmlspecialchars(preg_replace('/\s+/', "\n", trim($challenge['challenger_name'] ?? '-')))); ?>
                                     </div>
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>
+                                </div>
                             </td>
                             <td class="vs-cell" style="text-align: center; font-weight: bold; color: var(--primary);">
                                 VS
                             </td>
-                            <td class="team-cell">
-                                <?php if (!empty($challenge['opponent_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo'] ?? ''); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
-                                         class="team-logo-small">
-                                <?php else: ?>
-                                    <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                            <td class="team-cell opponent-cell">
+                                <div class="challenger-stack">
+                                    <?php if (!empty($challenge['opponent_logo'])): ?>
+                                        <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo'] ?? ''); ?>" 
+                                             alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
+                                             class="team-logo-small">
+                                    <?php else: ?>
+                                        <div class="team-logo-small team-logo-fallback">
+                                            <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="challenger-name">
+                                        <?php echo nl2br(htmlspecialchars(preg_replace('/\s+/', "\n", trim($challenge['opponent_name'] ?? 'TBD')))); ?>
                                     </div>
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['opponent_name'] ?? 'TBD'); ?>
+                                </div>
                             </td>
                             <td class="venue-cell">
                                 <?php echo !empty($challenge['venue_name']) ? htmlspecialchars($challenge['venue_name']) : '-'; ?>
@@ -1278,15 +1428,20 @@ body {
                                 <?php echo date('d M Y, H:i', strtotime($challenge['expiry_date'])); ?>
                             </td>
                             <td class="sport-cell">
-                                <?php if (!empty($challenge['sport_type'])): ?>
-                                    <span style="padding: 4px 8px; background: #f0f7ff; color: var(--primary); border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span style="padding: 4px 8px; background: #f0f0f0; color: #666; border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['challenger_sport'] ?? '-'); ?>
-                                    </span>
-                                <?php endif; ?>
+                                <?php
+                                $event_value = !empty($challenge['sport_type'])
+                                    ? (string)($challenge['sport_type'] ?? '')
+                                    : (string)($challenge['challenger_sport'] ?? '-');
+                                $event_value = trim($event_value);
+                                $event_words = preg_split('/\s+/', $event_value, -1, PREG_SPLIT_NO_EMPTY);
+                                $event_line_1 = $event_words[0] ?? '-';
+                                $event_line_2 = count($event_words) > 1 ? implode(' ', array_slice($event_words, 1)) : '&nbsp;';
+                                $event_class = !empty($challenge['sport_type']) ? 'event-badge-primary' : 'event-badge-muted';
+                                ?>
+                                <span class="event-badge <?php echo $event_class; ?>">
+                                    <span><?php echo htmlspecialchars($event_line_1); ?></span>
+                                    <span><?php echo $event_line_2 === '&nbsp;' ? '&nbsp;' : htmlspecialchars($event_line_2); ?></span>
+                                </span>
                             </td>
                             <td class="match-cell">
                                 <?php if (!empty($challenge['match_status'])): ?>
@@ -1327,7 +1482,9 @@ body {
                                     </a>
                                     <!-- TOMBOL DELETE SELALU TAMPIL -->
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteChallenge(<?php echo $challenge['id']; ?>, '<?php echo htmlspecialchars(addslashes($challenge['challenge_code'] ?? '')); ?>')">
+                                            data-challenge-id="<?php echo (int) $challenge['id']; ?>"
+                                            data-challenge-code="<?php echo htmlspecialchars($challenge['challenge_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1400,8 +1557,25 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let currentChallengeId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const deleteChallengeCode = document.getElementById('deleteChallengeCode');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-challenge-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentChallengeId = this.getAttribute('data-challenge-id');
+            if (deleteChallengeCode) {
+                deleteChallengeCode.textContent = this.getAttribute('data-challenge-code') || '-';
+            }
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
+            }
+        });
+    });
+
     // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
@@ -1448,9 +1622,34 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentChallengeId) {
+                deleteChallenge(currentChallengeId);
+            }
+        });
+    }
 });
 
-function deleteChallenge(challengeId, challengeCode) {
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+    currentChallengeId = null;
+}
+
+const deleteModalElement = document.getElementById('deleteModal');
+if (deleteModalElement) {
+    deleteModalElement.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+}
+
+function deleteChallenge(challengeId) {
     const deleteErrorAlert = document.getElementById('deleteErrorAlert');
     const deleteErrorText = document.getElementById('deleteErrorText');
 
@@ -1472,30 +1671,31 @@ function deleteChallenge(challengeId, challengeCode) {
         deleteErrorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    if (confirm(`Apakah Anda yakin ingin menghapus challenge "${challengeCode}"?`)) {
-        clearDeleteError();
-        fetch(`challenge_delete.php?id=${challengeId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                toastr.success('Challenge berhasil dihapus!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showDeleteError(data.message || 'Gagal menghapus challenge.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showDeleteError('Terjadi kesalahan saat menghapus challenge.');
-        });
-    }
+    clearDeleteError();
+    fetch(`challenge_delete.php?id=${challengeId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeDeleteModal();
+            toastr.success('Challenge berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            closeDeleteModal();
+            showDeleteError(data.message || 'Gagal menghapus challenge.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        closeDeleteModal();
+        showDeleteError('Terjadi kesalahan saat menghapus challenge.');
+    });
 }
 
 function exportChallenges() {

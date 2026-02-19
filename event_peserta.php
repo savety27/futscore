@@ -138,7 +138,7 @@ if ($player_id_raw !== '' && $player_id_filter <= 0) {
 }
 
 if ($group_slug === '' && $legacy_event === '') {
-    header('Location: event.php');
+    header('Location: EVENTS.PHP');
     exit;
 }
 
@@ -306,7 +306,8 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="event.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
@@ -350,6 +351,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                     <p class="header-subtitle">Lihat peserta tim per kategori event secara dinamis.</p>
                 </div>
                 <div class="header-actions">
+                    <a href="EVENTS.PHP" class="btn-back-event"><i class="fas fa-house"></i> Hub Event</a>
                     <a href="event.php" class="btn-back-event"><i class="fas fa-arrow-left"></i> Kembali ke Event</a>
                 </div>
             </div>
@@ -372,7 +374,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                         <i class="fas fa-calendar-times"></i>
                         <h4>Event tidak ditemukan</h4>
                         <p>Event yang dipilih tidak memiliki kategori atau belum dipetakan.</p>
-                        <a href="event.php" class="btn-back-event btn-back-event-inline"><i class="fas fa-arrow-left"></i> Kembali ke daftar event</a>
+                        <a href="EVENTS.PHP" class="btn-back-event btn-back-event-inline"><i class="fas fa-house"></i> Kembali ke Hub Event</a>
                     </div>
                 </section>
             <?php else: ?>

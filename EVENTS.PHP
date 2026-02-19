@@ -111,6 +111,7 @@ if ($eventId > 0) {
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
@@ -159,9 +160,11 @@ if ($eventId > 0) {
                 </div>
                 <div class="header-actions">
                     <?php if ($eventId > 0): ?>
+                        <a href="event.php" class="btn-primary"><i class="fas fa-sitemap"></i> Event Kategori</a>
                         <a href="EVENTS.PHP" class="btn-secondary"><i class="fas fa-arrow-left"></i> Semua Event</a>
                         <a href="team.php" class="btn-primary"><i class="fas fa-users"></i> Lihat Tim</a>
                     <?php else: ?>
+                        <a href="event.php" class="btn-primary"><i class="fas fa-sitemap"></i> Event Kategori</a>
                         <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
                         <a href="player.php" class="btn-primary"><i class="fas fa-running"></i> Lihat Player</a>
                     <?php endif; ?>
