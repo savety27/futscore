@@ -175,6 +175,21 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('ijazah.jpg', $params[':diploma_image']);
     }
 
+    public function testInsertSqlPlaceholdersStayInSyncWithBuildInsertParams(): void
+    {
+        $sql = playerAddInsertSql();
+        $params = playerAddBuildInsertParams($this->validInput(), [], 'my-slug-3');
+
+        preg_match_all('/:[a-z_]+/', $sql, $matches);
+        $sqlPlaceholders = array_values(array_unique($matches[0]));
+        $paramKeys = array_keys($params);
+
+        sort($sqlPlaceholders);
+        sort($paramKeys);
+
+        $this->assertSame($paramKeys, $sqlPlaceholders);
+    }
+
     #[DataProvider('duplicateErrorProvider')]
     public function testMapInsertErrorForDuplicateKeys(array $errorInfo, string $message, string $expected): void
     {

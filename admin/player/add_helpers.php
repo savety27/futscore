@@ -88,6 +88,25 @@ function playerAddGenerateSlug(string $name, ?int $timestamp = null): string
     return $slug . '-' . $timestamp;
 }
 
+function playerAddInsertSql(): string
+{
+    return "INSERT INTO players (
+        team_id, name, slug, position, jersey_number, birth_date, height, weight,
+        birth_place, gender, nisn, nik, sport_type, email, phone, nationality,
+        street, city, province, postal_code, country, dominant_foot, position_detail,
+        dribbling, technique, speed, juggling, shooting, setplay_position, passing, control,
+        photo, ktp_image, kk_image, birth_cert_image, diploma_image,
+        created_at, updated_at, status
+    ) VALUES (
+        :team_id, :name, :slug, :position, :jersey_number, :birth_date, :height, :weight,
+        :birth_place, :gender, :nisn, :nik, :sport_type, :email, :phone, :nationality,
+        :street, :city, :province, :postal_code, :country, :dominant_foot, :position_detail,
+        :dribbling, :technique, :speed, :juggling, :shooting, :setplay_position, :passing, :control,
+        :photo, :ktp_image, :kk_image, :birth_cert_image, :diploma_image,
+        NOW(), NOW(), :status
+    )";
+}
+
 function playerAddBuildInsertParams(array $input, array $uploadedFiles, string $slug): array
 {
     return [
