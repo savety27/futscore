@@ -1,4 +1,4 @@
-name: PHPUnit
+name: Ricky's CI
 
 on:
   pull_request:
