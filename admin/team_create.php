@@ -252,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     --light: #F8F9FA;
     --dark: #1e293b;
     --gray: #64748b;
-    --sidebar-bg: rgba(15, 39, 68, 0.95);
+    --sidebar-bg: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
     --glass-white: rgba(255, 255, 255, 0.85);
     --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
     --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -282,8 +282,6 @@ body {
 .sidebar {
     width: 280px;
     background: var(--sidebar-bg);
-    backdrop-filter: blur(15px) saturate(160%);
-    -webkit-backdrop-filter: blur(15px) saturate(160%);
     color: white;
     padding: 0;
     position: fixed;
