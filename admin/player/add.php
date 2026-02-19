@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Include database connection
 require_once '../config/database.php';
+require_once __DIR__ . '/add_helpers.php';
 
 $event_helper_path = __DIR__ . '/../includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
@@ -79,65 +80,19 @@ if (file_exists($event_helper_path)) {
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
-        // Profile data
-        $name = trim($_POST['name'] ?? '');
-        $place_of_birth = trim($_POST['place_of_birth'] ?? '');
-        $date_of_birth = trim($_POST['date_of_birth'] ?? '');
-        $sport = trim($_POST['sport'] ?? '');
-        $gender = trim($_POST['gender'] ?? '');
-        $nik = trim($_POST['nik'] ?? '');
-        $nisn = trim($_POST['nisn'] ?? '');
-        $height = trim($_POST['height'] ?? '');
-        $weight = trim($_POST['weight'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $nationality = trim($_POST['nationality'] ?? '');
-        $address = trim($_POST['address'] ?? '');
-        $city = trim($_POST['city'] ?? '');
-        $province = trim($_POST['province'] ?? '');
-        $postal_code = trim($_POST['postal_code'] ?? '');
-        $country = trim($_POST['country'] ?? '');
-        
-        // Team data
-        $team_id = trim($_POST['team_id'] ?? '');
-        $jersey_number = trim($_POST['jersey_number'] ?? '');
-        $dominant_foot = trim($_POST['dominant_foot'] ?? '');
-        $position = trim($_POST['position'] ?? '');
-        $status = isset($_POST['status']) ? 'active' : 'inactive';
-        
-        // Skills data - PERBAIKAN DI SINI
-        $dribbling = isset($_POST['dribbling']) ? (int)$_POST['dribbling'] : 5;
-        $technique = isset($_POST['technique']) ? (int)$_POST['technique'] : 5;
-        $speed = isset($_POST['speed']) ? (int)$_POST['speed'] : 5;
-        $juggling = isset($_POST['juggling']) ? (int)$_POST['juggling'] : 5;
-        $shooting = isset($_POST['shooting']) ? (int)$_POST['shooting'] : 5;
-        $setplay_position = isset($_POST['setplay_position']) ? (int)$_POST['setplay_position'] : 5;
-        $passing = isset($_POST['passing']) ? (int)$_POST['passing'] : 5;
-        $control = isset($_POST['control']) ? (int)$_POST['control'] : 5;
-        
-        // Validate required fields
-        if (empty($name) || empty($place_of_birth) || empty($date_of_birth) || empty($sport) || 
-            empty($gender) || empty($nik) || empty($team_id) || empty($jersey_number) || empty($dominant_foot) || empty($position)) {
-            $error = "Semua field yang wajib harus diisi!";
-        } else if (strlen($nik) != 16 || !is_numeric($nik)) {
-            // VALIDASI NIK 16 DIGIT
-            $error = "NIK harus terdiri dari tepat 16 digit angka!";
-        } else if (!empty($nisn) && (strlen($nisn) != 10 || !is_numeric($nisn))) {
-            // VALIDASI NISN 10 DIGIT
-            $error = "NISN harus terdiri dari tepat 10 digit angka!";
-        } else {
+        $input = playerAddCollectInput($_POST);
+        $error = playerAddValidateInput($input);
+
+        if ($error === null) {
             // Validasi duplicate nama pemain (global lintas semua tim)
             $stmt_check_name = $conn->prepare("SELECT id FROM players WHERE TRIM(name) = TRIM(?) LIMIT 1");
-            $stmt_check_name->execute([$name]);
+            $stmt_check_name->execute([$input['name']]);
             if ($stmt_check_name->fetchColumn()) {
                 throw new Exception("Nama pemain sudah terdaftar. Gunakan nama yang berbeda.");
             }
-
-            // Konversi gender ke format database (L/P)
-            $gender_db = ($gender == 'Laki-laki') ? 'L' : 'P';
             
             // Generate slug from name
-            $slug = generateSlug($name);
+            $slug = playerAddGenerateSlug($input['name']);
             
             // Create upload directory if not exists
             $upload_dir = '../../images/players/';
@@ -199,45 +154,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             )";
             
             $stmt = $conn->prepare($query);
-            $stmt->execute([
-                ':team_id' => $team_id,
-                ':name' => $name,
-                ':slug' => $slug,
-                ':position' => $position,
-                ':jersey_number' => $jersey_number,
-                ':birth_date' => $date_of_birth,
-                ':height' => $height ?: null,
-                ':weight' => $weight ?: null,
-                ':birth_place' => $place_of_birth,
-                ':gender' => $gender_db, // Menggunakan $gender_db bukan $gender
-                ':nisn' => $nisn ?: null,
-                ':nik' => $nik,
-                ':sport_type' => $sport,
-                ':email' => $email ?: null,
-                ':phone' => $phone ?: null,
-                ':nationality' => $nationality ?: 'Indonesia',
-                ':street' => $address ?: null,
-                ':city' => $city ?: null,
-                ':province' => $province ?: null,
-                ':postal_code' => $postal_code ?: null,
-                ':country' => $country ?: 'Indonesia',
-                ':dominant_foot' => $dominant_foot,
-                ':position_detail' => $position,
-                ':dribbling' => $dribbling,
-                ':technique' => $technique,
-                ':speed' => $speed,
-                ':juggling' => $juggling,
-                ':shooting' => $shooting,
-                ':setplay_position' => $setplay_position,
-                ':passing' => $passing,
-                ':control' => $control,
-                ':status' => $status,
-                ':photo' => $photo_file,
-                ':ktp_image' => $ktp_file,
-                ':kk_image' => $kk_file,
-                ':birth_cert_image' => $akte_file,
-                ':diploma_image' => $ijazah_file
-            ]);
+            $stmt->execute(playerAddBuildInsertParams($input, [
+                'photo_file' => $photo_file,
+                'ktp_file' => $ktp_file,
+                'kk_file' => $kk_file,
+                'akte_file' => $akte_file,
+                'ijazah_file' => $ijazah_file,
+            ], $slug));
             
             $player_id = $conn->lastInsertId();
             
@@ -246,40 +169,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             exit;
         }
     } catch (PDOException $e) {
-        $error = "Terjadi kesalahan: " . $e->getMessage();
-        $driver_code = (int)($e->errorInfo[1] ?? 0);
-        $message_lc = strtolower($e->getMessage());
-        if ($driver_code === 1062) {
-            if (strpos($message_lc, 'uq_players_name') !== false || strpos($message_lc, 'name') !== false) {
-                $error = "Nama pemain sudah terdaftar. Gunakan nama yang berbeda.";
-            } elseif (strpos($message_lc, 'nik') !== false) {
-                $error = "NIK sudah terdaftar. Gunakan NIK yang berbeda.";
-            } else {
-                $error = "Data duplikat terdeteksi. Periksa kembali input Anda.";
-            }
-        }
+        $error = playerAddMapInsertError($e);
         error_log("Database Error: " . $e->getMessage());
     } catch (Exception $e) {
         $error = "Terjadi kesalahan: " . $e->getMessage();
         error_log("General Error: " . $e->getMessage());
     }
-}
-
-// Function to generate slug from name
-function generateSlug($name) {
-    // Convert to lowercase
-    $slug = strtolower($name);
-    // Replace spaces with hyphens
-    $slug = str_replace(' ', '-', $slug);
-    // Remove special characters except hyphens and alphanumeric
-    $slug = preg_replace('/[^a-z0-9\-]/', '', $slug);
-    // Replace multiple hyphens with single hyphen
-    $slug = preg_replace('/-+/', '-', $slug);
-    // Remove leading/trailing hyphens
-    $slug = trim($slug, '-');
-    // Add timestamp to ensure uniqueness
-    $slug = $slug . '-' . time();
-    return $slug;
 }
 
 // Function to upload files
