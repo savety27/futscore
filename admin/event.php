@@ -362,11 +362,26 @@ body {
 .action-cell { white-space: nowrap; }
 .action-buttons-inline { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
 .action-cell form { display: inline-block; margin: 0; }
-.action-btn { border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 14px; }
-.btn-view { background: rgba(99, 102, 241, 0.15); color: #4338ca; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
-.btn-edit { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.action-btn {
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: var(--transition);
+}
+.btn-view { background: rgba(10, 36, 99, 0.1); color: var(--primary); }
+.btn-view:hover { background: var(--primary); color: #fff; }
+.btn-edit { background: rgba(76, 175, 80, 0.1); color: var(--success); }
+.btn-edit:hover { background: var(--success); color: #fff; }
 .btn-registration { background: rgba(245, 158, 11, 0.15); color: #b45309; }
-.btn-delete { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+.btn-delete { background: rgba(211, 47, 47, 0.1); color: var(--danger); }
+.btn-delete:hover { background: var(--danger); color: #fff; }
 .alert { padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .alert-success { background: rgba(46, 125, 50, 0.1); border-left: 4px solid #10b981; color: #047857; }
 .alert-danger { background: rgba(211, 47, 47, 0.1); border-left: 4px solid #ef4444; color: #b91c1c; }
@@ -515,7 +530,7 @@ body {
                 <span>Daftar Event</span>
             </div>
             <div class="action-buttons">
-                <a href="event_create.php" class="btn btn-primary"><i class="fas fa-plus"></i> Add Event</a>
+                <a href="event_create.php" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah Event</a>
             </div>
         </div>
 
@@ -630,7 +645,7 @@ body {
                             <td class="action-cell">
                                 <div class="action-buttons-inline">
                                     <a href="event_view.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-view" title="Lihat Detail"><i class="fas fa-eye"></i></a>
-                                    <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-edit" title="Edit Event"><i class="fas fa-pen"></i></a>
+                                    <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-edit" title="Edit Event"><i class="fas fa-edit"></i></a>
                                     <form method="POST" action="?<?php echo http_build_query(['search' => $search, 'registration' => $filter_registration, 'active' => $filter_active, 'page' => $page]); ?>">
                                         <input type="hidden" name="id" value="<?php echo (int) $event['id']; ?>">
                                         <input type="hidden" name="action" value="toggle_registration">

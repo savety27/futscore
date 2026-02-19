@@ -305,7 +305,7 @@ body {
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Event Details</h1>
+                <h1>Event Details 🗓️</h1>
                 <p>Informasi lengkap event</p>
             </div>
             <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>

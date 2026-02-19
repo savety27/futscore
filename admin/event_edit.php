@@ -530,7 +530,7 @@ body {
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Edit Event</h1>
+                <h1>Edit Event 🗓️</h1>
                 <p>Perbarui data event dengan konsep form seragam</p>
             </div>
             <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>

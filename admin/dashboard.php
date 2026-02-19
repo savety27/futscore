@@ -71,10 +71,16 @@ $menu_items = [
             'transfer' => 'transfer.php',
         ]
     ],
-    'Event' => [
+    'event' => [
         'icon' => '🏆',
         'name' => 'Event',
-        'url' => 'challenge.php', // URL sesuai permintaan
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
+        'url' => 'challenge.php',
         'submenu' => false
     ],
     'Venue' => [

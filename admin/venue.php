@@ -40,9 +40,15 @@ $menu_items = [
             'transfer' => ['name' => 'Transfer', 'url' => 'transfer.php'],
         ]
     ],
-    'Event' => [
+    'event' => [
         'icon' => '🏆',
         'name' => 'Event',
+        'url' => 'event.php',
+        'submenu' => false
+    ],
+    'challenge' => [
+        'icon' => '⚔️',
+        'name' => 'Challenge',
         'url' => 'challenge.php',
         'submenu' => false
     ],
