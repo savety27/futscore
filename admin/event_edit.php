@@ -74,6 +74,7 @@ $menu_items = [
         ]
     ],
     'event' => ['icon' => '🏆', 'name' => 'Event', 'url' => 'event.php', 'submenu' => false],
+    'challenge' => ['icon' => '⚔️', 'name' => 'Challenge', 'url' => 'challenge.php', 'submenu' => false],
     'Venue' => ['icon' => '📍', 'name' => 'Venue', 'url' => 'venue.php', 'submenu' => false],
     'Pelatih' => ['icon' => '👨‍🏫', 'name' => 'Pelatih', 'url' => 'pelatih.php', 'submenu' => false],
     'Berita' => ['icon' => '📰', 'name' => 'Berita', 'url' => 'berita.php', 'submenu' => false]
@@ -81,6 +82,8 @@ $menu_items = [
 
 $current_page = basename($_SERVER['PHP_SELF']);
 $admin_email = $_SESSION['admin_email'] ?? '';
+$academy_name = "Hi, Welcome...";
+$email = $admin_email;
 $event_id = isset($_GET['id']) ? (int) $_GET['id'] : (isset($_POST['id']) ? (int) $_POST['id'] : 0);
 
 if ($event_id <= 0) {
@@ -270,8 +273,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors['database'])) {
     --danger: #ef4444;
     --dark: #1e293b;
     --gray: #64748b;
-    --sidebar-bg: rgba(15, 39, 68, 0.95);
+    --sidebar-bg: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
     --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -280,21 +285,83 @@ body {
     color: var(--dark);
 }
 .wrapper { display: flex; min-height: 100vh; }
-.sidebar { width: 280px; background: var(--sidebar-bg); color: #fff; position: fixed; height: 100vh; overflow-y: auto; }
-.sidebar-header { padding: 26px 22px; text-align: center; border-bottom: 2px solid var(--secondary); }
-.academy-name { color: var(--secondary); font-size: 20px; font-weight: 700; }
-.academy-email { font-size: 13px; opacity: 0.9; }
-.menu { padding: 20px 14px; }
-.menu-item { margin-bottom: 8px; }
-.menu-link { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.75); text-decoration: none; padding: 12px 14px; border-radius: 10px; }
-.menu-link:hover { background: rgba(255,255,255,0.09); color: #fff; }
-.menu-link.active { color: var(--secondary); background: rgba(245,158,11,0.12); border-right: 3px solid var(--secondary); }
-.submenu { margin-top: 6px; margin-left: 14px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,0.2); }
-.submenu-link { display: block; color: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 8px; text-decoration: none; font-size: 14px; }
-.submenu-link.active, .submenu-link:hover { color: var(--secondary); background: rgba(245,158,11,0.1); }
+.sidebar {
+    width: 280px;
+    background: var(--sidebar-bg);
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+.sidebar-header {
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 10px;
+}
+.logo-container { position: relative; display: inline-block; }
+.logo {
+    max-width: 200px;
+    background: transparent;
+    margin: 0 auto 12px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    position: relative;
+    overflow: visible;
+    transition: var(--transition);
+}
+.logo:hover { transform: none; box-shadow: none; }
+.logo img {
+    width: 100%;
+    height: auto;
+    max-width: 200px;
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1));
+    transition: transform var(--transition), filter var(--transition);
+}
+.logo img:hover { transform: scale(1.05); }
+.academy-info { text-align: center; }
+.academy-name { color: var(--secondary); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.academy-email { font-size: 14px; opacity: 0.9; color: rgba(255,255,255,0.8); }
+.menu { padding: 25px 15px; }
+.menu-item { margin-bottom: 8px; border-radius: 12px; overflow: hidden; }
+.menu-link {
+    display: flex;
+    align-items: center;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    padding: 14px 20px;
+    border-radius: 12px;
+    transition: var(--transition);
+    margin: 4px 0;
+}
+.menu-link:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateX(5px); }
+.menu-link.active {
+    color: var(--secondary);
+    background: linear-gradient(90deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.02) 100%);
+    border-right: 4px solid var(--secondary);
+    border-radius: 12px 0 0 12px;
+    font-weight: 700;
+}
+.menu-icon { font-size: 18px; margin-right: 15px; width: 24px; text-align: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.menu-text { flex: 1; font-size: 15px; letter-spacing: 0.3px; }
+.menu-arrow { font-size: 12px; opacity: 0.6; transition: var(--transition); }
+.menu-arrow.rotate { transform: rotate(90deg); opacity: 1; }
+.submenu { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: rgba(0,0,0,0.2); border-radius: 0 0 12px 12px; }
+.submenu.open { max-height: 300px; }
+.submenu-item { padding: 5px 15px 5px 70px; }
+.submenu-link { display: block; color: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: var(--transition); position: relative; }
+.submenu-link.active, .submenu-link:hover { color: var(--secondary); background: rgba(245,158,11,0.1); padding-left: 20px; }
+.submenu-link::before { content: "•"; position: absolute; left: 0; color: var(--secondary); font-size: 18px; }
 .main { margin-left: 280px; flex: 1; padding: 28px; }
 .topbar, .page-header, .form-container { background: #fff; border-radius: 18px; box-shadow: var(--card-shadow); }
-.topbar { padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+.topbar { padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; animation: slideDown 0.5s ease-out; }
 .greeting h1 { color: var(--primary); font-size: 26px; }
 .greeting p { color: var(--gray); font-size: 14px; }
 .logout-btn { display: inline-flex; gap: 8px; align-items: center; background: linear-gradient(135deg, var(--danger), #b91c1c); color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; }
@@ -383,9 +450,19 @@ body {
 .alert { padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 .alert-danger { background: rgba(211, 47, 47, 0.1); border-left: 4px solid #ef4444; color: #b91c1c; }
 .form-actions { margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px; }
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 @media (max-width: 900px) {
-    .sidebar { transform: translateX(-100%); position: fixed; }
-    .main { margin-left: 0; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; width: 100%; padding: 16px; }
     .form-grid { grid-template-columns: 1fr; }
     .page-header { flex-direction: column; align-items: flex-start; }
 }
@@ -395,17 +472,26 @@ body {
 <div class="wrapper">
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="academy-name">Hi, Welcome...</div>
-            <div class="academy-email"><?php echo htmlspecialchars($admin_email); ?></div>
+            <div class="logo-container">
+                <div class="logo">
+                    <img src="../images/alvetrix.png" alt="Logo">
+                </div>
+            </div>
+            <div class="academy-info">
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+            </div>
         </div>
         <div class="menu">
             <?php foreach ($menu_items as $key => $item): ?>
             <?php
                 $isActive = false;
+                $isSubmenuOpen = false;
                 if ($item['submenu']) {
                     foreach ($item['items'] as $subUrl) {
                         if ($current_page === $subUrl) {
                             $isActive = true;
+                            $isSubmenuOpen = true;
                             break;
                         }
                     }
@@ -418,16 +504,21 @@ body {
                 }
             ?>
             <div class="menu-item">
-                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" class="menu-link <?php echo $isActive ? 'active' : ''; ?>">
-                    <span><?php echo $item['icon']; ?></span>
-                    <span><?php echo $item['name']; ?></span>
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" class="menu-link <?php echo $isActive ? 'active' : ''; ?>" data-menu="<?php echo $key; ?>">
+                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                    <span class="menu-text"><?php echo $item['name']; ?></span>
+                    <?php if ($item['submenu']): ?>
+                    <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                    <?php endif; ?>
                 </a>
                 <?php if ($item['submenu']): ?>
-                <div class="submenu">
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
                     <?php foreach ($item['items'] as $subKey => $subUrl): ?>
-                    <a href="<?php echo $subUrl; ?>" class="submenu-link <?php echo $current_page === $subUrl ? 'active' : ''; ?>">
-                        <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
-                    </a>
+                    <div class="submenu-item">
+                        <a href="<?php echo $subUrl; ?>" class="submenu-link <?php echo $current_page === $subUrl ? 'active' : ''; ?>">
+                            <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
+                        </a>
+                    </div>
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
@@ -657,6 +748,20 @@ document.getElementById('eventForm').addEventListener('submit', function (e) {
         if (typeof toastr !== 'undefined') {
             toastr.error('Tanggal selesai harus lebih besar atau sama dengan tanggal mulai.');
         }
+    }
+});
+
+document.querySelectorAll('.menu-link').forEach(function(link) {
+    if (link.querySelector('.menu-arrow')) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const submenu = this.nextElementSibling;
+            const arrow = this.querySelector('.menu-arrow');
+            if (submenu) {
+                submenu.classList.toggle('open');
+                arrow.classList.toggle('rotate');
+            }
+        });
     }
 });
 </script>

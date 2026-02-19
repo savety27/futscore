@@ -55,6 +55,7 @@ $menu_items = [
         ]
     ],
     'event' => ['icon' => '🏆', 'name' => 'Event', 'url' => 'event.php', 'submenu' => false],
+    'challenge' => ['icon' => '⚔️', 'name' => 'Challenge', 'url' => 'challenge.php', 'submenu' => false],
     'Venue' => ['icon' => '📍', 'name' => 'Venue', 'url' => 'venue.php', 'submenu' => false],
     'Pelatih' => ['icon' => '👨‍🏫', 'name' => 'Pelatih', 'url' => 'pelatih.php', 'submenu' => false],
     'Berita' => ['icon' => '📰', 'name' => 'Berita', 'url' => 'berita.php', 'submenu' => false]
@@ -189,9 +190,10 @@ try {
     --danger: #ef4444;
     --dark: #1e293b;
     --gray: #64748b;
-    --sidebar-bg: rgba(15, 39, 68, 0.95);
+    --sidebar-bg: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
     --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
     --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -207,26 +209,62 @@ body {
     position: fixed;
     height: 100vh;
     overflow-y: auto;
+    z-index: 100;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 .sidebar-header {
-    padding: 30px 25px;
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-bottom: 10px;
     text-align: center;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 2px solid var(--secondary);
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 10px;
 }
+.logo-container { position: relative; display: inline-block; }
+.logo {
+    max-width: 200px;
+    background: transparent;
+    margin: 0 auto 12px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    position: relative;
+    overflow: visible;
+    transition: var(--transition);
+}
+.logo:hover { transform: none; box-shadow: none; }
+.logo img {
+    width: 100%;
+    height: auto;
+    max-width: 200px;
+    filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1));
+    transition: transform var(--transition), filter var(--transition);
+}
+.logo img:hover { transform: scale(1.05); }
+.academy-info { text-align: center; }
 .academy-name { font-size: 22px; font-weight: 700; color: var(--secondary); margin-bottom: 8px; }
 .academy-email { font-size: 14px; color: rgba(255, 255, 255, 0.8); }
 .menu { padding: 25px 15px; }
-.menu-item { margin-bottom: 8px; }
-.menu-link { display: flex; align-items: center; gap: 10px; padding: 14px 20px; color: rgba(255, 255, 255, 0.75); text-decoration: none; border-radius: 12px; }
-.menu-link:hover { background: rgba(255, 255, 255, 0.1); color: white; }
-.menu-link.active { background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%); color: var(--secondary); font-weight: 700; border-right: 4px solid var(--secondary); }
-.submenu { margin-left: 20px; margin-top: 6px; }
-.submenu-link { display: block; color: rgba(255, 255, 255, 0.7); text-decoration: none; padding: 8px 12px; border-radius: 8px; }
-.submenu-link.active, .submenu-link:hover { color: var(--secondary); background: rgba(255, 215, 0, 0.1); }
+.menu-item { margin-bottom: 8px; border-radius: 12px; overflow: hidden; }
+.menu-link { display: flex; align-items: center; padding: 14px 20px; color: rgba(255, 255, 255, 0.75); text-decoration: none; transition: var(--transition); position: relative; border-radius: 12px; margin: 4px 0; }
+.menu-link:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateX(5px); }
+.menu-link.active { background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%); color: var(--secondary); font-weight: 700; border-right: 4px solid var(--secondary); border-radius: 12px 0 0 12px; }
+.menu-icon { font-size: 18px; margin-right: 15px; width: 24px; text-align: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.menu-text { flex: 1; font-size: 15px; letter-spacing: 0.3px; }
+.menu-arrow { font-size: 12px; opacity: 0.6; transition: var(--transition); }
+.menu-arrow.rotate { transform: rotate(90deg); opacity: 1; }
+.submenu { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: rgba(0, 0, 0, 0.2); border-radius: 0 0 12px 12px; }
+.submenu.open { max-height: 300px; }
+.submenu-item { padding: 5px 15px 5px 70px; }
+.submenu-link { display: block; padding: 12px 15px; color: rgba(255, 255, 255, 0.7); text-decoration: none; border-radius: 8px; transition: var(--transition); position: relative; font-size: 14px; }
+.submenu-link:hover { background: rgba(255, 215, 0, 0.1); color: var(--secondary); padding-left: 20px; }
+.submenu-link.active { background: rgba(255, 215, 0, 0.1); color: var(--secondary); padding-left: 20px; }
+.submenu-link::before { content: "•"; position: absolute; left: 0; color: var(--secondary); font-size: 18px; }
 .main { flex: 1; padding: 30px; margin-left: 280px; width: calc(100% - 280px); }
 .topbar, .page-header { background: white; border-radius: 20px; box-shadow: var(--card-shadow); }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px 25px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px 25px; animation: slideDown 0.5s ease-out; }
 .greeting h1 { font-size: 28px; color: var(--primary); margin-bottom: 5px; }
 .greeting p { color: var(--gray); font-size: 14px; }
 .logout-btn { background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%); color: white; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; }
@@ -312,14 +350,18 @@ body {
 .data-table { width: 100%; border-collapse: collapse; min-width: 1020px; }
 .data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); color: white; }
 .data-table th, .data-table td { padding: 11px 10px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
-.data-table tbody tr:hover { background: #f8f9fa; }
+.data-table tbody tr { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+.data-table tbody tr:hover { background: #eef5ff; transform: translateY(-3px); box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35); z-index: 2; }
+.data-table tbody tr:first-child:hover { transform: translateY(0); }
 .event-image { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; border: 2px solid #e5e7eb; }
 .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
 .badge-open { background: rgba(16, 185, 129, 0.15); color: #047857; }
 .badge-close { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
 .badge-active { background: rgba(16, 185, 129, 0.15); color: #047857; }
 .badge-inactive { background: rgba(100, 116, 139, 0.15); color: #334155; }
-.action-cell form { display: inline-block; margin-right: 6px; }
+.action-cell { white-space: nowrap; }
+.action-buttons-inline { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.action-cell form { display: inline-block; margin: 0; }
 .action-btn { border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 14px; }
 .btn-view { background: rgba(99, 102, 241, 0.15); color: #4338ca; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .btn-edit { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
@@ -373,6 +415,18 @@ body {
 .page-link { padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 10px; text-decoration: none; color: #334155; background: white; }
 .page-link.active { background: var(--primary); color: white; border-color: var(--primary); }
 .page-link.disabled { opacity: 0.4; pointer-events: none; }
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 900px) {
     .sidebar { display: none; }
     .main { margin-left: 0; width: 100%; padding: 16px; }
@@ -380,6 +434,9 @@ body {
     .greeting h1 { font-size: 22px; }
     .page-title { font-size: 22px; }
     .event-filter-form { grid-template-columns: 1fr; }
+    .action-cell { min-width: 166px; }
+    .action-buttons-inline { gap: 5px; }
+    .action-btn { width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
     .event-filter-actions .btn-filter,
     .event-filter-actions .clear-filter-btn {
         width: 100%;
@@ -392,17 +449,26 @@ body {
 <div class="wrapper">
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-            <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+            <div class="logo-container">
+                <div class="logo">
+                    <img src="../images/alvetrix.png" alt="Logo">
+                </div>
+            </div>
+            <div class="academy-info">
+                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
+                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
+            </div>
         </div>
         <div class="menu">
             <?php foreach ($menu_items as $key => $item): ?>
             <?php
                 $isActive = false;
+                $isSubmenuOpen = false;
                 if (!empty($item['submenu'])) {
                     foreach ($item['items'] as $subUrl) {
                         if ($current_page === $subUrl) {
                             $isActive = true;
+                            $isSubmenuOpen = true;
                             break;
                         }
                     }
@@ -411,16 +477,21 @@ body {
                 }
             ?>
             <div class="menu-item">
-                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" class="menu-link <?php echo $isActive ? 'active' : ''; ?>">
-                    <span><?php echo $item['icon']; ?></span>
-                    <span><?php echo $item['name']; ?></span>
+                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" class="menu-link <?php echo $isActive ? 'active' : ''; ?>" data-menu="<?php echo $key; ?>">
+                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
+                    <span class="menu-text"><?php echo $item['name']; ?></span>
+                    <?php if (!empty($item['submenu'])): ?>
+                    <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                    <?php endif; ?>
                 </a>
                 <?php if (!empty($item['submenu'])): ?>
-                <div class="submenu">
+                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
                     <?php foreach ($item['items'] as $subKey => $subUrl): ?>
-                    <a href="<?php echo $subUrl; ?>" class="submenu-link <?php echo $current_page === $subUrl ? 'active' : ''; ?>">
-                        <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
-                    </a>
+                    <div class="submenu-item">
+                        <a href="<?php echo $subUrl; ?>" class="submenu-link <?php echo $current_page === $subUrl ? 'active' : ''; ?>">
+                            <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
+                        </a>
+                    </div>
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
@@ -432,7 +503,7 @@ body {
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Event Management</h1>
+                <h1>Event Management 🗓️</h1>
                 <p>Kelola data event dengan konsep tampilan seragam</p>
             </div>
             <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -511,8 +582,8 @@ body {
                         <th>Pendaftaran</th>
                         <th>Status</th>
                         <th>Kontak</th>
-                        <th>Created</th>
-                        <th>Action</th>
+                        <th>Tanggal Dibuat</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -557,21 +628,23 @@ body {
                             <td><?php echo htmlspecialchars($event['contact'] ?? '-'); ?></td>
                             <td><?php echo !empty($event['created_at']) ? date('d M Y', strtotime($event['created_at'])) : '-'; ?></td>
                             <td class="action-cell">
-                                <a href="event_view.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-view" title="Lihat Detail"><i class="fas fa-eye"></i></a>
-                                <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-edit" title="Edit Event"><i class="fas fa-pen"></i></a>
-                                <form method="POST" action="?<?php echo http_build_query(['search' => $search, 'registration' => $filter_registration, 'active' => $filter_active, 'page' => $page]); ?>">
-                                    <input type="hidden" name="id" value="<?php echo (int) $event['id']; ?>">
-                                    <input type="hidden" name="action" value="toggle_registration">
-                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
-                                    <button type="submit" class="action-btn btn-registration" title="Toggle Open/Closed"><i class="fas fa-toggle-on"></i></button>
-                                </form>
-                                <button
-                                    type="button"
-                                    class="action-btn btn-delete"
-                                    title="Hapus"
-                                    data-event-id="<?php echo (int) $event['id']; ?>"
-                                    data-event-name="<?php echo htmlspecialchars($event['name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
-                                ><i class="fas fa-trash"></i></button>
+                                <div class="action-buttons-inline">
+                                    <a href="event_view.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-view" title="Lihat Detail"><i class="fas fa-eye"></i></a>
+                                    <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-edit" title="Edit Event"><i class="fas fa-pen"></i></a>
+                                    <form method="POST" action="?<?php echo http_build_query(['search' => $search, 'registration' => $filter_registration, 'active' => $filter_active, 'page' => $page]); ?>">
+                                        <input type="hidden" name="id" value="<?php echo (int) $event['id']; ?>">
+                                        <input type="hidden" name="action" value="toggle_registration">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                        <button type="submit" class="action-btn btn-registration" title="Toggle Open/Closed"><i class="fas fa-toggle-on"></i></button>
+                                    </form>
+                                    <button
+                                        type="button"
+                                        class="action-btn btn-delete"
+                                        title="Hapus"
+                                        data-event-id="<?php echo (int) $event['id']; ?>"
+                                        data-event-name="<?php echo htmlspecialchars($event['name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
+                                    ><i class="fas fa-trash"></i></button>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -690,6 +763,20 @@ function deleteEvent(eventId) {
         closeModal();
     });
 }
+
+document.querySelectorAll('.menu-link').forEach(function(link) {
+    if (link.querySelector('.menu-arrow')) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const submenu = this.nextElementSibling;
+            const arrow = this.querySelector('.menu-arrow');
+            if (submenu) {
+                submenu.classList.toggle('open');
+                arrow.classList.toggle('rotate');
+            }
+        });
+    }
+});
 </script>
 </body>
 </html>

@@ -1624,8 +1624,8 @@ body {
                         <th>NIK</th>
                         <th>Event</th>
                         <th>Status</th>
-                        <th>Tgl Daftar</th>
-                        <th>Action</th>
+                        <th>Tanggal Dibuat</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -1357,7 +1357,7 @@ body {
                         <th>Event</th>
                         <th>Match Status</th>
                         <th>Score</th>
-                        <th>Action</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

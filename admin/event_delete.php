@@ -60,19 +60,31 @@ try {
         $conn->rollBack();
         echo json_encode(['success' => false, 'message' => 'Event tidak ditemukan']);
     }
-} catch (Exception $e) {
+} catch (PDOException $e) {
     if ($conn->inTransaction()) {
         $conn->rollBack();
     }
 
-    $message = $e->getMessage();
-    if (strpos($message, '1451') !== false || strpos(strtolower($message), 'foreign key constraint fails') !== false) {
-        $message = 'Tidak dapat menghapus event yang sudah memiliki data terkait atau sudah berjalan.';
-    } else {
-        $message = 'Terjadi kesalahan saat menghapus event.';
+    $sqlState = (string) $e->getCode();
+    $mysqlCode = isset($e->errorInfo[1]) ? (int) $e->errorInfo[1] : 0;
+    $rawMessage = strtolower((string) $e->getMessage());
+
+    if ($sqlState === '23000' || $mysqlCode === 1451 || $mysqlCode === 1452 || strpos($rawMessage, 'foreign key') !== false) {
+        http_response_code(409);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Tidak dapat menghapus event karena sudah dipakai data lain (mis. pendaftaran/team/challenge terkait).'
+        ]);
+        exit;
     }
 
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => $message]);
+    echo json_encode(['success' => false, 'message' => 'Terjadi kesalahan saat menghapus event.']);
+} catch (Exception $e) {
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Terjadi kesalahan saat menghapus event.']);
 }
 ?>

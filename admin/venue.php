@@ -1355,9 +1355,9 @@ body {
                 <th>Kapasitas</th>
                 <th>Fasilitas</th>
                 <th>Status</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-                <th>Action</th>
+                <th>Tanggal Dibuat</th>
+                <th>Terakhir Update</th>
+                <th>Aksi</th>
             </tr>
                 </thead>
                 <tbody>

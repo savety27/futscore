@@ -1420,8 +1420,8 @@ body {
                         <th>Basecamp</th>
                         <th>Event</th>
                         <th>Status</th>
-                        <th>Created At</th>
-                        <th>Action</th>
+                        <th>Tanggal Dibuat</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

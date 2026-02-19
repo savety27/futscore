@@ -1470,10 +1470,10 @@ body {
                         <th>Team</th>
                         <th>Jabatan</th>
                         <th>Usia</th>
-                        <th class="certificate-cell">Cert</th>
+                        <th class="certificate-cell">Lisensi</th>
                         <th>Status</th>
-                        <th>Created At</th>
-                        <th width="120">Action</th>
+                        <th>Tanggal Dibuat</th>
+                        <th width="120">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
