@@ -1123,6 +1123,62 @@ body {
 .menu-arrow.rotate {
     transform: none !important;
 }
+
+/* Delete Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--danger);
+}
+
+.modal-header i {
+    font-size: 24px;
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #B71C1C);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
+}
 </style>
 </head>
 <body>
@@ -1133,6 +1189,26 @@ body {
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Venue</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus venue <strong>"<span id="deleteVenueName"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <!-- SIDEBAR -->
@@ -1317,7 +1393,9 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteVenue(<?php echo $venue['id']; ?>, '<?php echo htmlspecialchars(addslashes($venue['name'] ?? '')); ?>')">
+                                            data-venue-id="<?php echo (int) $venue['id']; ?>"
+                                            data-venue-name="<?php echo htmlspecialchars($venue['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1389,8 +1467,25 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let currentVenueId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const deleteVenueName = document.getElementById('deleteVenueName');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-venue-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentVenueId = this.getAttribute('data-venue-id');
+            if (deleteVenueName) {
+                deleteVenueName.textContent = this.getAttribute('data-venue-name') || '-';
+            }
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
+            }
+        });
+    });
+
     // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
@@ -1437,32 +1532,58 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-});
 
-function deleteVenue(venueId, venueName) {
-    if (confirm(`Apakah Anda yakin ingin menghapus venue "${venueName}"?`)) {
-        fetch(`venue_delete.php?id=${venueId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentVenueId) {
+                deleteVenue(currentVenueId);
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                toastr.success('Venue berhasil dihapus!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                toastr.error('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            toastr.error('Terjadi kesalahan saat menghapus venue.');
         });
     }
+});
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+    currentVenueId = null;
+}
+
+const deleteModalElement = document.getElementById('deleteModal');
+if (deleteModalElement) {
+    deleteModalElement.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+}
+
+function deleteVenue(venueId) {
+    fetch(`venue_delete.php?id=${venueId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeDeleteModal();
+            toastr.success('Venue berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            toastr.error('Error: ' + data.message);
+            closeDeleteModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toastr.error('Terjadi kesalahan saat menghapus venue.');
+        closeDeleteModal();
+    });
 }
 
 function exportVenues() {

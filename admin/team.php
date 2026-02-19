@@ -1090,13 +1090,24 @@ body {
         font-size: 14px;
     }
 
-    /* Stack action buttons vertically */
-    .action-buttons {
+    /* Stack header action buttons vertically */
+    .page-header .action-buttons {
         flex-direction: column;
     }
 
-    .btn {
+    .page-header .btn {
         width: 100%;
+    }
+
+    /* Keep table action buttons horizontal like venue.php */
+    .action-cell .action-buttons {
+        flex-direction: row;
+        width: auto;
+        flex-wrap: nowrap;
+    }
+
+    .action-cell .action-btn {
+        flex: 0 0 auto;
     }
 }
 
@@ -1160,6 +1171,62 @@ body {
     cursor: pointer;
 }
 
+/* Delete Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--danger);
+}
+
+.modal-header i {
+    font-size: 24px;
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #B71C1C);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -1181,6 +1248,26 @@ body {
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Team</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus team <strong>"<span id="deleteTeamName"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <!-- SIDEBAR -->
@@ -1416,7 +1503,9 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteTeam(<?php echo $team['id']; ?>, '<?php echo htmlspecialchars(addslashes($team['name'] ?? '')); ?>')">
+                                            data-team-id="<?php echo (int) $team['id']; ?>"
+                                            data-team-name="<?php echo htmlspecialchars($team['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1488,8 +1577,25 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let currentTeamId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const deleteTeamName = document.getElementById('deleteTeamName');
+    const modal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-team-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentTeamId = this.getAttribute('data-team-id');
+            if (deleteTeamName) {
+                deleteTeamName.textContent = this.getAttribute('data-team-name') || '-';
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        });
+    });
+
     // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
@@ -1536,32 +1642,59 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-});
 
-function deleteTeam(teamId, teamName) {
-    if (confirm(`Apakah Anda yakin ingin menghapus team "${teamName}"?`)) {
-        fetch(`team_delete.php?id=${teamId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentTeamId) {
+                deleteTeam(currentTeamId);
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                toastr.success('Team berhasil dihapus!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                toastr.error('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            toastr.error('Terjadi kesalahan saat menghapus team.');
         });
     }
+});
+
+function closeModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentTeamId = null;
+}
+
+// Close modal when clicking outside
+const modal = document.getElementById('deleteModal');
+if (modal) {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+}
+
+function deleteTeam(teamId) {
+    fetch(`team_delete.php?id=${teamId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal();
+            toastr.success('Team berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            toastr.error('Error: ' + data.message);
+            closeModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toastr.error('Terjadi kesalahan saat menghapus team.');
+        closeModal();
+    });
 }
 
 function exportTeams() {

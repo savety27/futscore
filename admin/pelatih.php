@@ -980,14 +980,24 @@ body {
         max-width: 100%;
     }
 
-    .action-buttons {
+    .page-header .action-buttons {
         width: 100%;
         flex-wrap: wrap;
     }
 
-    .btn {
+    .page-header .btn {
         flex: 1;
         justify-content: center;
+    }
+
+    /* Keep table action buttons horizontal */
+    .action-cell .action-buttons {
+        width: auto;
+        flex-wrap: nowrap;
+    }
+
+    .action-cell .action-btn {
+        flex: 0 0 auto;
     }
 
     /* Table Optimization */
@@ -1079,6 +1089,62 @@ body {
         transform: translateY(0);
     }
 }
+
+/* Delete Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--danger);
+}
+
+.modal-header i {
+    font-size: 24px;
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #B71C1C);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
+}
 </style>
 </head>
 <body>
@@ -1089,6 +1155,26 @@ body {
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Pelatih</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus pelatih <strong>"<span id="deletePelatihName"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <!-- SIDEBAR dengan struktur menu yang sama -->
@@ -1290,7 +1376,9 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
-                                            onclick="deletePelatih(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['username'] ?? '')); ?>')">
+                                            data-pelatih-id="<?php echo (int) $p['id']; ?>"
+                                            data-pelatih-name="<?php echo htmlspecialchars($p['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1364,8 +1452,25 @@ body {
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let currentPelatihId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const deletePelatihName = document.getElementById('deletePelatihName');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-pelatih-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentPelatihId = this.getAttribute('data-pelatih-id');
+            if (deletePelatihName) {
+                deletePelatihName.textContent = this.getAttribute('data-pelatih-name') || '-';
+            }
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
+            }
+        });
+    });
+
     // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
@@ -1412,32 +1517,58 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
-});
 
-function deletePelatih(pelatihId, username) {
-    if (confirm(`Apakah Anda yakin ingin menghapus pelatih "${username}"?`)) {
-        fetch(`pelatih_delete.php?id=${pelatihId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentPelatihId) {
+                deletePelatih(currentPelatihId);
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                toastr.success('Pelatih berhasil dihapus!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                toastr.error('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            toastr.error('Terjadi kesalahan saat menghapus pelatih.');
         });
     }
+});
+
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+    currentPelatihId = null;
+}
+
+const deleteModalElement = document.getElementById('deleteModal');
+if (deleteModalElement) {
+    deleteModalElement.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+}
+
+function deletePelatih(pelatihId) {
+    fetch(`pelatih_delete.php?id=${pelatihId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeDeleteModal();
+            toastr.success('Pelatih berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            toastr.error('Error: ' + data.message);
+            closeDeleteModal();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        toastr.error('Terjadi kesalahan saat menghapus pelatih.');
+        closeDeleteModal();
+    });
 }
 
 function exportPelatih() {

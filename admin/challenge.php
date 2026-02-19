@@ -1048,10 +1048,67 @@ body {
         flex-direction: column;
     }
 
-    .btn {
+.btn {
         width: 100%;
     }
 }
+
+/* Delete Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: var(--danger);
+}
+
+.modal-header i {
+    font-size: 24px;
+}
+
+.modal-body {
+    margin-bottom: 25px;
+    color: var(--dark);
+    line-height: 1.6;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger), #B71C1C);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #B71C1C, var(--danger));
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -1072,6 +1129,26 @@ body {
 <button class="menu-toggle" id="menuToggle">
     <i class="fas fa-bars"></i>
 </button>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Challenge</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus challenge <strong>"<span id="deleteChallengeCode"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <!-- SIDEBAR -->
@@ -1327,7 +1404,9 @@ body {
                                     </a>
                                     <!-- TOMBOL DELETE SELALU TAMPIL -->
                                     <button class="action-btn btn-delete" 
-                                            onclick="deleteChallenge(<?php echo $challenge['id']; ?>, '<?php echo htmlspecialchars(addslashes($challenge['challenge_code'] ?? '')); ?>')">
+                                            data-challenge-id="<?php echo (int) $challenge['id']; ?>"
+                                            data-challenge-code="<?php echo htmlspecialchars($challenge['challenge_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -1400,8 +1479,25 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
+let currentChallengeId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const deleteChallengeCode = document.getElementById('deleteChallengeCode');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    document.querySelectorAll('.btn-delete[data-challenge-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentChallengeId = this.getAttribute('data-challenge-id');
+            if (deleteChallengeCode) {
+                deleteChallengeCode.textContent = this.getAttribute('data-challenge-code') || '-';
+            }
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
+            }
+        });
+    });
+
     // Mobile Menu Toggle Functionality
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.querySelector('.sidebar');
@@ -1448,9 +1544,34 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (currentChallengeId) {
+                deleteChallenge(currentChallengeId);
+            }
+        });
+    }
 });
 
-function deleteChallenge(challengeId, challengeCode) {
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+    currentChallengeId = null;
+}
+
+const deleteModalElement = document.getElementById('deleteModal');
+if (deleteModalElement) {
+    deleteModalElement.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+}
+
+function deleteChallenge(challengeId) {
     const deleteErrorAlert = document.getElementById('deleteErrorAlert');
     const deleteErrorText = document.getElementById('deleteErrorText');
 
@@ -1472,30 +1593,31 @@ function deleteChallenge(challengeId, challengeCode) {
         deleteErrorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
-    if (confirm(`Apakah Anda yakin ingin menghapus challenge "${challengeCode}"?`)) {
-        clearDeleteError();
-        fetch(`challenge_delete.php?id=${challengeId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                toastr.success('Challenge berhasil dihapus!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showDeleteError(data.message || 'Gagal menghapus challenge.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showDeleteError('Terjadi kesalahan saat menghapus challenge.');
-        });
-    }
+    clearDeleteError();
+    fetch(`challenge_delete.php?id=${challengeId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeDeleteModal();
+            toastr.success('Challenge berhasil dihapus!');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            closeDeleteModal();
+            showDeleteError(data.message || 'Gagal menghapus challenge.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        closeDeleteModal();
+        showDeleteError('Terjadi kesalahan saat menghapus challenge.');
+    });
 }
 
 function exportChallenges() {
