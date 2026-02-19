@@ -91,11 +91,22 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('Detail posisi maksimal 100 karakter!', $error);
     }
 
+    public function testValidateInputRejectsInvalidGender(): void
+    {
+        $input = $this->validInput();
+        $input['gender'] = 'Other';
+
+        $error = playerAddValidateInput($input);
+
+        $this->assertSame('Jenis kelamin tidak valid!', $error);
+    }
+
     public function testMapGenderForDb(): void
     {
         $this->assertSame('L', playerAddMapGenderForDb('Laki-laki'));
         $this->assertSame('P', playerAddMapGenderForDb('Perempuan'));
-        $this->assertSame('P', playerAddMapGenderForDb(''));
+        $this->assertSame('', playerAddMapGenderForDb(''));
+        $this->assertSame('', playerAddMapGenderForDb('Other'));
     }
 
     public function testGenerateSlugWithProvidedTimestamp(): void

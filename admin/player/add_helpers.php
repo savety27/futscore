@@ -58,6 +58,10 @@ function playerAddValidateInput(array $input): ?string
         }
     }
 
+    if (!in_array($input['gender'], ['Laki-laki', 'Perempuan'], true)) {
+        return 'Jenis kelamin tidak valid!';
+    }
+
     if (strlen($input['nik']) !== 16 || !is_numeric($input['nik'])) {
         return 'NIK harus terdiri dari tepat 16 digit angka!';
     }
@@ -75,7 +79,15 @@ function playerAddValidateInput(array $input): ?string
 
 function playerAddMapGenderForDb(string $gender): string
 {
-    return $gender === 'Laki-laki' ? 'L' : 'P';
+    if ($gender === 'Laki-laki') {
+        return 'L';
+    }
+
+    if ($gender === 'Perempuan') {
+        return 'P';
+    }
+
+    return '';
 }
 
 function playerAddGenerateSlug(string $name, ?int $timestamp = null): string
