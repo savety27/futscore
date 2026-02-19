@@ -1137,6 +1137,17 @@ body {
         font-size: 36px;
     }
 }
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 </head>
 <body>
@@ -1220,7 +1231,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Add New Team ⚽</h1>
+                <h1>Tambah Team Baru ⚽</h1>
                 <p>Tambahkan data team baru ke sistem</p>
             </div>
             

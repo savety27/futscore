@@ -333,6 +333,7 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -1067,7 +1068,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Detail Pelatih 👤</h1>
+                <h1>Pelatih Profile 👤</h1>
                 <p>Detail informasi pelatih: <?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></p>
             </div>
             

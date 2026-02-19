@@ -481,6 +481,7 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {

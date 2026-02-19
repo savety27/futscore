@@ -1207,6 +1207,17 @@ body {
         width: 100%;
     }
 }
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 </head>
 <body>
@@ -1329,7 +1340,7 @@ body {
             <div class="action-buttons">
                 <a href="team_staff_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Add Staff
+                    Tambah Staff
                 </a>
                 <button class="btn btn-success" onclick="exportStaff()">
                     <i class="fas fa-download"></i>

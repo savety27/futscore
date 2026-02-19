@@ -1262,7 +1262,7 @@ try {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
+                <h1>Tambah Player Baru &#127939;</h1>
                 <p>Tambah Player Baru - Sistem manajemen pemain futsal</p>
             </div>
             

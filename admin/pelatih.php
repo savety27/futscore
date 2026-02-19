@@ -385,6 +385,7 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -1068,6 +1069,16 @@ body {
         font-size: 14px;
     }
 }
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 </head>
 <body>
@@ -1149,7 +1160,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Manajemen Pelatih 👤</h1>
+                <h1> Pelatih Management 👤</h1>
                 <p>Kelola data pelatih dan administrator dengan mudah</p>
             </div>
             

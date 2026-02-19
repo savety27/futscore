@@ -521,6 +521,7 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    animation: slideDown 0.5s ease-out;
 }
 
 .greeting h1 {
@@ -1206,6 +1207,16 @@ body {
 .btn-remove-goal:hover {
     background: var(--danger);
     color: white;
+}
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>
 </head>

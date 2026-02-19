@@ -1119,7 +1119,7 @@ tbody tr:hover {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Team Staff Details 👔</h1>
+                <h1>Team Staff Profile 👔</h1>
                 <p>Detail informasi staff: <?php echo htmlspecialchars($staff_data['name'] ?? ''); ?></p>
             </div>
             

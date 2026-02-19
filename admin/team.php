@@ -1160,6 +1160,17 @@ body {
     cursor: pointer;
 }
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 </style>
 </head>
 <body>
@@ -1273,7 +1284,7 @@ body {
             <div class="action-buttons">
                 <a href="team_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Add Team
+                    Tambah Team
                 </a>
                 <button class="btn btn-success" onclick="exportTeams()">
                     <i class="fas fa-download"></i>

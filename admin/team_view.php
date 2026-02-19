@@ -1127,7 +1127,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Team Details ⚽</h1>
+                <h1>Team Profile ⚽</h1>
                 <p>Detail informasi team: <?php echo htmlspecialchars($team_data['name'] ?? ''); ?></p>
             </div>
             

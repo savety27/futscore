@@ -925,6 +925,16 @@ body {
         font-size: 14px;
     }
 }
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 </head>
 <body>
@@ -1008,7 +1018,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Add New Venue 🏟️</h1>
+                <h1>Tambah Venue 🏟️</h1>
                 <p>Tambahkan data venue baru ke sistem</p>
             </div>
             

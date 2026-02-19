@@ -1236,7 +1236,7 @@ body {
             <div class="action-buttons">
                 <a href="venue_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Add Venue
+                    Tambah Venue
                 </a>
                 <button class="btn btn-success" onclick="exportVenues()">
                     <i class="fas fa-download"></i>

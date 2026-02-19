@@ -1462,7 +1462,7 @@ select.form-control {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
+                <h1>Edit Player &#127939;</h1>
                 <p>Edit Player - Sistem manajemen pemain futsal</p>
             </div>
             

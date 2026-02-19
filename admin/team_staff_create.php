@@ -1383,7 +1383,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Add New Team Staff 👔</h1>
+                <h1>Tambah Team Staff Baru 👔</h1>
                 <p>Tambahkan data staff baru ke sistem</p>
             </div>
             
