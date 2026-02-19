@@ -1664,6 +1664,21 @@ try {
                                     <option value="FW" <?php echo (isset($_POST['position']) && $_POST['position'] == 'FW') ? 'selected' : ''; ?>>Penyerang (FW)</option>
                                 </select>
                             </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span>Detail Posisi</span>
+                                    <span class="note">Opsional</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="position_detail"
+                                    class="form-control"
+                                    maxlength="100"
+                                    placeholder="Contoh: Winger Kiri"
+                                    value="<?php echo isset($_POST['position_detail']) ? htmlspecialchars($_POST['position_detail']) : ''; ?>"
+                                >
+                            </div>
                         </div>
 
                         <!-- Skills Section -->

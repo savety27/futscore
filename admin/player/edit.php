@@ -129,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $jersey_number = !empty($_POST['jersey_number']) ? $_POST['jersey_number'] : null;
         $dominant_foot = $_POST['dominant_foot'] ?? '';
         $position = $_POST['position'] ?? '';
+        $position_detail = trim((string)($_POST['position_detail'] ?? ''));
         $status = isset($_POST['status']) ? 'active' : 'inactive';
         
         // Skills
@@ -145,6 +146,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nik_error = playerEditValidateNik($nik);
         if ($nik_error !== null) {
             throw new Exception($nik_error);
+        }
+
+        if ((function_exists('mb_strlen') ? mb_strlen($position_detail, 'UTF-8') : strlen($position_detail)) > 100) {
+            throw new Exception('Detail posisi maksimal 100 karakter!');
         }
 
         // Validasi duplicate nama pemain (global lintas semua tim), kecuali player ini sendiri
@@ -265,6 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 jersey_number = ?,
                 dominant_foot = ?,
                 position = ?,
+                position_detail = ?,
                 dribbling = ?,
                 technique = ?,
                 speed = ?,
@@ -287,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name, $birth_place, $birth_date, $sport_type, $gender_db,
             $nik, $nisn, $height, $weight, $email, $phone,
             $nationality, $street, $city, $province, $postal_code, $country,
-            $team_id, $jersey_number, $dominant_foot, $position,
+            $team_id, $jersey_number, $dominant_foot, $position, $position_detail !== '' ? $position_detail : null,
             $dribbling, $technique, $speed, $juggling, $shooting,
             $setplay_position, $passing, $control, $status,
             $photo, $ktp_image, $kk_image, $birth_cert_image, $diploma_image,
@@ -1822,6 +1828,19 @@ select.form-control {
                                 <option value="MF" <?php echo $player['position'] === 'MF' ? 'selected' : ''; ?>>Gelandang (MF)</option>
                                 <option value="FW" <?php echo $player['position'] === 'FW' ? 'selected' : ''; ?>>Penyerang (FW)</option>
                             </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="position_detail">Detail Posisi</label>
+                            <input
+                                type="text"
+                                id="position_detail"
+                                name="position_detail"
+                                class="form-control"
+                                maxlength="100"
+                                placeholder="Contoh: Winger Kiri"
+                                value="<?php echo htmlspecialchars($_POST['position_detail'] ?? ($player['position_detail'] ?? '')); ?>"
+                            >
                         </div>
                     </div>
 

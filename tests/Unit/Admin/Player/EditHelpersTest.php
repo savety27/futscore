@@ -11,6 +11,7 @@ final class EditHelpersTest extends TestCase
             'name' => '  Budi  ',
             'place_of_birth' => '  Jakarta ',
             'sport' => '  Futsal  ',
+            'position_detail' => '  Winger Kiri  ',
             'status' => 'on',
             'dribbling' => '7',
             'control' => '8',
@@ -19,6 +20,7 @@ final class EditHelpersTest extends TestCase
         $this->assertSame('Budi', $input['name']);
         $this->assertSame('Jakarta', $input['place_of_birth']);
         $this->assertSame('Futsal', $input['sport']);
+        $this->assertSame('Winger Kiri', $input['position_detail']);
         $this->assertSame('active', $input['status']);
         $this->assertSame(7, $input['dribbling']);
         $this->assertSame(8, $input['control']);
@@ -28,6 +30,7 @@ final class EditHelpersTest extends TestCase
     {
         $input = playerEditCollectInput([]);
 
+        $this->assertSame('', $input['position_detail']);
         $this->assertSame('inactive', $input['status']);
         $this->assertSame(5, $input['dribbling']);
         $this->assertSame(5, $input['technique']);
@@ -88,6 +91,16 @@ final class EditHelpersTest extends TestCase
         $this->assertSame('NISN harus terdiri dari tepat 10 digit angka!', $error);
     }
 
+    public function testValidateInputRejectsTooLongPositionDetail(): void
+    {
+        $input = $this->validInput();
+        $input['position_detail'] = str_repeat('a', 101);
+
+        $error = playerEditValidateInput($input);
+
+        $this->assertSame('Detail posisi maksimal 100 karakter!', $error);
+    }
+
     public function testValidateNikReturnsNullForValidNik(): void
     {
         $this->assertNull(playerEditValidateNik('1234567890123456'));
@@ -130,7 +143,7 @@ final class EditHelpersTest extends TestCase
         $this->assertSame('12', $params[':team_id']);
         $this->assertSame('Budi', $params[':name']);
         $this->assertSame('L', $params[':gender']);
-        $this->assertSame('Forward', $params[':position_detail']);
+        $this->assertSame('Second Striker', $params[':position_detail']);
         $this->assertSame('inactive', $params[':status']);
     }
 
@@ -148,6 +161,7 @@ final class EditHelpersTest extends TestCase
         $input['province'] = '';
         $input['postal_code'] = '';
         $input['country'] = '';
+        $input['position_detail'] = '';
 
         $params = playerEditBuildUpdateParams($input, [], 42);
 
@@ -160,6 +174,7 @@ final class EditHelpersTest extends TestCase
         $this->assertNull($params[':city']);
         $this->assertNull($params[':province']);
         $this->assertNull($params[':postal_code']);
+        $this->assertNull($params[':position_detail']);
         $this->assertSame('Indonesia', $params[':nationality']);
         $this->assertSame('Indonesia', $params[':country']);
     }
@@ -319,6 +334,7 @@ final class EditHelpersTest extends TestCase
             'jersey_number' => '10',
             'dominant_foot' => 'Kanan',
             'position' => 'Forward',
+            'position_detail' => 'Second Striker',
             'status' => 'inactive',
             'dribbling' => 6,
             'technique' => 7,

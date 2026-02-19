@@ -24,6 +24,7 @@ function playerEditCollectInput(array $post): array
         'jersey_number' => trim((string)($post['jersey_number'] ?? '')),
         'dominant_foot' => trim((string)($post['dominant_foot'] ?? '')),
         'position' => trim((string)($post['position'] ?? '')),
+        'position_detail' => trim((string)($post['position_detail'] ?? '')),
         'status' => isset($post['status']) ? 'active' : 'inactive',
         'dribbling' => isset($post['dribbling']) ? (int)$post['dribbling'] : 5,
         'technique' => isset($post['technique']) ? (int)$post['technique'] : 5,
@@ -62,6 +63,10 @@ function playerEditValidateInput(array $input): ?string
 
     if ($input['nisn'] !== '' && (strlen($input['nisn']) !== 10 || !is_numeric($input['nisn']))) {
         return 'NISN harus terdiri dari tepat 10 digit angka!';
+    }
+
+    if ((function_exists('mb_strlen') ? mb_strlen($input['position_detail'], 'UTF-8') : strlen($input['position_detail'])) > 100) {
+        return 'Detail posisi maksimal 100 karakter!';
     }
 
     return null;
@@ -135,7 +140,7 @@ function playerEditBuildUpdateParams(array $input, array $uploadedFiles, int $id
         ':postal_code' => $input['postal_code'] !== '' ? $input['postal_code'] : null,
         ':country' => $input['country'] !== '' ? $input['country'] : 'Indonesia',
         ':dominant_foot' => $input['dominant_foot'],
-        ':position_detail' => $input['position'],
+        ':position_detail' => $input['position_detail'] !== '' ? $input['position_detail'] : null,
         ':dribbling' => $input['dribbling'],
         ':technique' => $input['technique'],
         ':speed' => $input['speed'],

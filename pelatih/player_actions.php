@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? '');
         $jersey_number = trim($_POST['jersey_number'] ?? '');
         $position = trim($_POST['position'] ?? '');
+        $position_detail = trim($_POST['position_detail'] ?? '');
         $birth_date = trim($_POST['birth_date'] ?? '');
         $birth_place = trim($_POST['birth_place'] ?? '');
         $gender = trim($_POST['gender'] ?? '');
@@ -104,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $postal_code = trim($_POST['postal_code'] ?? '');
         $country = trim($_POST['country'] ?? 'Indonesia');
         $status = isset($_POST['status']) ? 'active' : 'inactive';
+        $position_detail_db = $position_detail !== '' ? $position_detail : null;
         
         // Skills data
         $dribbling = (int)($_POST['dribbling'] ?? 5);
@@ -126,6 +128,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validate NIK
             if (!preg_match('/^[0-9]{16}$/', $nik)) {
                 throw new Exception('NIK must be exactly 16 digits.');
+            }
+
+            if ((function_exists('mb_strlen') ? mb_strlen($position_detail, 'UTF-8') : strlen($position_detail)) > 100) {
+                throw new Exception('Detail posisi maksimal 100 karakter!');
             }
         }
         
@@ -172,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $diploma_image = uploadPlayerFile($_FILES['diploma_image'], '../images/players/', 'ijazah_');
             }
             
-            // Insert player data - position_detail diisi dengan nilai position
+            // Insert player data
             $stmt = $conn->prepare("
                 INSERT INTO players (
                     name, slug, team_id, jersey_number, position, position_detail, 
@@ -190,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ");
             
             $stmt->execute([
-                $name, $slug, $team_id, $jersey_number, $position, $position, // position_detail = position
+                $name, $slug, $team_id, $jersey_number, $position, $position_detail_db,
                 $birth_date, $birth_place, $gender, $height, $weight, $photo,
                 $dominant_foot, $nisn, $nik, $sport_type, $email, $phone,
                 $nationality, $street, $city, $province, $postal_code, $country,
@@ -227,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     setplay_position = ?, passing = ?, control = ?, status = ?, updated_at = NOW()";
             
             $params = [
-                $name, $jersey_number, $position, $position, // position_detail = position
+                $name, $jersey_number, $position, $position_detail_db,
                 $birth_date, $birth_place, $gender,
                 $height, $weight, $dominant_foot,
                 $nisn, $nik, $sport_type, $email, $phone,
