@@ -25,11 +25,12 @@ function resolveSchemaPath(string $projectRoot): string
     $configuredPath = getenv('TEST_SCHEMA_PATH');
 
     if ($configuredPath === false || trim($configuredPath) === '') {
-        $configuredPath = $projectRoot . '/migrations/futscore_db (8).sql';
+        $configuredPath = 'migrations/futscore_db (8).sql';
     }
 
     $isAbsolutePath = preg_match('/^[A-Za-z]:[\\\\\/]/', $configuredPath) === 1
         || str_starts_with($configuredPath, '\\\\');
+    $isAbsolutePath = $isAbsolutePath || str_starts_with($configuredPath, '/');
     $schemaPath = $isAbsolutePath
         ? $configuredPath
         : $projectRoot . '/' . ltrim($configuredPath, '/\\');
