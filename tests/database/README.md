@@ -4,7 +4,7 @@ Project ini menggunakan database khusus untuk integration test:
 
 - Nama database: `futscore_test`
 - Script setup/reset: `tests/scripts/reset_test_db.php`
-- Schema: `tests/database/schema.sql`
+- Schema source: `migrations/futscore_db (8).sql`
 - Data seed: `tests/database/seed.sql`
 
 ## Alasan
@@ -35,3 +35,8 @@ Reset DB + jalankan integration test:
 ```bash
 composer test:integration
 ```
+
+## Catatan sinkronisasi schema
+
+Reset integration test menggunakan satu baseline schema dump (`migrations/futscore_db (8).sql`) lalu seed data.
+Migration historis (`migration_*.sql` / `fix_*.sql`) tidak direplay saat reset untuk menghindari konflik schema ganda.

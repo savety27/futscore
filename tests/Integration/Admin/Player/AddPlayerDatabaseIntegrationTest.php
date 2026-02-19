@@ -25,35 +25,45 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
 
-        $this->pdo->exec('DELETE FROM players');
+        $this->pdo->beginTransaction();
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
     }
 
     public function testCanInsertPlayerDataIntoDedicatedTestDatabase(): void
     {
-        $input = $this->validInput('Budi Integrasi', '1111222233334444');
+        $nik = $this->randomNik();
+        $input = $this->validInput('ITEST Budi Integrasi', $nik);
         $slug = playerAddGenerateSlug($input['name'], 1700000000);
         $params = playerAddBuildInsertParams($input, [], $slug);
 
         $stmt = $this->pdo->prepare($this->insertSql());
         $stmt->execute($params);
 
-        $saved = $this->pdo->query("SELECT name, nik, gender, status FROM players LIMIT 1")->fetch();
+        $stmt = $this->pdo->prepare('SELECT name, nik, gender, status FROM players WHERE nik = :nik LIMIT 1');
+        $stmt->execute([':nik' => $nik]);
+        $saved = $stmt->fetch();
 
-        $this->assertSame('Budi Integrasi', $saved['name']);
-        $this->assertSame('1111222233334444', $saved['nik']);
+        $this->assertSame('ITEST Budi Integrasi', $saved['name']);
+        $this->assertSame($nik, $saved['nik']);
         $this->assertSame('L', $saved['gender']);
         $this->assertSame('inactive', $saved['status']);
     }
 
     public function testDuplicateNameMapsToFriendlyErrorMessage(): void
     {
-        $inputA = $this->validInput('Nama Sama', '1111222233334444');
-        $inputB = $this->validInput('Nama Sama', '5555666677778888');
+        $inputA = $this->validInput('ITEST Nama Sama', $this->randomNik());
+        $inputB = $this->validInput('ITEST Nama Sama', $this->randomNik());
 
-        $this->insertPlayer($inputA);
+        $this->insertPlayer($inputA, 1700000000);
 
         try {
-            $this->insertPlayer($inputB);
+            $this->insertPlayer($inputB, 1700000001);
             $this->fail('Expected duplicate name insert to fail.');
         } catch (PDOException $e) {
             $mapped = playerAddMapInsertError($e);
@@ -63,8 +73,9 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
 
     public function testDuplicateNikMapsToFriendlyErrorMessage(): void
     {
-        $inputA = $this->validInput('Nama Satu', '1111222233334444');
-        $inputB = $this->validInput('Nama Dua', '1111222233334444');
+        $nik = $this->randomNik();
+        $inputA = $this->validInput('ITEST Nama Satu', $nik);
+        $inputB = $this->validInput('ITEST Nama Dua', $nik);
 
         $this->insertPlayer($inputA);
 
@@ -77,9 +88,9 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
         }
     }
 
-    private function insertPlayer(array $input): void
+    private function insertPlayer(array $input, ?int $timestamp = null): void
     {
-        $slug = playerAddGenerateSlug($input['name'], 1700000000);
+        $slug = playerAddGenerateSlug($input['name'], $timestamp ?? 1700000000);
         $params = playerAddBuildInsertParams($input, [], $slug);
 
         $stmt = $this->pdo->prepare($this->insertSql());
@@ -139,5 +150,14 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
             'passing' => 7,
             'control' => 8,
         ];
+    }
+
+    private function randomNik(): string
+    {
+        $nik = '';
+        for ($i = 0; $i < 16; $i++) {
+            $nik .= (string) random_int(0, 9);
+        }
+        return $nik;
     }
 }
