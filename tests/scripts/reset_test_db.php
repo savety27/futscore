@@ -161,7 +161,13 @@ $dbPdo = new PDO($dbDsn, $username, $password, [
 
 $projectRoot = dirname(__DIR__, 2);
 $schemaPath = resolveSchemaPath($projectRoot);
+$schemaPatchPath = __DIR__ . '/../database/schema_patch.sql';
 $seedPath = __DIR__ . '/../database/seed.sql';
+
+if (!file_exists($schemaPatchPath)) {
+    fwrite(STDERR, "Schema patch file not found: {$schemaPatchPath}\n");
+    exit(1);
+}
 
 if (!file_exists($seedPath)) {
     fwrite(STDERR, "Seed file not found: {$seedPath}\n");
@@ -170,6 +176,10 @@ if (!file_exists($seedPath)) {
 
 fwrite(STDOUT, 'Loading schema: ' . basename($schemaPath) . " ... ");
 applySqlFile($dbPdo, $schemaPath);
+fwrite(STDOUT, "DONE\n");
+
+fwrite(STDOUT, 'Loading schema patch: ' . basename($schemaPatchPath) . " ... ");
+applySqlFile($dbPdo, $schemaPatchPath);
 fwrite(STDOUT, "DONE\n");
 
 fwrite(STDOUT, 'Loading seed: ' . basename($seedPath) . " ... ");
