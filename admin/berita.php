@@ -657,11 +657,20 @@ body {
 
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .data-table tbody tr:hover {
-    background: #f8f9fa;
+    background: #eef5ff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+/* Prevent first row hover from overlapping the yellow header border */
+.data-table tbody tr:first-child:hover {
+    transform: translateY(0);
 }
 
 .data-table td {

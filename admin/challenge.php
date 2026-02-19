@@ -579,11 +579,20 @@ body {
 
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .data-table tbody tr:hover {
-    background: #f8f9fa;
+    background: #eef5ff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
+    z-index: 2;
+}
+
+/* Prevent first row hover from overlapping the yellow header border */
+.data-table tbody tr:first-child:hover {
+    transform: translateY(0);
 }
 
 .data-table td {
@@ -642,6 +651,56 @@ body {
     border: 2px solid #e0e0e0;
     vertical-align: middle;
     margin-right: 8px;
+}
+
+.challenger-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.challenger-stack .team-logo-small {
+    margin-right: 0;
+}
+
+.challenger-name {
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    max-width: 90px;
+    word-break: break-word;
+}
+
+.team-logo-fallback {
+    background: #f0f0f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 92px;
+    min-height: 34px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    line-height: 1.15;
+    text-align: center;
+}
+
+.event-badge-primary {
+    background: #f0f7ff;
+    color: var(--primary);
+}
+
+.event-badge-muted {
+    background: #f0f0f0;
+    color: #666;
 }
 
 /* Score Badge */
@@ -1318,32 +1377,40 @@ body {
                                     <?php echo htmlspecialchars($challenge['status'] ?? ''); ?>
                                 </span>
                             </td>
-                            <td class="team-cell">
-                                <?php if (!empty($challenge['challenger_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo'] ?? ''); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
-                                         class="team-logo-small">
-                                <?php else: ?>
-                                    <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                            <td class="team-cell challenger-cell">
+                                <div class="challenger-stack">
+                                    <?php if (!empty($challenge['challenger_logo'])): ?>
+                                        <img src="../images/teams/<?php echo htmlspecialchars($challenge['challenger_logo'] ?? ''); ?>" 
+                                             alt="<?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>" 
+                                             class="team-logo-small">
+                                    <?php else: ?>
+                                        <div class="team-logo-small team-logo-fallback">
+                                            <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="challenger-name">
+                                        <?php echo nl2br(htmlspecialchars(preg_replace('/\s+/', "\n", trim($challenge['challenger_name'] ?? '-')))); ?>
                                     </div>
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>
+                                </div>
                             </td>
                             <td class="vs-cell" style="text-align: center; font-weight: bold; color: var(--primary);">
                                 VS
                             </td>
-                            <td class="team-cell">
-                                <?php if (!empty($challenge['opponent_logo'])): ?>
-                                    <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo'] ?? ''); ?>" 
-                                         alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
-                                         class="team-logo-small">
-                                <?php else: ?>
-                                    <div class="team-logo-small" style="background: #f0f0f0; display: inline-flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                            <td class="team-cell opponent-cell">
+                                <div class="challenger-stack">
+                                    <?php if (!empty($challenge['opponent_logo'])): ?>
+                                        <img src="../images/teams/<?php echo htmlspecialchars($challenge['opponent_logo'] ?? ''); ?>" 
+                                             alt="<?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>" 
+                                             class="team-logo-small">
+                                    <?php else: ?>
+                                        <div class="team-logo-small team-logo-fallback">
+                                            <i class="fas fa-shield-alt" style="color: #999; font-size: 18px;"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="challenger-name">
+                                        <?php echo nl2br(htmlspecialchars(preg_replace('/\s+/', "\n", trim($challenge['opponent_name'] ?? 'TBD')))); ?>
                                     </div>
-                                <?php endif; ?>
-                                <?php echo htmlspecialchars($challenge['opponent_name'] ?? 'TBD'); ?>
+                                </div>
                             </td>
                             <td class="venue-cell">
                                 <?php echo !empty($challenge['venue_name']) ? htmlspecialchars($challenge['venue_name']) : '-'; ?>
@@ -1355,15 +1422,20 @@ body {
                                 <?php echo date('d M Y, H:i', strtotime($challenge['expiry_date'])); ?>
                             </td>
                             <td class="sport-cell">
-                                <?php if (!empty($challenge['sport_type'])): ?>
-                                    <span style="padding: 4px 8px; background: #f0f7ff; color: var(--primary); border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
-                                    </span>
-                                <?php else: ?>
-                                    <span style="padding: 4px 8px; background: #f0f0f0; color: #666; border-radius: 12px; font-size: 11px;">
-                                        <?php echo htmlspecialchars($challenge['challenger_sport'] ?? '-'); ?>
-                                    </span>
-                                <?php endif; ?>
+                                <?php
+                                $event_value = !empty($challenge['sport_type'])
+                                    ? (string)($challenge['sport_type'] ?? '')
+                                    : (string)($challenge['challenger_sport'] ?? '-');
+                                $event_value = trim($event_value);
+                                $event_words = preg_split('/\s+/', $event_value, -1, PREG_SPLIT_NO_EMPTY);
+                                $event_line_1 = $event_words[0] ?? '-';
+                                $event_line_2 = count($event_words) > 1 ? implode(' ', array_slice($event_words, 1)) : '&nbsp;';
+                                $event_class = !empty($challenge['sport_type']) ? 'event-badge-primary' : 'event-badge-muted';
+                                ?>
+                                <span class="event-badge <?php echo $event_class; ?>">
+                                    <span><?php echo htmlspecialchars($event_line_1); ?></span>
+                                    <span><?php echo $event_line_2 === '&nbsp;' ? '&nbsp;' : htmlspecialchars($event_line_2); ?></span>
+                                </span>
                             </td>
                             <td class="match-cell">
                                 <?php if (!empty($challenge['match_status'])): ?>
