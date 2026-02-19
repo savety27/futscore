@@ -446,14 +446,41 @@ body {
     border-radius: 24px;
     box-shadow: var(--premium-shadow);
     text-align: center;
-    transition: var(--transition);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
     border: 1px solid rgba(255, 255, 255, 0.8);
+    position: relative;
+    overflow: hidden;
+    will-change: transform;
 }
 
 .action-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--secondary);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    transform: translateY(-11px) scale(1.017);
+    border-color: #8ebeff;
+    box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
+}
+
+.action-card:focus-within {
+    transform: translateY(-11px) scale(1.017);
+    border-color: #8ebeff;
+    box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: -120%;
+    left: -35%;
+    width: 35%;
+    height: 300%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+    transform: rotate(14deg);
+    transition: transform 0.8s ease, left 0.8s ease;
+    pointer-events: none;
+}
+
+.action-card:hover::before,
+.action-card:focus-within::before {
+    left: 120%;
 }
 
 .action-icon {
@@ -468,6 +495,14 @@ body {
     background: linear-gradient(135deg, var(--primary), var(--accent));
     margin: 0 auto 15px;
     box-shadow: 0 10px 20px rgba(10, 36, 99, 0.2);
+    transition: transform 0.28s ease, background-color 0.28s ease, color 0.28s ease;
+}
+
+.action-card:hover .action-icon,
+.action-card:focus-within .action-icon {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-3px) scale(1.06);
 }
 
 .action-title {
@@ -739,6 +774,60 @@ body {
         transform: translateY(0);
     }
 }
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cardPop {
+    0% {
+        opacity: 0;
+        transform: translateY(22px) scale(0.96);
+    }
+    65% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.reveal {
+    animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    opacity: 0;
+}
+
+.stat-card.reveal,
+.action-card.reveal {
+    animation: cardPop 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    opacity: 0;
+}
+
+.d-1 { animation-delay: 0.1s; }
+.d-2 { animation-delay: 0.2s; }
+.d-3 { animation-delay: 0.3s; }
+.d-4 { animation-delay: 0.4s; }
+.d-5 { animation-delay: 0.5s; }
+.d-6 { animation-delay: 0.6s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal,
+    .stat-card.reveal,
+    .action-card.reveal {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
 </style>
 </head>
 <body>
@@ -829,39 +918,39 @@ body {
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card reveal d-1">
                 <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><?php echo number_format($stats['total_players']); ?></h3>
+                    <h3 data-count="<?php echo (int) $stats['total_players']; ?>"><?php echo number_format((int) $stats['total_players']); ?></h3>
                     <p>Total Pemain</p>
                 </div>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card reveal d-2">
                 <div class="stat-icon">
                     <i class="fas fa-futbol"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><?php echo number_format($stats['total_teams']); ?></h3>
+                    <h3 data-count="<?php echo (int) $stats['total_teams']; ?>"><?php echo number_format((int) $stats['total_teams']); ?></h3>
                     <p>Total Team</p>
                 </div>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card reveal d-3">
                 <div class="stat-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><?php echo number_format($stats['active_teams']); ?></h3>
+                    <h3 data-count="<?php echo (int) $stats['active_teams']; ?>"><?php echo number_format((int) $stats['active_teams']); ?></h3>
                     <p>Team Aktif</p>
                 </div>
             </div>
         </div>
 
         <div class="quick-actions">
-            <div class="action-card">
+            <div class="action-card reveal d-4">
                 <div class="action-icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
@@ -872,7 +961,7 @@ body {
                 </a>
             </div>
 
-            <div class="action-card">
+            <div class="action-card reveal d-5">
                 <div class="action-icon">
                     <i class="fas fa-plus-circle"></i>
                 </div>
@@ -883,7 +972,7 @@ body {
                 </a>
             </div>
 
-            <div class="action-card">
+            <div class="action-card reveal d-6">
                 <div class="action-icon">
                     <i class="fas fa-trophy"></i>
                 </div>
@@ -946,17 +1035,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Action card hover effects
-    document.querySelectorAll('.action-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-            this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.12)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = 'var(--card-shadow)';
-        });
+    // Counter animation (same style as pelatih dashboard)
+    const counters = document.querySelectorAll('.stat-content h3[data-count]');
+    counters.forEach((el) => {
+        const target = parseInt(el.getAttribute('data-count'), 10);
+        if (Number.isNaN(target)) return;
+
+        const duration = 850;
+        const start = performance.now();
+
+        function tick(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(target * eased).toLocaleString('en-US');
+            if (progress < 1) {
+                requestAnimationFrame(tick);
+            }
+        }
+
+        el.textContent = '0';
+        requestAnimationFrame(tick);
     });
 });
 </script>
