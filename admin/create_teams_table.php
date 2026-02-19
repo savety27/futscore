@@ -214,7 +214,7 @@ echo "<br><br><a href='team.php' style='background: linear-gradient(135deg, #0A2
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Teams Table - FutScore</title>
+<title>Create Teams Table</title>
 <style>
     body {
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;

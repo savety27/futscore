@@ -105,7 +105,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard - MGP</title>
+<title>Admin Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
@@ -817,7 +817,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
-                <p>Dashboard admin MGP - Sistem manajemen pertandingan futsal</p>
+                <p>Dashboard admin - Sistem manajemen pertandingan futsal</p>
             </div>
             
             <div class="user-actions">

@@ -77,7 +77,7 @@ try {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fix Teams Table - FutScore</title>
+<title>Fix Teams Table </title>
 <style>
     body {
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;

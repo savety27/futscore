@@ -6,8 +6,8 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>TENTANG MGP</h3>
-                    <p>MGP adalah aplikasi berbasis web yang berfokus pada pembinaan atlet dengan menyimpan data history pemain, team, dan event secara lengkap. Data MGP dibuat dan dipelihara dengan kolaborasi admin, para Coach team, dan Event Organizer. MGP juga mendukung Klub olahraga untuk manajemen kepelatihan.</p>
+                    <h3>TENTANG ALVETRIX</h3>
+                    <p>ALVETRIX adalah aplikasi berbasis web yang berfokus pada pembinaan atlet dengan menyimpan data history pemain, team, dan event secara lengkap. Data ALVETRIX dibuat dan dipelihara dengan kolaborasi admin, para Coach team, dan Event Organizer. ALVETRIX juga mendukung Klub olahraga untuk manajemen kepelatihan.</p>
                 </div>
                 
                 <div class="footer-section">
