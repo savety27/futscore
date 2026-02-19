@@ -43,7 +43,7 @@ try {
     // Jika error, sport_types akan tetap array kosong
 }
 
-// Base query untuk challenges dengan join ke teams untuk nama tim
+// Base query untuk challenges dengan join ke teams untuk nama team
 $base_query = "SELECT 
     c.*,
     t1.name as challenger_name,
@@ -521,7 +521,7 @@ try {
                     <input
                         type="text"
                         name="search"
-                        placeholder="Cari kode, tim, event, atau status pertandingan..."
+                        placeholder="Cari kode, team, event, atau status pertandingan..."
                         value="<?php echo htmlspecialchars($search); ?>"
                         class="schedule-search-input"
                     >
@@ -571,7 +571,7 @@ try {
                     <tr>
                         <th>Kode Pertandingan</th>
                         <th>Tanggal</th>
-                        <th>Tim</th>
+                        <th>Team</th>
                         <th>Event</th>
                         <th>Lokasi</th>
                         <th>Skor</th>

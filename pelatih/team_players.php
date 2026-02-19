@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Pemain Tim';
+$page_title = 'Pemain Team';
 $current_page = 'team'; // Keep 'team' as current page to highlight the sidebar correctly
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -15,7 +15,7 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Tim tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Tim</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
     require_once 'includes/footer.php';
     exit;
 }
@@ -83,14 +83,14 @@ try {
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Tim
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
         </a>
     </div>
 
     <?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
-            <p>Tidak ada pemain ditemukan di tim ini.</p>
+            <p>Tidak ada pemain ditemukan di team ini.</p>
         </div>
     <?php else: ?>
         <div class="table-responsive">

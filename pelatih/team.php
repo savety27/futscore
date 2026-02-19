@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Daftar Tim';
+$page_title = 'Daftar Team';
 $current_page = 'team';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -70,26 +70,26 @@ try {
 
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Tim</h2>
+        <h2 class="section-title">Team</h2>
         <!-- Read Only: No Add Button -->
     </div>
 
     <div class="search-bar" style="margin-bottom: 20px;">
         <form action="" method="GET">
-            <input type="text" name="search" placeholder="Cari tim..." value="<?php echo htmlspecialchars($search); ?>">
+            <input type="text" name="search" placeholder="Cari team..." value="<?php echo htmlspecialchars($search); ?>">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
     </div>
 
     <?php if (empty($teams)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">Tim tidak ditemukan.</p>
+        <p style="text-align: center; color: var(--gray); padding: 20px;">Team tidak ditemukan.</p>
     <?php else: ?>
         <div class="team-table-wrap">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th class="logo-cell">Logo</th>
-                        <th>Nama Tim</th>
+                        <th>Nama Team</th>
                         <th>Alias</th>
                         <th>Manager</th>
                         <th>Pemain</th>

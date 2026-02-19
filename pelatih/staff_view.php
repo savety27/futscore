@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Lihat Detail Staf Tim';
+$page_title = 'Lihat Detail Staf Team';
 $current_page = 'team_staff';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -344,7 +344,7 @@ $position_labels = [
 <div class="page-header">
     <h2 class="page-title">
         <i class="fas fa-user-tie"></i>
-        <span>Detail Staf Tim</span>
+        <span>Detail Staf Team</span>
     </h2>
     <div class="action-buttons">
         <a href="team_staff.php" class="btn btn-secondary">

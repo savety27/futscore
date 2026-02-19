@@ -94,7 +94,7 @@ if ($team_id) {
     <?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
-            <p>Tidak ada pemain ditemukan di tim Anda.</p>
+            <p>Tidak ada pemain ditemukan di team Anda.</p>
             <a href="player_form.php" class="btn-primary">Tambah Pemain Pertama Anda</a>
         </div>
     <?php else: ?>

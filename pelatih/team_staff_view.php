@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Staf Tim';
+$page_title = 'Staf Team';
 $current_page = 'team'; // Keep 'team' as current page for sidebar
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -15,7 +15,7 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Tim tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Tim</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
     require_once 'includes/footer.php';
     exit;
 }
@@ -128,7 +128,7 @@ try {
             </div>
         </div>
         <a href="team.php" class="btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Tim
+            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
         </a>
     </div>
 
@@ -144,7 +144,7 @@ try {
     <?php if (empty($staff_list)): ?>
         <div class="empty-state">
             <i class="fas fa-user-tie"></i>
-            <p>Tidak ada staf ditemukan di tim ini.</p>
+            <p>Tidak ada staf ditemukan di team ini.</p>
         </div>
     <?php else: ?>
         <div class="table-responsive">

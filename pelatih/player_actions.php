@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if (!$team_id) {
-            throw new Exception('Tim belum terhubung ke akun pelatih. Silakan set tim terlebih dulu.');
+            throw new Exception('Team belum terhubung ke akun pelatih. Silakan set team terlebih dulu.');
         }
         // Get form data
         $name = trim($_POST['name'] ?? '');

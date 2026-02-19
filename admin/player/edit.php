@@ -326,7 +326,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edit Player - FutScore</title>
+<title>Edit Player</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 /* CSS styles for sidebar and layout */
@@ -405,7 +405,7 @@ body {
     box-shadow: none;
     position: relative;
     overflow: visible;
-    transition: var(--transition);
+    transition: none;
 }
 
 .logo:hover {
@@ -461,7 +461,7 @@ body {
     padding: 14px 20px;
     color: rgba(255, 255, 255, 0.75);
     text-decoration: none;
-    transition: var(--transition);
+    transition: none;
     position: relative;
     border-radius: 12px;
     margin: 4px 0;
@@ -470,7 +470,7 @@ body {
 .menu-link:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    transform: translateX(5px);
+    transform: none;
 }
 
 .menu-link.active {
@@ -498,11 +498,11 @@ body {
 .menu-arrow {
     font-size: 12px;
     opacity: 0.6;
-    transition: var(--transition);
+    transition: none;
 }
 
 .menu-arrow.rotate {
-    transform: rotate(90deg);
+    transform: none;
     opacity: 1;
 }
 
@@ -510,7 +510,7 @@ body {
 .submenu {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease-in-out;
+    transition: none;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 0 0 12px 12px;
 }
@@ -529,7 +529,7 @@ body {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     border-radius: 8px;
-    transition: var(--transition);
+    transition: none;
     position: relative;
     font-size: 14px;
 }
@@ -537,7 +537,7 @@ body {
 .submenu-link:hover {
     background: rgba(255, 215, 0, 0.1);
     color: var(--secondary);
-    padding-left: 20px;
+    padding-left: 15px;
 }
 
 .submenu-link.active {
@@ -1170,7 +1170,7 @@ select.form-control {
         z-index: 1001;
         font-size: 24px;
         cursor: pointer;
-        transition: var(--transition);
+        transition: none;
     }
 
     .menu-toggle:hover {
@@ -1349,6 +1349,24 @@ select.form-control {
         min-width: 100%;
     }
 }
+
+/* Sidebar interaction override: disable animations */
+.sidebar,
+.sidebar *,
+.menu-link,
+.menu-arrow,
+.submenu,
+.submenu-link,
+.menu-overlay {
+    transition: none !important;
+    animation: none !important;
+}
+
+.menu-link:hover,
+.submenu-link:hover,
+.menu-arrow.rotate {
+    transform: none !important;
+}
 </style>
 </head>
 <body>
@@ -1432,7 +1450,7 @@ select.form-control {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
+                <h1>Edit Player &#127939;</h1>
                 <p>Edit Player - Sistem manajemen pemain futsal</p>
             </div>
             
@@ -2468,3 +2486,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+

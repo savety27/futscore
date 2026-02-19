@@ -211,7 +211,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Player - FutScore Admin</title>
+    <title>Tambah Player</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* CSS styles for sidebar and layout */
@@ -1246,7 +1246,7 @@ try {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Selamat Datang, <?php echo htmlspecialchars($admin_name ?? ''); ?> ! 👋</h1>
+                <h1>Tambah Player Baru &#127939;</h1>
                 <p>Tambah Player Baru - Sistem manajemen pemain futsal</p>
             </div>
             

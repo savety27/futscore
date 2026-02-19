@@ -298,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Team Staff - FutScore</title>
+<title>Add Team Staff </title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
@@ -349,7 +349,7 @@ body {
     overflow-y: auto;
     z-index: 100;
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
-    transition: var(--transition);
+    transition: none;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -433,7 +433,7 @@ body {
     padding: 14px 20px;
     color: rgba(255, 255, 255, 0.75);
     text-decoration: none;
-    transition: var(--transition);
+    transition: none;
     position: relative;
     border-radius: 12px;
     margin: 4px 0;
@@ -442,7 +442,7 @@ body {
 .menu-link:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    transform: translateX(5px);
+    transform: none;
 }
 
 .menu-link.active {
@@ -470,11 +470,11 @@ body {
 .menu-arrow {
     font-size: 12px;
     opacity: 0.6;
-    transition: var(--transition);
+    transition: none;
 }
 
 .menu-arrow.rotate {
-    transform: rotate(90deg);
+    transform: none;
     opacity: 1;
 }
 
@@ -482,7 +482,7 @@ body {
 .submenu {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease-in-out;
+    transition: none;
     background: rgba(0, 0, 0, 0.2);
     border-radius: 0 0 12px 12px;
 }
@@ -501,7 +501,7 @@ body {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
     border-radius: 8px;
-    transition: var(--transition);
+    transition: none;
     position: relative;
     font-size: 14px;
 }
@@ -509,7 +509,7 @@ body {
 .submenu-link:hover {
     background: rgba(255, 215, 0, 0.1);
     color: var(--secondary);
-    padding-left: 20px;
+    padding-left: 15px;
 }
 
 .submenu-link.active {
@@ -1125,7 +1125,7 @@ body {
         z-index: 1001;
         font-size: 24px;
         cursor: pointer;
-        transition: var(--transition);
+        transition: none;
     }
 
     .menu-toggle:hover {
@@ -1282,6 +1282,24 @@ body {
         right: 20px;
     }
 }
+
+/* Sidebar interaction override: disable animations */
+.sidebar,
+.sidebar *,
+.menu-link,
+.menu-arrow,
+.submenu,
+.submenu-link,
+.menu-overlay {
+    transition: none !important;
+    animation: none !important;
+}
+
+.menu-link:hover,
+.submenu-link:hover,
+.menu-arrow.rotate {
+    transform: none !important;
+}
 </style>
 </head>
 <body>
@@ -1365,7 +1383,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Add New Team Staff 👔</h1>
+                <h1>Tambah Team Staff Baru 👔</h1>
                 <p>Tambahkan data staff baru ke sistem</p>
             </div>
             
@@ -2040,3 +2058,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+

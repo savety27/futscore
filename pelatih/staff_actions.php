@@ -21,7 +21,7 @@ if (!$team_id && isset($_SESSION['admin_id'])) {
 }
 
 if (!$team_id) {
-    $_SESSION['error_message'] = 'Tim belum terhubung ke akun pelatih. Silakan hubungi administrator.';
+    $_SESSION['error_message'] = 'Team belum terhubung ke akun pelatih. Silakan hubungi administrator.';
     header('Location: team_staff.php');
     exit;
 }
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("SELECT id FROM team_staff WHERE id = ? AND team_id = ?");
             $stmt->execute([$id, $team_id]);
             if (!$stmt->fetch()) {
-                throw new Exception('Akses ditolak. Staff ini bukan milik tim Anda.');
+                throw new Exception('Akses ditolak. Staff ini bukan milik team Anda.');
             }
             
             // Validation

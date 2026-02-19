@@ -13,7 +13,7 @@ $page_title = $page_title ?? 'Dashboard';
 $current_page = $current_page ?? 'dashboard';
 $pelatih_name = $_SESSION['admin_fullname'] ?? 'Pelatih';
 $team_id = $_SESSION['team_id'] ?? 0;
-$team_name = 'FutScore';
+$team_name = 'Alvetrix';
 
 if ($team_id && isset($conn)) {
     try {
@@ -30,7 +30,7 @@ if ($team_id && isset($conn)) {
         $stmt_expire->execute();
         
     } catch (PDOException $e) {
-        $team_name = 'FutScore';
+        $team_name = 'Alvetrix';
     }
 } elseif (isset($conn)) {
     // Fallback jika tidak ada team_id tapi koneksi ada (jarang terjadi di pelatih area tapi untuk jaga-jaga)
@@ -105,7 +105,7 @@ if ($team_id && isset($conn)) {
             <div class="menu-item">
                 <a href="team_staff.php" class="menu-link <?php echo $current_page === 'team_staff' ? 'active' : ''; ?>">
                     <span class="menu-icon">👔</span>
-                    <span class="menu-text">Staf Tim</span>
+                    <span class="menu-text">Staf Team</span>
                 </a>
             </div>
 

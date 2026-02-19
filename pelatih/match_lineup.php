@@ -42,7 +42,7 @@ if ($my_team_id == 0) {
 }
 
     if (!$my_team_id) {
-        die("Error: Anda tidak terdaftar dalam tim manapun.");
+        die("Error: Anda tidak terdaftar dalam team manapun.");
     }
 
     // Get challenge details
