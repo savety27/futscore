@@ -89,6 +89,7 @@ $pageTitle = "Home";
                 <div class="header-actions">
                     <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Lihat Event</a>
                     <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
+                    <a href="player.php" class="btn-primary"><i class="fas fa-running"></i> Lihat Player</a>
                 </div>
             </div>
         </header>
