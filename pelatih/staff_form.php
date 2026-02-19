@@ -1,5 +1,5 @@
 <?php
-$page_title = 'Tambah Staf Tim';
+$page_title = 'Tambah Staf Team';
 $current_page = 'team_staff';
 require_once 'config/database.php';
 require_once 'includes/header.php';
@@ -443,7 +443,7 @@ if ($is_edit) {
     <div class="section-header">
         <h2 class="section-title">
             <i class="fas <?php echo $is_edit ? 'fa-edit' : 'fa-plus-circle'; ?>"></i>
-            <?php echo $is_edit ? 'Edit Staf Tim' : 'Tambah Staf Tim Baru'; ?>
+            <?php echo $is_edit ? 'Edit Staf Team' : 'Tambah Staf Team Baru'; ?>
         </h2>
         <a href="team_staff.php" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali

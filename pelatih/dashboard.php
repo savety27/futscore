@@ -436,7 +436,7 @@ if ($team_id) {
     <!-- Header Section -->
     <div class="dashboard-hero reveal">
         <span class="hero-label">Dashboard Taktis</span>
-        <h1 class="hero-title">Pusat Manajemen Tim</h1>
+        <h1 class="hero-title">Pusat Manajemen Team</h1>
         <p class="hero-description">Pantau performa skuad, jadwal pertandingan mendatang, dan staf manajemen. Pembaruan waktu nyata untuk musim aktif saat ini.</p>
     </div>
 
@@ -447,7 +447,7 @@ if ($team_id) {
             <div class="card-top">
                 <div class="card-icon-box">
                     <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo ?? ''); ?>" alt="Tim" style="width: 32px; height: 32px; object-fit: contain;">
+                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo ?? ''); ?>" alt="Team" style="width: 32px; height: 32px; object-fit: contain;">
                     <?php else: ?>
                         <i class="fas fa-shield"></i>
                     <?php endif; ?>
@@ -477,7 +477,7 @@ if ($team_id) {
             </div>
             <div>
                 <div class="card-value" data-count="<?php echo (int)$staff_count; ?>"><?php echo (int)$staff_count; ?></div>
-                <div class="card-label">Ofisial Tim</div>
+                <div class="card-label">Ofisial Team</div>
             </div>
         </div>
 
@@ -578,7 +578,7 @@ if ($team_id) {
             <div class="empty-state-light">
                 <i class="far fa-calendar-times"></i>
                 <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">Tidak Ada Pertandingan Terjadwal</h3>
-                <p style="color: var(--premium-text-muted);">Tim saat ini sedang dalam masa istirahat di antara jadwal pertandingan.</p>
+                <p style="color: var(--premium-text-muted);">Team saat ini sedang dalam masa istirahat di antara jadwal pertandingan.</p>
             </div>
         <?php endif; ?>
     </div>
