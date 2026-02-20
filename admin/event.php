@@ -41,28 +41,6 @@ function ensure_events_active_column(PDO $conn) {
 
 ensure_events_active_column($conn);
 
-$menu_items = [
-    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'url' => 'dashboard.php', 'submenu' => false],
-    'master' => [
-        'icon' => '📊',
-        'name' => 'Master Data',
-        'submenu' => true,
-        'items' => [
-            'player' => 'player.php',
-            'team' => 'team.php',
-            'team_staff' => 'team_staff.php',
-            'transfer' => 'transfer.php',
-        ]
-    ],
-    'event' => ['icon' => '🏆', 'name' => 'Event', 'url' => 'event.php', 'submenu' => false],
-    'challenge' => ['icon' => '⚔️', 'name' => 'Challenge', 'url' => 'challenge.php', 'submenu' => false],
-    'Venue' => ['icon' => '📍', 'name' => 'Venue', 'url' => 'venue.php', 'submenu' => false],
-    'Pelatih' => ['icon' => '👨‍🏫', 'name' => 'Pelatih', 'url' => 'pelatih.php', 'submenu' => false],
-    'Berita' => ['icon' => '📰', 'name' => 'Berita', 'url' => 'berita.php', 'submenu' => false]
-];
-
-$current_page = basename($_SERVER['PHP_SELF']);
-$academy_name = "Hi, Welcome...";
 $email = $_SESSION['admin_email'] ?? '';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_registration = isset($_GET['registration']) ? trim($_GET['registration']) : '';
@@ -180,6 +158,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Event Management</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 :root {
@@ -190,7 +169,6 @@ try {
     --danger: #ef4444;
     --dark: #1e293b;
     --gray: #64748b;
-    --sidebar-bg: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
     --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
     --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
@@ -202,38 +180,7 @@ body {
     color: var(--dark);
 }
 .wrapper { display: flex; min-height: 100vh; }
-.sidebar {
-    width: 280px;
-    background: var(--sidebar-bg);
-    color: white;
-    position: fixed;
-    height: 100vh;
-    overflow-y: auto;
-    z-index: 100;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-.sidebar-header {
-    padding-top: 20px;
-    padding-right: 10px;
-    padding-bottom: 10px;
-    text-align: center;
-    background: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 10px;
-}
 .logo-container { position: relative; display: inline-block; }
-.logo {
-    max-width: 200px;
-    background: transparent;
-    margin: 0 auto 12px;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    position: relative;
-    overflow: visible;
-    transition: var(--transition);
-}
 .logo:hover { transform: none; box-shadow: none; }
 .logo img {
     width: 100%;
@@ -244,7 +191,6 @@ body {
 }
 .logo img:hover { transform: scale(1.05); }
 .academy-info { text-align: center; }
-.academy-name { font-size: 22px; font-weight: 700; color: var(--secondary); margin-bottom: 8px; }
 .academy-email { font-size: 14px; color: rgba(255, 255, 255, 0.8); }
 .menu { padding: 25px 15px; }
 .menu-item { margin-bottom: 8px; border-radius: 12px; overflow: hidden; }
@@ -443,7 +389,6 @@ body {
 }
 
 @media (max-width: 900px) {
-    .sidebar { display: none; }
     .main { margin-left: 0; width: 100%; padding: 16px; }
     .topbar, .page-header { padding: 16px; }
     .greeting h1 { font-size: 22px; }
@@ -462,6 +407,8 @@ body {
 </head>
 <body>
 <div class="wrapper">
+    <?php include __DIR__ . '/includes/sidebar.php'; ?>
+
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
@@ -793,5 +740,6 @@ document.querySelectorAll('.menu-link').forEach(function(link) {
     }
 });
 </script>
+<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
