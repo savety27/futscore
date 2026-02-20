@@ -121,6 +121,7 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
             'jersey_number' => '10',
             'dominant_foot' => 'Kanan',
             'position' => 'Forward',
+            'position_detail' => '',
             'status' => 'inactive',
             'dribbling' => 6,
             'technique' => 7,

@@ -4,9 +4,9 @@ function playerEditCollectInput(array $post): array
 {
     return [
         'name' => trim((string)($post['name'] ?? '')),
-        'place_of_birth' => trim((string)($post['place_of_birth'] ?? '')),
-        'date_of_birth' => trim((string)($post['date_of_birth'] ?? '')),
-        'sport' => trim((string)($post['sport'] ?? '')),
+        'birth_place' => trim((string)($post['birth_place'] ?? '')),
+        'birth_date' => trim((string)($post['birth_date'] ?? '')),
+        'sport_type' => trim((string)($post['sport_type'] ?? '')),
         'gender' => trim((string)($post['gender'] ?? '')),
         'nik' => trim((string)($post['nik'] ?? '')),
         'nisn' => trim((string)($post['nisn'] ?? '')),
@@ -14,14 +14,14 @@ function playerEditCollectInput(array $post): array
         'weight' => trim((string)($post['weight'] ?? '')),
         'email' => trim((string)($post['email'] ?? '')),
         'phone' => trim((string)($post['phone'] ?? '')),
-        'nationality' => trim((string)($post['nationality'] ?? '')),
-        'address' => trim((string)($post['address'] ?? '')),
+        'nationality' => trim((string)($post['nationality'] ?? 'Indonesia')),
+        'street' => trim((string)($post['street'] ?? '')),
         'city' => trim((string)($post['city'] ?? '')),
         'province' => trim((string)($post['province'] ?? '')),
         'postal_code' => trim((string)($post['postal_code'] ?? '')),
-        'country' => trim((string)($post['country'] ?? '')),
-        'team_id' => trim((string)($post['team_id'] ?? '')),
-        'jersey_number' => trim((string)($post['jersey_number'] ?? '')),
+        'country' => trim((string)($post['country'] ?? 'Indonesia')),
+        'team_id' => ($post['team_id'] ?? '') !== '' ? (string)$post['team_id'] : null,
+        'jersey_number' => ($post['jersey_number'] ?? '') !== '' ? (string)$post['jersey_number'] : null,
         'dominant_foot' => trim((string)($post['dominant_foot'] ?? '')),
         'position' => trim((string)($post['position'] ?? '')),
         'position_detail' => trim((string)($post['position_detail'] ?? '')),
@@ -39,30 +39,9 @@ function playerEditCollectInput(array $post): array
 
 function playerEditValidateInput(array $input): ?string
 {
-    $requiredFields = [
-        'name',
-        'place_of_birth',
-        'date_of_birth',
-        'sport',
-        'gender',
-        'team_id',
-        'jersey_number',
-        'dominant_foot',
-        'position',
-    ];
-
-    foreach ($requiredFields as $field) {
-        if (empty($input[$field])) {
-            return 'Semua field yang wajib harus diisi!';
-        }
-    }
-
-    if (empty($input['nik']) || strlen($input['nik']) !== 16 || !is_numeric($input['nik'])) {
-        return 'NIK harus terdiri dari tepat 16 digit angka!';
-    }
-
-    if ($input['nisn'] !== '' && (strlen($input['nisn']) !== 10 || !is_numeric($input['nisn']))) {
-        return 'NISN harus terdiri dari tepat 10 digit angka!';
+    $nikError = playerEditValidateNik((string)($input['nik'] ?? ''));
+    if ($nikError !== null) {
+        return $nikError;
     }
 
     if ((function_exists('mb_strlen') ? mb_strlen($input['position_detail'], 'UTF-8') : strlen($input['position_detail'])) > 100) {
@@ -75,18 +54,15 @@ function playerEditValidateInput(array $input): ?string
 function playerEditUpdateSql(): string
 {
     return "UPDATE players SET
-        team_id = :team_id,
         name = :name,
-        position = :position,
-        jersey_number = :jersey_number,
+        birth_place = :birth_place,
         birth_date = :birth_date,
+        sport_type = :sport_type,
+        gender = :gender,
+        nik = :nik,
+        nisn = :nisn,
         height = :height,
         weight = :weight,
-        birth_place = :birth_place,
-        gender = :gender,
-        nisn = :nisn,
-        nik = :nik,
-        sport_type = :sport_type,
         email = :email,
         phone = :phone,
         nationality = :nationality,
@@ -95,7 +71,10 @@ function playerEditUpdateSql(): string
         province = :province,
         postal_code = :postal_code,
         country = :country,
+        team_id = :team_id,
+        jersey_number = :jersey_number,
         dominant_foot = :dominant_foot,
+        position = :position,
         position_detail = :position_detail,
         dribbling = :dribbling,
         technique = :technique,
@@ -119,27 +98,27 @@ function playerEditBuildUpdateParams(array $input, array $uploadedFiles, int $id
 {
     return [
         ':id' => $id,
-        ':team_id' => $input['team_id'],
         ':name' => $input['name'],
-        ':position' => $input['position'],
-        ':jersey_number' => $input['jersey_number'],
-        ':birth_date' => $input['date_of_birth'],
-        ':height' => $input['height'] !== '' ? $input['height'] : null,
-        ':weight' => $input['weight'] !== '' ? $input['weight'] : null,
-        ':birth_place' => $input['place_of_birth'],
+        ':birth_place' => $input['birth_place'],
+        ':birth_date' => $input['birth_date'],
+        ':sport_type' => $input['sport_type'],
         ':gender' => playerEditMapGenderForDb($input['gender']),
-        ':nisn' => $input['nisn'] !== '' ? $input['nisn'] : null,
         ':nik' => $input['nik'],
-        ':sport_type' => $input['sport'],
+        ':nisn' => $input['nisn'] !== '' ? $input['nisn'] : null,
+        ':height' => $input['height'] !== '' ? $input['height'] : 0,
+        ':weight' => $input['weight'] !== '' ? $input['weight'] : 0,
         ':email' => $input['email'] !== '' ? $input['email'] : null,
         ':phone' => $input['phone'] !== '' ? $input['phone'] : null,
         ':nationality' => $input['nationality'] !== '' ? $input['nationality'] : 'Indonesia',
-        ':street' => $input['address'] !== '' ? $input['address'] : null,
+        ':street' => $input['street'] !== '' ? $input['street'] : null,
         ':city' => $input['city'] !== '' ? $input['city'] : null,
         ':province' => $input['province'] !== '' ? $input['province'] : null,
         ':postal_code' => $input['postal_code'] !== '' ? $input['postal_code'] : null,
         ':country' => $input['country'] !== '' ? $input['country'] : 'Indonesia',
+        ':team_id' => $input['team_id'],
+        ':jersey_number' => $input['jersey_number'],
         ':dominant_foot' => $input['dominant_foot'],
+        ':position' => $input['position'],
         ':position_detail' => $input['position_detail'] !== '' ? $input['position_detail'] : null,
         ':dribbling' => $input['dribbling'],
         ':technique' => $input['technique'],
@@ -150,11 +129,11 @@ function playerEditBuildUpdateParams(array $input, array $uploadedFiles, int $id
         ':passing' => $input['passing'],
         ':control' => $input['control'],
         ':status' => $input['status'],
-        ':photo' => $uploadedFiles['photo_file'] ?? null,
-        ':ktp_image' => $uploadedFiles['ktp_file'] ?? null,
-        ':kk_image' => $uploadedFiles['kk_file'] ?? null,
-        ':birth_cert_image' => $uploadedFiles['akte_file'] ?? null,
-        ':diploma_image' => $uploadedFiles['ijazah_file'] ?? null,
+        ':photo' => $uploadedFiles['photo'] ?? null,
+        ':ktp_image' => $uploadedFiles['ktp_image'] ?? null,
+        ':kk_image' => $uploadedFiles['kk_image'] ?? null,
+        ':birth_cert_image' => $uploadedFiles['birth_cert_image'] ?? null,
+        ':diploma_image' => $uploadedFiles['diploma_image'] ?? null,
     ];
 }
 
