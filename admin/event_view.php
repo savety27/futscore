@@ -36,6 +36,20 @@ function ensure_events_active_column(PDO $conn) {
 
 ensure_events_active_column($conn);
 
+function hasColumnEventView(PDO $conn, $tableName, $columnName) {
+    try {
+        $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+        if ($safeTable === '') {
+            return false;
+        }
+        $quotedColumn = $conn->quote((string) $columnName);
+        $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+        return $stmt && $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 $menu_items = [
     'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'url' => 'dashboard.php', 'submenu' => false],
     'master' => [
@@ -70,6 +84,9 @@ if ($event_id <= 0) {
 
 $event = null;
 $error = '';
+$eventParticipantGroups = [];
+$eventParticipantTotal = 0;
+$eventDataReady = false;
 try {
     $stmt = $conn->prepare("SELECT * FROM events WHERE id = ? LIMIT 1");
     $stmt->execute([$event_id]);
@@ -82,6 +99,59 @@ if (!$event && $error === '') {
     $_SESSION['error_message'] = 'Data event tidak ditemukan.';
     header('Location: event.php');
     exit;
+}
+
+if (!empty($event)) {
+    $hasChallengeEventId = hasColumnEventView($conn, 'challenges', 'event_id');
+    if ($hasChallengeEventId) {
+        try {
+            $categoryStmt = $conn->prepare("SELECT sport_type AS category_name, COUNT(*) AS total_matches
+                                            FROM challenges
+                                            WHERE event_id = ?
+                                              AND sport_type IS NOT NULL
+                                              AND sport_type <> ''
+                                            GROUP BY sport_type
+                                            ORDER BY sport_type ASC");
+            $categoryStmt->execute([$event_id]);
+            $categories = $categoryStmt->fetchAll(PDO::FETCH_ASSOC);
+            $participantTotalRows = 0;
+
+            foreach ($categories as $categoryRow) {
+                $categoryName = trim((string)($categoryRow['category_name'] ?? ''));
+                if ($categoryName === '') {
+                    continue;
+                }
+
+                $teamStmt = $conn->prepare("SELECT t.id, t.name, t.logo
+                                            FROM teams t
+                                            INNER JOIN (
+                                                SELECT challenger_id AS team_id
+                                                FROM challenges
+                                                WHERE event_id = ? AND sport_type = ?
+                                                UNION
+                                                SELECT opponent_id AS team_id
+                                                FROM challenges
+                                                WHERE event_id = ? AND sport_type = ?
+                                            ) participant ON participant.team_id = t.id
+                                            ORDER BY t.name ASC");
+                $teamStmt->execute([$event_id, $categoryName, $event_id, $categoryName]);
+                $teams = $teamStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $participantTotalRows += count($teams);
+
+                $eventParticipantGroups[] = [
+                    'category_name' => $categoryName,
+                    'total_matches' => (int)($categoryRow['total_matches'] ?? 0),
+                    'teams' => $teams
+                ];
+            }
+
+            $eventParticipantTotal = $participantTotalRows;
+            $eventDataReady = true;
+        } catch (PDOException $e) {
+            $eventDataReady = false;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -222,6 +292,18 @@ body {
 .detail-description { padding: 22px; }
 .desc-title { color: var(--primary); font-size: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .desc-body { color: #1f2937; line-height: 1.6; white-space: pre-wrap; }
+.participant-section { margin-top: 18px; background: #fff; border-radius: 18px; box-shadow: var(--card-shadow); padding: 22px; }
+.participant-title { color: var(--primary); font-size: 20px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.participant-note { color: #64748b; font-size: 13px; margin-bottom: 14px; }
+.participant-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.participant-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
+.participant-head { background: #0f172a; color: #fff; padding: 10px 12px; font-weight: 700; font-size: 14px; }
+.participant-table { width: 100%; border-collapse: collapse; }
+.participant-table th, .participant-table td { padding: 8px 10px; border-bottom: 1px solid #edf2f7; font-size: 13px; }
+.participant-table th { text-align: left; background: #f8fafc; }
+.team-row-mini { display: flex; align-items: center; gap: 8px; }
+.team-logo-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid #dbe6f3; }
+.team-info-link { color: #2563eb; text-decoration: none; }
 .alert { padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 .alert-danger { background: rgba(211, 47, 47, 0.1); border-left: 4px solid #ef4444; color: #b91c1c; }
 @keyframes slideDown {
@@ -391,6 +473,63 @@ body {
         <div class="detail-description">
             <div class="desc-title"><i class="fas fa-align-left"></i> Deskripsi</div>
             <div class="desc-body"><?php echo !empty(trim((string) ($event['description'] ?? ''))) ? nl2br(htmlspecialchars($event['description'])) : 'Belum ada deskripsi.'; ?></div>
+        </div>
+
+        <div class="participant-section">
+            <div class="participant-title"><i class="fas fa-users"></i> Peserta (<?php echo (int) $eventParticipantTotal; ?>)</div>
+            <div class="participant-note">Daftar tim yang terdaftar berdasarkan challenge pada event ini, dikelompokkan per kategori.</div>
+
+            <?php if (!$eventDataReady): ?>
+                <div style="color:#64748b;">Data peserta belum tersedia (kolom relasi event belum aktif).</div>
+            <?php elseif (empty($eventParticipantGroups)): ?>
+                <div style="color:#64748b;">Belum ada challenge yang terhubung ke event ini.</div>
+            <?php else: ?>
+                <div class="participant-grid">
+                    <?php foreach ($eventParticipantGroups as $group): ?>
+                        <article class="participant-card">
+                            <div class="participant-head"><?php echo htmlspecialchars($group['category_name'] ?? '-'); ?></div>
+                            <table class="participant-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:44px;">No</th>
+                                        <th>Team</th>
+                                        <th style="width:44px;">Info</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($group['teams'])): ?>
+                                        <tr><td colspan="3" style="color:#64748b;">Belum ada tim</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($group['teams'] as $idx => $team): ?>
+                                            <?php
+                                            $teamId = (int)($team['id'] ?? 0);
+                                            $teamLink = '../all.php?status=result&event=' . urlencode((string)($group['category_name'] ?? '')) . '&team=' . urlencode((string)$teamId);
+                                            ?>
+                                            <tr>
+                                                <td><?php echo $idx + 1; ?></td>
+                                                <td>
+                                                    <div class="team-row-mini">
+                                                        <img src="../images/teams/<?php echo htmlspecialchars($team['logo'] ?? 'default-team.png'); ?>"
+                                                             alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
+                                                             class="team-logo-mini"
+                                                             onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                                                        <span><?php echo htmlspecialchars($team['name'] ?? '-'); ?></span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <a class="team-info-link" href="<?php echo htmlspecialchars($teamLink); ?>" title="Lihat pertandingan tim">
+                                                        <i class="fas fa-circle-info"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>

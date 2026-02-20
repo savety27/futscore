@@ -19,6 +19,38 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('adminHasColumn')) {
+    function adminHasColumn(PDO $conn, $tableName, $columnName) {
+        try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+            if ($safeTable === '') {
+                return false;
+            }
+            $quotedColumn = $conn->quote((string) $columnName);
+            $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('adminHasTable')) {
+    function adminHasTable(PDO $conn, $tableName) {
+        try {
+            $quotedTable = $conn->quote((string) $tableName);
+            $stmt = $conn->query("SHOW TABLES LIKE {$quotedTable}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+$challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
+$events_table_exists = adminHasTable($conn, 'events');
+$can_join_event_name = $challenge_has_event_id && $events_table_exists;
+
 // --- DATA MENU DROPDOWN ---
 $menu_items = [
     'dashboard' => [
@@ -90,12 +122,17 @@ if ($challenge_id <= 0) {
 
 // Fetch challenge data with all details
 try {
+    $event_select = $can_join_event_name ? "e.name as event_name," : "NULL as event_name,";
+    $event_join = $can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "";
+
     $stmt = $conn->prepare("
-        SELECT c.*, 
+        SELECT c.*,
+        {$event_select}
         t1.name as challenger_name, t1.logo as challenger_logo, t1.sport_type as challenger_sport, t1.coach as challenger_coach,
-        t2.name as opponent_name, t2.logo as opponent_logo, t2.coach as opponent_coach,
+        t2.name as opponent_name, t2.logo as opponent_logo, t2.sport_type as opponent_sport, t2.coach as opponent_coach,
         l.name as venue_name, l.location as venue_location, l.capacity as venue_capacity
         FROM challenges c
+        {$event_join}
         LEFT JOIN teams t1 ON c.challenger_id = t1.id
         LEFT JOIN teams t2 ON c.opponent_id = t2.id
         LEFT JOIN venues l ON c.venue_id = l.id
@@ -1193,7 +1230,7 @@ body {
                     <?php endif; ?>
                     <div class="team-name"><?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?></div>
                     <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['opponent_coach'] ?? ''); ?></div>
-                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['sport_type'] ?? ''); ?></div>
+                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['opponent_sport'] ?? ''); ?></div>
                 </div>
             </div>
         </div>
@@ -1239,8 +1276,18 @@ body {
                 <div class="info-item">
                     <span class="info-label">Event</span>
                     <div class="info-value">
+                        <?php $event_name_value = trim((string)($challenge_data['event_name'] ?? '')); ?>
                         <span style="padding: 4px 12px; background: var(--primary); color: white; border-radius: 12px; font-size: 14px;">
-                            <?php echo htmlspecialchars($challenge_data['sport_type'] ?? ''); ?>
+                            <?php echo htmlspecialchars($event_name_value !== '' ? $event_name_value : '-'); ?>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Kategori</span>
+                    <div class="info-value">
+                        <span style="padding: 4px 12px; background: #2563eb; color: white; border-radius: 12px; font-size: 14px;">
+                            <?php echo htmlspecialchars($challenge_data['sport_type'] ?? '-'); ?>
                         </span>
                     </div>
                 </div>

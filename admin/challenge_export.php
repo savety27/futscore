@@ -14,36 +14,76 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
+if (!function_exists('adminHasColumn')) {
+    function adminHasColumn(PDO $conn, $tableName, $columnName) {
+        try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+            if ($safeTable === '') {
+                return false;
+            }
+            $quotedColumn = $conn->quote((string) $columnName);
+            $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('adminHasTable')) {
+    function adminHasTable(PDO $conn, $tableName) {
+        try {
+            $quotedTable = $conn->quote((string) $tableName);
+            $stmt = $conn->query("SHOW TABLES LIKE {$quotedTable}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+$challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
+$events_table_exists = adminHasTable($conn, 'events');
+$can_join_event_name = $challenge_has_event_id && $events_table_exists;
+
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$selected_event_id = isset($_GET['event_id']) ? (int) $_GET['event_id'] : 0;
 
 // Query untuk mengambil semua data challenges
-$query = "SELECT c.*, 
+$event_select = $can_join_event_name ? "e.name as event_name," : "NULL as event_name,";
+$event_join = $can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "";
+
+$query = "SELECT c.*,
+          {$event_select}
           t1.name as challenger_name, t1.sport_type as challenger_sport,
           t2.name as opponent_name,
           v.name as venue_name, v.location as venue_location
           FROM challenges c
+          {$event_join}
           LEFT JOIN teams t1 ON c.challenger_id = t1.id
           LEFT JOIN teams t2 ON c.opponent_id = t2.id
           LEFT JOIN venues v ON c.venue_id = v.id
           WHERE 1=1";
+$params = [];
 
 if (!empty($search)) {
     $search_term = "%{$search}%";
     $query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? 
               OR t1.name LIKE ? OR t2.name LIKE ?)";
+    $params = array_merge($params, [$search_term, $search_term, $search_term, $search_term]);
+}
+
+if ($can_join_event_name && $selected_event_id > 0) {
+    $query .= " AND c.event_id = ?";
+    $params[] = $selected_event_id;
 }
 
 $query .= " ORDER BY c.challenge_date DESC";
 
 try {
-    if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->execute();
-    }
+    $stmt = $conn->prepare($query);
+    $stmt->execute($params);
     
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -92,7 +132,8 @@ echo '<th>Opponent</th>';
 echo '<th>Venue</th>';
 echo '<th>Tanggal & Waktu</th>';
 echo '<th>Expiry Date</th>';
-echo '<th>Event</th>';
+echo '<th>Events</th>';
+echo '<th>Kategori</th>';
 echo '<th>Match Status</th>';
 echo '<th>Skor Challenger</th>';
 echo '<th>Skor Opponent</th>';
@@ -126,6 +167,7 @@ foreach ($challenges as $challenge) {
     echo '<td>' . htmlspecialchars($challenge['venue_name'] ?? '-') . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($challenge['challenge_date'])) . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($challenge['expiry_date'])) . '</td>';
+    echo '<td>' . htmlspecialchars($challenge['event_name'] ?? '-') . '</td>';
     echo '<td>' . htmlspecialchars($challenge['sport_type'] ?? '') . '</td>';
     echo '<td>' . htmlspecialchars($challenge['match_status'] ?? 'Belum Mulai') . '</td>';
     echo '<td>' . ($challenge['challenger_score'] !== null ? $challenge['challenger_score'] : '-') . '</td>';

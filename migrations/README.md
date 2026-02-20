@@ -18,6 +18,11 @@ Do not expose migration or schema-debug scripts in public web routes.
 - File: `migration_seed_event_taxonomy_aafi_2026.sql`
 - Apply this seed to map current legacy labels (`U-13` and `U-16`) into one event group (`LIGA AAFI BATAM 2026`).
 
+## Required migration for challenge-event relation
+
+- File: `migration_add_event_id_to_challenges.sql`
+- Apply this migration before deploying challenge pages that store/show selected event via `challenges.event_id`.
+
 Example command:
 
 ```bash

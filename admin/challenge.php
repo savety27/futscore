@@ -19,6 +19,38 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('adminHasColumn')) {
+    function adminHasColumn(PDO $conn, $tableName, $columnName) {
+        try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+            if ($safeTable === '') {
+                return false;
+            }
+            $quotedColumn = $conn->quote((string) $columnName);
+            $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('adminHasTable')) {
+    function adminHasTable(PDO $conn, $tableName) {
+        try {
+            $quotedTable = $conn->quote((string) $tableName);
+            $stmt = $conn->query("SHOW TABLES LIKE {$quotedTable}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+$challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
+$events_table_exists = adminHasTable($conn, 'events');
+$can_join_event_name = $challenge_has_event_id && $events_table_exists;
+
 // --- DATA MENU DROPDOWN ---
 $menu_items = [
     'dashboard' => [
@@ -82,16 +114,33 @@ $email = $admin_email;
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$selected_event_id = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
+$event_filter_options = [];
+
+if ($events_table_exists) {
+    try {
+        $events_stmt = $conn->prepare("SELECT id, name FROM events WHERE name IS NOT NULL AND name <> '' ORDER BY created_at DESC, name ASC");
+        $events_stmt->execute();
+        $event_filter_options = $events_stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $event_filter_options = [];
+    }
+}
 
 // Query untuk mengambil data challenges dengan join ke teams
-$base_query = "SELECT c.*, 
+$event_select = $can_join_event_name ? "e.name as event_name," : "NULL as event_name,";
+$event_join = $can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "";
+
+$base_query = "SELECT c.*,
+              {$event_select}
               t1.name as challenger_name, t1.logo as challenger_logo, t1.sport_type as challenger_sport,
               t2.name as opponent_name, t2.logo as opponent_logo,
               v.name as venue_name, v.location as venue_location
               FROM challenges c
+              {$event_join}
               LEFT JOIN teams t1 ON c.challenger_id = t1.id
               LEFT JOIN teams t2 ON c.opponent_id = t2.id
               LEFT JOIN venues v ON c.venue_id = v.id
@@ -100,14 +149,35 @@ $base_query = "SELECT c.*,
 $count_query = "SELECT COUNT(*) as total 
                 FROM challenges c
                 WHERE 1=1";
+$base_params = [];
+$count_params = [];
 
 // Handle search condition
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $base_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR t1.name LIKE ? OR t2.name LIKE ?)";
-    $count_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR 
+    if ($can_join_event_name) {
+        $base_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR c.sport_type LIKE ? OR e.name LIKE ? OR t1.name LIKE ? OR t2.name LIKE ?)";
+        $count_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR c.sport_type LIKE ? OR
+                         EXISTS (SELECT 1 FROM events e2 WHERE e2.id = c.event_id AND e2.name LIKE ?) OR
                          EXISTS (SELECT 1 FROM teams t WHERE t.id = c.challenger_id AND t.name LIKE ?) OR
                          EXISTS (SELECT 1 FROM teams t WHERE t.id = c.opponent_id AND t.name LIKE ?))";
+        $base_params = array_merge($base_params, [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term]);
+        $count_params = array_merge($count_params, [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term]);
+    } else {
+        $base_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR c.sport_type LIKE ? OR t1.name LIKE ? OR t2.name LIKE ?)";
+        $count_query .= " AND (c.challenge_code LIKE ? OR c.status LIKE ? OR c.sport_type LIKE ? OR
+                         EXISTS (SELECT 1 FROM teams t WHERE t.id = c.challenger_id AND t.name LIKE ?) OR
+                         EXISTS (SELECT 1 FROM teams t WHERE t.id = c.opponent_id AND t.name LIKE ?))";
+        $base_params = array_merge($base_params, [$search_term, $search_term, $search_term, $search_term, $search_term]);
+        $count_params = array_merge($count_params, [$search_term, $search_term, $search_term, $search_term, $search_term]);
+    }
+}
+
+if ($can_join_event_name && $selected_event_id > 0) {
+    $base_query .= " AND c.event_id = ?";
+    $count_query .= " AND c.event_id = ?";
+    $base_params[] = $selected_event_id;
+    $count_params[] = $selected_event_id;
 }
 
 $base_query .= " ORDER BY c.challenge_date DESC, c.created_at DESC";
@@ -120,33 +190,19 @@ $error = '';
 
 try {
     // Count total records
-    if (!empty($search)) {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } else {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    }
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($count_params);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_data = $result['total'];
     
     $total_pages = ceil($total_data / $limit);
     
     // Get data with pagination
     $query = $base_query . " LIMIT ? OFFSET ?";
-    
-    if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $params = array_merge([$search_term, $search_term, $search_term, $search_term], [$limit, $offset]);
-        $stmt->execute($params);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-        $stmt->execute();
-    }
+
+    $stmt = $conn->prepare($query);
+    $params = array_merge($base_params, [$limit, $offset]);
+    $stmt->execute($params);
     
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -464,6 +520,14 @@ body {
     font-size: 32px;
 }
 
+.search-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 620px;
+    max-width: 100%;
+}
+
 .search-bar {
     position: relative;
     width: 400px;
@@ -496,6 +560,23 @@ body {
     color: var(--primary);
     font-size: 18px;
     cursor: pointer;
+}
+
+.event-filter-select {
+    width: 220px;
+    padding: 15px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #f8f9fa;
+    color: var(--dark);
+}
+
+.event-filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
 }
 
 .action-buttons {
@@ -1015,6 +1096,17 @@ body {
         max-width: 100%;
     }
 
+    .search-toolbar {
+        width: 100%;
+        max-width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .event-filter-select {
+        width: 100%;
+    }
+
     .action-buttons {
         width: 100%;
         flex-wrap: wrap;
@@ -1048,11 +1140,11 @@ body {
     }
 
     .page-title {
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .page-title i {
-        font-size: 26px;
+        font-size: 24px;
     }
 
     /* Compact sidebar */
@@ -1307,12 +1399,22 @@ body {
                 <span>Daftar Challenge</span>
             </div>
             
-            <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari challenge (kode, status, nama team)..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
-                <button type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
+            <form method="GET" action="" class="search-toolbar" id="searchForm">
+                <div class="search-bar">
+                    <input type="text" name="search" placeholder="Cari challenge (kode, status, nama team)..."
+                           value="<?php echo htmlspecialchars($search); ?>">
+                    <button type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <select name="event_id" id="eventFilter" class="event-filter-select">
+                    <option value="">Semua Events</option>
+                    <?php foreach ($event_filter_options as $event_option): ?>
+                        <option value="<?php echo (int)($event_option['id'] ?? 0); ?>" <?php echo $selected_event_id === (int)($event_option['id'] ?? 0) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($event_option['name'] ?? ''); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </form>
             
             <div class="action-buttons">
@@ -1360,7 +1462,8 @@ body {
                         <th>Venue</th>
                         <th>Date & Time</th>
                         <th>Expired</th>
-                        <th>Event</th>
+                        <th>Events</th>
+                        <th>Kategori</th>
                         <th>Match Status</th>
                         <th>Score</th>
                         <th>Aksi</th>
@@ -1429,6 +1532,14 @@ body {
                             </td>
                             <td class="sport-cell">
                                 <?php
+                                $active_event_name = trim((string)($challenge['event_name'] ?? ''));
+                                ?>
+                                <span class="event-badge <?php echo $active_event_name !== '' ? 'event-badge-primary' : 'event-badge-muted'; ?>">
+                                    <span><?php echo $active_event_name !== '' ? htmlspecialchars($active_event_name) : '-'; ?></span>
+                                </span>
+                            </td>
+                            <td class="sport-cell">
+                                <?php
                                 $event_value = !empty($challenge['sport_type'])
                                     ? (string)($challenge['sport_type'] ?? '')
                                     : (string)($challenge['challenger_sport'] ?? '-');
@@ -1492,9 +1603,9 @@ body {
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <!-- colspan="13" untuk 13 kolom -->
+                        <!-- colspan="14" untuk 14 kolom -->
                         <tr>
-                            <td colspan="13" style="text-align: center; padding: 40px;">
+                            <td colspan="14" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
                                     <div class="empty-icon">
                                         <i class="fas fa-trophy"></i>
@@ -1517,7 +1628,7 @@ body {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>&event_id=<?php echo (int)$selected_event_id; ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-left"></i>
                 </a>
@@ -1533,14 +1644,14 @@ body {
             
             for ($i = $start_page; $i <= $end_page; $i++): 
             ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&event_id=<?php echo (int)$selected_event_id; ?>" 
                    class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
                    <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>&event_id=<?php echo (int)$selected_event_id; ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-right"></i>
                 </a>
@@ -1560,6 +1671,14 @@ body {
 let currentChallengeId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const eventFilter = document.getElementById('eventFilter');
+    const searchForm = document.getElementById('searchForm');
+    if (eventFilter && searchForm) {
+        eventFilter.addEventListener('change', function () {
+            searchForm.submit();
+        });
+    }
+
     const deleteChallengeCode = document.getElementById('deleteChallengeCode');
     const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
