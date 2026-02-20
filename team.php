@@ -255,12 +255,12 @@ if ($teamId > 0) {
                     <div class="section-header">
                         <h2 class="section-title">DAFTAR</h2>
                         <div class="section-tabs team-roster-tabs">
+                            <button class="tab-button player-tab active" data-tab="players">Semua Pemain</button>
                             <?php foreach ($events as $event): ?>
                                 <button class="tab-button player-tab" data-event="<?php echo htmlspecialchars($event['event_key'] ?? ''); ?>">
                                     <?php echo htmlspecialchars($event['event_name'] ?? ''); ?>
                                 </button>
                             <?php endforeach; ?>
-                            <button class="tab-button player-tab active" data-tab="players">Pemain</button>
                             <button class="tab-button player-tab" data-tab="staff">Pelatih / Staf</button>
                         </div>
                     </div>
@@ -767,11 +767,53 @@ if ($teamId > 0) {
                     return div.innerHTML;
                 }
                 
-                // For event players (placeholder function)
+                // Filter players by sport_type matching the event/category tab
                 function loadEventPlayers(eventId) {
-                    // Implement this if you want to show players filtered by event
-                    console.log('Loading players for event:', eventId);
-                    loadPlayers(); // Fallback to all players for now
+                    currentType = 'player';
+                    const playerList = document.getElementById('playerList');
+
+                    // Filter players whose sport_type matches the event tab label
+                    const filtered = playersData.filter(p => {
+                        const st = (p.sport_type || '').trim().toLowerCase();
+                        const ev = (eventId || '').trim().toLowerCase();
+                        return st === ev;
+                    });
+
+                    if (filtered.length === 0) {
+                        playerList.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <h4>Tidak ada pemain</h4>
+                                <p>Tidak ada pemain terdaftar untuk kategori ini</p>
+                            </div>
+                        `;
+                        showEmptyDetailPanel();
+                        return;
+                    }
+
+                    let html = '';
+                    filtered.forEach((player, index) => {
+                        const position = player.position || 'P';
+                        const isGoalkeeper = player.position === 'GK' || player.position === 'Goalkeeper';
+
+                        html += `
+                            <div class="player-item ${index === 0 ? 'active' : ''}" 
+                                 onclick="showPlayerDetail(${JSON.stringify(player).replace(/\"/g, '&quot;')}, this)">
+                                <div class="position-badge ${isGoalkeeper ? 'keeper' : ''}">
+                                    ${position.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="player-item-info">
+                                    <span class="player-number">${player.jersey_number || '-'}.</span>
+                                    <span class="player-name">${escapeHtml(player.name)}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    playerList.innerHTML = html;
+
+                    // Show first filtered player's detail
+                    showPlayerDetail(filtered[0]);
                 }
                 </script>
 
