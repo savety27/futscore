@@ -17,6 +17,46 @@ function hasTableMySQLi($conn, $table) {
     return $result && $result->num_rows > 0;
 }
 
+function normalizeMatchTokensPublic($raw) {
+    $normalized = strtoupper(trim((string) $raw));
+    if ($normalized === '') return [];
+
+    $normalized = str_replace(["\r", "\n", ";", "|", "/", "\\"], ',', $normalized);
+    $normalized = preg_replace('/\s+/', ',', $normalized);
+    $parts = array_filter(array_map('trim', explode(',', $normalized)), static fn($v) => $v !== '');
+
+    $mapped = [];
+    foreach ($parts as $part) {
+        $token = $part;
+        if ($token === 'M' || $token === 'WIN') $token = 'W';
+        if ($token === 'MP' || $token === 'WINP') $token = 'WP';
+        if ($token === 'S' || $token === 'DRAW') $token = 'D';
+        if ($token === 'KP' || $token === 'LOSEP') $token = 'LP';
+        if ($token === 'K' || $token === 'LOSE') $token = 'L';
+        if (in_array($token, ['W', 'WP', 'D', 'LP', 'L'], true)) {
+            $mapped[] = $token;
+        }
+    }
+    return $mapped;
+}
+
+function renderMatchHistoryBadgesPublic($history) {
+    $tokens = normalizeMatchTokensPublic($history);
+    if (empty($tokens)) {
+        return '-';
+    }
+
+    $html = '<div class="match-seq">';
+    foreach ($tokens as $token) {
+        $cls = 'draw';
+        if ($token === 'W' || $token === 'WP') $cls = 'win';
+        if ($token === 'L' || $token === 'LP') $cls = 'lose';
+        $html .= '<span class="match-pill ' . $cls . '">' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '</span>';
+    }
+    $html .= '</div>';
+    return $html;
+}
+
 $hasIsActive = hasColumnMySQLi($conn, 'events', 'is_active');
 $events = [];
 $event = null;
@@ -24,7 +64,9 @@ $eventParticipantGroups = [];
 $eventParticipantTotal = 0;
 $eventDataReady = false;
 $eventStandings = [];
+$eventStandingsByCategory = [];
 $eventPlayerCards = [];
+$eventPlayerCardsByCategory = [];
 $hasEventValueTables = false;
 
 if ($eventId > 0) {
@@ -116,17 +158,145 @@ if ($eventId > 0 && !empty($event)) {
 
     $hasEventValueTables = hasTableMySQLi($conn, 'event_team_values') && hasTableMySQLi($conn, 'player_event_cards');
     if ($hasEventValueTables) {
+        $categoryTeamMap = [];
+        $categoryOrder = [];
+        foreach ($eventParticipantGroups as $group) {
+            $categoryName = trim((string) ($group['category_name'] ?? ''));
+            if ($categoryName === '') {
+                continue;
+            }
+            if (!isset($categoryTeamMap[$categoryName])) {
+                $categoryTeamMap[$categoryName] = [];
+                $categoryOrder[] = $categoryName;
+            }
+            foreach (($group['teams'] ?? []) as $team) {
+                $teamId = (int) ($team['id'] ?? 0);
+                if ($teamId <= 0) {
+                    continue;
+                }
+                $categoryTeamMap[$categoryName][$teamId] = (string) ($team['name'] ?? '-');
+            }
+        }
+
         $standingSql = "SELECT etv.*, t.name AS team_name
                         FROM event_team_values etv
                         INNER JOIN teams t ON t.id = etv.team_id
                         WHERE etv.event_id = ?
-                        ORDER BY etv.kls ASC, etv.points DESC, etv.sg DESC, etv.gm DESC, t.name ASC";
+                        ORDER BY etv.sport_type ASC, etv.kls ASC, etv.points DESC, etv.sg DESC, etv.gm DESC, t.name ASC";
         $standingStmt = $conn->prepare($standingSql);
         $standingStmt->bind_param("i", $eventId);
         $standingStmt->execute();
         $standingResult = $standingStmt->get_result();
         while ($standingRow = $standingResult->fetch_assoc()) {
             $eventStandings[] = $standingRow;
+        }
+
+        $standingsFromDbByCategory = [];
+        foreach ($eventStandings as $standingRow) {
+            $categoryName = trim((string) ($standingRow['sport_type'] ?? ''));
+            if ($categoryName === '') {
+                $categoryName = 'Lainnya';
+            }
+            if (!isset($standingsFromDbByCategory[$categoryName])) {
+                $standingsFromDbByCategory[$categoryName] = [];
+            }
+            $standingsFromDbByCategory[$categoryName][] = $standingRow;
+        }
+
+        if (!empty($categoryOrder)) {
+            foreach ($categoryOrder as $categoryName) {
+                $rowsByTeamId = [];
+                foreach (($standingsFromDbByCategory[$categoryName] ?? []) as $row) {
+                    $rowsByTeamId[(int) ($row['team_id'] ?? 0)] = $row;
+                }
+
+                foreach (($categoryTeamMap[$categoryName] ?? []) as $teamId => $teamName) {
+                    if ($teamId <= 0 || isset($rowsByTeamId[$teamId])) {
+                        continue;
+                    }
+                    $rowsByTeamId[$teamId] = [
+                        'team_id' => $teamId,
+                        'team_name' => $teamName,
+                        'mn' => 0,
+                        'm' => 0,
+                        'mp' => 0,
+                        's' => 0,
+                        'kp' => 0,
+                        'k' => 0,
+                        'gm' => 0,
+                        'gk' => 0,
+                        'sg' => 0,
+                        'points' => 0,
+                        'kls' => 0,
+                        'red_cards' => 0,
+                        'yellow_cards' => 0,
+                        'green_cards' => 0,
+                    ];
+                }
+
+                $rows = array_values($rowsByTeamId);
+                usort($rows, static function (array $a, array $b): int {
+                    if ((int) ($a['points'] ?? 0) !== (int) ($b['points'] ?? 0)) {
+                        return (int) ($b['points'] ?? 0) <=> (int) ($a['points'] ?? 0);
+                    }
+                    if ((int) ($a['sg'] ?? 0) !== (int) ($b['sg'] ?? 0)) {
+                        return (int) ($b['sg'] ?? 0) <=> (int) ($a['sg'] ?? 0);
+                    }
+                    if ((int) ($a['gm'] ?? 0) !== (int) ($b['gm'] ?? 0)) {
+                        return (int) ($b['gm'] ?? 0) <=> (int) ($a['gm'] ?? 0);
+                    }
+                    return strcmp((string) ($a['team_name'] ?? ''), (string) ($b['team_name'] ?? ''));
+                });
+                foreach ($rows as $idx => &$row) {
+                    $row['display_kls'] = $idx + 1;
+                }
+                unset($row);
+
+                $eventStandingsByCategory[$categoryName] = $rows;
+            }
+
+            foreach ($standingsFromDbByCategory as $categoryName => $rows) {
+                if (isset($eventStandingsByCategory[$categoryName])) {
+                    continue;
+                }
+                usort($rows, static function (array $a, array $b): int {
+                    if ((int) ($a['points'] ?? 0) !== (int) ($b['points'] ?? 0)) {
+                        return (int) ($b['points'] ?? 0) <=> (int) ($a['points'] ?? 0);
+                    }
+                    if ((int) ($a['sg'] ?? 0) !== (int) ($b['sg'] ?? 0)) {
+                        return (int) ($b['sg'] ?? 0) <=> (int) ($a['sg'] ?? 0);
+                    }
+                    if ((int) ($a['gm'] ?? 0) !== (int) ($b['gm'] ?? 0)) {
+                        return (int) ($b['gm'] ?? 0) <=> (int) ($a['gm'] ?? 0);
+                    }
+                    return strcmp((string) ($a['team_name'] ?? ''), (string) ($b['team_name'] ?? ''));
+                });
+                foreach ($rows as $idx => &$row) {
+                    $row['display_kls'] = $idx + 1;
+                }
+                unset($row);
+                $eventStandingsByCategory[$categoryName] = $rows;
+            }
+        } else {
+            foreach ($standingsFromDbByCategory as $categoryName => $rows) {
+                usort($rows, static function (array $a, array $b): int {
+                    if ((int) ($a['points'] ?? 0) !== (int) ($b['points'] ?? 0)) {
+                        return (int) ($b['points'] ?? 0) <=> (int) ($a['points'] ?? 0);
+                    }
+                    if ((int) ($a['sg'] ?? 0) !== (int) ($b['sg'] ?? 0)) {
+                        return (int) ($b['sg'] ?? 0) <=> (int) ($a['sg'] ?? 0);
+                    }
+                    if ((int) ($a['gm'] ?? 0) !== (int) ($b['gm'] ?? 0)) {
+                        return (int) ($b['gm'] ?? 0) <=> (int) ($a['gm'] ?? 0);
+                    }
+                    return strcmp((string) ($a['team_name'] ?? ''), (string) ($b['team_name'] ?? ''));
+                });
+                foreach ($rows as $idx => &$row) {
+                    $row['display_kls'] = $idx + 1;
+                }
+                unset($row);
+                $eventStandingsByCategory[$categoryName] = $rows;
+            }
         }
 
         $cardSql = "SELECT pec.*, p.name AS player_name, t.name AS team_name
@@ -143,6 +313,32 @@ if ($eventId > 0 && !empty($event)) {
         $cardResult = $cardStmt->get_result();
         while ($cardRow = $cardResult->fetch_assoc()) {
             $eventPlayerCards[] = $cardRow;
+        }
+
+        foreach ($eventPlayerCards as $cardRow) {
+            $categoryName = trim((string) ($cardRow['sport_type'] ?? ''));
+            if ($categoryName === '') {
+                $categoryName = 'Lainnya';
+            }
+            if (!isset($eventPlayerCardsByCategory[$categoryName])) {
+                $eventPlayerCardsByCategory[$categoryName] = [];
+            }
+            $eventPlayerCardsByCategory[$categoryName][] = $cardRow;
+        }
+
+        if (!empty($categoryOrder)) {
+            $orderedPlayerCards = [];
+            foreach ($categoryOrder as $categoryName) {
+                $orderedPlayerCards[$categoryName] = $eventPlayerCardsByCategory[$categoryName] ?? [];
+            }
+            foreach ($eventPlayerCardsByCategory as $categoryName => $rows) {
+                if (!isset($orderedPlayerCards[$categoryName])) {
+                    $orderedPlayerCards[$categoryName] = $rows;
+                }
+            }
+            $eventPlayerCardsByCategory = $orderedPlayerCards;
+        } else {
+            ksort($eventPlayerCardsByCategory);
         }
     }
 }
@@ -243,6 +439,41 @@ if ($eventId > 0 && !empty($event)) {
 .event-standing-table thead th { background: #0f172a; color: #fff; }
 .event-standing-table th:nth-child(2), .event-standing-table td:nth-child(2) { text-align: left; }
 .event-card-note { margin: 8px 0 0 0; color: #475569; font-size: 12px; }
+.card-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 22px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 8px;
+    border: 1px solid transparent;
+}
+.card-badge.red { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+.card-badge.yellow { background: #fef9c3; color: #a16207; border-color: #fde68a; }
+.card-badge.green { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.match-seq {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.match-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 20px;
+    border-radius: 5px;
+    padding: 0 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+}
+.match-pill.win { background: #16a34a; }
+.match-pill.lose { background: #dc2626; }
+.match-pill.draw { background: #d97706; }
 .suspend-pill {
     display: inline-block;
     padding: 4px 8px;
@@ -464,97 +695,117 @@ if ($eventId > 0 && !empty($event)) {
 
                             <?php if (!$hasEventValueTables): ?>
                                 <p style="margin:10px 0 0 0; color:#64748b;">Tabel nilai event belum tersedia. Jalankan migration untuk mulai input data dari admin.</p>
-                            <?php elseif (empty($eventStandings)): ?>
+                            <?php elseif (empty($eventStandingsByCategory)): ?>
                                 <p style="margin:10px 0 0 0; color:#64748b;">Belum ada data klasemen untuk event ini.</p>
                             <?php else: ?>
-                                <div class="event-standing-wrap">
-                                    <table class="event-standing-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Team</th>
-                                                <th>MN</th>
-                                                <th>M</th>
-                                                <th>MP</th>
-                                                <th>S</th>
-                                                <th>KP</th>
-                                                <th>K</th>
-                                                <th>GM</th>
-                                                <th>GK</th>
-                                                <th>SG</th>
-                                                <th>P</th>
-                                                <th>KLS</th>
-                                                <th>Merah</th>
-                                                <th>Kuning</th>
-                                                <th>Hijau</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($eventStandings as $idx => $standing): ?>
+                                <?php foreach ($eventStandingsByCategory as $categoryName => $rows): ?>
+                                    <h4 style="margin:18px 0 8px 0;">Klasemen <?php echo htmlspecialchars($categoryName); ?></h4>
+                                    <div class="event-standing-wrap">
+                                        <table class="event-standing-table">
+                                            <thead>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($standing['team_name'] ?? '-'); ?></td>
-                                                    <td><?php echo (int) ($standing['mn'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['m'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['mp'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['s'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['kp'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['k'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['gm'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['gk'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['sg'] ?? 0); ?></td>
-                                                    <td><strong><?php echo (int) ($standing['points'] ?? 0); ?></strong></td>
-                                                    <td><?php echo (int) (($standing['kls'] ?? 0) > 0 ? $standing['kls'] : ($idx + 1)); ?></td>
-                                                    <td><?php echo (int) ($standing['red_cards'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['yellow_cards'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($standing['green_cards'] ?? 0); ?></td>
+                                                    <th>Team</th>
+                                                    <th>MN</th>
+                                                    <th>M</th>
+                                                    <th>MP</th>
+                                                    <th>S</th>
+                                                    <th>KP</th>
+                                                    <th>K</th>
+                                                    <th>GM</th>
+                                                    <th>GK</th>
+                                                    <th>SG</th>
+                                                    <th>P</th>
+                                                    <th>KLS</th>
+                                                    <th>Match</th>
+                                                    <th>🟥</th>
+                                                    <th>🟨</th>
+                                                    <th>🟩</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (empty($rows)): ?>
+                                                    <tr>
+                                                        <td colspan="16" style="text-align:left;">Belum ada data.</td>
+                                                    </tr>
+                                                <?php else: ?>
+                                                    <?php foreach ($rows as $standing): ?>
+                                                        <tr>
+                                                            <td><?php echo htmlspecialchars($standing['team_name'] ?? '-'); ?></td>
+                                                            <td><?php echo (int) ($standing['mn'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['m'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['mp'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['s'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['kp'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['k'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['gm'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['gk'] ?? 0); ?></td>
+                                                            <td><?php echo (int) ($standing['sg'] ?? 0); ?></td>
+                                                            <td><strong><?php echo (int) ($standing['points'] ?? 0); ?></strong></td>
+                                                            <td><?php echo (int) ($standing['display_kls'] ?? 0); ?></td>
+                                                            <td><?php echo renderMatchHistoryBadgesPublic($standing['match_history'] ?? ''); ?></td>
+                                                            <td><span class="card-badge red"><?php echo (int) ($standing['red_cards'] ?? 0); ?></span></td>
+                                                            <td><span class="card-badge yellow"><?php echo (int) ($standing['yellow_cards'] ?? 0); ?></span></td>
+                                                            <td><span class="card-badge green"><?php echo (int) ($standing['green_cards'] ?? 0); ?></span></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endforeach; ?>
                             <?php endif; ?>
 
                             <h4 style="margin:18px 0 8px 0;">Status Suspend Pemain</h4>
                             <?php if (!$hasEventValueTables): ?>
                                 <p style="margin:0; color:#64748b;">Data kartu pemain belum tersedia.</p>
-                            <?php elseif (empty($eventPlayerCards)): ?>
+                            <?php elseif (empty($eventPlayerCardsByCategory)): ?>
                                 <p style="margin:0; color:#64748b;">Belum ada data kartu pemain.</p>
                             <?php else: ?>
-                                <div class="event-standing-wrap">
-                                    <table class="event-standing-table" style="min-width:760px;">
-                                        <thead>
-                                            <tr>
-                                                <th>Pemain</th>
-                                                <th>Tim</th>
-                                                <th>Kuning</th>
-                                                <th>Merah</th>
-                                                <th>Hijau</th>
-                                                <th>Suspend Sampai</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($eventPlayerCards as $card): ?>
-                                                <?php
-                                                $suspendUntil = !empty($card['suspension_until']) ? $card['suspension_until'] : null;
-                                                $isSuspended = $suspendUntil && $suspendUntil >= date('Y-m-d');
-                                                ?>
+                                <?php foreach ($eventPlayerCardsByCategory as $categoryName => $rows): ?>
+                                    <h4 style="margin:18px 0 8px 0;">Suspend <?php echo htmlspecialchars($categoryName); ?></h4>
+                                    <div class="event-standing-wrap">
+                                        <table class="event-standing-table" style="min-width:760px;">
+                                            <thead>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($card['player_name'] ?? '-'); ?></td>
-                                                    <td><?php echo htmlspecialchars($card['team_name'] ?? '-'); ?></td>
-                                                    <td><?php echo (int) ($card['yellow_cards'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($card['red_cards'] ?? 0); ?></td>
-                                                    <td><?php echo (int) ($card['green_cards'] ?? 0); ?></td>
-                                                    <td><?php echo $suspendUntil ? htmlspecialchars(date('d M Y', strtotime($suspendUntil))) : '-'; ?></td>
-                                                    <td>
-                                                        <span class="suspend-pill <?php echo $isSuspended ? 'active' : 'done'; ?>">
-                                                            <?php echo $isSuspended ? 'Tidak Boleh Main' : 'Boleh Main'; ?>
-                                                        </span>
-                                                    </td>
+                                                    <th>Pemain</th>
+                                                    <th>Tim</th>
+                                                    <th>Kuning</th>
+                                                    <th>Merah</th>
+                                                    <th>Hijau</th>
+                                                    <th>Suspend Sampai</th>
+                                                    <th>Status</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (empty($rows)): ?>
+                                                    <tr>
+                                                        <td colspan="7" style="text-align:left;">Belum ada data.</td>
+                                                    </tr>
+                                                <?php else: ?>
+                                                    <?php foreach ($rows as $card): ?>
+                                                        <?php
+                                                        $suspendUntil = !empty($card['suspension_until']) ? $card['suspension_until'] : null;
+                                                        $isSuspended = $suspendUntil && $suspendUntil >= date('Y-m-d');
+                                                        ?>
+                                                        <tr>
+                                                            <td><?php echo htmlspecialchars($card['player_name'] ?? '-'); ?></td>
+                                                            <td><?php echo htmlspecialchars($card['team_name'] ?? '-'); ?></td>
+                                                            <td><span class="card-badge yellow"><?php echo (int) ($card['yellow_cards'] ?? 0); ?></span></td>
+                                                            <td><span class="card-badge red"><?php echo (int) ($card['red_cards'] ?? 0); ?></span></td>
+                                                            <td><span class="card-badge green"><?php echo (int) ($card['green_cards'] ?? 0); ?></span></td>
+                                                            <td><?php echo $suspendUntil ? htmlspecialchars(date('d M Y', strtotime($suspendUntil))) : '-'; ?></td>
+                                                            <td>
+                                                                <span class="suspend-pill <?php echo $isSuspended ? 'active' : 'done'; ?>">
+                                                                    <?php echo $isSuspended ? 'Tidak Boleh Main' : 'Boleh Main'; ?>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
                     </div>

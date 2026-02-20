@@ -8,6 +8,11 @@ if (file_exists($config_path)) {
     die("Database configuration file not found at: $config_path");
 }
 
+$event_helper_path = __DIR__ . '/includes/event_helpers.php';
+if (file_exists($event_helper_path)) {
+    require_once $event_helper_path;
+}
+
 if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
     exit;
@@ -28,6 +33,7 @@ function ensureSchema(PDO $conn): void
         id INT AUTO_INCREMENT PRIMARY KEY,
         event_id INT NOT NULL,
         team_id INT NOT NULL,
+        sport_type VARCHAR(120) NOT NULL DEFAULT '',
         mn INT NOT NULL DEFAULT 0,
         m INT NOT NULL DEFAULT 0,
         mp INT NOT NULL DEFAULT 0,
@@ -42,9 +48,10 @@ function ensureSchema(PDO $conn): void
         red_cards INT NOT NULL DEFAULT 0,
         yellow_cards INT NOT NULL DEFAULT 0,
         green_cards INT NOT NULL DEFAULT 0,
+        match_history TEXT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uq_event_team (event_id, team_id),
+        UNIQUE KEY uq_event_team_category (event_id, team_id, sport_type),
         CONSTRAINT fk_etv_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
         CONSTRAINT fk_etv_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE ON UPDATE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
@@ -54,13 +61,14 @@ function ensureSchema(PDO $conn): void
         event_id INT NOT NULL,
         player_id INT NOT NULL,
         team_id INT NOT NULL,
+        sport_type VARCHAR(120) NOT NULL DEFAULT '',
         yellow_cards INT NOT NULL DEFAULT 0,
         red_cards INT NOT NULL DEFAULT 0,
         green_cards INT NOT NULL DEFAULT 0,
         suspension_until DATE DEFAULT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uq_event_player (event_id, player_id),
+        UNIQUE KEY uq_event_player_category (event_id, player_id, sport_type),
         CONSTRAINT fk_pec_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
         CONSTRAINT fk_pec_player FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE ON UPDATE CASCADE,
         CONSTRAINT fk_pec_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -70,6 +78,23 @@ function ensureSchema(PDO $conn): void
     if (!$hasKls) {
         $conn->exec("ALTER TABLE event_team_values ADD COLUMN kls INT NOT NULL DEFAULT 0 AFTER points");
     }
+    $hasSportTypeTeam = $conn->query("SHOW COLUMNS FROM event_team_values LIKE 'sport_type'")->fetch(PDO::FETCH_ASSOC);
+    if (!$hasSportTypeTeam) {
+        $conn->exec("ALTER TABLE event_team_values ADD COLUMN sport_type VARCHAR(120) NOT NULL DEFAULT '' AFTER team_id");
+    }
+    $hasSportTypePlayer = $conn->query("SHOW COLUMNS FROM player_event_cards LIKE 'sport_type'")->fetch(PDO::FETCH_ASSOC);
+    if (!$hasSportTypePlayer) {
+        $conn->exec("ALTER TABLE player_event_cards ADD COLUMN sport_type VARCHAR(120) NOT NULL DEFAULT '' AFTER team_id");
+    }
+    $hasMatchHistory = $conn->query("SHOW COLUMNS FROM event_team_values LIKE 'match_history'")->fetch(PDO::FETCH_ASSOC);
+    if (!$hasMatchHistory) {
+        $conn->exec("ALTER TABLE event_team_values ADD COLUMN match_history TEXT NULL AFTER green_cards");
+    }
+
+    try { $conn->exec("ALTER TABLE event_team_values DROP INDEX uq_event_team"); } catch (PDOException $e) {}
+    try { $conn->exec("ALTER TABLE event_team_values ADD UNIQUE KEY uq_event_team_category (event_id, team_id, sport_type)"); } catch (PDOException $e) {}
+    try { $conn->exec("ALTER TABLE player_event_cards DROP INDEX uq_event_player"); } catch (PDOException $e) {}
+    try { $conn->exec("ALTER TABLE player_event_cards ADD UNIQUE KEY uq_event_player_category (event_id, player_id, sport_type)"); } catch (PDOException $e) {}
 
     try {
         $conn->exec("CREATE INDEX idx_event_kls ON event_team_values (event_id, kls)");
@@ -78,23 +103,40 @@ function ensureSchema(PDO $conn): void
     }
 }
 
-function loadEventTeams(PDO $conn, int $eventId): array
+function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): array
 {
     if ($eventId <= 0) return [];
 
-    $sql = "SELECT DISTINCT t.id, t.name 
-            FROM teams t 
-            INNER JOIN (
-                SELECT challenger_id AS team_id FROM challenges WHERE event_id = ?
-                UNION 
-                SELECT opponent_id AS team_id FROM challenges WHERE event_id = ?
-                UNION 
-                SELECT te.team_id FROM team_events te INNER JOIN events e ON e.name = te.event_name WHERE e.id = ?
-            ) src ON src.team_id = t.id 
-            ORDER BY t.name ASC";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->execute([$eventId, $eventId, $eventId]);
+    if ($categoryName !== '') {
+        $sql = "SELECT DISTINCT t.id, t.name
+                FROM teams t
+                INNER JOIN (
+                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ?
+                    UNION
+                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ?
+                    UNION
+                    SELECT te.team_id
+                    FROM team_events te
+                    INNER JOIN events e ON e.name = te.event_name
+                    WHERE e.id = ? AND te.event_name = ?
+                ) src ON src.team_id = t.id
+                ORDER BY t.name ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$eventId, $categoryName, $eventId, $categoryName, $eventId, $categoryName]);
+    } else {
+        $sql = "SELECT DISTINCT t.id, t.name 
+                FROM teams t 
+                INNER JOIN (
+                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ?
+                    UNION 
+                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ?
+                    UNION 
+                    SELECT te.team_id FROM team_events te INNER JOIN events e ON e.name = te.event_name WHERE e.id = ?
+                ) src ON src.team_id = t.id 
+                ORDER BY t.name ASC";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$eventId, $eventId, $eventId]);
+    }
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -145,15 +187,77 @@ function calculateTeamPoints(int $m, int $mp, int $kp): int
     return ($m * 3) + ($mp * 2) + $kp;
 }
 
-function recomputeEventKls(PDO $conn, int $eventId): void
+function normalizeMatchTokens(string $raw): array
+{
+    $normalized = strtoupper(trim($raw));
+    if ($normalized === '') return [];
+
+    $normalized = str_replace(["\r", "\n", ";", "|", "/", "\\"], ',', $normalized);
+    $normalized = preg_replace('/\s+/', ',', $normalized);
+    $parts = array_filter(array_map('trim', explode(',', $normalized)), static fn($v) => $v !== '');
+
+    $mapped = [];
+    foreach ($parts as $part) {
+        $token = $part;
+        if ($token === 'M' || $token === 'WIN') $token = 'W';
+        if ($token === 'MP' || $token === 'WINP') $token = 'WP';
+        if ($token === 'S' || $token === 'DRAW') $token = 'D';
+        if ($token === 'KP' || $token === 'LOSEP') $token = 'LP';
+        if ($token === 'K' || $token === 'LOSE') $token = 'L';
+        if (in_array($token, ['W', 'WP', 'D', 'LP', 'L'], true)) {
+            $mapped[] = $token;
+        }
+    }
+    return $mapped;
+}
+
+function buildMatchTokensFromStats(int $m, int $mp, int $s, int $kp, int $k): array
+{
+    $tokens = [];
+    for ($i = 0; $i < $m; $i++) $tokens[] = 'W';
+    for ($i = 0; $i < $mp; $i++) $tokens[] = 'WP';
+    for ($i = 0; $i < $s; $i++) $tokens[] = 'D';
+    for ($i = 0; $i < $kp; $i++) $tokens[] = 'LP';
+    for ($i = 0; $i < $k; $i++) $tokens[] = 'L';
+    return $tokens;
+}
+
+function renderMatchHistoryBadges(string $history): string
+{
+    $tokens = normalizeMatchTokens($history);
+    if (empty($tokens)) {
+        return '-';
+    }
+
+    $html = '<div class="match-seq">';
+    foreach ($tokens as $token) {
+        $cls = 'draw';
+        if ($token === 'W' || $token === 'WP') $cls = 'win';
+        if ($token === 'L' || $token === 'LP') $cls = 'lose';
+        $html .= '<span class="match-pill ' . $cls . '">' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '</span>';
+    }
+    $html .= '</div>';
+
+    return $html;
+}
+
+function recomputeEventKls(PDO $conn, int $eventId, string $categoryName = ''): void
 {
     if ($eventId <= 0) return;
 
-    $rankStmt = $conn->prepare("SELECT id
-                                FROM event_team_values
-                                WHERE event_id = ?
-                                ORDER BY points DESC, sg DESC, gm DESC, id ASC");
-    $rankStmt->execute([$eventId]);
+    if ($categoryName !== '') {
+        $rankStmt = $conn->prepare("SELECT id
+                                    FROM event_team_values
+                                    WHERE event_id = ? AND sport_type = ?
+                                    ORDER BY points DESC, sg DESC, gm DESC, id ASC");
+        $rankStmt->execute([$eventId, $categoryName]);
+    } else {
+        $rankStmt = $conn->prepare("SELECT id
+                                    FROM event_team_values
+                                    WHERE event_id = ?
+                                    ORDER BY points DESC, sg DESC, gm DESC, id ASC");
+        $rankStmt->execute([$eventId]);
+    }
     $rows = $rankStmt->fetchAll(PDO::FETCH_ASSOC);
 
     $updateStmt = $conn->prepare("UPDATE event_team_values SET kls = ? WHERE id = ?");
@@ -182,13 +286,17 @@ $menu_items = [
 $current_page = basename($_SERVER['PHP_SELF']);
 $academy_name = "Hi, Welcome...";
 $email = $_SESSION['admin_email'] ?? '';
+$event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 
 $eventId = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;
+$selectedCategory = trim((string)($_GET['sport_type'] ?? ''));
 $events = $conn->query("SELECT id, name FROM events ORDER BY start_date DESC, created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
 
-if ($eventId <= 0 && !empty($events)) $eventId = (int)$events[0]['id'];
+if ($selectedCategory !== '' && !in_array($selectedCategory, $event_types, true)) {
+    $selectedCategory = '';
+}
 
-$teams = loadEventTeams($conn, $eventId);
+$teams = loadEventTeams($conn, $eventId, $selectedCategory);
 $teamMap = [];
 foreach ($teams as $team) {
     $teamMap[(int)$team['id']] = true;
@@ -204,7 +312,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $action = trim($_POST['action'] ?? '');
     $eventId = (int)($_POST['event_id'] ?? $eventId);
-    $teams = loadEventTeams($conn, $eventId);
+    $selectedCategory = trim((string)($_POST['sport_type'] ?? $selectedCategory));
+    if (!empty($event_types) && ($selectedCategory === '' || !in_array($selectedCategory, $event_types, true))) {
+        $errors[] = 'Kategori wajib dipilih.';
+    }
+    $teams = loadEventTeams($conn, $eventId, $selectedCategory);
     $teamMap = [];
     foreach ($teams as $team) {
         $teamMap[(int)$team['id']] = true;
@@ -212,6 +324,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'save_team' && empty($errors)) {
         $teamId = (int)($_POST['team_id'] ?? 0);
+        $matchHistoryInput = trim((string)($_POST['match_history'] ?? ''));
         $m = max(0, (int)($_POST['m'] ?? 0));
         $mp = max(0, (int)($_POST['mp'] ?? 0));
         $s = max(0, (int)($_POST['s'] ?? 0));
@@ -232,11 +345,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             $conn->beginTransaction();
             try {
-                $existingStmt = $conn->prepare("SELECT mn, m, mp, s, kp, k, gm, gk, red_cards, yellow_cards, green_cards
+                $existingStmt = $conn->prepare("SELECT mn, m, mp, s, kp, k, gm, gk, red_cards, yellow_cards, green_cards, match_history
                                                 FROM event_team_values
-                                                WHERE event_id = ? AND team_id = ? LIMIT 1
+                                                WHERE event_id = ? AND team_id = ? AND sport_type = ? LIMIT 1
                                                 FOR UPDATE");
-                $existingStmt->execute([$eventId, $teamId]);
+                $existingStmt->execute([$eventId, $teamId, $selectedCategory]);
                 $existing = $existingStmt->fetch(PDO::FETCH_ASSOC);
 
                 $totalM = (int)($existing['m'] ?? 0) + $m;
@@ -253,17 +366,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mn = $totalM + $totalMp + $totalS + $totalKp + $totalK;
                 $sg = $totalGm - $totalGk;
                 $points = calculateTeamPoints($totalM, $totalMp, $totalKp);
+                $existingTokens = normalizeMatchTokens((string)($existing['match_history'] ?? ''));
+                $newTokens = normalizeMatchTokens($matchHistoryInput);
+                if (empty($newTokens)) {
+                    $newTokens = buildMatchTokensFromStats($m, $mp, $s, $kp, $k);
+                }
+                $matchHistory = implode(',', array_merge($existingTokens, $newTokens));
 
-                $stmt = $conn->prepare("INSERT INTO event_team_values (event_id, team_id, mn, m, mp, s, kp, k, gm, gk, sg, points, kls, red_cards, yellow_cards, green_cards) 
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+                $stmt = $conn->prepare("INSERT INTO event_team_values (event_id, team_id, sport_type, mn, m, mp, s, kp, k, gm, gk, sg, points, kls, red_cards, yellow_cards, green_cards, match_history) 
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
                                         ON DUPLICATE KEY UPDATE 
                                         mn = VALUES(mn), m = VALUES(m), mp = VALUES(mp), s = VALUES(s), kp = VALUES(kp), k = VALUES(k), 
-                                        gm = VALUES(gm), gk = VALUES(gk), sg = VALUES(sg), points = VALUES(points), kls = VALUES(kls),
-                                        red_cards = VALUES(red_cards), yellow_cards = VALUES(yellow_cards), green_cards = VALUES(green_cards), 
+                                        gm = VALUES(gm), gk = VALUES(gk), sg = VALUES(sg), points = VALUES(points), kls = VALUES(kls), sport_type = VALUES(sport_type),
+                                        red_cards = VALUES(red_cards), yellow_cards = VALUES(yellow_cards), green_cards = VALUES(green_cards), match_history = VALUES(match_history),
                                         updated_at = CURRENT_TIMESTAMP");
 
-                $stmt->execute([$eventId, $teamId, $mn, $totalM, $totalMp, $totalS, $totalKp, $totalK, $totalGm, $totalGk, $sg, $points, 0, $totalRed, $totalYellow, $totalGreen]);
-                recomputeEventKls($conn, $eventId);
+                $stmt->execute([$eventId, $teamId, $selectedCategory, $mn, $totalM, $totalMp, $totalS, $totalKp, $totalK, $totalGm, $totalGk, $sg, $points, 0, $totalRed, $totalYellow, $totalGreen, $matchHistory]);
+                recomputeEventKls($conn, $eventId, $selectedCategory);
                 $conn->commit();
             } catch (Throwable $e) {
                 if ($conn->inTransaction()) $conn->rollBack();
@@ -298,8 +417,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             $existingStmt = $conn->prepare("SELECT yellow_cards, red_cards, green_cards, suspension_until
                                             FROM player_event_cards
-                                            WHERE event_id = ? AND player_id = ? LIMIT 1");
-            $existingStmt->execute([$eventId, $playerId]);
+                                            WHERE event_id = ? AND player_id = ? AND sport_type = ? LIMIT 1");
+            $existingStmt->execute([$eventId, $playerId, $selectedCategory]);
             $existing = $existingStmt->fetch(PDO::FETCH_ASSOC);
 
             $prevYellow = (int)($existing['yellow_cards'] ?? 0);
@@ -324,12 +443,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $suspend = date('Y-m-d', strtotime($baseDate . ' +' . (7 * $newSuspensionBatch) . ' days'));
             }
 
-            $stmt = $conn->prepare("INSERT INTO player_event_cards (event_id, player_id, team_id, yellow_cards, red_cards, green_cards, suspension_until) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?) 
+            $stmt = $conn->prepare("INSERT INTO player_event_cards (event_id, player_id, team_id, sport_type, yellow_cards, red_cards, green_cards, suspension_until) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
                                     ON DUPLICATE KEY UPDATE 
-                                    team_id = VALUES(team_id), yellow_cards = VALUES(yellow_cards), red_cards = VALUES(red_cards), 
+                                    team_id = VALUES(team_id), sport_type = VALUES(sport_type), yellow_cards = VALUES(yellow_cards), red_cards = VALUES(red_cards), 
                                     green_cards = VALUES(green_cards), suspension_until = VALUES(suspension_until), updated_at = CURRENT_TIMESTAMP");
-            $stmt->execute([$eventId, $playerId, $teamId, $totalYellow, $totalRed, $totalGreen, $suspend]);
+            $stmt->execute([$eventId, $playerId, $teamId, $selectedCategory, $totalYellow, $totalRed, $totalGreen, $suspend]);
             $success = 'Kartu pemain tersimpan.';
         }
     }
@@ -338,7 +457,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrf = $_SESSION['csrf_token'];
 }
 
-$teams = loadEventTeams($conn, $eventId);
+$teams = loadEventTeams($conn, $eventId, $selectedCategory);
 $teamIds = array_map(static fn($row) => (int)$row['id'], $teams);
 
 $players = [];
@@ -347,59 +466,8 @@ if (!empty($teamIds)) {
     $players = $conn->query("SELECT id, name, team_id FROM players WHERE team_id IN ($in) ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$standings = [];
 $standingsByCategory = [];
 if ($eventId > 0) {
-    recomputeEventKls($conn, $eventId);
-    $stmt = $conn->prepare("SELECT etv.*, t.name AS team_name 
-                            FROM event_team_values etv 
-                            INNER JOIN teams t ON t.id = etv.team_id 
-                            WHERE etv.event_id = ? 
-                            ORDER BY etv.kls ASC, etv.points DESC, etv.sg DESC, etv.gm DESC, t.name ASC");
-    $stmt->execute([$eventId]);
-    $standingsRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $standingsMap = [];
-    foreach ($standingsRows as $row) {
-        $standingsMap[(int)$row['team_id']] = $row;
-    }
-
-    foreach ($teams as $team) {
-        $teamId = (int)$team['id'];
-        $row = $standingsMap[$teamId] ?? [
-            'team_id' => $teamId,
-            'team_name' => $team['name'],
-            'mn' => 0,
-            'm' => 0,
-            'mp' => 0,
-            's' => 0,
-            'kp' => 0,
-            'k' => 0,
-            'gm' => 0,
-            'gk' => 0,
-            'sg' => 0,
-            'points' => 0,
-            'kls' => 0,
-            'red_cards' => 0,
-            'yellow_cards' => 0,
-            'green_cards' => 0,
-        ];
-        $row['team_name'] = $row['team_name'] ?? $team['name'];
-        $standings[] = $row;
-    }
-
-    usort($standings, static function (array $a, array $b): int {
-        if ((int)$a['points'] !== (int)$b['points']) return (int)$b['points'] <=> (int)$a['points'];
-        if ((int)$a['sg'] !== (int)$b['sg']) return (int)$b['sg'] <=> (int)$a['sg'];
-        if ((int)$a['gm'] !== (int)$b['gm']) return (int)$b['gm'] <=> (int)$a['gm'];
-        return strcmp((string)$a['team_name'], (string)$b['team_name']);
-    });
-
-    foreach ($standings as $idx => &$row) {
-        if ((int)($row['kls'] ?? 0) <= 0) $row['kls'] = $idx + 1;
-    }
-    unset($row);
-
     $eventName = '';
     foreach ($events as $ev) {
         if ((int)($ev['id'] ?? 0) === $eventId) {
@@ -409,36 +477,79 @@ if ($eventId > 0) {
     }
 
     $categoryTeamMap = loadEventCategoryTeamMap($conn, $eventId);
-    if (empty($categoryTeamMap)) {
-        $rows = $standings;
-        foreach ($rows as $idx => &$row) {
-            $row['display_kls'] = $idx + 1;
+    if ($selectedCategory !== '') {
+        if (isset($categoryTeamMap[$selectedCategory])) {
+            $categoryTeamMap = [$selectedCategory => $categoryTeamMap[$selectedCategory]];
+        } else {
+            $categoryTeamMap = [];
         }
-        unset($row);
-        $standingsByCategory[] = [
-            'title' => trim('Klasemen Event ' . $eventName),
-            'rows' => $rows
-        ];
-    } else {
-        $usedTeam = [];
-        foreach ($categoryTeamMap as $categoryName => $teamIdsInCategory) {
-            $teamMap = array_fill_keys($teamIdsInCategory, true);
-            $rows = [];
-            foreach ($standings as $row) {
-                if (isset($teamMap[(int)$row['team_id']])) {
-                    $rows[] = $row;
-                    $usedTeam[(int)$row['team_id']] = true;
-                }
-            }
-            if (empty($rows)) continue;
+    }
 
+    $allStandingsStmt = $conn->prepare("SELECT etv.*, t.name AS team_name
+                                        FROM event_team_values etv
+                                        INNER JOIN teams t ON t.id = etv.team_id
+                                        WHERE etv.event_id = ?
+                                        ORDER BY etv.sport_type ASC, etv.kls ASC, etv.points DESC, etv.sg DESC, etv.gm DESC, t.name ASC");
+    $allStandingsStmt->execute([$eventId]);
+    $standingsRowsAll = $allStandingsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $standingsBySport = [];
+    foreach ($standingsRowsAll as $row) {
+        $sport = trim((string)($row['sport_type'] ?? ''));
+        if ($sport === '') continue;
+        if (!isset($standingsBySport[$sport])) $standingsBySport[$sport] = [];
+        $standingsBySport[$sport][] = $row;
+    }
+    if ($selectedCategory !== '') {
+        if (isset($standingsBySport[$selectedCategory])) {
+            $standingsBySport = [$selectedCategory => $standingsBySport[$selectedCategory]];
+        } else {
+            $standingsBySport = [];
+        }
+    }
+
+    if (!empty($categoryTeamMap)) {
+        foreach ($categoryTeamMap as $categoryName => $teamIdsInCategory) {
+            recomputeEventKls($conn, $eventId, (string)$categoryName);
+
+            $rows = $standingsBySport[$categoryName] ?? [];
+            $rowsByTeamId = [];
+            foreach ($rows as $row) {
+                $rowsByTeamId[(int)$row['team_id']] = $row;
+            }
+
+            $teamsInCategory = loadEventTeams($conn, $eventId, (string)$categoryName);
+            foreach ($teamsInCategory as $team) {
+                $teamId = (int)($team['id'] ?? 0);
+                if ($teamId <= 0 || isset($rowsByTeamId[$teamId])) continue;
+                $rowsByTeamId[$teamId] = [
+                    'team_id' => $teamId,
+                    'team_name' => (string)($team['name'] ?? '-'),
+                    'mn' => 0,
+                    'm' => 0,
+                    'mp' => 0,
+                    's' => 0,
+                    'kp' => 0,
+                    'k' => 0,
+                    'gm' => 0,
+                    'gk' => 0,
+                    'sg' => 0,
+                    'points' => 0,
+                    'kls' => 0,
+                    'red_cards' => 0,
+                    'yellow_cards' => 0,
+                    'green_cards' => 0,
+                    'match_history' => '',
+                ];
+            }
+
+            $rows = array_values($rowsByTeamId);
             usort($rows, static function (array $a, array $b): int {
                 if ((int)$a['points'] !== (int)$b['points']) return (int)$b['points'] <=> (int)$a['points'];
                 if ((int)$a['sg'] !== (int)$b['sg']) return (int)$b['sg'] <=> (int)$a['sg'];
                 if ((int)$a['gm'] !== (int)$b['gm']) return (int)$b['gm'] <=> (int)$a['gm'];
                 return strcmp((string)$a['team_name'], (string)$b['team_name']);
             });
-
             foreach ($rows as $idx => &$row) {
                 $row['display_kls'] = $idx + 1;
             }
@@ -449,36 +560,81 @@ if ($eventId > 0) {
                 'rows' => $rows
             ];
         }
-
-        $otherRows = [];
-        foreach ($standings as $row) {
-            if (!isset($usedTeam[(int)$row['team_id']])) {
-                $otherRows[] = $row;
-            }
-        }
-        if (!empty($otherRows)) {
-            foreach ($otherRows as $idx => &$row) {
+    } else {
+        foreach ($standingsBySport as $categoryName => $rows) {
+            usort($rows, static function (array $a, array $b): int {
+                if ((int)$a['points'] !== (int)$b['points']) return (int)$b['points'] <=> (int)$a['points'];
+                if ((int)$a['sg'] !== (int)$b['sg']) return (int)$b['sg'] <=> (int)$a['sg'];
+                if ((int)$a['gm'] !== (int)$b['gm']) return (int)$b['gm'] <=> (int)$a['gm'];
+                return strcmp((string)$a['team_name'], (string)$b['team_name']);
+            });
+            foreach ($rows as $idx => &$row) {
                 $row['display_kls'] = $idx + 1;
             }
             unset($row);
+
             $standingsByCategory[] = [
-                'title' => trim('Klasemen Event ' . $eventName . ' Lainnya'),
-                'rows' => $otherRows
+                'title' => trim('Klasemen Event ' . $eventName . ' ' . $categoryName),
+                'rows' => $rows
             ];
         }
     }
+
+    usort($standingsByCategory, static function (array $a, array $b): int {
+        return strcmp((string)($a['title'] ?? ''), (string)($b['title'] ?? ''));
+    });
 }
 
-$playerCards = [];
+$playerCardsByCategory = [];
 if ($eventId > 0) {
+    $categoryTeamMap = loadEventCategoryTeamMap($conn, $eventId);
+    if ($selectedCategory !== '') {
+        if (isset($categoryTeamMap[$selectedCategory])) {
+            $categoryTeamMap = [$selectedCategory => $categoryTeamMap[$selectedCategory]];
+        } else {
+            $categoryTeamMap = [];
+        }
+    }
+    if (!empty($categoryTeamMap)) {
+        foreach (array_keys($categoryTeamMap) as $categoryName) {
+            if (!isset($playerCardsByCategory[$categoryName])) {
+                $playerCardsByCategory[$categoryName] = [];
+            }
+        }
+    }
+
     $stmt = $conn->prepare("SELECT c.*, p.name AS player_name, t.name AS team_name 
                             FROM player_event_cards c 
                             INNER JOIN players p ON p.id = c.player_id 
                             INNER JOIN teams t ON t.id = c.team_id 
-                            WHERE c.event_id = ? 
-                            ORDER BY c.updated_at DESC");
+                            WHERE c.event_id = ?
+                            ORDER BY c.sport_type ASC, c.updated_at DESC");
     $stmt->execute([$eventId]);
     $playerCards = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($playerCards as $card) {
+        $sport = trim((string)($card['sport_type'] ?? ''));
+        if ($sport === '') $sport = 'Lainnya';
+        if ($selectedCategory !== '' && $sport !== $selectedCategory) {
+            continue;
+        }
+        if (!isset($playerCardsByCategory[$sport])) $playerCardsByCategory[$sport] = [];
+        $playerCardsByCategory[$sport][] = $card;
+    }
+    if (!empty($categoryTeamMap)) {
+        $orderedPlayerCardsByCategory = [];
+        foreach (array_keys($categoryTeamMap) as $categoryName) {
+            $orderedPlayerCardsByCategory[$categoryName] = $playerCardsByCategory[$categoryName] ?? [];
+        }
+        foreach ($playerCardsByCategory as $categoryName => $rows) {
+            if (!isset($orderedPlayerCardsByCategory[$categoryName])) {
+                $orderedPlayerCardsByCategory[$categoryName] = $rows;
+            }
+        }
+        $playerCardsByCategory = $orderedPlayerCardsByCategory;
+    } else {
+        ksort($playerCardsByCategory);
+    }
 }
 ?>
 
@@ -820,6 +976,77 @@ if ($eventId > 0) {
         .data-table td:first-child {
             text-align: left
         }
+        .card-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 22px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 0 8px;
+            border: 1px solid transparent
+        }
+        .card-badge.red { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+        .card-badge.yellow { background: #fef9c3; color: #a16207; border-color: #fde68a; }
+        .card-badge.green { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .match-seq {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px
+        }
+        .match-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 20px;
+            border-radius: 5px;
+            padding: 0 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff
+        }
+        .match-pill.win { background: #16a34a; }
+        .match-pill.lose { background: #dc2626; }
+        .match-pill.draw { background: #d97706; }
+        .match-builder {
+            border: 1px solid #dbe5f3;
+            border-radius: 10px;
+            background: #ffffff;
+            padding: 10px
+        }
+        .match-builder-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px
+        }
+        .match-token-btn {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff
+        }
+        .match-token-btn.win { background: #16a34a; }
+        .match-token-btn.lose { background: #dc2626; }
+        .match-token-btn.draw { background: #d97706; }
+        .match-token-btn.neutral {
+            background: #475569;
+            border-color: #334155
+        }
+        .match-builder-preview {
+            min-height: 26px;
+            align-items: center
+        }
+        .match-placeholder {
+            color: #64748b;
+            font-size: 12px
+        }
         .badge-pill {
             display: inline-block;
             padding: 5px 10px;
@@ -953,9 +1180,21 @@ if ($eventId > 0) {
                             <div class="form-group">
                                 <label class="form-label">Event</label>
                                 <select class="form-select" name="event_id" onchange="this.form.submit()">
+                                    <option value="">Pilih Event</option>
                                     <?php foreach ($events as $event): ?>
                                         <option value="<?php echo (int)$event['id']; ?>" <?php echo $eventId === (int)$event['id'] ? 'selected' : ''; ?>>
                                             <?php echo htmlspecialchars($event['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kategori</label>
+                                <select class="form-select" name="sport_type" onchange="this.form.submit()">
+                                    <option value="">Pilih Kategori</option>
+                                    <?php foreach ($event_types as $eventType): ?>
+                                        <option value="<?php echo htmlspecialchars($eventType); ?>" <?php echo $selectedCategory === $eventType ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($eventType); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -968,10 +1207,14 @@ if ($eventId > 0) {
                     <div class="section-title">
                         <i class="fas fa-trophy"></i> Input Nilai Tim
                     </div>
+                    <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
+                        <div class="form-note">Pilih Event dan Kategori dulu untuk mengisi nilai tim.</div>
+                    <?php else: ?>
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                         <input type="hidden" name="action" value="save_team">
                         <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                        <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
 
                         <div class="form-grid">
                             <div class="form-group">
@@ -1012,9 +1255,16 @@ if ($eventId > 0) {
                                 <label class="form-label">K</label>
                                 <input class="form-input" type="number" id="team_k" name="k" min="0" value="0" required>
                             </div>
+                        </div>
+
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label">GM</label>
                                 <input class="form-input" type="number" name="gm" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">GK</label>
+                                <input class="form-input" type="number" name="gk" min="0" value="0" required>
                             </div>
                         </div>
 
@@ -1023,13 +1273,25 @@ if ($eventId > 0) {
                                 <label class="form-label">Poin (Otomatis)</label>
                                 <input class="form-input" type="number" id="team_points_preview" value="0" readonly>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Input Match (Klik Kotak)</label>
+                                <input type="hidden" name="match_history" id="match_history_input" value="<?php echo htmlspecialchars((string)($_POST['match_history'] ?? '')); ?>">
+                                <div class="match-builder">
+                                    <div class="match-builder-actions">
+                                        <button type="button" class="match-token-btn win" data-token="W">+ W</button>
+                                        <button type="button" class="match-token-btn win" data-token="WP">+ WP</button>
+                                        <button type="button" class="match-token-btn draw" data-token="D">+ D</button>
+                                        <button type="button" class="match-token-btn lose" data-token="LP">+ LP</button>
+                                        <button type="button" class="match-token-btn lose" data-token="L">+ L</button>
+                                        <button type="button" class="match-token-btn neutral" id="match_undo_btn">Undo</button>
+                                        <button type="button" class="match-token-btn neutral" id="match_reset_btn">Reset</button>
+                                    </div>
+                                    <div class="match-seq match-builder-preview" id="match_builder_preview"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">GK</label>
-                                <input class="form-input" type="number" name="gk" min="0" value="0" required>
-                            </div>
                             <div class="form-group">
                                 <label class="form-label">Kartu Merah</label>
                                 <input class="form-input" type="number" name="red_cards" min="0" value="0" required>
@@ -1048,22 +1310,27 @@ if ($eventId > 0) {
                             Rumus poin: <strong>P = (M × 3) + (MP × 2) + (KP × 1)</strong>.
                         </div>
                         <div class="form-note">
-                            TM = <strong>M + MP + S + KP + K</strong> (otomatis total match dimainkan).
+                            TM otomatis: <strong>M + MP + S + KP + K</strong>. Kode match: W (win), WP (win penalty), D (draw), LP (lose penalty), L (lose).
                         </div>
                         <div class="form-actions">
                             <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Nilai Tim</button>
                         </div>
                     </form>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-id-card"></i> Input Kartu Pemain
                     </div>
+                    <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
+                        <div class="form-note">Pilih Event dan Kategori dulu untuk input kartu pemain.</div>
+                    <?php else: ?>
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
                         <input type="hidden" name="action" value="save_player">
                         <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                        <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
 
                         <div class="form-grid">
                             <div class="form-group">
@@ -1112,18 +1379,21 @@ if ($eventId > 0) {
                             <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Kartu Pemain</button>
                         </div>
                     </form>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-table"></i> Klasemen Event
                     </div>
-                    <?php if (empty($standingsByCategory)): ?>
+                    <?php if ($eventId <= 0): ?>
+                        <div class="form-note">Pilih Event untuk menampilkan klasemen per kategori.</div>
+                    <?php elseif (empty($standingsByCategory)): ?>
                         <div class="table-container">
                             <table class="data-table">
                                 <tbody>
                                     <tr>
-                                        <td>Belum ada data.</td>
+                                        <td>Belum ada data klasemen untuk event ini.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1149,9 +1419,10 @@ if ($eventId > 0) {
                                             <th>SG</th>
                                             <th>P</th>
                                             <th>KLS</th>
-                                            <th>Merah</th>
-                                            <th>Kuning</th>
-                                            <th>Hijau</th>
+                                            <th>Match</th>
+                                            <th>🟥</th>
+                                            <th>🟨</th>
+                                            <th>🟩</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1169,9 +1440,10 @@ if ($eventId > 0) {
                                                 <td><?php echo (int)$row['sg']; ?></td>
                                                 <td><strong><?php echo (int)$row['points']; ?></strong></td>
                                                 <td><?php echo (int)($row['display_kls'] ?? $row['kls'] ?? 0); ?></td>
-                                                <td><?php echo (int)$row['red_cards']; ?></td>
-                                                <td><?php echo (int)$row['yellow_cards']; ?></td>
-                                                <td><?php echo (int)$row['green_cards']; ?></td>
+                                                <td><?php echo renderMatchHistoryBadges((string)($row['match_history'] ?? '')); ?></td>
+                                                <td><span class="card-badge red"><?php echo (int)$row['red_cards']; ?></span></td>
+                                                <td><span class="card-badge yellow"><?php echo (int)$row['yellow_cards']; ?></span></td>
+                                                <td><span class="card-badge green"><?php echo (int)$row['green_cards']; ?></span></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -1185,47 +1457,58 @@ if ($eventId > 0) {
                     <div class="section-title">
                         <i class="fas fa-user-shield"></i> Status Suspend Pemain
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Pemain</th>
-                                    <th>Tim</th>
-                                    <th>Kuning</th>
-                                    <th>Merah</th>
-                                    <th>Hijau</th>
-                                    <th>Suspend Sampai</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (empty($playerCards)): ?>
-                                    <tr>
-                                        <td colspan="7">Belum ada data.</td>
-                                    </tr>
-                                <?php else: 
-                                    foreach ($playerCards as $row): 
-                                        $isSuspended = !empty($row['suspension_until']) && $row['suspension_until'] >= date('Y-m-d'); ?>
+                    <?php if ($eventId <= 0): ?>
+                        <div class="form-note">Pilih Event untuk melihat status suspend pemain per kategori.</div>
+                    <?php elseif (empty($playerCardsByCategory)): ?>
+                        <div class="form-note">Belum ada data suspend pemain untuk event ini.</div>
+                    <?php else: ?>
+                        <?php foreach ($playerCardsByCategory as $categoryName => $rows): ?>
+                            <div class="form-note" style="margin: 0 0 10px 0; font-size: 15px; font-weight: 700; color: var(--primary);">
+                                Suspend <?php echo htmlspecialchars($categoryName); ?>
+                            </div>
+                            <div class="table-container" style="margin-bottom: 14px;">
+                                <table class="data-table">
+                                    <thead>
                                         <tr>
-                                            <td><?php echo htmlspecialchars($row['player_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['team_name']); ?></td>
-                                            <td><?php echo (int)$row['yellow_cards']; ?></td>
-                                            <td><?php echo (int)$row['red_cards']; ?></td>
-                                            <td><?php echo (int)$row['green_cards']; ?></td>
-                                            <td><?php echo !empty($row['suspension_until']) ? htmlspecialchars(date('d M Y', strtotime($row['suspension_until']))) : '-'; ?></td>
-                                            <td>
-                                                <?php if ($isSuspended): ?>
-                                                    <span class="badge-pill badge-ban">Tidak Boleh Main</span>
-                                                <?php else: ?>
-                                                    <span class="badge-pill badge-ok">Boleh Main</span>
-                                                <?php endif; ?>
-                                            </td>
+                                            <th>Pemain</th>
+                                            <th>Tim</th>
+                                            <th>Kuning</th>
+                                            <th>Merah</th>
+                                            <th>Hijau</th>
+                                            <th>Suspend Sampai</th>
+                                            <th>Status</th>
                                         </tr>
-                                    <?php endforeach; 
-                                endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (empty($rows)): ?>
+                                            <tr>
+                                                <td colspan="7">Belum ada data.</td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <?php foreach ($rows as $row): ?>
+                                                <?php $isSuspended = !empty($row['suspension_until']) && $row['suspension_until'] >= date('Y-m-d'); ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($row['player_name']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['team_name']); ?></td>
+                                                    <td><span class="card-badge yellow"><?php echo (int)$row['yellow_cards']; ?></span></td>
+                                                    <td><span class="card-badge red"><?php echo (int)$row['red_cards']; ?></span></td>
+                                                    <td><span class="card-badge green"><?php echo (int)$row['green_cards']; ?></span></td>
+                                                    <td><?php echo !empty($row['suspension_until']) ? htmlspecialchars(date('d M Y', strtotime($row['suspension_until']))) : '-'; ?></td>
+                                                    <td>
+                                                        <?php if ($isSuspended): ?>
+                                                            <span class="badge-pill badge-ban">Tidak Boleh Main</span>
+                                                        <?php else: ?>
+                                                            <span class="badge-pill badge-ok">Boleh Main</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1270,6 +1553,12 @@ if ($eventId > 0) {
         const teamK = document.getElementById('team_k');
         const teamMn = document.getElementById('team_mn');
         const teamPointsPreview = document.getElementById('team_points_preview');
+        const matchHistoryInput = document.getElementById('match_history_input');
+        const matchBuilderPreview = document.getElementById('match_builder_preview');
+        const matchTokenButtons = document.querySelectorAll('.match-token-btn[data-token]');
+        const matchUndoBtn = document.getElementById('match_undo_btn');
+        const matchResetBtn = document.getElementById('match_reset_btn');
+        let matchTokens = [];
 
         function toNum(el) {
             if (!el) return 0;
@@ -1294,6 +1583,60 @@ if ($eventId > 0) {
             if (el) el.addEventListener('input', updateTeamCalculatedFields);
         });
         updateTeamCalculatedFields();
+
+        function tokenClass(token) {
+            if (token === 'W' || token === 'WP') return 'win';
+            if (token === 'L' || token === 'LP') return 'lose';
+            return 'draw';
+        }
+
+        function renderMatchBuilder() {
+            if (!matchBuilderPreview || !matchHistoryInput) return;
+            matchHistoryInput.value = matchTokens.join(',');
+            if (matchTokens.length === 0) {
+                matchBuilderPreview.innerHTML = '<span class="match-placeholder">Belum ada match. Klik tombol +W / +L / dst.</span>';
+                return;
+            }
+            matchBuilderPreview.innerHTML = '';
+            matchTokens.forEach(function(token) {
+                const pill = document.createElement('span');
+                pill.className = 'match-pill ' + tokenClass(token);
+                pill.textContent = token;
+                matchBuilderPreview.appendChild(pill);
+            });
+        }
+
+        if (matchHistoryInput) {
+            matchTokens = (matchHistoryInput.value || '')
+                .split(',')
+                .map(function(v) { return v.trim().toUpperCase(); })
+                .filter(function(v) { return ['W', 'WP', 'D', 'LP', 'L'].indexOf(v) !== -1; });
+            renderMatchBuilder();
+        }
+
+        matchTokenButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const token = (btn.getAttribute('data-token') || '').toUpperCase();
+                if (!token) return;
+                matchTokens.push(token);
+                renderMatchBuilder();
+            });
+        });
+
+        if (matchUndoBtn) {
+            matchUndoBtn.addEventListener('click', function() {
+                if (matchTokens.length === 0) return;
+                matchTokens.pop();
+                renderMatchBuilder();
+            });
+        }
+
+        if (matchResetBtn) {
+            matchResetBtn.addEventListener('click', function() {
+                matchTokens = [];
+                renderMatchBuilder();
+            });
+        }
     </script>
 </body>
 </html>

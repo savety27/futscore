@@ -515,7 +515,7 @@ body {
                                 <div class="action-buttons-inline">
                                     <a href="event_view.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-view" title="Lihat Detail"><i class="fas fa-eye"></i></a>
                                     <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-edit" title="Edit Event"><i class="fas fa-edit"></i></a>
-                                    <a href="event_value.php?event_id=<?php echo (int) $event['id']; ?>" class="action-btn btn-value" title="Input Nilai Event"><i class="fas fa-list-ol"></i></a>
+                                    <a href="event_value.php" class="action-btn btn-value" title="Input Nilai Event"><i class="fas fa-list-ol"></i></a>
                                     <form method="POST" action="?<?php echo http_build_query(['search' => $search, 'registration' => $filter_registration, 'active' => $filter_active, 'page' => $page]); ?>">
                                         <input type="hidden" name="id" value="<?php echo (int) $event['id']; ?>">
                                         <input type="hidden" name="action" value="toggle_registration">
