@@ -1,6 +1,6 @@
 <?php
 
-function playerAddCollectInput(array $post): array
+function playerEditCollectInput(array $post): array
 {
     return [
         'name' => trim((string)($post['name'] ?? '')),
@@ -37,7 +37,7 @@ function playerAddCollectInput(array $post): array
     ];
 }
 
-function playerAddValidateInput(array $input): ?string
+function playerEditValidateInput(array $input): ?string
 {
     $requiredFields = [
         'name',
@@ -45,7 +45,6 @@ function playerAddValidateInput(array $input): ?string
         'date_of_birth',
         'sport',
         'gender',
-        'nik',
         'team_id',
         'jersey_number',
         'dominant_foot',
@@ -58,11 +57,7 @@ function playerAddValidateInput(array $input): ?string
         }
     }
 
-    if (!in_array($input['gender'], ['Laki-laki', 'Perempuan'], true)) {
-        return 'Jenis kelamin tidak valid!';
-    }
-
-    if (strlen($input['nik']) !== 16 || !is_numeric($input['nik'])) {
+    if (empty($input['nik']) || strlen($input['nik']) !== 16 || !is_numeric($input['nik'])) {
         return 'NIK harus terdiri dari tepat 16 digit angka!';
     }
 
@@ -77,66 +72,62 @@ function playerAddValidateInput(array $input): ?string
     return null;
 }
 
-function playerAddMapGenderForDb(string $gender): string
+function playerEditUpdateSql(): string
 {
-    if ($gender === 'Laki-laki') {
-        return 'L';
-    }
-
-    if ($gender === 'Perempuan') {
-        return 'P';
-    }
-
-    return '';
+    return "UPDATE players SET
+        team_id = :team_id,
+        name = :name,
+        position = :position,
+        jersey_number = :jersey_number,
+        birth_date = :birth_date,
+        height = :height,
+        weight = :weight,
+        birth_place = :birth_place,
+        gender = :gender,
+        nisn = :nisn,
+        nik = :nik,
+        sport_type = :sport_type,
+        email = :email,
+        phone = :phone,
+        nationality = :nationality,
+        street = :street,
+        city = :city,
+        province = :province,
+        postal_code = :postal_code,
+        country = :country,
+        dominant_foot = :dominant_foot,
+        position_detail = :position_detail,
+        dribbling = :dribbling,
+        technique = :technique,
+        speed = :speed,
+        juggling = :juggling,
+        shooting = :shooting,
+        setplay_position = :setplay_position,
+        passing = :passing,
+        control = :control,
+        photo = :photo,
+        ktp_image = :ktp_image,
+        kk_image = :kk_image,
+        birth_cert_image = :birth_cert_image,
+        diploma_image = :diploma_image,
+        status = :status,
+        updated_at = NOW()
+    WHERE id = :id";
 }
 
-function playerAddGenerateSlug(string $name, ?int $timestamp = null): string
-{
-    $slug = strtolower($name);
-    $slug = str_replace(' ', '-', $slug);
-    $slug = preg_replace('/[^a-z0-9\-]/', '', $slug);
-    $slug = preg_replace('/-+/', '-', $slug);
-    $slug = trim($slug, '-');
-
-    if ($timestamp === null) {
-        $timestamp = time();
-    }
-
-    return $slug . '-' . $timestamp;
-}
-
-function playerAddInsertSql(): string
-{
-    return "INSERT INTO players (
-        team_id, name, slug, position, jersey_number, birth_date, height, weight,
-        birth_place, gender, nisn, nik, sport_type, email, phone, nationality,
-        street, city, province, postal_code, country, dominant_foot, position_detail,
-        dribbling, technique, speed, juggling, shooting, setplay_position, passing, control,
-        photo, ktp_image, kk_image, birth_cert_image, diploma_image,
-        created_at, updated_at, status
-    ) VALUES (
-        :team_id, :name, :slug, :position, :jersey_number, :birth_date, :height, :weight,
-        :birth_place, :gender, :nisn, :nik, :sport_type, :email, :phone, :nationality,
-        :street, :city, :province, :postal_code, :country, :dominant_foot, :position_detail,
-        :dribbling, :technique, :speed, :juggling, :shooting, :setplay_position, :passing, :control,
-        :photo, :ktp_image, :kk_image, :birth_cert_image, :diploma_image,
-        NOW(), NOW(), :status
-    )";
-}
-
-function playerAddBuildInsertParams(array $input, array $uploadedFiles, string $slug): array
+function playerEditBuildUpdateParams(array $input, array $uploadedFiles, int $id): array
 {
     return [
+        ':id' => $id,
         ':team_id' => $input['team_id'],
         ':name' => $input['name'],
-        ':slug' => $slug,
         ':position' => $input['position'],
         ':jersey_number' => $input['jersey_number'],
         ':birth_date' => $input['date_of_birth'],
         ':height' => $input['height'] !== '' ? $input['height'] : null,
         ':weight' => $input['weight'] !== '' ? $input['weight'] : null,
         ':birth_place' => $input['place_of_birth'],
-        ':gender' => playerAddMapGenderForDb($input['gender']),
+        ':gender' => playerEditMapGenderForDb($input['gender']),
         ':nisn' => $input['nisn'] !== '' ? $input['nisn'] : null,
         ':nik' => $input['nik'],
         ':sport_type' => $input['sport'],
@@ -159,30 +150,61 @@ function playerAddBuildInsertParams(array $input, array $uploadedFiles, string $
         ':passing' => $input['passing'],
         ':control' => $input['control'],
         ':status' => $input['status'],
-        ':photo' => $uploadedFiles['photo_file'] ?? '',
-        ':ktp_image' => $uploadedFiles['ktp_file'] ?? '',
-        ':kk_image' => $uploadedFiles['kk_file'] ?? '',
-        ':birth_cert_image' => $uploadedFiles['akte_file'] ?? '',
-        ':diploma_image' => $uploadedFiles['ijazah_file'] ?? '',
+        ':photo' => $uploadedFiles['photo_file'] ?? null,
+        ':ktp_image' => $uploadedFiles['ktp_file'] ?? null,
+        ':kk_image' => $uploadedFiles['kk_file'] ?? null,
+        ':birth_cert_image' => $uploadedFiles['akte_file'] ?? null,
+        ':diploma_image' => $uploadedFiles['ijazah_file'] ?? null,
     ];
 }
 
-function playerAddMapInsertError(PDOException $e): string
+function playerEditValidateNik(string $nik): ?string
+{
+    if (strlen($nik) !== 16 || !is_numeric($nik)) {
+        return 'NIK harus terdiri dari tepat 16 digit angka!';
+    }
+
+    return null;
+}
+
+function playerEditValidateKkImage(bool $hasExistingFile, bool $newFileUploaded, bool $deleteChecked): ?string
+{
+    if (!$newFileUploaded && (!$hasExistingFile || $deleteChecked)) {
+        return 'File Kartu Keluarga (KK) wajib diupload!';
+    }
+
+    return null;
+}
+
+function playerEditMapGenderForDb(string $gender): string
+{
+    if ($gender === 'Laki-laki') {
+        return 'L';
+    }
+
+    if ($gender === 'Perempuan') {
+        return 'P';
+    }
+
+    return '';
+}
+
+function playerEditMapUpdateError(PDOException $e): string
 {
     $driverCode = (int)($e->errorInfo[1] ?? 0);
     $messageLc = strtolower($e->getMessage());
 
     if ($driverCode === 1062) {
         if (strpos($messageLc, 'uq_players_name') !== false || strpos($messageLc, 'name') !== false) {
-            return 'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.';
+            return 'Error: Nama pemain sudah terdaftar. Gunakan nama yang berbeda.';
         }
 
         if (strpos($messageLc, 'nik') !== false) {
-            return 'NIK sudah terdaftar. Gunakan NIK yang berbeda.';
+            return 'Error: NIK sudah terdaftar. Gunakan NIK yang berbeda.';
         }
 
-        return 'Data duplikat terdeteksi. Periksa kembali input Anda.';
+        return 'Error: Data duplikat terdeteksi. Periksa kembali input Anda.';
     }
 
-    return 'Terjadi kesalahan: ' . $e->getMessage();
+    return 'Error: ' . $e->getMessage();
 }
