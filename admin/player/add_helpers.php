@@ -2,11 +2,16 @@
 
 function playerAddCollectInput(array $post): array
 {
+    $birthPlace = $post['birth_place'] ?? $post['place_of_birth'] ?? '';
+    $birthDate = $post['birth_date'] ?? $post['date_of_birth'] ?? '';
+    $sportType = $post['sport_type'] ?? $post['sport'] ?? '';
+    $street = $post['street'] ?? $post['address'] ?? '';
+
     return [
         'name' => trim((string)($post['name'] ?? '')),
-        'place_of_birth' => trim((string)($post['place_of_birth'] ?? '')),
-        'date_of_birth' => trim((string)($post['date_of_birth'] ?? '')),
-        'sport' => trim((string)($post['sport'] ?? '')),
+        'birth_place' => trim((string)$birthPlace),
+        'birth_date' => trim((string)$birthDate),
+        'sport_type' => trim((string)$sportType),
         'gender' => trim((string)($post['gender'] ?? '')),
         'nik' => trim((string)($post['nik'] ?? '')),
         'nisn' => trim((string)($post['nisn'] ?? '')),
@@ -14,12 +19,12 @@ function playerAddCollectInput(array $post): array
         'weight' => trim((string)($post['weight'] ?? '')),
         'email' => trim((string)($post['email'] ?? '')),
         'phone' => trim((string)($post['phone'] ?? '')),
-        'nationality' => trim((string)($post['nationality'] ?? '')),
-        'address' => trim((string)($post['address'] ?? '')),
+        'nationality' => trim((string)($post['nationality'] ?? 'Indonesia')),
+        'street' => trim((string)$street),
         'city' => trim((string)($post['city'] ?? '')),
         'province' => trim((string)($post['province'] ?? '')),
         'postal_code' => trim((string)($post['postal_code'] ?? '')),
-        'country' => trim((string)($post['country'] ?? '')),
+        'country' => trim((string)($post['country'] ?? 'Indonesia')),
         'team_id' => trim((string)($post['team_id'] ?? '')),
         'jersey_number' => trim((string)($post['jersey_number'] ?? '')),
         'dominant_foot' => trim((string)($post['dominant_foot'] ?? '')),
@@ -41,9 +46,9 @@ function playerAddValidateInput(array $input): ?string
 {
     $requiredFields = [
         'name',
-        'place_of_birth',
-        'date_of_birth',
-        'sport',
+        'birth_place',
+        'birth_date',
+        'sport_type',
         'gender',
         'nik',
         'team_id',
@@ -132,18 +137,18 @@ function playerAddBuildInsertParams(array $input, array $uploadedFiles, string $
         ':slug' => $slug,
         ':position' => $input['position'],
         ':jersey_number' => $input['jersey_number'],
-        ':birth_date' => $input['date_of_birth'],
+        ':birth_date' => $input['birth_date'],
         ':height' => $input['height'] !== '' ? $input['height'] : null,
         ':weight' => $input['weight'] !== '' ? $input['weight'] : null,
-        ':birth_place' => $input['place_of_birth'],
+        ':birth_place' => $input['birth_place'],
         ':gender' => playerAddMapGenderForDb($input['gender']),
         ':nisn' => $input['nisn'] !== '' ? $input['nisn'] : null,
         ':nik' => $input['nik'],
-        ':sport_type' => $input['sport'],
+        ':sport_type' => $input['sport_type'],
         ':email' => $input['email'] !== '' ? $input['email'] : null,
         ':phone' => $input['phone'] !== '' ? $input['phone'] : null,
         ':nationality' => $input['nationality'] !== '' ? $input['nationality'] : 'Indonesia',
-        ':street' => $input['address'] !== '' ? $input['address'] : null,
+        ':street' => $input['street'] !== '' ? $input['street'] : null,
         ':city' => $input['city'] !== '' ? $input['city'] : null,
         ':province' => $input['province'] !== '' ? $input['province'] : null,
         ':postal_code' => $input['postal_code'] !== '' ? $input['postal_code'] : null,
@@ -159,11 +164,11 @@ function playerAddBuildInsertParams(array $input, array $uploadedFiles, string $
         ':passing' => $input['passing'],
         ':control' => $input['control'],
         ':status' => $input['status'],
-        ':photo' => $uploadedFiles['photo_file'] ?? '',
-        ':ktp_image' => $uploadedFiles['ktp_file'] ?? '',
-        ':kk_image' => $uploadedFiles['kk_file'] ?? '',
-        ':birth_cert_image' => $uploadedFiles['akte_file'] ?? '',
-        ':diploma_image' => $uploadedFiles['ijazah_file'] ?? '',
+        ':photo' => $uploadedFiles['photo'] ?? $uploadedFiles['photo_file'] ?? '',
+        ':ktp_image' => $uploadedFiles['ktp_image'] ?? $uploadedFiles['ktp_file'] ?? '',
+        ':kk_image' => $uploadedFiles['kk_image'] ?? $uploadedFiles['kk_file'] ?? '',
+        ':birth_cert_image' => $uploadedFiles['birth_cert_image'] ?? $uploadedFiles['akte_file'] ?? '',
+        ':diploma_image' => $uploadedFiles['diploma_image'] ?? $uploadedFiles['ijazah_file'] ?? '',
     ];
 }
 

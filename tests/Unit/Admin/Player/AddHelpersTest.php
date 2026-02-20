@@ -9,21 +9,36 @@ final class AddHelpersTest extends TestCase
     {
         $input = playerAddCollectInput([
             'name' => '  Budi  ',
-            'place_of_birth' => '  Jakarta ',
-            'sport' => '  Futsal  ',
+            'birth_place' => '  Jakarta ',
+            'sport_type' => '  Futsal  ',
             'position_detail' => '  Winger Kiri  ',
             'status' => 'on',
             'dribbling' => '7',
-            'control' => '8'
+            'control' => '8',
         ]);
 
         $this->assertSame('Budi', $input['name']);
-        $this->assertSame('Jakarta', $input['place_of_birth']);
-        $this->assertSame('Futsal', $input['sport']);
+        $this->assertSame('Jakarta', $input['birth_place']);
+        $this->assertSame('Futsal', $input['sport_type']);
         $this->assertSame('Winger Kiri', $input['position_detail']);
         $this->assertSame('active', $input['status']);
         $this->assertSame(7, $input['dribbling']);
         $this->assertSame(8, $input['control']);
+    }
+
+    public function testCollectInputSupportsLegacyAliases(): void
+    {
+        $input = playerAddCollectInput([
+            'place_of_birth' => 'Jakarta',
+            'date_of_birth' => '2010-01-01',
+            'sport' => 'Futsal U-16',
+            'address' => 'Jalan Mawar',
+        ]);
+
+        $this->assertSame('Jakarta', $input['birth_place']);
+        $this->assertSame('2010-01-01', $input['birth_date']);
+        $this->assertSame('Futsal U-16', $input['sport_type']);
+        $this->assertSame('Jalan Mawar', $input['street']);
     }
 
     public function testCollectInputUsesDefaultsForMissingValues(): void
@@ -32,6 +47,8 @@ final class AddHelpersTest extends TestCase
 
         $this->assertSame('', $input['position_detail']);
         $this->assertSame('inactive', $input['status']);
+        $this->assertSame('Indonesia', $input['nationality']);
+        $this->assertSame('Indonesia', $input['country']);
         $this->assertSame(5, $input['dribbling']);
         $this->assertSame(5, $input['technique']);
         $this->assertSame(5, $input['speed']);
@@ -152,7 +169,7 @@ final class AddHelpersTest extends TestCase
         $input['email'] = '';
         $input['phone'] = '';
         $input['nationality'] = '';
-        $input['address'] = '';
+        $input['street'] = '';
         $input['city'] = '';
         $input['province'] = '';
         $input['postal_code'] = '';
@@ -187,12 +204,29 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('', $defaultParams[':diploma_image']);
 
         $params = playerAddBuildInsertParams($input, [
+            'photo' => 'photo.jpg',
+            'ktp_image' => 'ktp.jpg',
+            'kk_image' => 'kk.jpg',
+            'birth_cert_image' => 'akte.jpg',
+            'diploma_image' => 'ijazah.jpg',
+        ], 'slug-custom');
+
+        $this->assertSame('photo.jpg', $params[':photo']);
+        $this->assertSame('ktp.jpg', $params[':ktp_image']);
+        $this->assertSame('kk.jpg', $params[':kk_image']);
+        $this->assertSame('akte.jpg', $params[':birth_cert_image']);
+        $this->assertSame('ijazah.jpg', $params[':diploma_image']);
+    }
+
+    public function testBuildInsertParamsSupportsLegacyUploadedFileKeys(): void
+    {
+        $params = playerAddBuildInsertParams($this->validInput(), [
             'photo_file' => 'photo.jpg',
             'ktp_file' => 'ktp.jpg',
             'kk_file' => 'kk.jpg',
             'akte_file' => 'akte.jpg',
             'ijazah_file' => 'ijazah.jpg',
-        ], 'slug-custom');
+        ], 'slug-legacy');
 
         $this->assertSame('photo.jpg', $params[':photo']);
         $this->assertSame('ktp.jpg', $params[':ktp_image']);
@@ -241,9 +275,9 @@ final class AddHelpersTest extends TestCase
     {
         return [
             ['name'],
-            ['place_of_birth'],
-            ['date_of_birth'],
-            ['sport'],
+            ['birth_place'],
+            ['birth_date'],
+            ['sport_type'],
             ['gender'],
             ['nik'],
             ['team_id'],
@@ -279,17 +313,17 @@ final class AddHelpersTest extends TestCase
             [
                 ['23000', 1062, "Duplicate entry for key 'uq_players_name'"],
                 "Duplicate entry for key 'uq_players_name'",
-                'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.'
+                'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.',
             ],
             [
                 ['23000', 1062, "Duplicate entry for key 'players_nik_unique'"],
                 "Duplicate entry for key 'players_nik_unique'",
-                'NIK sudah terdaftar. Gunakan NIK yang berbeda.'
+                'NIK sudah terdaftar. Gunakan NIK yang berbeda.',
             ],
             [
                 ['23000', 1062, 'Duplicate entry'],
                 'Duplicate entry',
-                'Data duplikat terdeteksi. Periksa kembali input Anda.'
+                'Data duplikat terdeteksi. Periksa kembali input Anda.',
             ],
         ];
     }
@@ -298,9 +332,9 @@ final class AddHelpersTest extends TestCase
     {
         return [
             'name' => 'Budi',
-            'place_of_birth' => 'Jakarta',
-            'date_of_birth' => '2010-01-01',
-            'sport' => 'Futsal U-16',
+            'birth_place' => 'Jakarta',
+            'birth_date' => '2010-01-01',
+            'sport_type' => 'Futsal U-16',
             'gender' => 'Laki-laki',
             'nik' => '1234567890123456',
             'nisn' => '1234567890',
@@ -309,7 +343,7 @@ final class AddHelpersTest extends TestCase
             'email' => 'budi@example.com',
             'phone' => '08123456789',
             'nationality' => 'Indonesia',
-            'address' => 'Jalan Mawar',
+            'street' => 'Jalan Mawar',
             'city' => 'Jakarta',
             'province' => 'DKI Jakarta',
             'postal_code' => '12345',
