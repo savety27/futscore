@@ -192,6 +192,66 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('Indonesia', $params[':country']);
     }
 
+    public function testBuildInsertParamsHandlesMissingOptionalInputKeys(): void
+    {
+        $input = $this->validInput();
+        unset(
+            $input['height'],
+            $input['weight'],
+            $input['nisn'],
+            $input['email'],
+            $input['phone'],
+            $input['nationality'],
+            $input['street'],
+            $input['city'],
+            $input['province'],
+            $input['postal_code'],
+            $input['country'],
+            $input['position_detail'],
+            $input['status'],
+            $input['dribbling'],
+            $input['technique'],
+            $input['speed'],
+            $input['juggling'],
+            $input['shooting'],
+            $input['setplay_position'],
+            $input['passing'],
+            $input['control']
+        );
+
+        set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+            throw new ErrorException($message, 0, $severity, $file, $line);
+        });
+
+        try {
+            $params = playerAddBuildInsertParams($input, [], 'my-slug-optional-missing');
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertNull($params[':height']);
+        $this->assertNull($params[':weight']);
+        $this->assertNull($params[':nisn']);
+        $this->assertNull($params[':email']);
+        $this->assertNull($params[':phone']);
+        $this->assertNull($params[':street']);
+        $this->assertNull($params[':city']);
+        $this->assertNull($params[':province']);
+        $this->assertNull($params[':postal_code']);
+        $this->assertNull($params[':position_detail']);
+        $this->assertSame('Indonesia', $params[':nationality']);
+        $this->assertSame('Indonesia', $params[':country']);
+        $this->assertSame('inactive', $params[':status']);
+        $this->assertSame(5, $params[':dribbling']);
+        $this->assertSame(5, $params[':technique']);
+        $this->assertSame(5, $params[':speed']);
+        $this->assertSame(5, $params[':juggling']);
+        $this->assertSame(5, $params[':shooting']);
+        $this->assertSame(5, $params[':setplay_position']);
+        $this->assertSame(5, $params[':passing']);
+        $this->assertSame(5, $params[':control']);
+    }
+
     public function testBuildInsertParamsUsesUploadedFileDefaultsAndOverrides(): void
     {
         $input = $this->validInput();
