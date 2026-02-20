@@ -1,0 +1,45 @@
+-- Event standings values + player card discipline
+CREATE TABLE IF NOT EXISTS event_team_values (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    team_id INT NOT NULL,
+    mn INT NOT NULL DEFAULT 0,
+    m INT NOT NULL DEFAULT 0,
+    mp INT NOT NULL DEFAULT 0,
+    s INT NOT NULL DEFAULT 0,
+    kp INT NOT NULL DEFAULT 0,
+    k INT NOT NULL DEFAULT 0,
+    gm INT NOT NULL DEFAULT 0,
+    gk INT NOT NULL DEFAULT 0,
+    sg INT NOT NULL DEFAULT 0,
+    points INT NOT NULL DEFAULT 0,
+    kls INT NOT NULL DEFAULT 0,
+    red_cards INT NOT NULL DEFAULT 0,
+    yellow_cards INT NOT NULL DEFAULT 0,
+    green_cards INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_event_team (event_id, team_id),
+    KEY idx_event_points (event_id, points, sg),
+    KEY idx_event_kls (event_id, kls),
+    CONSTRAINT fk_event_team_values_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_event_team_values_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS player_event_cards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id INT NOT NULL,
+    player_id INT NOT NULL,
+    team_id INT NOT NULL,
+    yellow_cards INT NOT NULL DEFAULT 0,
+    red_cards INT NOT NULL DEFAULT 0,
+    green_cards INT NOT NULL DEFAULT 0,
+    suspension_until DATE DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_event_player (event_id, player_id),
+    KEY idx_event_suspend (event_id, suspension_until),
+    CONSTRAINT fk_player_event_cards_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_player_event_cards_player FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_player_event_cards_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
