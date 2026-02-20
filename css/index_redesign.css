@@ -6,9 +6,6 @@
 /* Header */
 .dashboard-wrapper,
 .main-content-dashboard {
-    --green: #2563eb;
-    --primary-green: #2563eb;
-    --dark-green: #1e40af;
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
 }
 
