@@ -299,6 +299,8 @@ body {
 .btn-registration { background: rgba(245, 158, 11, 0.15); color: #b45309; }
 .btn-value { background: rgba(59, 130, 246, 0.14); color: #1d4ed8; }
 .btn-value:hover { background: #2563eb; color: #fff; }
+.btn-bracket { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+.btn-bracket:hover { background: #d97706; color: #fff; }
 .btn-delete { background: rgba(211, 47, 47, 0.1); color: var(--danger); }
 .btn-delete:hover { background: var(--danger); color: #fff; }
 .alert { padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
@@ -516,6 +518,7 @@ body {
                                     <a href="event_view.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-view" title="Lihat Detail"><i class="fas fa-eye"></i></a>
                                     <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="action-btn btn-edit" title="Edit Event"><i class="fas fa-edit"></i></a>
                                     <a href="event_value.php" class="action-btn btn-value" title="Input Nilai Event"><i class="fas fa-list-ol"></i></a>
+                                    <a href="event_bracket.php" class="action-btn btn-bracket" title="Kelola Bracket"><i class="fas fa-diagram-project"></i></a>
                                     <form method="POST" action="?<?php echo http_build_query(['search' => $search, 'registration' => $filter_registration, 'active' => $filter_active, 'page' => $page]); ?>">
                                         <input type="hidden" name="id" value="<?php echo (int) $event['id']; ?>">
                                         <input type="hidden" name="action" value="toggle_registration">

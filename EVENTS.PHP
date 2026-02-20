@@ -57,6 +57,42 @@ function renderMatchHistoryBadgesPublic($history) {
     return $html;
 }
 
+function resolveMatchOutcomePublic($team1, $team2, $score1, $score2) {
+    $team1 = (int) $team1;
+    $team2 = (int) $team2;
+    if ($team1 <= 0 || $team2 <= 0) {
+        return ['winner' => 0, 'loser' => 0, 'status' => 'pending'];
+    }
+    if ($score1 === null || $score2 === null) {
+        return ['winner' => 0, 'loser' => 0, 'status' => 'pending'];
+    }
+    $score1 = (int) $score1;
+    $score2 = (int) $score2;
+    if ($score1 === $score2) {
+        return ['winner' => 0, 'loser' => 0, 'status' => 'tie'];
+    }
+    if ($score1 > $score2) {
+        return ['winner' => $team1, 'loser' => $team2, 'status' => 'done'];
+    }
+    return ['winner' => $team2, 'loser' => $team1, 'status' => 'done'];
+}
+
+function renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $teamId) {
+    $teamId = (int) $teamId;
+    if ($teamId <= 0) {
+        return '<span class="evb-team"><span class="evb-team-logo evb-team-logo-placeholder"></span><span class="evb-team-name">-</span></span>';
+    }
+
+    $name = (string) ($teamMap[$teamId] ?? ('Team #' . $teamId));
+    $logoFile = trim((string) ($teamLogoMap[$teamId] ?? ''));
+    $logoPath = SITE_URL . '/images/teams/default-team.png';
+    if ($logoFile !== '') {
+        $logoPath = SITE_URL . '/images/teams/' . ltrim($logoFile, '/');
+    }
+
+    return '<span class="evb-team"><img class="evb-team-logo" src="' . htmlspecialchars($logoPath, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '" onerror="this.onerror=null;this.src=\'' . htmlspecialchars(SITE_URL . '/images/teams/default-team.png', ENT_QUOTES, 'UTF-8') . '\'"><span class="evb-team-name">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</span></span>';
+}
+
 $hasIsActive = hasColumnMySQLi($conn, 'events', 'is_active');
 $events = [];
 $event = null;
@@ -68,6 +104,8 @@ $eventStandingsByCategory = [];
 $eventPlayerCards = [];
 $eventPlayerCardsByCategory = [];
 $hasEventValueTables = false;
+$hasEventBracketTable = false;
+$eventBracketViews = [];
 
 if ($eventId > 0) {
     $sql = "SELECT * FROM events WHERE id = ?";
@@ -106,6 +144,7 @@ if ($eventId > 0 && !empty($event)) {
         $categorySql = "SELECT sport_type AS category_name, COUNT(*) AS total_matches
                         FROM challenges
                         WHERE event_id = ?
+                          AND status = 'accepted'
                           AND sport_type IS NOT NULL
                           AND sport_type <> ''
                         GROUP BY sport_type
@@ -127,11 +166,11 @@ if ($eventId > 0 && !empty($event)) {
                         INNER JOIN (
                             SELECT challenger_id AS team_id
                             FROM challenges
-                            WHERE event_id = ? AND sport_type = ?
+                            WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
                             UNION
                             SELECT opponent_id AS team_id
                             FROM challenges
-                            WHERE event_id = ? AND sport_type = ?
+                            WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
                         ) participant ON participant.team_id = t.id
                         ORDER BY t.name ASC";
             $teamStmt = $conn->prepare($teamSql);
@@ -154,6 +193,94 @@ if ($eventId > 0 && !empty($event)) {
 
         $eventParticipantTotal = $participantTotalRows;
         $eventDataReady = true;
+    }
+
+    $hasEventBracketTable = hasTableMySQLi($conn, 'event_brackets');
+    if ($hasEventBracketTable && !empty($eventParticipantGroups)) {
+        $categoryTeamMapForBracket = [];
+        $categoryLogoMapForBracket = [];
+        $categoryOrderForBracket = [];
+        foreach ($eventParticipantGroups as $group) {
+            $categoryName = trim((string) ($group['category_name'] ?? ''));
+            if ($categoryName === '') {
+                continue;
+            }
+            if (!isset($categoryTeamMapForBracket[$categoryName])) {
+                $categoryTeamMapForBracket[$categoryName] = [];
+                $categoryLogoMapForBracket[$categoryName] = [];
+                $categoryOrderForBracket[] = $categoryName;
+            }
+            foreach (($group['teams'] ?? []) as $team) {
+                $teamId = (int) ($team['id'] ?? 0);
+                if ($teamId <= 0) continue;
+                $categoryTeamMapForBracket[$categoryName][$teamId] = (string) ($team['name'] ?? '-');
+                $categoryLogoMapForBracket[$categoryName][$teamId] = (string) ($team['logo'] ?? '');
+            }
+        }
+
+        $bracketByCategory = [];
+        $bracketStmt = $conn->prepare("SELECT * FROM event_brackets WHERE event_id = ?");
+        $bracketStmt->bind_param("i", $eventId);
+        $bracketStmt->execute();
+        $bracketResult = $bracketStmt->get_result();
+        while ($bracketRow = $bracketResult->fetch_assoc()) {
+            $categoryName = trim((string) ($bracketRow['sport_type'] ?? ''));
+            if ($categoryName === '') continue;
+            $bracketByCategory[$categoryName] = $bracketRow;
+        }
+
+        foreach ($categoryOrderForBracket as $categoryName) {
+            $row = $bracketByCategory[$categoryName] ?? null;
+            $sf1Team1 = (int) ($row['sf1_team1_id'] ?? 0);
+            $sf1Team2 = (int) ($row['sf1_team2_id'] ?? 0);
+            $sf2Team1 = (int) ($row['sf2_team1_id'] ?? 0);
+            $sf2Team2 = (int) ($row['sf2_team2_id'] ?? 0);
+            $sf1Score1 = isset($row['sf1_score1']) ? (int) $row['sf1_score1'] : null;
+            $sf1Score2 = isset($row['sf1_score2']) ? (int) $row['sf1_score2'] : null;
+            $sf2Score1 = isset($row['sf2_score1']) ? (int) $row['sf2_score1'] : null;
+            $sf2Score2 = isset($row['sf2_score2']) ? (int) $row['sf2_score2'] : null;
+            $finalScore1 = isset($row['final_score1']) ? (int) $row['final_score1'] : null;
+            $finalScore2 = isset($row['final_score2']) ? (int) $row['final_score2'] : null;
+            $thirdScore1 = isset($row['third_score1']) ? (int) $row['third_score1'] : null;
+            $thirdScore2 = isset($row['third_score2']) ? (int) $row['third_score2'] : null;
+
+            $sf1Outcome = resolveMatchOutcomePublic($sf1Team1, $sf1Team2, $sf1Score1, $sf1Score2);
+            $sf2Outcome = resolveMatchOutcomePublic($sf2Team1, $sf2Team2, $sf2Score1, $sf2Score2);
+
+            $finalTeam1 = (int) ($sf1Outcome['winner'] ?? 0);
+            $finalTeam2 = (int) ($sf2Outcome['winner'] ?? 0);
+            $thirdTeam1 = (int) ($sf1Outcome['loser'] ?? 0);
+            $thirdTeam2 = (int) ($sf2Outcome['loser'] ?? 0);
+
+            $finalOutcome = resolveMatchOutcomePublic($finalTeam1, $finalTeam2, $finalScore1, $finalScore2);
+            $thirdOutcome = resolveMatchOutcomePublic($thirdTeam1, $thirdTeam2, $thirdScore1, $thirdScore2);
+
+            $eventBracketViews[] = [
+                'category' => $categoryName,
+                'team_map' => $categoryTeamMapForBracket[$categoryName] ?? [],
+                'team_logo_map' => $categoryLogoMapForBracket[$categoryName] ?? [],
+                'sf1_team1' => $sf1Team1,
+                'sf1_team2' => $sf1Team2,
+                'sf2_team1' => $sf2Team1,
+                'sf2_team2' => $sf2Team2,
+                'sf1_score1' => $sf1Score1,
+                'sf1_score2' => $sf1Score2,
+                'sf2_score1' => $sf2Score1,
+                'sf2_score2' => $sf2Score2,
+                'final_team1' => $finalTeam1,
+                'final_team2' => $finalTeam2,
+                'final_score1' => $finalScore1,
+                'final_score2' => $finalScore2,
+                'third_team1' => $thirdTeam1,
+                'third_team2' => $thirdTeam2,
+                'third_score1' => $thirdScore1,
+                'third_score2' => $thirdScore2,
+                'sf1_outcome' => $sf1Outcome,
+                'sf2_outcome' => $sf2Outcome,
+                'final_outcome' => $finalOutcome,
+                'third_outcome' => $thirdOutcome,
+            ];
+        }
     }
 
     $hasEventValueTables = hasTableMySQLi($conn, 'event_team_values') && hasTableMySQLi($conn, 'player_event_cards');
@@ -483,6 +610,96 @@ if ($eventId > 0 && !empty($event)) {
 }
 .suspend-pill.active { background: rgba(239, 68, 68, 0.14); color: #991b1b; }
 .suspend-pill.done { background: rgba(16, 185, 129, 0.14); color: #065f46; }
+.event-bracket-wrap {
+    margin-top: 14px;
+    background: radial-gradient(circle at 20% 0%, #f8fbff 0%, #eef4fb 48%, #e9f1f9 100%);
+    border: 1px solid #dbe5f3;
+    border-radius: 16px;
+    padding: 18px;
+}
+.event-bracket-title { margin: 0 0 8px 0; color: #1e293b; }
+.event-bracket-note { margin: 0 0 10px 0; color: #64748b; font-size: 12px; }
+.evb-canvas {
+    position: relative;
+    min-height: 540px;
+}
+.evb-match {
+    position: absolute;
+    width: 260px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(15,39,68,.08);
+}
+.evb-row {
+    display: grid;
+    grid-template-columns: 1fr 40px;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background .2s ease;
+}
+.evb-row:last-child { border-bottom: none; }
+.evb-row.win {
+    background: linear-gradient(90deg,#0ea5e9 0%, #2563eb 100%);
+    color: #fff;
+}
+.evb-row.lose { background: #eef2f7; }
+.evb-row.linked-highlight {
+    background: linear-gradient(90deg,#166534 0%, #15803d 45%, #16a34a 100%) !important;
+    color: #fff !important;
+}
+.evb-name { padding: 8px 10px; font-size: 14px; }
+.evb-score { text-align: center; padding: 8px 0; font-weight: 800; font-size: 20px; }
+.evb-score.green { color: #16a34a; }
+.evb-score.red { color: #b91c1c; }
+.evb-row.win .evb-score.green,
+.evb-row.linked-highlight .evb-score { color: #fff !important; }
+.evb-rank {
+    position: absolute;
+    right: -62px;
+    width: 52px;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    border-radius: 6px;
+    padding: 4px 0;
+    box-shadow: 0 8px 14px rgba(15,39,68,.18);
+}
+.evb-rank.first { top: 8px; background: #2563eb; }
+.evb-rank.second { top: 44px; background: #334155; }
+.evb-rank.third { top: 8px; background: #0f766e; }
+.evb-rank.fourth { top: 44px; background: #7c2d12; }
+.evb-line {
+    position: absolute;
+    border-color: #cbd5e1;
+    border-style: solid;
+    border-width: 0;
+}
+.evb-line.gold { border-color: #2563eb; }
+.evb-team {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.evb-team-logo {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(148,163,184,.7);
+    background: #fff;
+    flex-shrink: 0;
+}
+.evb-team-logo-placeholder {
+    display: inline-block;
+    background: #cbd5e1;
+}
+@media (max-width: 1100px) {
+    .evb-canvas { min-height: unset; display: grid; gap: 12px; }
+    .evb-match { position: static; width: 100%; }
+    .evb-line, .evb-rank { display: none; }
+}
 </style>
 
 <div class="dashboard-wrapper">
@@ -808,6 +1025,109 @@ if ($eventId > 0 && !empty($event)) {
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
+                        <div class="event-desc" id="eventBracket">
+                            <h3 style="margin:0 0 8px 0;">Preview Bracket</h3>
+                            <p style="margin:0 0 8px 0; color:#475569;">Bracket semifinal, final, dan perebutan juara 3 per kategori.</p>
+
+                            <?php if (!$hasEventBracketTable): ?>
+                                <p style="margin:10px 0 0 0; color:#64748b;">Tabel bracket belum tersedia.</p>
+                            <?php elseif (empty($eventBracketViews)): ?>
+                                <p style="margin:10px 0 0 0; color:#64748b;">Belum ada data bracket untuk event ini.</p>
+                            <?php else: ?>
+                                <?php foreach ($eventBracketViews as $view): ?>
+                                    <?php
+                                    $categoryName = (string) ($view['category'] ?? '');
+                                    $teamMap = (array) ($view['team_map'] ?? []);
+                                    $teamLogoMap = (array) ($view['team_logo_map'] ?? []);
+                                    $sf1Team1 = (int) ($view['sf1_team1'] ?? 0);
+                                    $sf1Team2 = (int) ($view['sf1_team2'] ?? 0);
+                                    $sf2Team1 = (int) ($view['sf2_team1'] ?? 0);
+                                    $sf2Team2 = (int) ($view['sf2_team2'] ?? 0);
+                                    $finalTeam1 = (int) ($view['final_team1'] ?? 0);
+                                    $finalTeam2 = (int) ($view['final_team2'] ?? 0);
+                                    $thirdTeam1 = (int) ($view['third_team1'] ?? 0);
+                                    $thirdTeam2 = (int) ($view['third_team2'] ?? 0);
+                                    $sf1Score1 = $view['sf1_score1'] ?? null;
+                                    $sf1Score2 = $view['sf1_score2'] ?? null;
+                                    $sf2Score1 = $view['sf2_score1'] ?? null;
+                                    $sf2Score2 = $view['sf2_score2'] ?? null;
+                                    $finalScore1 = $view['final_score1'] ?? null;
+                                    $finalScore2 = $view['final_score2'] ?? null;
+                                    $thirdScore1 = $view['third_score1'] ?? null;
+                                    $thirdScore2 = $view['third_score2'] ?? null;
+                                    $sf1Outcome = (array) ($view['sf1_outcome'] ?? []);
+                                    $sf2Outcome = (array) ($view['sf2_outcome'] ?? []);
+                                    $finalOutcome = (array) ($view['final_outcome'] ?? []);
+                                    $thirdOutcome = (array) ($view['third_outcome'] ?? []);
+                                    $sf1Done = ((string) ($sf1Outcome['status'] ?? '') === 'done');
+                                    $sf2Done = ((string) ($sf2Outcome['status'] ?? '') === 'done');
+                                    $finalDone = ((string) ($finalOutcome['status'] ?? '') === 'done');
+                                    $thirdDone = ((string) ($thirdOutcome['status'] ?? '') === 'done');
+                                    ?>
+                                    <div class="event-bracket-wrap">
+                                        <h4 class="event-bracket-title"><?php echo htmlspecialchars($categoryName); ?></h4>
+                                        <p class="event-bracket-note">Preview kategori <?php echo htmlspecialchars($categoryName); ?>.</p>
+                                        <div class="evb-canvas">
+                                            <div class="evb-match" style="left:10px; top:48px;">
+                                                <div class="evb-row <?php echo $sf1Done && (int) ($sf1Outcome['winner'] ?? 0) === $sf1Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $sf1Team1; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $sf1Team1); ?></div>
+                                                    <div class="evb-score <?php echo $sf1Done && (int) ($sf1Outcome['winner'] ?? 0) === $sf1Team1 ? 'green' : 'red'; ?>"><?php echo $sf1Score1 !== null ? (int) $sf1Score1 : '-'; ?></div>
+                                                </div>
+                                                <div class="evb-row <?php echo $sf1Done && (int) ($sf1Outcome['winner'] ?? 0) === $sf1Team2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $sf1Team2; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $sf1Team2); ?></div>
+                                                    <div class="evb-score <?php echo $sf1Done && (int) ($sf1Outcome['winner'] ?? 0) === $sf1Team2 ? 'green' : 'red'; ?>"><?php echo $sf1Score2 !== null ? (int) $sf1Score2 : '-'; ?></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="evb-match" style="left:10px; top:240px;">
+                                                <div class="evb-row <?php echo $sf2Done && (int) ($sf2Outcome['winner'] ?? 0) === $sf2Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $sf2Team1; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $sf2Team1); ?></div>
+                                                    <div class="evb-score <?php echo $sf2Done && (int) ($sf2Outcome['winner'] ?? 0) === $sf2Team1 ? 'green' : 'red'; ?>"><?php echo $sf2Score1 !== null ? (int) $sf2Score1 : '-'; ?></div>
+                                                </div>
+                                                <div class="evb-row <?php echo $sf2Done && (int) ($sf2Outcome['winner'] ?? 0) === $sf2Team2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $sf2Team2; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $sf2Team2); ?></div>
+                                                    <div class="evb-score <?php echo $sf2Done && (int) ($sf2Outcome['winner'] ?? 0) === $sf2Team2 ? 'green' : 'red'; ?>"><?php echo $sf2Score2 !== null ? (int) $sf2Score2 : '-'; ?></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="evb-match" style="left:460px; top:145px;">
+                                                <div class="evb-row <?php echo $finalDone && (int) ($finalOutcome['winner'] ?? 0) === $finalTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $finalTeam1; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $finalTeam1); ?></div>
+                                                    <div class="evb-score <?php echo $finalDone && (int) ($finalOutcome['winner'] ?? 0) === $finalTeam1 ? 'green' : 'red'; ?>"><?php echo $finalScore1 !== null ? (int) $finalScore1 : '-'; ?></div>
+                                                </div>
+                                                <div class="evb-row <?php echo $finalDone && (int) ($finalOutcome['winner'] ?? 0) === $finalTeam2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $finalTeam2; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $finalTeam2); ?></div>
+                                                    <div class="evb-score <?php echo $finalDone && (int) ($finalOutcome['winner'] ?? 0) === $finalTeam2 ? 'green' : 'red'; ?>"><?php echo $finalScore2 !== null ? (int) $finalScore2 : '-'; ?></div>
+                                                </div>
+                                                <span class="evb-rank first">1st</span>
+                                                <span class="evb-rank second">2nd</span>
+                                            </div>
+
+                                            <div class="evb-match" style="left:460px; top:380px;">
+                                                <div class="evb-row <?php echo $thirdDone && (int) ($thirdOutcome['winner'] ?? 0) === $thirdTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $thirdTeam1; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $thirdTeam1); ?></div>
+                                                    <div class="evb-score <?php echo $thirdDone && (int) ($thirdOutcome['winner'] ?? 0) === $thirdTeam1 ? 'green' : 'red'; ?>"><?php echo $thirdScore1 !== null ? (int) $thirdScore1 : '-'; ?></div>
+                                                </div>
+                                                <div class="evb-row <?php echo $thirdDone && (int) ($thirdOutcome['winner'] ?? 0) === $thirdTeam2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo $thirdTeam2; ?>">
+                                                    <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $thirdTeam2); ?></div>
+                                                    <div class="evb-score <?php echo $thirdDone && (int) ($thirdOutcome['winner'] ?? 0) === $thirdTeam2 ? 'green' : 'red'; ?>"><?php echo $thirdScore2 !== null ? (int) $thirdScore2 : '-'; ?></div>
+                                                </div>
+                                                <span class="evb-rank third">3rd</span>
+                                                <span class="evb-rank fourth">4th</span>
+                                            </div>
+
+                                            <div class="evb-line gold" style="left:270px; top:84px; width:90px; border-top-width:3px;"></div>
+                                            <div class="evb-line gold" style="left:360px; top:84px; height:92px; border-right-width:3px;"></div>
+                                            <div class="evb-line gold" style="left:360px; top:176px; width:100px; border-top-width:3px;"></div>
+
+                                            <div class="evb-line" style="left:270px; top:276px; width:90px; border-top-width:3px;"></div>
+                                            <div class="evb-line" style="left:360px; top:176px; height:100px; border-right-width:3px;"></div>
+                                            <div class="evb-line" style="left:360px; top:176px; width:100px; border-top-width:3px;"></div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             <?php else: ?>
@@ -907,6 +1227,35 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
         if (window.innerWidth > 992) setSidebarOpen(false);
     });
 }
+</script>
+<script>
+(function() {
+    const rows = Array.from(document.querySelectorAll('.evb-canvas .evb-row[data-team-id]'));
+    if (!rows.length) return;
+
+    function clearLinked() {
+        rows.forEach(function(row) { row.classList.remove('linked-highlight'); });
+    }
+
+    function applyLinked(teamId) {
+        if (!teamId || teamId === '0') return;
+        rows.forEach(function(row) {
+            if (row.getAttribute('data-team-id') === teamId) {
+                row.classList.add('linked-highlight');
+            }
+        });
+    }
+
+    rows.forEach(function(row) {
+        row.addEventListener('mouseenter', function() {
+            clearLinked();
+            applyLinked(row.getAttribute('data-team-id'));
+        });
+        row.addEventListener('mouseleave', function() {
+            clearLinked();
+        });
+    });
+})();
 </script>
 <script>
 const SITE_URL = '<?php echo SITE_URL; ?>';

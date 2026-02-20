@@ -111,9 +111,9 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
         $sql = "SELECT DISTINCT t.id, t.name
                 FROM teams t
                 INNER JOIN (
-                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ?
+                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
                     UNION
-                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ?
+                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
                     UNION
                     SELECT te.team_id
                     FROM team_events te
@@ -127,9 +127,9 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
         $sql = "SELECT DISTINCT t.id, t.name 
                 FROM teams t 
                 INNER JOIN (
-                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ?
+                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND status = 'accepted'
                     UNION 
-                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ?
+                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND status = 'accepted'
                     UNION 
                     SELECT te.team_id FROM team_events te INNER JOIN events e ON e.name = te.event_name WHERE e.id = ?
                 ) src ON src.team_id = t.id 
@@ -150,12 +150,14 @@ function loadEventCategoryTeamMap(PDO $conn, int $eventId): array
                                     SELECT c.sport_type AS category_name, c.challenger_id AS team_id
                                     FROM challenges c
                                     WHERE c.event_id = ?
+                                      AND c.status = 'accepted'
                                       AND c.sport_type IS NOT NULL
                                       AND c.sport_type <> ''
                                     UNION ALL
                                     SELECT c.sport_type AS category_name, c.opponent_id AS team_id
                                     FROM challenges c
                                     WHERE c.event_id = ?
+                                      AND c.status = 'accepted'
                                       AND c.sport_type IS NOT NULL
                                       AND c.sport_type <> ''
                                 ) src
@@ -1142,7 +1144,7 @@ if ($eventId > 0) {
         <div class="main">
             <div class="topbar">
                 <div class="greeting">
-                    <h1>Event Value</h1>
+                    <h1>Event Value 🗓️</h1>
                     <p>Kelola klasemen, poin, kartu tim dan disiplin pemain.</p>
                 </div>
                 <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
