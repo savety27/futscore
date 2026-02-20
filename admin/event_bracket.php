@@ -830,7 +830,7 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                         <div class="grid grid-4">
                             <div class="form-group">
                                 <label>SF1 Team A</label>
-                                <select class="form-control" name="sf1_team1_id" required>
+                                <select class="form-control" id="sf1_team1_id" name="sf1_team1_id" required>
                                     <option value="">Pilih Tim</option>
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf1Team1 === (int)$team['id'] ? 'selected' : ''; ?>>
@@ -841,7 +841,7 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                             </div>
                             <div class="form-group">
                                 <label>SF1 Team B</label>
-                                <select class="form-control" name="sf1_team2_id" required>
+                                <select class="form-control" id="sf1_team2_id" name="sf1_team2_id" required>
                                     <option value="">Pilih Tim</option>
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf1Team2 === (int)$team['id'] ? 'selected' : ''; ?>>
@@ -852,7 +852,7 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                             </div>
                             <div class="form-group">
                                 <label>SF2 Team A</label>
-                                <select class="form-control" name="sf2_team1_id" required>
+                                <select class="form-control" id="sf2_team1_id" name="sf2_team1_id" required>
                                     <option value="">Pilih Tim</option>
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf2Team1 === (int)$team['id'] ? 'selected' : ''; ?>>
@@ -863,7 +863,7 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                             </div>
                             <div class="form-group">
                                 <label>SF2 Team B</label>
-                                <select class="form-control" name="sf2_team2_id" required>
+                                <select class="form-control" id="sf2_team2_id" name="sf2_team2_id" required>
                                     <option value="">Pilih Tim</option>
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf2Team2 === (int)$team['id'] ? 'selected' : ''; ?>>
@@ -878,19 +878,23 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                         <div class="grid grid-4">
                             <div class="form-group">
                                 <label>Skor SF1 Team A</label>
-                                <input class="form-control" type="number" min="0" name="sf1_score1" value="<?php echo $sf1Score1 !== null ? (int)$sf1Score1 : ''; ?>">
+                                <input class="form-control" id="sf1_score1" type="number" min="0" name="sf1_score1" value="<?php echo $sf1Score1 !== null ? (int)$sf1Score1 : ''; ?>">
+                                <div class="muted" id="sf1_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf1Team1)); ?></div>
                             </div>
                             <div class="form-group">
                                 <label>Skor SF1 Team B</label>
-                                <input class="form-control" type="number" min="0" name="sf1_score2" value="<?php echo $sf1Score2 !== null ? (int)$sf1Score2 : ''; ?>">
+                                <input class="form-control" id="sf1_score2" type="number" min="0" name="sf1_score2" value="<?php echo $sf1Score2 !== null ? (int)$sf1Score2 : ''; ?>">
+                                <div class="muted" id="sf1_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf1Team2)); ?></div>
                             </div>
                             <div class="form-group">
                                 <label>Skor SF2 Team A</label>
-                                <input class="form-control" type="number" min="0" name="sf2_score1" value="<?php echo $sf2Score1 !== null ? (int)$sf2Score1 : ''; ?>">
+                                <input class="form-control" id="sf2_score1" type="number" min="0" name="sf2_score1" value="<?php echo $sf2Score1 !== null ? (int)$sf2Score1 : ''; ?>">
+                                <div class="muted" id="sf2_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf2Team1)); ?></div>
                             </div>
                             <div class="form-group">
                                 <label>Skor SF2 Team B</label>
-                                <input class="form-control" type="number" min="0" name="sf2_score2" value="<?php echo $sf2Score2 !== null ? (int)$sf2Score2 : ''; ?>">
+                                <input class="form-control" id="sf2_score2" type="number" min="0" name="sf2_score2" value="<?php echo $sf2Score2 !== null ? (int)$sf2Score2 : ''; ?>">
+                                <div class="muted" id="sf2_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf2Team2)); ?></div>
                             </div>
                         </div>
 
@@ -899,18 +903,22 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                             <div class="form-group">
                                 <label>Skor Final Team A</label>
                                 <input class="form-control" type="number" min="0" name="final_score1" value="<?php echo $finalScore1 !== null ? (int)$finalScore1 : ''; ?>">
+                                <div class="muted" id="final_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $finalTeam1)); ?></div>
                             </div>
                             <div class="form-group">
                                 <label>Skor Final Team B</label>
                                 <input class="form-control" type="number" min="0" name="final_score2" value="<?php echo $finalScore2 !== null ? (int)$finalScore2 : ''; ?>">
+                                <div class="muted" id="final_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $finalTeam2)); ?></div>
                             </div>
                             <div class="form-group">
                                 <label>Skor 3rd Team A</label>
                                 <input class="form-control" type="number" min="0" name="third_score1" value="<?php echo $thirdScore1 !== null ? (int)$thirdScore1 : ''; ?>">
+                                <div class="muted" id="third_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $thirdTeam1)); ?></div>
                             </div>
                             <div class="form-group">
                                 <label>Skor 3rd Team B</label>
                                 <input class="form-control" type="number" min="0" name="third_score2" value="<?php echo $thirdScore2 !== null ? (int)$thirdScore2 : ''; ?>">
+                                <div class="muted" id="third_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $thirdTeam2)); ?></div>
                             </div>
                         </div>
 
@@ -1030,6 +1038,117 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
             clearLinked();
         });
     });
+})();
+
+(function() {
+    const sf1Team1 = document.getElementById('sf1_team1_id');
+    const sf1Team2 = document.getElementById('sf1_team2_id');
+    const sf2Team1 = document.getElementById('sf2_team1_id');
+    const sf2Team2 = document.getElementById('sf2_team2_id');
+    const sf1Score1 = document.getElementById('sf1_score1');
+    const sf1Score2 = document.getElementById('sf1_score2');
+    const sf2Score1 = document.getElementById('sf2_score1');
+    const sf2Score2 = document.getElementById('sf2_score2');
+
+    const finalTeam1Label = document.getElementById('final_team1_label');
+    const finalTeam2Label = document.getElementById('final_team2_label');
+    const thirdTeam1Label = document.getElementById('third_team1_label');
+    const thirdTeam2Label = document.getElementById('third_team2_label');
+    const sf1Team1Label = document.getElementById('sf1_team1_label');
+    const sf1Team2Label = document.getElementById('sf1_team2_label');
+    const sf2Team1Label = document.getElementById('sf2_team1_label');
+    const sf2Team2Label = document.getElementById('sf2_team2_label');
+
+    if (!sf1Team1 || !sf1Team2 || !sf2Team1 || !sf2Team2 || !sf1Score1 || !sf1Score2 || !sf2Score1 || !sf2Score2) return;
+    if (!finalTeam1Label || !finalTeam2Label || !thirdTeam1Label || !thirdTeam2Label) return;
+    if (!sf1Team1Label || !sf1Team2Label || !sf2Team1Label || !sf2Team2Label) return;
+
+    function parseScore(input) {
+        const raw = String(input.value || '').trim();
+        if (raw === '') return null;
+        const value = parseInt(raw, 10);
+        if (Number.isNaN(value)) return null;
+        return Math.max(0, value);
+    }
+
+    function selectedTeam(select) {
+        const id = parseInt(select.value || '0', 10) || 0;
+        if (id <= 0) return { id: 0, name: '-' };
+        const option = select.options[select.selectedIndex];
+        const name = option ? String(option.text || '').trim() : '-';
+        return { id, name: name !== '' ? name : '-' };
+    }
+
+    function resolveOutcome(teamA, teamB, scoreA, scoreB) {
+        if (!teamA.id || !teamB.id) {
+            return { winner: '-', loser: '-', status: 'pending' };
+        }
+        if (scoreA === null || scoreB === null) {
+            return { winner: 'Menunggu hasil SF', loser: 'Menunggu hasil SF', status: 'pending' };
+        }
+        if (scoreA === scoreB) {
+            return { winner: 'Skor seri (belum valid)', loser: 'Skor seri (belum valid)', status: 'tie' };
+        }
+        if (scoreA > scoreB) {
+            return { winner: teamA.name, loser: teamB.name, status: 'done' };
+        }
+        return { winner: teamB.name, loser: teamA.name, status: 'done' };
+    }
+
+    function updateDerivedTeamLabels() {
+        const m1TeamA = selectedTeam(sf1Team1);
+        const m1TeamB = selectedTeam(sf1Team2);
+        const m2TeamA = selectedTeam(sf2Team1);
+        const m2TeamB = selectedTeam(sf2Team2);
+
+        sf1Team1Label.textContent = 'Tim: ' + m1TeamA.name;
+        sf1Team2Label.textContent = 'Tim: ' + m1TeamB.name;
+        sf2Team1Label.textContent = 'Tim: ' + m2TeamA.name;
+        sf2Team2Label.textContent = 'Tim: ' + m2TeamB.name;
+
+        const m1 = resolveOutcome(m1TeamA, m1TeamB, parseScore(sf1Score1), parseScore(sf1Score2));
+        const m2 = resolveOutcome(m2TeamA, m2TeamB, parseScore(sf2Score1), parseScore(sf2Score2));
+
+        finalTeam1Label.textContent = 'Tim: ' + m1.winner;
+        finalTeam2Label.textContent = 'Tim: ' + m2.winner;
+        thirdTeam1Label.textContent = 'Tim: ' + m1.loser;
+        thirdTeam2Label.textContent = 'Tim: ' + m2.loser;
+    }
+
+    function syncUniqueTeamSelections() {
+        const selects = [sf1Team1, sf1Team2, sf2Team1, sf2Team2];
+        const selectedIds = selects.map(function(sel) {
+            return parseInt(sel.value || '0', 10) || 0;
+        });
+
+        selects.forEach(function(sel, idx) {
+            const ownId = selectedIds[idx];
+            Array.from(sel.options).forEach(function(opt, optIdx) {
+                if (optIdx === 0) {
+                    opt.disabled = false;
+                    return;
+                }
+                const optId = parseInt(opt.value || '0', 10) || 0;
+                if (optId <= 0) {
+                    opt.disabled = false;
+                    return;
+                }
+                const usedInOtherSlot = selectedIds.some(function(id, otherIdx) {
+                    return otherIdx !== idx && id > 0 && id === optId;
+                });
+                opt.disabled = usedInOtherSlot && optId !== ownId;
+            });
+        });
+    }
+
+    [sf1Team1, sf1Team2, sf2Team1, sf2Team2, sf1Score1, sf1Score2, sf2Score1, sf2Score2].forEach(function(el) {
+        el.addEventListener('change', updateDerivedTeamLabels);
+        el.addEventListener('input', updateDerivedTeamLabels);
+        el.addEventListener('change', syncUniqueTeamSelections);
+    });
+
+    syncUniqueTeamSelections();
+    updateDerivedTeamLabels();
 })();
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
