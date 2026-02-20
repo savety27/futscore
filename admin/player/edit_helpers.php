@@ -44,7 +44,8 @@ function playerEditValidateInput(array $input): ?string
         return $nikError;
     }
 
-    if ((function_exists('mb_strlen') ? mb_strlen($input['position_detail'], 'UTF-8') : strlen($input['position_detail'])) > 100) {
+    $positionDetail = (string)($input['position_detail'] ?? '');
+    if ((function_exists('mb_strlen') ? mb_strlen($positionDetail, 'UTF-8') : strlen($positionDetail)) > 100) {
         return 'Detail posisi maksimal 100 karakter!';
     }
 
@@ -96,39 +97,52 @@ function playerEditUpdateSql(): string
 
 function playerEditBuildUpdateParams(array $input, array $uploadedFiles, int $id): array
 {
+    $height = (string)($input['height'] ?? '');
+    $weight = (string)($input['weight'] ?? '');
+    $nisn = (string)($input['nisn'] ?? '');
+    $email = (string)($input['email'] ?? '');
+    $phone = (string)($input['phone'] ?? '');
+    $nationality = (string)($input['nationality'] ?? '');
+    $street = (string)($input['street'] ?? '');
+    $city = (string)($input['city'] ?? '');
+    $province = (string)($input['province'] ?? '');
+    $postalCode = (string)($input['postal_code'] ?? '');
+    $country = (string)($input['country'] ?? '');
+    $positionDetail = (string)($input['position_detail'] ?? '');
+
     return [
         ':id' => $id,
-        ':name' => $input['name'],
-        ':birth_place' => $input['birth_place'],
-        ':birth_date' => $input['birth_date'],
-        ':sport_type' => $input['sport_type'],
-        ':gender' => playerEditMapGenderForDb($input['gender']),
-        ':nik' => $input['nik'],
-        ':nisn' => $input['nisn'] !== '' ? $input['nisn'] : null,
-        ':height' => $input['height'] !== '' ? $input['height'] : 0,
-        ':weight' => $input['weight'] !== '' ? $input['weight'] : 0,
-        ':email' => $input['email'] !== '' ? $input['email'] : null,
-        ':phone' => $input['phone'] !== '' ? $input['phone'] : null,
-        ':nationality' => $input['nationality'] !== '' ? $input['nationality'] : 'Indonesia',
-        ':street' => $input['street'] !== '' ? $input['street'] : null,
-        ':city' => $input['city'] !== '' ? $input['city'] : null,
-        ':province' => $input['province'] !== '' ? $input['province'] : null,
-        ':postal_code' => $input['postal_code'] !== '' ? $input['postal_code'] : null,
-        ':country' => $input['country'] !== '' ? $input['country'] : 'Indonesia',
-        ':team_id' => $input['team_id'],
-        ':jersey_number' => $input['jersey_number'],
-        ':dominant_foot' => $input['dominant_foot'],
-        ':position' => $input['position'],
-        ':position_detail' => $input['position_detail'] !== '' ? $input['position_detail'] : null,
-        ':dribbling' => $input['dribbling'],
-        ':technique' => $input['technique'],
-        ':speed' => $input['speed'],
-        ':juggling' => $input['juggling'],
-        ':shooting' => $input['shooting'],
-        ':setplay_position' => $input['setplay_position'],
-        ':passing' => $input['passing'],
-        ':control' => $input['control'],
-        ':status' => $input['status'],
+        ':name' => (string)($input['name'] ?? ''),
+        ':birth_place' => (string)($input['birth_place'] ?? ''),
+        ':birth_date' => (string)($input['birth_date'] ?? ''),
+        ':sport_type' => (string)($input['sport_type'] ?? ''),
+        ':gender' => playerEditMapGenderForDb((string)($input['gender'] ?? '')),
+        ':nik' => (string)($input['nik'] ?? ''),
+        ':nisn' => $nisn !== '' ? $nisn : null,
+        ':height' => $height !== '' ? $height : null,
+        ':weight' => $weight !== '' ? $weight : null,
+        ':email' => $email !== '' ? $email : null,
+        ':phone' => $phone !== '' ? $phone : null,
+        ':nationality' => $nationality !== '' ? $nationality : 'Indonesia',
+        ':street' => $street !== '' ? $street : null,
+        ':city' => $city !== '' ? $city : null,
+        ':province' => $province !== '' ? $province : null,
+        ':postal_code' => $postalCode !== '' ? $postalCode : null,
+        ':country' => $country !== '' ? $country : 'Indonesia',
+        ':team_id' => $input['team_id'] ?? null,
+        ':jersey_number' => $input['jersey_number'] ?? null,
+        ':dominant_foot' => (string)($input['dominant_foot'] ?? ''),
+        ':position' => (string)($input['position'] ?? ''),
+        ':position_detail' => $positionDetail !== '' ? $positionDetail : null,
+        ':dribbling' => (int)($input['dribbling'] ?? 5),
+        ':technique' => (int)($input['technique'] ?? 5),
+        ':speed' => (int)($input['speed'] ?? 5),
+        ':juggling' => (int)($input['juggling'] ?? 5),
+        ':shooting' => (int)($input['shooting'] ?? 5),
+        ':setplay_position' => (int)($input['setplay_position'] ?? 5),
+        ':passing' => (int)($input['passing'] ?? 5),
+        ':control' => (int)($input['control'] ?? 5),
+        ':status' => (string)($input['status'] ?? 'inactive'),
         ':photo' => $uploadedFiles['photo'] ?? null,
         ':ktp_image' => $uploadedFiles['ktp_image'] ?? null,
         ':kk_image' => $uploadedFiles['kk_image'] ?? null,

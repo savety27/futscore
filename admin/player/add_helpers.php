@@ -58,24 +58,28 @@ function playerAddValidateInput(array $input): ?string
     ];
 
     foreach ($requiredFields as $field) {
-        if (empty($input[$field])) {
+        if (empty($input[$field] ?? null)) {
             return 'Semua field yang wajib harus diisi!';
         }
     }
 
-    if (!in_array($input['gender'], ['Laki-laki', 'Perempuan'], true)) {
+    $gender = (string)($input['gender'] ?? '');
+    if (!in_array($gender, ['Laki-laki', 'Perempuan'], true)) {
         return 'Jenis kelamin tidak valid!';
     }
 
-    if (strlen($input['nik']) !== 16 || !is_numeric($input['nik'])) {
+    $nik = (string)($input['nik'] ?? '');
+    if (strlen($nik) !== 16 || !is_numeric($nik)) {
         return 'NIK harus terdiri dari tepat 16 digit angka!';
     }
 
-    if ($input['nisn'] !== '' && (strlen($input['nisn']) !== 10 || !is_numeric($input['nisn']))) {
+    $nisn = (string)($input['nisn'] ?? '');
+    if ($nisn !== '' && (strlen($nisn) !== 10 || !is_numeric($nisn))) {
         return 'NISN harus terdiri dari tepat 10 digit angka!';
     }
 
-    if ((function_exists('mb_strlen') ? mb_strlen($input['position_detail'], 'UTF-8') : strlen($input['position_detail'])) > 100) {
+    $positionDetail = (string)($input['position_detail'] ?? '');
+    if ((function_exists('mb_strlen') ? mb_strlen($positionDetail, 'UTF-8') : strlen($positionDetail)) > 100) {
         return 'Detail posisi maksimal 100 karakter!';
     }
 
@@ -131,39 +135,52 @@ function playerAddInsertSql(): string
 
 function playerAddBuildInsertParams(array $input, array $uploadedFiles, string $slug): array
 {
+    $height = (string)($input['height'] ?? '');
+    $weight = (string)($input['weight'] ?? '');
+    $nisn = (string)($input['nisn'] ?? '');
+    $email = (string)($input['email'] ?? '');
+    $phone = (string)($input['phone'] ?? '');
+    $nationality = (string)($input['nationality'] ?? '');
+    $street = (string)($input['street'] ?? '');
+    $city = (string)($input['city'] ?? '');
+    $province = (string)($input['province'] ?? '');
+    $postalCode = (string)($input['postal_code'] ?? '');
+    $country = (string)($input['country'] ?? '');
+    $positionDetail = (string)($input['position_detail'] ?? '');
+
     return [
-        ':team_id' => $input['team_id'],
-        ':name' => $input['name'],
+        ':team_id' => (string)($input['team_id'] ?? ''),
+        ':name' => (string)($input['name'] ?? ''),
         ':slug' => $slug,
-        ':position' => $input['position'],
-        ':jersey_number' => $input['jersey_number'],
-        ':birth_date' => $input['birth_date'],
-        ':height' => $input['height'] !== '' ? $input['height'] : null,
-        ':weight' => $input['weight'] !== '' ? $input['weight'] : null,
-        ':birth_place' => $input['birth_place'],
-        ':gender' => playerAddMapGenderForDb($input['gender']),
-        ':nisn' => $input['nisn'] !== '' ? $input['nisn'] : null,
-        ':nik' => $input['nik'],
-        ':sport_type' => $input['sport_type'],
-        ':email' => $input['email'] !== '' ? $input['email'] : null,
-        ':phone' => $input['phone'] !== '' ? $input['phone'] : null,
-        ':nationality' => $input['nationality'] !== '' ? $input['nationality'] : 'Indonesia',
-        ':street' => $input['street'] !== '' ? $input['street'] : null,
-        ':city' => $input['city'] !== '' ? $input['city'] : null,
-        ':province' => $input['province'] !== '' ? $input['province'] : null,
-        ':postal_code' => $input['postal_code'] !== '' ? $input['postal_code'] : null,
-        ':country' => $input['country'] !== '' ? $input['country'] : 'Indonesia',
-        ':dominant_foot' => $input['dominant_foot'],
-        ':position_detail' => $input['position_detail'] !== '' ? $input['position_detail'] : null,
-        ':dribbling' => $input['dribbling'],
-        ':technique' => $input['technique'],
-        ':speed' => $input['speed'],
-        ':juggling' => $input['juggling'],
-        ':shooting' => $input['shooting'],
-        ':setplay_position' => $input['setplay_position'],
-        ':passing' => $input['passing'],
-        ':control' => $input['control'],
-        ':status' => $input['status'],
+        ':position' => (string)($input['position'] ?? ''),
+        ':jersey_number' => (string)($input['jersey_number'] ?? ''),
+        ':birth_date' => (string)($input['birth_date'] ?? ''),
+        ':height' => $height !== '' ? $height : null,
+        ':weight' => $weight !== '' ? $weight : null,
+        ':birth_place' => (string)($input['birth_place'] ?? ''),
+        ':gender' => playerAddMapGenderForDb((string)($input['gender'] ?? '')),
+        ':nisn' => $nisn !== '' ? $nisn : null,
+        ':nik' => (string)($input['nik'] ?? ''),
+        ':sport_type' => (string)($input['sport_type'] ?? ''),
+        ':email' => $email !== '' ? $email : null,
+        ':phone' => $phone !== '' ? $phone : null,
+        ':nationality' => $nationality !== '' ? $nationality : 'Indonesia',
+        ':street' => $street !== '' ? $street : null,
+        ':city' => $city !== '' ? $city : null,
+        ':province' => $province !== '' ? $province : null,
+        ':postal_code' => $postalCode !== '' ? $postalCode : null,
+        ':country' => $country !== '' ? $country : 'Indonesia',
+        ':dominant_foot' => (string)($input['dominant_foot'] ?? ''),
+        ':position_detail' => $positionDetail !== '' ? $positionDetail : null,
+        ':dribbling' => (int)($input['dribbling'] ?? 5),
+        ':technique' => (int)($input['technique'] ?? 5),
+        ':speed' => (int)($input['speed'] ?? 5),
+        ':juggling' => (int)($input['juggling'] ?? 5),
+        ':shooting' => (int)($input['shooting'] ?? 5),
+        ':setplay_position' => (int)($input['setplay_position'] ?? 5),
+        ':passing' => (int)($input['passing'] ?? 5),
+        ':control' => (int)($input['control'] ?? 5),
+        ':status' => (string)($input['status'] ?? 'inactive'),
         ':photo' => $uploadedFiles['photo'] ?? $uploadedFiles['photo_file'] ?? '',
         ':ktp_image' => $uploadedFiles['ktp_image'] ?? $uploadedFiles['ktp_file'] ?? '',
         ':kk_image' => $uploadedFiles['kk_image'] ?? $uploadedFiles['kk_file'] ?? '',
