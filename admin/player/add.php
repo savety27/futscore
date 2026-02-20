@@ -142,24 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $ijazah_file = uploadFile($_FILES['ijazah_file'], $upload_dir, 'ijazah_');
             }
             
-            // Insert player data - PERBAIKAN: gunakan gender_db
-            $query = "INSERT INTO players (
-                team_id, name, slug, position, jersey_number, birth_date, height, weight,
-                birth_place, gender, nisn, nik, sport_type, email, phone, nationality,
-                street, city, province, postal_code, country, dominant_foot, position_detail,
-                dribbling, technique, speed, juggling, shooting, setplay_position, passing, control,
-                photo, ktp_image, kk_image, birth_cert_image, diploma_image,
-                created_at, updated_at, status
-            ) VALUES (
-                :team_id, :name, :slug, :position, :jersey_number, :birth_date, :height, :weight,
-                :birth_place, :gender, :nisn, :nik, :sport_type, :email, :phone, :nationality,
-                :street, :city, :province, :postal_code, :country, :dominant_foot, :position_detail,
-                :dribbling, :technique, :speed, :juggling, :shooting, :setplay_position, :passing, :control,
-                :photo, :ktp_image, :kk_image, :birth_cert_image, :diploma_image,
-                NOW(), NOW(), :status
-            )";
-            
-            $stmt = $conn->prepare($query);
+            // Insert player data
+            $stmt = $conn->prepare(playerAddInsertSql());
             $stmt->execute(playerAddBuildInsertParams($input, [
                 'photo_file' => $photo_file,
                 'ktp_file' => $ktp_file,
@@ -1684,6 +1668,21 @@ try {
                                     <option value="MF" <?php echo (isset($_POST['position']) && $_POST['position'] == 'MF') ? 'selected' : ''; ?>>Gelandang (MF)</option>
                                     <option value="FW" <?php echo (isset($_POST['position']) && $_POST['position'] == 'FW') ? 'selected' : ''; ?>>Penyerang (FW)</option>
                                 </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span>Detail Posisi</span>
+                                    <span class="note">Opsional</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="position_detail"
+                                    class="form-control"
+                                    maxlength="100"
+                                    placeholder="Contoh: Winger Kiri"
+                                    value="<?php echo isset($_POST['position_detail']) ? htmlspecialchars($_POST['position_detail']) : ''; ?>"
+                                >
                             </div>
                         </div>
 

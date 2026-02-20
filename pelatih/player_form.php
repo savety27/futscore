@@ -14,7 +14,7 @@ $player = [
     'name' => '',
     'jersey_number' => '',
     'position' => '',
-    'position_detail' => '', // Tetap ada di array tapi tidak diisi manual
+    'position_detail' => '',
     'birth_date' => '',
     'birth_place' => '',
     'gender' => 'L',
@@ -184,6 +184,21 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             }
                             ?>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Detail Posisi</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="position_detail"
+                            class="form-control"
+                            maxlength="100"
+                            placeholder="Contoh: Winger Kiri"
+                            value="<?php echo htmlspecialchars($player['position_detail'] ?? ''); ?>"
+                        >
                     </div>
                     
                     <div class="form-group">

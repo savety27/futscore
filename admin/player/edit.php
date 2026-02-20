@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once __DIR__ . '/edit_helpers.php';
 
 $event_helper_path = __DIR__ . '/../includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
@@ -134,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $jersey_number = !empty($_POST['jersey_number']) ? $_POST['jersey_number'] : null;
         $dominant_foot = $_POST['dominant_foot'] ?? '';
         $position = $_POST['position'] ?? '';
+        $position_detail = trim((string)($_POST['position_detail'] ?? ''));
         $status = isset($_POST['status']) ? 'active' : 'inactive';
         
         // Skills
@@ -147,8 +149,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $control = $_POST['control'] ?? 5;
         
         // **VALIDASI NIK 16 DIGIT** - TAMBAHKAN DI SINI
-        if (strlen($nik) != 16 || !is_numeric($nik)) {
-            throw new Exception("NIK harus terdiri dari tepat 16 digit angka!");
+        $nik_error = playerEditValidateNik($nik);
+        if ($nik_error !== null) {
+            throw new Exception($nik_error);
+        }
+
+        if ((function_exists('mb_strlen') ? mb_strlen($position_detail, 'UTF-8') : strlen($position_detail)) > 100) {
+            throw new Exception('Detail posisi maksimal 100 karakter!');
         }
 
         // Validasi duplicate nama pemain (global lintas semua tim), kecuali player ini sendiri
@@ -159,7 +166,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // **VALIDASI KK** - WAJIB ADA FILE KK
-        $kk_required = true;
         $kk_has_existing_file = !empty($player['kk_image']);
         $kk_new_file_uploaded = isset($_FILES['kk_image']) && $_FILES['kk_image']['error'] === UPLOAD_ERR_OK;
         $kk_delete_checked = isset($_POST['delete_kk_image']) && $_POST['delete_kk_image'] == '1';
@@ -170,22 +176,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 3. Jika tidak ada file yang sudah ada DAN tidak ada upload baru → ERROR
         // 4. Jika ada file yang sudah ada tapi dicentang hapus DAN tidak ada upload baru → ERROR
         
-        if ($kk_has_existing_file && !$kk_delete_checked) {
-            // Ada file KK di database dan tidak dihapus → OK
-            $kk_required = false;
-        } elseif ($kk_new_file_uploaded) {
-            // Ada upload file KK baru → OK
-            $kk_required = false;
-        } elseif ($kk_has_existing_file && $kk_delete_checked && !$kk_new_file_uploaded) {
-            // File KK ada di database, dicentang hapus, dan tidak ada upload baru → ERROR
-            throw new Exception("File Kartu Keluarga (KK) wajib diupload!");
-        } elseif (!$kk_has_existing_file && !$kk_new_file_uploaded) {
-            // Tidak ada file KK di database dan tidak ada upload baru → ERROR
-            throw new Exception("File Kartu Keluarga (KK) wajib diupload!");
+        $kk_error = playerEditValidateKkImage($kk_has_existing_file, $kk_new_file_uploaded, $kk_delete_checked);
+        if ($kk_error !== null) {
+            throw new Exception($kk_error);
         }
         
         // Konversi gender ke format database (L/P)
-        $gender_db = ($gender == 'Laki-laki') ? 'L' : (($gender == 'Perempuan') ? 'P' : '');
+        $gender_db = playerEditMapGenderForDb($gender);
         
         // Handle photo upload
         $photo = $player['photo']; // Keep existing photo
@@ -279,6 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 jersey_number = ?,
                 dominant_foot = ?,
                 position = ?,
+                position_detail = ?,
                 dribbling = ?,
                 technique = ?,
                 speed = ?,
@@ -301,7 +299,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name, $birth_place, $birth_date, $sport_type, $gender_db,
             $nik, $nisn, $height, $weight, $email, $phone,
             $nationality, $street, $city, $province, $postal_code, $country,
-            $team_id, $jersey_number, $dominant_foot, $position,
+            $team_id, $jersey_number, $dominant_foot, $position, $position_detail !== '' ? $position_detail : null,
             $dribbling, $technique, $speed, $juggling, $shooting,
             $setplay_position, $passing, $control, $status,
             $photo, $ktp_image, $kk_image, $birth_cert_image, $diploma_image,
@@ -317,17 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->rollback();
         $error = "Error: " . $e->getMessage();
         if ($e instanceof PDOException) {
-            $driver_code = (int)($e->errorInfo[1] ?? 0);
-            $message_lc = strtolower($e->getMessage());
-            if ($driver_code === 1062) {
-                if (strpos($message_lc, 'uq_players_name') !== false || strpos($message_lc, 'name') !== false) {
-                    $error = "Error: Nama pemain sudah terdaftar. Gunakan nama yang berbeda.";
-                } elseif (strpos($message_lc, 'nik') !== false) {
-                    $error = "Error: NIK sudah terdaftar. Gunakan NIK yang berbeda.";
-                } else {
-                    $error = "Error: Data duplikat terdeteksi. Periksa kembali input Anda.";
-                }
-            }
+            $error = playerEditMapUpdateError($e);
         }
     }
 }
@@ -1863,6 +1851,19 @@ select.form-control {
                                 <option value="MF" <?php echo $player['position'] === 'MF' ? 'selected' : ''; ?>>Gelandang (MF)</option>
                                 <option value="FW" <?php echo $player['position'] === 'FW' ? 'selected' : ''; ?>>Penyerang (FW)</option>
                             </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="position_detail">Detail Posisi</label>
+                            <input
+                                type="text"
+                                id="position_detail"
+                                name="position_detail"
+                                class="form-control"
+                                maxlength="100"
+                                placeholder="Contoh: Winger Kiri"
+                                value="<?php echo htmlspecialchars($_POST['position_detail'] ?? ($player['position_detail'] ?? '')); ?>"
+                            >
                         </div>
                     </div>
 

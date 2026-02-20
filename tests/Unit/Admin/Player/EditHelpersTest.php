@@ -3,18 +3,18 @@
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class AddHelpersTest extends TestCase
+final class EditHelpersTest extends TestCase
 {
     public function testCollectInputTrimsAndCastsValues(): void
     {
-        $input = playerAddCollectInput([
+        $input = playerEditCollectInput([
             'name' => '  Budi  ',
             'place_of_birth' => '  Jakarta ',
             'sport' => '  Futsal  ',
             'position_detail' => '  Winger Kiri  ',
             'status' => 'on',
             'dribbling' => '7',
-            'control' => '8'
+            'control' => '8',
         ]);
 
         $this->assertSame('Budi', $input['name']);
@@ -28,7 +28,7 @@ final class AddHelpersTest extends TestCase
 
     public function testCollectInputUsesDefaultsForMissingValues(): void
     {
-        $input = playerAddCollectInput([]);
+        $input = playerEditCollectInput([]);
 
         $this->assertSame('', $input['position_detail']);
         $this->assertSame('inactive', $input['status']);
@@ -44,7 +44,7 @@ final class AddHelpersTest extends TestCase
 
     public function testValidateInputReturnsNullForValidPayload(): void
     {
-        $error = playerAddValidateInput($this->validInput());
+        $error = playerEditValidateInput($this->validInput());
         $this->assertNull($error);
     }
 
@@ -54,9 +54,19 @@ final class AddHelpersTest extends TestCase
         $input = $this->validInput();
         $input[$field] = '';
 
-        $error = playerAddValidateInput($input);
+        $error = playerEditValidateInput($input);
 
         $this->assertSame('Semua field yang wajib harus diisi!', $error);
+    }
+
+    public function testValidateInputRejectsEmptyNik(): void
+    {
+        $input = $this->validInput();
+        $input['nik'] = '';
+
+        $error = playerEditValidateInput($input);
+
+        $this->assertSame('NIK harus terdiri dari tepat 16 digit angka!', $error);
     }
 
     #[DataProvider('invalidNikProvider')]
@@ -65,7 +75,7 @@ final class AddHelpersTest extends TestCase
         $input = $this->validInput();
         $input['nik'] = $nik;
 
-        $error = playerAddValidateInput($input);
+        $error = playerEditValidateInput($input);
 
         $this->assertSame('NIK harus terdiri dari tepat 16 digit angka!', $error);
     }
@@ -76,7 +86,7 @@ final class AddHelpersTest extends TestCase
         $input = $this->validInput();
         $input['nisn'] = $nisn;
 
-        $error = playerAddValidateInput($input);
+        $error = playerEditValidateInput($input);
 
         $this->assertSame('NISN harus terdiri dari tepat 10 digit angka!', $error);
     }
@@ -86,64 +96,58 @@ final class AddHelpersTest extends TestCase
         $input = $this->validInput();
         $input['position_detail'] = str_repeat('a', 101);
 
-        $error = playerAddValidateInput($input);
+        $error = playerEditValidateInput($input);
 
         $this->assertSame('Detail posisi maksimal 100 karakter!', $error);
     }
 
-    public function testValidateInputRejectsInvalidGender(): void
+    public function testValidateNikReturnsNullForValidNik(): void
     {
-        $input = $this->validInput();
-        $input['gender'] = 'Other';
+        $this->assertNull(playerEditValidateNik('1234567890123456'));
+    }
 
-        $error = playerAddValidateInput($input);
+    #[DataProvider('invalidNikProvider')]
+    public function testValidateNikRejectsInvalidNik(string $nik): void
+    {
+        $error = playerEditValidateNik($nik);
 
-        $this->assertSame('Jenis kelamin tidak valid!', $error);
+        $this->assertSame('NIK harus terdiri dari tepat 16 digit angka!', $error);
+    }
+
+    #[DataProvider('kkValidationProvider')]
+    public function testValidateKkImageRules(
+        bool $hasExistingFile,
+        bool $newFileUploaded,
+        bool $deleteChecked,
+        ?string $expectedError
+    ): void {
+        $error = playerEditValidateKkImage($hasExistingFile, $newFileUploaded, $deleteChecked);
+
+        $this->assertSame($expectedError, $error);
     }
 
     public function testMapGenderForDb(): void
     {
-        $this->assertSame('L', playerAddMapGenderForDb('Laki-laki'));
-        $this->assertSame('P', playerAddMapGenderForDb('Perempuan'));
-        $this->assertSame('', playerAddMapGenderForDb(''));
-        $this->assertSame('', playerAddMapGenderForDb('Other'));
+        $this->assertSame('L', playerEditMapGenderForDb('Laki-laki'));
+        $this->assertSame('P', playerEditMapGenderForDb('Perempuan'));
+        $this->assertSame('', playerEditMapGenderForDb(''));
+        $this->assertSame('', playerEditMapGenderForDb('Other'));
     }
 
-    public function testGenerateSlugWithProvidedTimestamp(): void
-    {
-        $slug = playerAddGenerateSlug('  Muhammad Budi!@#  ', 1700000000);
-
-        $this->assertSame('muhammad-budi-1700000000', $slug);
-    }
-
-    public function testGenerateSlugNormalizesMultipleHyphens(): void
-    {
-        $slug = playerAddGenerateSlug('A---B   C', 1700000000);
-
-        $this->assertSame('a-b-c-1700000000', $slug);
-    }
-
-    public function testGenerateSlugWithOnlySymbolsKeepsTimestampSuffix(): void
-    {
-        $slug = playerAddGenerateSlug('---', 1700000000);
-
-        $this->assertSame('-1700000000', $slug);
-    }
-
-    public function testBuildInsertParamsMapsRequiredAndDerivedValues(): void
+    public function testBuildUpdateParamsMapsRequiredAndDerivedValues(): void
     {
         $input = $this->validInput();
-        $params = playerAddBuildInsertParams($input, [], 'my-slug-1');
+        $params = playerEditBuildUpdateParams($input, [], 42);
 
+        $this->assertSame(42, $params[':id']);
         $this->assertSame('12', $params[':team_id']);
         $this->assertSame('Budi', $params[':name']);
-        $this->assertSame('my-slug-1', $params[':slug']);
         $this->assertSame('L', $params[':gender']);
         $this->assertSame('Second Striker', $params[':position_detail']);
         $this->assertSame('inactive', $params[':status']);
     }
 
-    public function testBuildInsertParamsConvertsEmptyOptionalFields(): void
+    public function testBuildUpdateParamsConvertsEmptyOptionalFields(): void
     {
         $input = $this->validInput();
         $input['height'] = '';
@@ -159,7 +163,7 @@ final class AddHelpersTest extends TestCase
         $input['country'] = '';
         $input['position_detail'] = '';
 
-        $params = playerAddBuildInsertParams($input, [], 'my-slug-2');
+        $params = playerEditBuildUpdateParams($input, [], 42);
 
         $this->assertNull($params[':height']);
         $this->assertNull($params[':weight']);
@@ -175,24 +179,24 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('Indonesia', $params[':country']);
     }
 
-    public function testBuildInsertParamsUsesUploadedFileDefaultsAndOverrides(): void
+    public function testBuildUpdateParamsUsesUploadedFileDefaultsAndOverrides(): void
     {
         $input = $this->validInput();
 
-        $defaultParams = playerAddBuildInsertParams($input, [], 'slug-defaults');
-        $this->assertSame('', $defaultParams[':photo']);
-        $this->assertSame('', $defaultParams[':ktp_image']);
-        $this->assertSame('', $defaultParams[':kk_image']);
-        $this->assertSame('', $defaultParams[':birth_cert_image']);
-        $this->assertSame('', $defaultParams[':diploma_image']);
+        $defaultParams = playerEditBuildUpdateParams($input, [], 42);
+        $this->assertNull($defaultParams[':photo']);
+        $this->assertNull($defaultParams[':ktp_image']);
+        $this->assertNull($defaultParams[':kk_image']);
+        $this->assertNull($defaultParams[':birth_cert_image']);
+        $this->assertNull($defaultParams[':diploma_image']);
 
-        $params = playerAddBuildInsertParams($input, [
+        $params = playerEditBuildUpdateParams($input, [
             'photo_file' => 'photo.jpg',
             'ktp_file' => 'ktp.jpg',
             'kk_file' => 'kk.jpg',
             'akte_file' => 'akte.jpg',
             'ijazah_file' => 'ijazah.jpg',
-        ], 'slug-custom');
+        ], 42);
 
         $this->assertSame('photo.jpg', $params[':photo']);
         $this->assertSame('ktp.jpg', $params[':ktp_image']);
@@ -201,13 +205,13 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('ijazah.jpg', $params[':diploma_image']);
     }
 
-    public function testInsertSqlPlaceholdersStayInSyncWithBuildInsertParams(): void
+    public function testUpdateSqlPlaceholdersStayInSyncWithBuildUpdateParams(): void
     {
-        $sql = playerAddInsertSql();
-        $params = playerAddBuildInsertParams($this->validInput(), [], 'my-slug-3');
+        $sql = playerEditUpdateSql();
+        $params = playerEditBuildUpdateParams($this->validInput(), [], 42);
 
-        preg_match_all('/:[a-z_]+/', $sql, $matches);
-        $sqlPlaceholders = array_values(array_unique($matches[0]));
+        preg_match_all('/=\s*(:[a-z_]+)/', $sql, $matches);
+        $sqlPlaceholders = array_values(array_unique($matches[1]));
         $paramKeys = array_keys($params);
 
         sort($sqlPlaceholders);
@@ -217,24 +221,24 @@ final class AddHelpersTest extends TestCase
     }
 
     #[DataProvider('duplicateErrorProvider')]
-    public function testMapInsertErrorForDuplicateKeys(array $errorInfo, string $message, string $expected): void
+    public function testMapUpdateErrorForDuplicateKeys(array $errorInfo, string $message, string $expected): void
     {
         $e = new PDOException($message);
         $e->errorInfo = $errorInfo;
 
-        $mapped = playerAddMapInsertError($e);
+        $mapped = playerEditMapUpdateError($e);
 
         $this->assertSame($expected, $mapped);
     }
 
-    public function testMapInsertErrorForNonDuplicateKeepsRawMessage(): void
+    public function testMapUpdateErrorForNonDuplicateKeepsRawMessage(): void
     {
         $e = new PDOException('Some SQL error');
         $e->errorInfo = ['HY000', 1234, 'Some SQL error'];
 
-        $mapped = playerAddMapInsertError($e);
+        $mapped = playerEditMapUpdateError($e);
 
-        $this->assertSame('Terjadi kesalahan: Some SQL error', $mapped);
+        $this->assertSame('Error: Some SQL error', $mapped);
     }
 
     public static function requiredFieldProvider(): array
@@ -245,7 +249,6 @@ final class AddHelpersTest extends TestCase
             ['date_of_birth'],
             ['sport'],
             ['gender'],
-            ['nik'],
             ['team_id'],
             ['jersey_number'],
             ['dominant_foot'],
@@ -273,23 +276,36 @@ final class AddHelpersTest extends TestCase
         ];
     }
 
+    public static function kkValidationProvider(): array
+    {
+        return [
+            [true, false, false, null],
+            [false, true, false, null],
+            [true, true, true, null],
+            [true, true, false, null],
+            [true, false, true, 'File Kartu Keluarga (KK) wajib diupload!'],
+            [false, false, false, 'File Kartu Keluarga (KK) wajib diupload!'],
+            [false, false, true, 'File Kartu Keluarga (KK) wajib diupload!'],
+        ];
+    }
+
     public static function duplicateErrorProvider(): array
     {
         return [
             [
                 ['23000', 1062, "Duplicate entry for key 'uq_players_name'"],
                 "Duplicate entry for key 'uq_players_name'",
-                'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.'
+                'Error: Nama pemain sudah terdaftar. Gunakan nama yang berbeda.',
             ],
             [
                 ['23000', 1062, "Duplicate entry for key 'players_nik_unique'"],
                 "Duplicate entry for key 'players_nik_unique'",
-                'NIK sudah terdaftar. Gunakan NIK yang berbeda.'
+                'Error: NIK sudah terdaftar. Gunakan NIK yang berbeda.',
             ],
             [
                 ['23000', 1062, 'Duplicate entry'],
                 'Duplicate entry',
-                'Data duplikat terdeteksi. Periksa kembali input Anda.'
+                'Error: Data duplikat terdeteksi. Periksa kembali input Anda.',
             ],
         ];
     }
