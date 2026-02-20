@@ -13,66 +13,8 @@ if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: ../index.php");
     exit;
 }
-
-// Mendapatkan nama file saat ini untuk penanda menu 'Active'
-$current_page = basename($_SERVER['PHP_SELF']);
-
-// --- DATA MENU DROPDOWN ---
-$menu_items = [
-    'dashboard' => [
-        'icon' => '🏠',
-        'name' => 'Dashboard',
-        'url' => 'dashboard.php',
-        'submenu' => false
-    ],
-    'master' => [
-        'icon' => '📊',
-        'name' => 'Master Data',
-        'submenu' => true,
-        'items' => [
-            'player' => 'player.php',
-            'team' => 'team.php',
-            'team_staff' => 'team_staff.php',
-            'transfer' => 'transfer.php'
-        ]
-    ],
-    'event' => [
-        'icon' => '🏆',
-        'name' => 'Event',
-        'url' => 'event.php',
-        'submenu' => false
-    ],
-    'challenge' => [
-        'icon' => '⚔️',
-        'name' => 'Challenge',
-        'url' => 'challenge.php',
-        'submenu' => false
-    ],
-    'Venue' => [
-        'icon' => '📍',
-        'name' => 'Venue',
-        'url' => 'venue.php',
-        'submenu' => false
-    ],
-    'Pelatih' => [
-        'icon' => '👨‍🏫',
-        'name' => 'Pelatih',
-        'url' => 'pelatih.php',
-        'submenu' => false
-    ],
-    'Berita' => [
-        'icon' => '📰',
-        'name' => 'Berita',
-        'url' => 'berita.php',
-        'submenu' => false
-    ]
-];
-
-$academy_name = "Hi, Welcome...";
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
-$email = $admin_email;
-
 $errors = [];
 
 // Handle transfer submit
@@ -165,6 +107,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Transfer Center</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/sidebar.css">
 <style>
 :root {
     --primary: #0f2744;
@@ -176,7 +119,7 @@ try {
     --light: #F8F9FA;
     --dark: #1e293b;
     --gray: #64748b;
-    --sidebar-bg: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
+
     --glass-white: rgba(255, 255, 255, 0.85);
     --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
     --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -202,192 +145,6 @@ body {
     min-height: 100vh;
 }
 
-/* ===== SIDEBAR ===== */
-.sidebar {
-    width: 280px;
-    background: var(--sidebar-bg);
-    color: white;
-    padding: 0;
-    position: fixed;
-    height: 100vh;
-    overflow-y: auto;
-    z-index: 100;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
-    transition: var(--transition);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header {
-    padding-top: 20px;
-    padding-right: 10px;
-    padding-bottom: 10px;
-    text-align: center;
-    background: transparent;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 10px;
-}
-
-.logo-container {
-    position: relative;
-    display: inline-block;
-}
-
-.logo {
-    max-width: 200px;
-    background: transparent;
-    margin: 0 auto 12px;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    position: relative;
-    overflow: visible;
-    transition: var(--transition);
-}
-
-.logo:hover {
-    transform: none;
-    box-shadow: none;
-}
-
-.logo img {
-    width: 100%;
-    height: auto;
-    max-width: 200px;
-    filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1));
-    transition: transform var(--transition), filter var(--transition);
-}
-
-.logo img:hover {
-    transform: scale(1.05);
-}
-
-.academy-info {
-    text-align: center;
-}
-
-.academy-name {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--secondary);
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-}
-
-.academy-email {
-    font-size: 14px;
-    opacity: 0.9;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-/* Menu */
-.menu {
-    padding: 25px 15px;
-}
-
-.menu-item {
-    margin-bottom: 8px;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.menu-link {
-    display: flex;
-    align-items: center;
-    padding: 14px 20px;
-    color: rgba(255, 255, 255, 0.75);
-    text-decoration: none;
-    transition: var(--transition);
-    position: relative;
-    border-radius: 12px;
-    margin: 4px 0;
-}
-
-.menu-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    transform: translateX(5px);
-}
-
-.menu-link.active {
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%);
-    color: var(--secondary);
-    font-weight: 700;
-    border-right: 4px solid var(--secondary);
-    border-radius: 12px 0 0 12px;
-}
-
-.menu-icon {
-    font-size: 18px;
-    margin-right: 15px;
-    width: 24px;
-    text-align: center;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-}
-
-.menu-text {
-    flex: 1;
-    font-size: 15px;
-    letter-spacing: 0.3px;
-}
-
-.menu-arrow {
-    font-size: 12px;
-    opacity: 0.6;
-    transition: var(--transition);
-}
-
-.menu-arrow.rotate {
-    transform: rotate(90deg);
-    opacity: 1;
-}
-
-/* Submenu */
-.submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease-in-out;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0 0 12px 12px;
-}
-
-.submenu.open {
-    max-height: 300px;
-}
-
-.submenu-item {
-    padding: 5px 15px 5px 70px;
-}
-
-.submenu-link {
-    display: block;
-    padding: 12px 15px;
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    border-radius: 8px;
-    transition: var(--transition);
-    position: relative;
-    font-size: 14px;
-}
-
-.submenu-link:hover {
-    background: rgba(255, 215, 0, 0.1);
-    color: var(--secondary);
-    padding-left: 20px;
-}
-
-.submenu-link.active {
-    background: rgba(255, 215, 0, 0.1);
-    color: var(--secondary);
-    padding-left: 20px;
-}
-
-.submenu-link::before {
-    content: "•";
-    position: absolute;
-    left: 0;
-    color: var(--secondary);
-    font-size: 16px;
-}
 
 /* ===== MAIN CONTENT ===== */
 .main {
@@ -762,10 +519,7 @@ body {
 }
 
 /* Responsive */
-@media screen and (max-width: 1024px) {
-    .sidebar {
-        width: 240px;
-    }
+@media screen and (max-width: 1024px) {
 
     .main {
         margin-left: 240px;
@@ -812,10 +566,7 @@ body {
         backdrop-filter: blur(2px);
     }
 
-    body.menu-open .menu-overlay {
-        opacity: 1;
-        visibility: visible;
-    }
+    
 
     .sidebar {
         transform: translateX(-100%);
@@ -851,15 +602,6 @@ body {
     .sidebar {
         width: 260px;
     }
-
-    .sidebar-header {
-        padding: 20px 18px 26px;
-    }
-
-    .logo,
-    .logo img {
-        max-width: 120px;
-    }
 }
 @keyframes slideDown {
     from {
@@ -875,72 +617,8 @@ body {
 </head>
 <body>
 
-<div class="menu-overlay"></div>
-<button class="menu-toggle" id="menuToggle">
-    <i class="fas fa-bars"></i>
-</button>
-
 <div class="wrapper">
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-container">
-                <div class="logo">
-                    <img src="../images/alvetrix.png" alt="Logo">
-                </div>
-            </div>
-            <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name ?? ''); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email ?? ''); ?></div>
-            </div>
-        </div>
-
-        <div class="menu">
-            <?php foreach ($menu_items as $key => $item): ?>
-            <?php 
-                $isActive = false;
-                $isSubmenuOpen = false;
-                
-                if ($item['submenu']) {
-                    foreach($item['items'] as $subUrl) {
-                        if($current_page === $subUrl) {
-                            $isActive = true;
-                            $isSubmenuOpen = true;
-                            break;
-                        }
-                    }
-                } else {
-                    if ($current_page === $item['url']) {
-                        $isActive = true;
-                    }
-                }
-            ?>
-            <div class="menu-item">
-                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
-                   class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
-                   data-menu="<?php echo $key; ?>">
-                        <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                        <span class="menu-text"><?php echo $item['name']; ?></span>
-                        <?php if ($item['submenu']): ?>
-                        <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
-                        <?php endif; ?>
-                </a>
-                
-                <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
-                    <div class="submenu-item">
-                        <a href="<?php echo $subUrl; ?>" 
-                           class="submenu-link <?php echo ($current_page === $subUrl) ? 'active' : ''; ?>">
-                           <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
-                        </a>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
     <div class="main">
         <div class="topbar">
@@ -1242,5 +920,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
