@@ -1517,17 +1517,7 @@ if ($eventId > 0) {
     </div>
 
     <script>
-        document.querySelectorAll('.menu-link').forEach(function(link) {
-            if (link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const submenu = this.nextElementSibling;
-                    const arrow = this.querySelector('.menu-arrow');
-                    if (submenu) {
-                        submenu.classList.toggle('open');
-                        arrow.classList.toggle('rotate');
-                    }
-                });
+        
             }
         });
 

@@ -645,7 +645,7 @@ body {
 
 
 /* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
 
     .main {
         margin-left: 240px;
@@ -655,7 +655,7 @@ body {
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) {
 
     
 
@@ -686,7 +686,7 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
-}
+}
 
 /* Delete Modal */
 .modal {
@@ -777,7 +777,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Venue Management 🏟️</h1>
-                <p>Kelola data venue dengan mudah dan cepat</p>
+                <p>Kelola data venue dengan mudah and cepat</p>
             </div>
             
             <div class="user-actions">
@@ -980,53 +980,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Mobile Menu Toggle Functionality
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
-
-    if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
-
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', function() {
             if (currentVenueId) {
@@ -1087,4 +1040,3 @@ function exportVenues() {
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
-
