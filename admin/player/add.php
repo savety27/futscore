@@ -65,18 +65,10 @@ $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Adm
 $admin_email = $_SESSION['admin_email'] ?? '';
 $email = $admin_email;
 
-// DEBUG: Tampilkan semua data POST untuk melihat apa yang dikirim
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    error_log("=== DEBUG PLAYER ADD ===");
-    error_log("POST Data: " . print_r($_POST, true));
-    error_log("FILES Data: " . print_r($_FILES, true));
-    error_log("Gender: " . ($_POST['gender'] ?? 'NOT SET'));
-    error_log("=== END DEBUG ===");
-}
-
 // Include database connection
 require_once '../config/database.php';
 require_once __DIR__ . '/add_helpers.php';
+require_once __DIR__ . '/add_service.php';
 
 $event_helper_path = __DIR__ . '/../includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
@@ -86,116 +78,21 @@ if (file_exists($event_helper_path)) {
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
-        $input = playerAddCollectInput($_POST);
-        $error = playerAddValidateInput($input);
-
-        if ($error === null) {
-            // Validasi duplicate nama pemain (global lintas semua tim)
-            $stmt_check_name = $conn->prepare("SELECT id FROM players WHERE TRIM(name) = TRIM(?) LIMIT 1");
-            $stmt_check_name->execute([$input['name']]);
-            if ($stmt_check_name->fetchColumn()) {
-                throw new Exception("Nama pemain sudah terdaftar. Gunakan nama yang berbeda.");
-            }
-            
-            // Generate slug from name
-            $slug = playerAddGenerateSlug($input['name']);
-            
-            // Create upload directory if not exists
-            $upload_dir = '../../images/players/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            
-            // Initialize file names
-            $photo_file = '';
-            $ktp_file = '';
-            $kk_file = '';
-            $akte_file = '';
-            $ijazah_file = '';
-            
-            // Upload Photo Profile
-            if (isset($_FILES['photo_file']) && $_FILES['photo_file']['error'] == 0) {
-                $photo_file = uploadFile($_FILES['photo_file'], $upload_dir, 'player_');
-            }
-            
-            // Upload KTP/KIA/Kartu Pelajar
-            if (isset($_FILES['ktp_file']) && $_FILES['ktp_file']['error'] == 0) {
-                $ktp_file = uploadFile($_FILES['ktp_file'], $upload_dir, 'ktp_');
-            }
-            
-            // Upload Kartu Keluarga - WAJIB
-            if (isset($_FILES['kk_file']) && $_FILES['kk_file']['error'] == 0) {
-                $kk_file = uploadFile($_FILES['kk_file'], $upload_dir, 'kk_');
-            } else {
-                // Jika file KK tidak diupload, tampilkan error
-                $error = "File Kartu Keluarga (KK) wajib diupload!";
-                throw new Exception($error);
-            }
-            
-            // Upload Akta Lahir
-            if (isset($_FILES['akte_file']) && $_FILES['akte_file']['error'] == 0) {
-                $akte_file = uploadFile($_FILES['akte_file'], $upload_dir, 'akte_');
-            }
-            
-            // Upload Ijazah/Biodata
-            if (isset($_FILES['ijazah_file']) && $_FILES['ijazah_file']['error'] == 0) {
-                $ijazah_file = uploadFile($_FILES['ijazah_file'], $upload_dir, 'ijazah_');
-            }
-            
-            // Insert player data
-            $stmt = $conn->prepare(playerAddInsertSql());
-            $stmt->execute(playerAddBuildInsertParams($input, [
-                'photo_file' => $photo_file,
-                'ktp_file' => $ktp_file,
-                'kk_file' => $kk_file,
-                'akte_file' => $akte_file,
-                'ijazah_file' => $ijazah_file,
-            ], $slug));
-            
-            $player_id = $conn->lastInsertId();
-            
-            $_SESSION['success_message'] = "Player berhasil ditambahkan!";
-            header("Location: ../player.php");
-            exit;
-        }
-    } catch (PDOException $e) {
-        $error = playerAddMapInsertError($e);
-        error_log("Database Error: " . $e->getMessage());
+        playerAddCreatePlayer($conn, $_POST, $_FILES);
+        $_SESSION['success_message'] = "Player berhasil ditambahkan!";
+        header("Location: ../player.php");
+        exit;
     } catch (Exception $e) {
-        $error = "Terjadi kesalahan: " . $e->getMessage();
+        $error = $e->getMessage();
         error_log("General Error: " . $e->getMessage());
     }
-}
-
-// Function to upload files
-function uploadFile($file, $upload_dir, $prefix) {
-    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-    $max_size = 5 * 1024 * 1024; // 5MB
-    
-    if (!in_array($file['type'], $allowed_types)) {
-        throw new Exception("Format file tidak didukung. Harap upload file gambar (JPEG, PNG, GIF).");
-    }
-    
-    if ($file['size'] > $max_size) {
-        throw new Exception("Ukuran file terlalu besar. Maksimal 5MB.");
-    }
-    
-    $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = $prefix . time() . '_' . uniqid() . '.' . $file_extension;
-    $target_path = $upload_dir . $filename;
-    
-    if (!move_uploaded_file($file['tmp_name'], $target_path)) {
-        throw new Exception("Gagal mengupload file.");
-    }
-    
-    return $filename;
 }
 
 // Get teams for dropdown
 $teams = [];
 $event_options = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 
-$selected_sport = trim((string)($_POST['sport'] ?? ''));
+$selected_sport = trim((string)($_POST['sport'] ?? $_POST['sport_type'] ?? ''));
 if ($selected_sport !== '' && !in_array($selected_sport, $event_options, true)) {
     $event_options[] = $selected_sport;
     natcasesort($event_options);

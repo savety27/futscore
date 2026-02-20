@@ -124,9 +124,9 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
     {
         return [
             'name' => $name,
-            'place_of_birth' => 'Jakarta',
-            'date_of_birth' => '2010-01-01',
-            'sport' => 'Futsal U-16',
+            'birth_place' => 'Jakarta',
+            'birth_date' => '2010-01-01',
+            'sport_type' => 'Futsal U-16',
             'gender' => 'Laki-laki',
             'nik' => $nik,
             'nisn' => '1234567890',
@@ -135,7 +135,7 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
             'email' => 'budi@example.com',
             'phone' => '08123456789',
             'nationality' => 'Indonesia',
-            'address' => 'Jalan Mawar',
+            'street' => 'Jalan Mawar',
             'city' => 'Jakarta',
             'province' => 'DKI Jakarta',
             'postal_code' => '12345',

@@ -1,10 +1,15 @@
 <?php
 
 require_once __DIR__ . '/edit_helpers.php';
+require_once __DIR__ . '/file_upload_helpers.php';
 
 function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $files, array $existingPlayer): void
 {
-    $conn->beginTransaction();
+    $startedTransaction = false;
+    if (!$conn->inTransaction()) {
+        $conn->beginTransaction();
+        $startedTransaction = true;
+    }
 
     try {
         $input = playerEditCollectInput($post);
@@ -41,15 +46,17 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
         $stmt = $conn->prepare(playerEditUpdateSql());
         $stmt->execute(playerEditBuildUpdateParams($input, $resolvedFiles, $playerId));
 
-        $conn->commit();
+        if ($startedTransaction) {
+            $conn->commit();
+        }
     } catch (PDOException $e) {
-        if ($conn->inTransaction()) {
+        if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
         throw new Exception(playerEditMapUpdateError($e), 0, $e);
     } catch (Exception $e) {
-        if ($conn->inTransaction()) {
+        if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
@@ -59,9 +66,7 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
 
 function playerEditEnsureUploadDirectory(string $uploadDir): void
 {
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
+    playerFileEnsureUploadDirectory($uploadDir);
 }
 
 function playerEditHandlePhotoUpload(array $files, ?string $existingPhoto, string $uploadDir): ?string
@@ -70,18 +75,9 @@ function playerEditHandlePhotoUpload(array $files, ?string $existingPhoto, strin
         return $existingPhoto;
     }
 
-    if (!empty($existingPhoto)) {
-        $oldPhotoPath = $uploadDir . $existingPhoto;
-        if (file_exists($oldPhotoPath)) {
-            @unlink($oldPhotoPath);
-        }
-    }
-
-    $fileExtension = pathinfo($files['photo']['name'], PATHINFO_EXTENSION);
-    $newFilename = 'player_' . time() . '_' . uniqid() . '.' . $fileExtension;
-    $targetPath = $uploadDir . $newFilename;
-
-    if (move_uploaded_file($files['photo']['tmp_name'], $targetPath)) {
+    playerFileDeleteIfExists($uploadDir, $existingPhoto);
+    $newFilename = playerFileMoveUploaded($files['photo'], $uploadDir, 'player_');
+    if ($newFilename !== null) {
         return $newFilename;
     }
 
@@ -97,29 +93,15 @@ function playerEditHandleDocumentUpload(
     string $uploadDir
 ): ?string {
     if (isset($files[$fieldName]) && $files[$fieldName]['error'] === UPLOAD_ERR_OK) {
-        if (!empty($existingFile)) {
-            $oldFilePath = $uploadDir . $existingFile;
-            if (file_exists($oldFilePath)) {
-                @unlink($oldFilePath);
-            }
-        }
-
-        $fileExtension = pathinfo($files[$fieldName]['name'], PATHINFO_EXTENSION);
-        $newFilename = $type . '_' . time() . '_' . uniqid() . '.' . $fileExtension;
-        $targetPath = $uploadDir . $newFilename;
-
-        if (move_uploaded_file($files[$fieldName]['tmp_name'], $targetPath)) {
+        playerFileDeleteIfExists($uploadDir, $existingFile);
+        $newFilename = playerFileMoveUploaded($files[$fieldName], $uploadDir, $type . '_');
+        if ($newFilename !== null) {
             return $newFilename;
         }
     }
 
     if (isset($post['delete_' . $fieldName])) {
-        if (!empty($existingFile)) {
-            $oldFilePath = $uploadDir . $existingFile;
-            if (file_exists($oldFilePath)) {
-                @unlink($oldFilePath);
-            }
-        }
+        playerFileDeleteIfExists($uploadDir, $existingFile);
 
         return null;
     }

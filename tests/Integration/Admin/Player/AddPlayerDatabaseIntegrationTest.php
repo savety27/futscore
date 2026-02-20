@@ -38,66 +38,69 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
     public function testCanInsertPlayerDataIntoDedicatedTestDatabase(): void
     {
         $nik = $this->randomNik();
-        $input = $this->validInput('ITEST Budi Integrasi', $nik);
-        $slug = playerAddGenerateSlug($input['name'], 1700000000);
-        $params = playerAddBuildInsertParams($input, [], $slug);
+        $post = $this->validPostInput('ITEST Budi Integrasi', $nik);
 
-        $stmt = $this->pdo->prepare(playerAddInsertSql());
-        $stmt->execute($params);
+        $playerId = playerAddCreatePlayer(
+            $this->pdo,
+            $post,
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-a.jpg', 'ktp-a.jpg', 'kk-a.jpg', 'akte-a.jpg', 'ijazah-a.jpg')
+        );
 
-        $stmt = $this->pdo->prepare('SELECT name, nik, gender, status FROM players WHERE nik = :nik LIMIT 1');
-        $stmt->execute([':nik' => $nik]);
+        $stmt = $this->pdo->prepare('SELECT name, nik, gender, status, kk_image FROM players WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $playerId]);
         $saved = $stmt->fetch();
 
         $this->assertSame('ITEST Budi Integrasi', $saved['name']);
         $this->assertSame($nik, $saved['nik']);
         $this->assertSame('L', $saved['gender']);
         $this->assertSame('inactive', $saved['status']);
+        $this->assertSame('kk-a.jpg', $saved['kk_image']);
     }
 
     public function testDuplicateNameMapsToFriendlyErrorMessage(): void
     {
-        $inputA = $this->validInput('ITEST Nama Sama', $this->randomNik());
-        $inputB = $this->validInput('ITEST Nama Sama', $this->randomNik());
+        playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Sama', $this->randomNik()),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-1.jpg', 'ktp-1.jpg', 'kk-1.jpg', 'akte-1.jpg', 'ijazah-1.jpg')
+        );
 
-        $this->insertPlayer($inputA, 1700000000);
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
 
-        try {
-            $this->insertPlayer($inputB, 1700000001);
-            $this->fail('Expected duplicate name insert to fail.');
-        } catch (PDOException $e) {
-            $mapped = playerAddMapInsertError($e);
-            $this->assertSame('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.', $mapped);
-        }
+        playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Sama', $this->randomNik()),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-2.jpg', 'ktp-2.jpg', 'kk-2.jpg', 'akte-2.jpg', 'ijazah-2.jpg')
+        );
     }
 
     public function testDuplicateNikMapsToFriendlyErrorMessage(): void
     {
         $nik = $this->randomNik();
-        $inputA = $this->validInput('ITEST Nama Satu', $nik);
-        $inputB = $this->validInput('ITEST Nama Dua', $nik);
 
-        $this->insertPlayer($inputA);
+        playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Satu', $nik),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-1.jpg', 'ktp-1.jpg', 'kk-1.jpg', 'akte-1.jpg', 'ijazah-1.jpg')
+        );
 
-        try {
-            $this->insertPlayer($inputB);
-            $this->fail('Expected duplicate NIK insert to fail.');
-        } catch (PDOException $e) {
-            $mapped = playerAddMapInsertError($e);
-            $this->assertSame('NIK sudah terdaftar. Gunakan NIK yang berbeda.', $mapped);
-        }
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('NIK sudah terdaftar. Gunakan NIK yang berbeda.');
+
+        playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Dua', $nik),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-2.jpg', 'ktp-2.jpg', 'kk-2.jpg', 'akte-2.jpg', 'ijazah-2.jpg')
+        );
     }
 
-    private function insertPlayer(array $input, ?int $timestamp = null): void
-    {
-        $slug = playerAddGenerateSlug($input['name'], $timestamp ?? 1700000000);
-        $params = playerAddBuildInsertParams($input, [], $slug);
-
-        $stmt = $this->pdo->prepare(playerAddInsertSql());
-        $stmt->execute($params);
-    }
-
-    private function validInput(string $name, string $nik): array
+    private function validPostInput(string $name, string $nik): array
     {
         return [
             'name' => $name,
@@ -121,8 +124,7 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
             'jersey_number' => '10',
             'dominant_foot' => 'Kanan',
             'position' => 'Forward',
-            'position_detail' => '',
-            'status' => 'inactive',
+            'position_detail' => 'Second Striker',
             'dribbling' => 6,
             'technique' => 7,
             'speed' => 8,
@@ -134,12 +136,31 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
         ];
     }
 
+    private function fakeUploadResolver(
+        string $photo,
+        string $ktp,
+        string $kk,
+        string $birthCert,
+        string $diploma
+    ): callable {
+        return static function (array $files, string $uploadDir) use ($photo, $ktp, $kk, $birthCert, $diploma): array {
+            return [
+                'photo' => $photo,
+                'ktp_image' => $ktp,
+                'kk_image' => $kk,
+                'birth_cert_image' => $birthCert,
+                'diploma_image' => $diploma,
+            ];
+        };
+    }
+
     private function randomNik(): string
     {
         $nik = '';
         for ($i = 0; $i < 16; $i++) {
             $nik .= (string) random_int(0, 9);
         }
+
         return $nik;
     }
 }
