@@ -1,5 +1,7 @@
 <?php
-require_once 'db.php';
+if (!isset($db) || !is_object($db) || !method_exists($db, 'getConnection')) {
+    require_once __DIR__ . '/db.php';
+}
 
 // ========== FUNGSI UTAMA ==========
 
