@@ -168,7 +168,7 @@ usort($timeline_events, function($a, $b) {
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -178,7 +178,7 @@ usort($timeline_events, function($a, $b) {
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Tim</a>
+                    <a href="staff.php">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>

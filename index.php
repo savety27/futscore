@@ -43,7 +43,7 @@ $pageTitle = "Home";
             <a href="<?php echo SITE_URL; ?>" class="active"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -53,7 +53,7 @@ $pageTitle = "Home";
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Tim</a>
+                    <a href="staff.php">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -84,11 +84,11 @@ $pageTitle = "Home";
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
                     <h1>Beranda</h1>
-                    <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan tim terbaru dalam satu tampilan.</p>
+                    <p class="header-subtitle">Ringkasan pertandingan, berita, pemain, dan team terbaru dalam satu tampilan.</p>
                 </div>
                 <div class="header-actions">
                     <a href="event.php" class="btn-primary"><i class="fas fa-calendar-alt"></i> Lihat Event</a>
-                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
+                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Team</a>
                     <a href="player.php" class="btn-primary"><i class="fas fa-running"></i> Lihat Player</a>
                 </div>
             </div>
@@ -650,10 +650,10 @@ $pageTitle = "Home";
 <!-- Team Section -->
 <div class="container section-container">
     <div class="section-header">
-        <h2 class="section-title">TIM</h2>
+        <h2 class="section-title">TEAM</h2>
         <div class="section-tabs">
             <button class="tab-button active" data-tab="recent-winner">Menang Terbaru</button>
-            <button class="tab-button" data-tab="new-team">Tim Baru</button>
+            <button class="tab-button" data-tab="new-team">Team Baru</button>
         </div>
     </div>
     
@@ -662,7 +662,7 @@ $pageTitle = "Home";
         <div class="empty-state">
             <i class="fas fa-trophy"></i>
             <h4>Tidak ada pemenang terkini</h4>
-            <p>Belum ada tim yang memenangkan kompetisi</p>
+            <p>Belum ada team yang memenangkan kompetisi</p>
         </div>
         <?php else: ?>
         <div class="winners-grid">
@@ -701,8 +701,8 @@ $pageTitle = "Home";
         <?php if (empty($newTeams)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
-            <h4>Tidak ada tim baru</h4>
-            <p>Belum ada tim yang ditambahkan</p>
+            <h4>Tidak ada team baru</h4>
+            <p>Belum ada team yang ditambahkan</p>
         </div>
         <?php else: ?>
         <div class="teams-grid">
@@ -718,7 +718,7 @@ $pageTitle = "Home";
                          onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                 </div>
                 <h3 class="team-name"><?php echo htmlspecialchars($team['name']); ?></h3>
-                <p class="team-label">Tim Baru</p>
+                <p class="team-label">Team Baru</p>
             </a>
             <?php endforeach; ?>
         </div>

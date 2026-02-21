@@ -119,7 +119,7 @@ function maskNIK($nik) {
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown open active" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -129,7 +129,7 @@ function maskNIK($nik) {
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown show">
                     <a href="player.php" class="active">Pemain</a>
-                    <a href="staff.php">Staf Tim</a>
+                    <a href="staff.php">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -207,7 +207,7 @@ function maskNIK($nik) {
                                             <div class="team-logo-lg team-logo-placeholder"></div>
                                         <?php endif; ?>
                                         <div>
-                                            <div class="team-label">Tim</div>
+                                            <div class="team-label">Team</div>
                                             <div class="team-name"><?php echo htmlspecialchars($player_detail['team_name'] ?: '-'); ?></div>
                                         </div>
                                     </div>
@@ -279,7 +279,7 @@ function maskNIK($nik) {
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
                             <th>Nama</th>
-                            <th>Tim</th>
+                            <th>Team</th>
                             <th class="col-center">No Punggung</th>
                             <th class="col-center">Tgl Lahir</th>
                             <th class="col-center">Usia</th>
@@ -320,7 +320,7 @@ function maskNIK($nik) {
                                         <?php echo htmlspecialchars($p['name'] ?? ''); ?>
                                     </a>
                                 </td>
-                                <td class="cell-team" data-label="Tim">
+                                <td class="cell-team" data-label="Team">
                                     <div class="col-team">
                                         <?php if (!empty($p['team_logo']) && file_exists('images/teams/' . $p['team_logo'])): ?>
                                             <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $p['team_logo']; ?>" class="team-logo-small" alt="">

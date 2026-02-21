@@ -883,7 +883,7 @@ $pageTitle = "Staff List";
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown active" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -893,7 +893,7 @@ $pageTitle = "Staff List";
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown show">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php" class="active">Staf Tim</a>
+                    <a href="staff.php" class="active">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -923,15 +923,15 @@ $pageTitle = "Staff List";
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>STAF TIM</h1>
-                    <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi tim untuk memantau peran kunci di setiap skuad.</p>
+                    <h1>STAF TEAM</h1>
+                    <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi team untuk memantau peran kunci di setiap skuad.</p>
                 </div>
                 <div class="header-actions">
                     <div class="header-stat">
                         <span class="stat-label">Total Staf Aktif</span>
                         <span class="stat-value"><?php echo number_format($total_records); ?></span>
                     </div>
-                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
+                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Team</a>
                 </div>
             </div>
         </header>
@@ -975,7 +975,7 @@ $pageTitle = "Staff List";
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
                             <th>Nama Staf</th>
-                            <th>Tim</th>
+                            <th>Team</th>
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
@@ -1055,7 +1055,7 @@ $pageTitle = "Staff List";
                                 </td>
                                 
                                 <!-- Kolom Team -->
-                                <td class="col-team" data-label="Tim">
+                                <td class="col-team" data-label="Team">
                                     <div class="team-display">
                                         <?php if ($team_logo['found']): ?>
                                             <img src="<?php echo $team_logo['url']; ?>" 

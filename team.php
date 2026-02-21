@@ -95,7 +95,7 @@ if ($teamId > 0) {
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php" class="active"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php" class="active"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -105,7 +105,7 @@ if ($teamId > 0) {
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Tim</a>
+                    <a href="staff.php">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -139,14 +139,14 @@ if ($teamId > 0) {
                         <?php if ($teamId > 0): ?>
                             <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                         <?php else: ?>
-                            Direktori Tim
+                            Direktori Team
                         <?php endif; ?>
                     </h1>
                     <p class="header-subtitle">
                         <?php if ($teamId > 0): ?>
-                            Profil tim, roster pemain, dan staff resmi dalam satu tampilan premium.
+                            Profil team, roster pemain, dan staff resmi dalam satu tampilan premium.
                         <?php else: ?>
-                            Jelajahi daftar tim futsal terbaru dan temukan profil lengkapnya.
+                            Jelajahi daftar team futsal terbaru dan temukan profil lengkapnya.
                         <?php endif; ?>
                     </p>
                 </div>
@@ -167,7 +167,7 @@ if ($teamId > 0) {
                 <!-- TEAM DETAIL VIEW -->
                 <div class="container section-container section-elevated team-profile-section">
                     <div class="section-header">
-                        <h2 class="section-title">PROFIL TIM</h2>
+                        <h2 class="section-title">PROFIL TEAM</h2>
                         <div class="section-tabs">
                             <span class="team-status-pill"><i class="fas fa-shield-alt"></i> Terverifikasi</span>
                             <span class="team-status-pill"><i class="fas fa-users"></i> <?php echo count($players); ?> Pemain</span>
@@ -243,7 +243,7 @@ if ($teamId > 0) {
 
                             <?php if (empty($team['manager']) && empty($team['coach']) && empty($team['basecamp']) && empty($team['contact']) && empty($team['events_array'])): ?>
                             <div class="team-meta-item team-meta-empty">
-                                <div class="team-meta-label">Informasi Tim</div>
+                                <div class="team-meta-label">Informasi Team</div>
                                 <div class="team-meta-value">Belum ada data tambahan</div>
                             </div>
                             <?php endif; ?>
@@ -424,7 +424,7 @@ if ($teamId > 0) {
                             <div class="empty-state">
                                 <i class="fas fa-users"></i>
                                 <h4>Tidak ada pemain</h4>
-                                <p>Belum ada pemain yang terdaftar di tim ini</p>
+                                <p>Belum ada pemain yang terdaftar di team ini</p>
                             </div>
                         `;
                         showEmptyDetailPanel();
@@ -468,7 +468,7 @@ if ($teamId > 0) {
                             <div class="empty-state">
                                 <i class="fas fa-users-cog"></i>
                                 <h4>Tidak ada staff</h4>
-                                <p>Belum ada staff yang terdaftar di tim ini</p>
+                                <p>Belum ada staff yang terdaftar di team ini</p>
                             </div>
                         `;
                         showEmptyDetailPanel();
@@ -657,7 +657,7 @@ if ($teamId > 0) {
                 }
                 
                 function buildTeamShareText() {
-                    const name = teamShareName || 'tim ini';
+                    const name = teamShareName || 'team ini';
                     return `Lihat ${name} di ALVETRIX`;
                 }
 
@@ -821,17 +821,17 @@ if ($teamId > 0) {
                 <!-- TEAM LISTING VIEW -->
                 <div class="container section-container section-elevated">
                     <div class="section-header">
-                        <h2 class="section-title">TIM</h2>
+                        <h2 class="section-title">TEAM</h2>
                         <div class="section-tabs">
-                            <span class="team-count-pill"><i class="fas fa-users"></i> <?php echo count($allTeams); ?> Tim</span>
+                            <span class="team-count-pill"><i class="fas fa-users"></i> <?php echo count($allTeams); ?> Team</span>
                         </div>
                     </div>
 
                     <div class="team-filter-card">
-                        <label class="team-filter-label" for="teamSelector">Pilih Tim</label>
+                        <label class="team-filter-label" for="teamSelector">Pilih Team</label>
                         <div class="team-selector">
                             <select id="teamSelector" onchange="if(this.value) window.location.href='team.php?id=' + this.value">
-                                <option value="">Pilih tim dari dropdown atau daftar di bawah</option>
+                                <option value="">Pilih team dari dropdown atau daftar di bawah</option>
                                 <?php foreach ($allTeams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>">
                                         <?php echo htmlspecialchars($team['name']); ?>
@@ -846,8 +846,8 @@ if ($teamId > 0) {
                     <?php if (empty($allTeams)): ?>
                         <div class="empty-state">
                             <i class="fas fa-users"></i>
-                            <h4>Tidak ada tim</h4>
-                            <p>Belum ada tim yang terdaftar</p>
+                            <h4>Tidak ada team</h4>
+                            <p>Belum ada team yang terdaftar</p>
                         </div>
                     <?php else: ?>
                         <div class="teams-grid team-directory-grid">
@@ -884,13 +884,13 @@ if ($teamId > 0) {
         <div class="schedule-modal team-share-modal" id="teamShareModal" aria-hidden="true" role="dialog" aria-modal="true">
             <div class="schedule-modal-content">
                 <div class="schedule-modal-header">
-                    <h3>Bagikan Tim</h3>
+                    <h3>Bagikan Team</h3>
                     <button class="schedule-modal-close" id="closeTeamShareModal">&times;</button>
                 </div>
                 <div class="schedule-modal-body">
                     <div class="schedule-detail-content">
                         <h4 class="schedule-event-title"><?php echo htmlspecialchars($team['name'] ?? ''); ?></h4>
-                        <p class="schedule-round">Pilih platform untuk berbagi profil tim ini.</p>
+                        <p class="schedule-round">Pilih platform untuk berbagi profil team ini.</p>
                         <div class="share-buttons-grid">
                             <a href="#" target="_blank" class="share-btn-modal whatsapp" id="teamShareWhatsapp">
                                 <i class="fab fa-whatsapp"></i> WhatsApp

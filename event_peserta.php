@@ -308,7 +308,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -318,7 +318,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Tim</a>
+                    <a href="staff.php">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -348,7 +348,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
                     <h1><?php echo htmlspecialchars($event_group_name !== '' ? $event_group_name : 'Detail Peserta Event'); ?></h1>
-                    <p class="header-subtitle">Lihat peserta tim per kategori event secara dinamis.</p>
+                    <p class="header-subtitle">Lihat peserta team per kategori event secara dinamis.</p>
                 </div>
                 <div class="header-actions">
                     <a href="EVENTS.PHP" class="btn-back-event"><i class="fas fa-house"></i> Hub Event</a>
@@ -381,7 +381,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                 <section class="participants-top-card section-elevated">
                     <div class="participants-top-copy">
                         <h2>Peserta (<?php echo number_format($participant_total); ?>)</h2>
-                        <p>*klik icon <i class="fas fa-circle-info"></i> untuk melihat pertandingan tim pada kategori event ini</p>
+                        <p>*klik icon <i class="fas fa-circle-info"></i> untuk melihat pertandingan team pada kategori event ini</p>
                         <?php if ($is_single_legacy_event): ?>
                             <div class="notice-chip"><i class="fas fa-circle-exclamation"></i> Event ini belum dipetakan ke event group taxonomy.</div>
                         <?php endif; ?>
@@ -420,7 +420,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                             <article class="category-card section-elevated">
                                 <div class="category-card-head">
                                     <h3><?php echo htmlspecialchars($category['category_name'] ?? '-'); ?></h3>
-                                    <span class="category-badge"><?php echo number_format((int) ($category['team_count'] ?? 0)); ?> tim</span>
+                                    <span class="category-badge"><?php echo number_format((int) ($category['team_count'] ?? 0)); ?> team</span>
                                 </div>
                                 <div class="category-subtitle"><?php echo htmlspecialchars($category['legacy_event_name'] ?? '-'); ?></div>
 
@@ -461,7 +461,7 @@ $reset_link = 'event_peserta.php' . ($reset_query !== '' ? '?' . $reset_query : 
                                                             </div>
                                                         </td>
                                                         <td class="team-action-cell">
-                                                            <a href="<?php echo htmlspecialchars($team_match_link); ?>" class="team-detail-link" title="Lihat pertandingan tim pada kategori ini">
+                                                            <a href="<?php echo htmlspecialchars($team_match_link); ?>" class="team-detail-link" title="Lihat pertandingan team pada kategori ini">
                                                                 <i class="fas fa-circle-info"></i>
                                                             </a>
                                                         </td>

@@ -923,7 +923,7 @@ if ($eventId > 0 && !empty($event)) {
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
             <a href="EVENTS.PHP" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TIM</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -933,7 +933,7 @@ if ($eventId > 0 && !empty($event)) {
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Tim</a>
+                    <a href="staff.php">Staf Team</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -973,10 +973,10 @@ if ($eventId > 0 && !empty($event)) {
                     <?php if ($eventId > 0): ?>
                         <a href="event.php" class="btn-primary"><i class="fas fa-sitemap"></i> Event Kategori</a>
                         <a href="EVENTS.PHP" class="btn-secondary"><i class="fas fa-arrow-left"></i> Semua Event</a>
-                        <a href="team.php" class="btn-primary"><i class="fas fa-users"></i> Lihat Tim</a>
+                        <a href="team.php" class="btn-primary"><i class="fas fa-users"></i> Lihat Team</a>
                     <?php else: ?>
                         <a href="event.php" class="btn-primary"><i class="fas fa-sitemap"></i> Event Kategori</a>
-                        <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Tim</a>
+                        <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Team</a>
                         <a href="player.php" class="btn-primary"><i class="fas fa-running"></i> Lihat Player</a>
                     <?php endif; ?>
                 </div>
@@ -1046,7 +1046,7 @@ if ($eventId > 0 && !empty($event)) {
 
                         <div class="event-desc" id="eventParticipants">
                             <h3 style="margin:0 0 10px 0;">Peserta (<?php echo (int) $eventParticipantTotal; ?>)</h3>
-                            <p style="margin:0 0 12px 0; color:#475569;">*klik icon info untuk melihat statistik tim di kategori ini</p>
+                            <p style="margin:0 0 12px 0; color:#475569;">*klik icon info untuk melihat statistik team di kategori ini</p>
 
                             <?php if (!$eventDataReady): ?>
                                 <p style="margin:0; color:#64748b;">Data peserta belum tersedia (kolom relasi event belum aktif).</p>
@@ -1069,7 +1069,7 @@ if ($eventId > 0 && !empty($event)) {
                                                 </thead>
                                                 <tbody>
                                                     <?php if (empty($group['teams'])): ?>
-                                                        <tr><td colspan="3" style="color:#64748b;">Belum ada tim</td></tr>
+                                                        <tr><td colspan="3" style="color:#64748b;">Belum ada team</td></tr>
                                                     <?php else: ?>
                                                         <?php foreach ($group['teams'] as $idx => $team): ?>
                                                             <?php
@@ -1088,7 +1088,7 @@ if ($eventId > 0 && !empty($event)) {
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <a class="event-team-info-link" href="<?php echo htmlspecialchars($teamLink); ?>" title="Lihat pertandingan tim">
+                                                                    <a class="event-team-info-link" href="<?php echo htmlspecialchars($teamLink); ?>" title="Lihat pertandingan team">
                                                                         <i class="fas fa-circle-info"></i>
                                                                     </a>
                                                                 </td>
@@ -1205,7 +1205,7 @@ if ($eventId > 0 && !empty($event)) {
                                             <thead>
                                                 <tr>
                                                     <th>Pemain</th>
-                                                    <th>Tim</th>
+                                                    <th>Team</th>
                                                     <th>Kuning</th>
                                                     <th>Merah</th>
                                                     <th>Hijau</th>
