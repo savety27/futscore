@@ -465,7 +465,13 @@ $teamIds = array_map(static fn($row) => (int)$row['id'], $teams);
 $players = [];
 if (!empty($teamIds)) {
     $in = implode(',', $teamIds);
-    $players = $conn->query("SELECT id, name, team_id FROM players WHERE team_id IN ($in) ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    if ($selectedCategory !== '') {
+        $stmt_players = $conn->prepare("SELECT id, name, team_id FROM players WHERE team_id IN ($in) AND sport_type = ? ORDER BY name ASC");
+        $stmt_players->execute([$selectedCategory]);
+        $players = $stmt_players->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $players = $conn->query("SELECT id, name, team_id FROM players WHERE team_id IN ($in) ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 
 $standingsByCategory = [];
@@ -1345,10 +1351,6 @@ if ($eventId > 0) {
     </div>
 
     <script>
-        
-            }
-        });
-
         const teamSelect = document.getElementById('player_team_id');
         const playerSelect = document.getElementById('player_id');
         if (teamSelect && playerSelect) {

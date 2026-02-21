@@ -1119,6 +1119,160 @@ body {
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Basic score calculation preview
+    const cScore = document.getElementById('challenger_score');
+    const oScore = document.getElementById('opponent_score');
+    const preview = document.getElementById('resultPreview');
+    const cName = <?php echo json_encode($challenge_data['challenger_name'] ?? ''); ?>;
+    const oName = <?php echo json_encode($challenge_data['opponent_name'] ?? ''); ?>;
+
+    function updatePreview() {
+        if (!cScore || !oScore || !preview) return;
+        const cs = parseInt(cScore.value) || 0;
+        const os = parseInt(oScore.value) || 0;
+        
+        let txt = '';
+        if (cs > os) {
+            txt = `${cName} Menang`;
+        } else if (os > cs) {
+            txt = `${oName} Menang`;
+        } else {
+            txt = 'Seri (Draw)';
+        }
+        preview.textContent = txt;
+    }
+    
+    if (cScore) cScore.addEventListener('input', updatePreview);
+    if (oScore) oScore.addEventListener('input', updatePreview);
+    updatePreview();
+
+    // Goal Scorers Logic
+    const team1Id = <?php echo json_encode($challenge_data['challenger_id'] ?? ''); ?>;
+    const team1Name = <?php echo json_encode($challenge_data['challenger_name'] ?? ''); ?>;
+    const team2Id = <?php echo json_encode($challenge_data['opponent_id'] ?? ''); ?>;
+    const team2Name = <?php echo json_encode($challenge_data['opponent_name'] ?? ''); ?>;
+    
+    const team1Players = <?php echo json_encode($team1_players ?: []); ?>;
+    const team2Players = <?php echo json_encode($team2_players ?: []); ?>;
+    const existingGoals = <?php echo json_encode($existing_goals ?: []); ?>;
+
+    const btnAddGoal = document.getElementById('btnAddGoal');
+    const goalContainer = document.getElementById('goal-entries');
+
+    function createGoalRow(goalData = null) {
+        if (!goalContainer) return;
+
+        const row = document.createElement('div');
+        row.className = 'goal-entry-row';
+        
+        // Team Select
+        const teamCol = document.createElement('div');
+        const teamSelect = document.createElement('select');
+        teamSelect.name = 'goal_team_id[]';
+        teamSelect.className = 'form-select';
+        teamSelect.required = true;
+        
+        let tOpts = '<option value="">-- Pilih Tim --</option>';
+        tOpts += `<option value="${team1Id}">${team1Name}</option>`;
+        tOpts += `<option value="${team2Id}">${team2Name}</option>`;
+        teamSelect.innerHTML = tOpts;
+
+        if (goalData && goalData.team_id) {
+            teamSelect.value = goalData.team_id;
+        }
+
+        teamCol.appendChild(teamSelect);
+
+        // Player Select
+        const playerCol = document.createElement('div');
+        const playerSelect = document.createElement('select');
+        playerSelect.name = 'goal_player_id[]';
+        playerSelect.className = 'form-select';
+        playerSelect.required = true;
+        playerSelect.innerHTML = '<option value="">-- Pilih Pemain --</option>';
+
+        if (goalData && goalData.player_id) {
+            const tempVal = goalData.player_id;
+            // Postpone setting value until options are populated below
+            setTimeout(() => { playerSelect.value = tempVal; }, 10);
+        }
+        playerCol.appendChild(playerSelect);
+
+        // Populate players based on team
+        function updatePlayerOpts(teamId) {
+            let pOpts = '<option value="">-- Pilih Pemain --</option>';
+            let players = [];
+            if (teamId == team1Id) players = team1Players;
+            else if (teamId == team2Id) players = team2Players;
+
+            players.forEach(p => {
+                const jn = p.jersey_number ? ` (#${p.jersey_number})` : '';
+                pOpts += `<option value="${p.id}">${p.name}${jn}</option>`;
+            });
+            playerSelect.innerHTML = pOpts;
+        }
+
+        teamSelect.addEventListener('change', function() {
+            updatePlayerOpts(this.value);
+        });
+
+        // Initial setup for existing goal
+        if (goalData && goalData.team_id) {
+            updatePlayerOpts(goalData.team_id);
+        }
+
+        // Minute Input
+        const minCol = document.createElement('div');
+        const minInput = document.createElement('input');
+        minInput.type = 'number';
+        minInput.name = 'goal_minute[]';
+        minInput.className = 'form-input';
+        minInput.placeholder = 'Menit (e.g. 45)';
+        minInput.min = '1';
+        minInput.required = true;
+        if (goalData && goalData.minute) {
+            minInput.value = goalData.minute;
+        }
+        minCol.appendChild(minInput);
+
+        // Remove Button
+        const delCol = document.createElement('div');
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-remove-goal';
+        delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        delBtn.onclick = function() {
+            row.remove();
+        };
+        delCol.appendChild(delBtn);
+
+        // Assemble row
+        row.appendChild(teamCol);
+        row.appendChild(playerCol);
+        row.appendChild(minCol);
+        row.appendChild(delCol);
+
+        goalContainer.appendChild(row);
+    }
+
+    if (btnAddGoal) {
+        btnAddGoal.addEventListener('click', function() {
+            createGoalRow();
+        });
+    }
+
+    // Load existing goals
+    if (existingGoals && existingGoals.length > 0) {
+        existingGoals.forEach(g => {
+            createGoalRow(g);
+        });
+    }
+});
+</script>
+
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
