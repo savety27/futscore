@@ -534,10 +534,78 @@ body {
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
 @media screen and (max-width: 768px) {
-
-
+    .main {
+        margin-left: 0;
+        padding: 15px;
+    }
     
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+    }
     
+    .user-actions {
+        width: 100%;
+    }
+    
+    .logout-btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .player-profile {
+        grid-template-columns: 1fr;
+        padding: 15px;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .skills-section {
+        margin: 15px;
+        padding: 15px;
+    }
+
+    .documents-section {
+        padding: 15px;
+    }
+    
+    .documents-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .greeting h1 {
+        font-size: 24px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
     .section-title {
         font-size: 18px;
     }
