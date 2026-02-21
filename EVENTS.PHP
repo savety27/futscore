@@ -106,6 +106,8 @@ $eventPlayerCardsByCategory = [];
 $hasEventValueTables = false;
 $hasEventBracketTable = false;
 $eventBracketViews = [];
+$eventTopScorersByCategory = [];
+$eventTopScorersLiga = [];
 
 if ($eventId > 0) {
     $sql = "SELECT * FROM events WHERE id = ?";
@@ -193,6 +195,52 @@ if ($eventId > 0 && !empty($event)) {
 
         $eventParticipantTotal = $participantTotalRows;
         $eventDataReady = true;
+
+        // Fetch Top Scorers per Category
+        $topScorerSql = "SELECT g.player_id, p.name AS player_name, p.photo AS player_photo,
+                                t.name AS team_name, t.logo AS team_logo, c.sport_type AS category_name,
+                                COUNT(g.id) AS total_goals
+                         FROM goals g
+                         INNER JOIN challenges c ON g.match_id = c.id
+                         INNER JOIN players p ON g.player_id = p.id
+                         INNER JOIN teams t ON g.team_id = t.id
+                         WHERE c.event_id = ? AND c.status = 'accepted'
+                         GROUP BY g.player_id, c.sport_type
+                         ORDER BY total_goals DESC";
+        $tsStmt = $conn->prepare($topScorerSql);
+        $tsStmt->bind_param("i", $eventId);
+        $tsStmt->execute();
+        $tsResult = $tsStmt->get_result();
+
+        while ($tsRow = $tsResult->fetch_assoc()) {
+            $category = trim((string)($tsRow['category_name'] ?? ''));
+            if (!isset($eventTopScorersByCategory[$category])) {
+                $eventTopScorersByCategory[$category] = [];
+            }
+            if (count($eventTopScorersByCategory[$category]) < 5) {
+                $eventTopScorersByCategory[$category][] = $tsRow;
+            }
+        }
+
+        // Fetch Liga Top Scorers
+        $topLigaSql = "SELECT g.player_id, p.name AS player_name, p.photo AS player_photo,
+                              t.name AS team_name, t.logo AS team_logo,
+                              COUNT(g.id) AS total_goals
+                       FROM goals g
+                       INNER JOIN challenges c ON g.match_id = c.id
+                       INNER JOIN players p ON g.player_id = p.id
+                       INNER JOIN teams t ON g.team_id = t.id
+                       WHERE c.event_id = ? AND c.status = 'accepted'
+                       GROUP BY g.player_id
+                       ORDER BY total_goals DESC
+                       LIMIT 6";
+        $tsLigaStmt = $conn->prepare($topLigaSql);
+        $tsLigaStmt->bind_param("i", $eventId);
+        $tsLigaStmt->execute();
+        $tsLigaResult = $tsLigaStmt->get_result();
+        while ($tsLigaRow = $tsLigaResult->fetch_assoc()) {
+            $eventTopScorersLiga[] = $tsLigaRow;
+        }
     }
 
     $hasEventBracketTable = hasTableMySQLi($conn, 'event_brackets');
@@ -700,6 +748,72 @@ if ($eventId > 0 && !empty($event)) {
     .evb-match { position: static; width: 100%; }
     .evb-line, .evb-rank { display: none; }
 }
+
+.top-scorer-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 14px;
+    padding-bottom: 12px;
+}
+.top-scorer-grid::-webkit-scrollbar {
+    height: 6px;
+}
+.top-scorer-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.top-scorer-card {
+    flex: 0 0 160px;
+    background: #e9eff5;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+.top-scorer-photo {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.top-scorer-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.top-scorer-team {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+.top-scorer-team-logo {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.top-scorer-goals {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #475569;
+}
 </style>
 
 <div class="dashboard-wrapper">
@@ -969,6 +1083,26 @@ if ($eventId > 0 && !empty($event)) {
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    <?php if (!empty($eventTopScorersByCategory[$categoryName])): ?>
+                                        <div style="margin-top:20px;">
+                                            <div class="top-scorer-grid">
+                                                <?php foreach ($eventTopScorersByCategory[$categoryName] as $scorer): ?>
+                                                    <div class="top-scorer-card">
+                                                        <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                                        <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
+                                                        <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
+                                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($scorer['team_logo'] ?: 'default-team.png'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
+                                                        </div>
+                                                        <div class="top-scorer-goals">
+                                                            <i class="fas fa-futbol"></i> <?php echo (int) $scorer['total_goals']; ?> goal
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 <?php endforeach; ?>
                             <?php endif; ?>
 
@@ -1128,6 +1262,27 @@ if ($eventId > 0 && !empty($event)) {
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
+
+                        <?php if (!empty($eventTopScorersLiga)): ?>
+                            <div class="event-desc" id="eventTopScorerLiga">
+                                <h3 style="margin:0 0 16px 0;">Top Scorer Liga</h3>
+                                <div class="top-scorer-grid">
+                                    <?php foreach ($eventTopScorersLiga as $scorer): ?>
+                                        <div class="top-scorer-card">
+                                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                            <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
+                                            <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
+                                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($scorer['team_logo'] ?: 'default-team.png'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
+                                            </div>
+                                            <div class="top-scorer-goals">
+                                                <i class="fas fa-futbol"></i> <?php echo (int) $scorer['total_goals']; ?> goal
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php else: ?>
