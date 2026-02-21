@@ -647,6 +647,7 @@ if ($eventId > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Value</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/sidebar.css">
     <style>
         :root {
             --primary: #0f2744;
@@ -674,127 +675,7 @@ if ($eventId > 0) {
             display: flex;
             min-height: 100vh
         }
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar-bg);
-            color: #fff;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-            box-shadow: 10px 0 30px rgba(0,0,0,.15);
-            border-right: 1px solid rgba(255,255,255,.1)
-        }
-        .sidebar-header {
-            padding: 20px 10px 10px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,.08);
-            margin-bottom: 10px
-        }
-        .logo {
-            max-width: 200px;
-            margin: 0 auto 12px
-        }
-        .logo img {
-            width: 100%;
-            max-width: 200px;
-            filter: brightness(1.1) drop-shadow(0 0 15px rgba(255,255,255,.1))
-        }
-        .academy-name {
-            color: var(--secondary);
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 8px
-        }
-        .academy-email {
-            font-size: 14px;
-            color: rgba(255,255,255,.8)
-        }
-        .menu {
-            padding: 25px 15px
-        }
-        .menu-item {
-            margin-bottom: 8px;
-            border-radius: 12px;
-            overflow: hidden
-        }
-        .menu-link {
-            display: flex;
-            align-items: center;
-            color: rgba(255,255,255,.75);
-            text-decoration: none;
-            padding: 14px 20px;
-            border-radius: 12px;
-            transition: var(--transition);
-            margin: 4px 0
-        }
-        .menu-link:hover {
-            background: rgba(255,255,255,.1);
-            color: #fff;
-            transform: translateX(5px)
-        }
-        .menu-link.active {
-            color: var(--secondary);
-            background: linear-gradient(90deg, rgba(245,158,11,.15) 0%, rgba(245,158,11,.02) 100%);
-            border-right: 4px solid var(--secondary);
-            border-radius: 12px 0 0 12px;
-            font-weight: 700
-        }
-        .menu-icon {
-            font-size: 18px;
-            margin-right: 15px;
-            width: 24px;
-            text-align: center
-        }
-        .menu-text {
-            flex: 1;
-            font-size: 15px
-        }
-        .menu-arrow {
-            font-size: 12px;
-            opacity: .6;
-            transition: var(--transition)
-        }
-        .menu-arrow.rotate {
-            transform: rotate(90deg);
-            opacity: 1
-        }
-        .submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height .4s ease-in-out;
-            background: rgba(0,0,0,.2);
-            border-radius: 0 0 12px 12px
-        }
-        .submenu.open {
-            max-height: 300px
-        }
-        .submenu-item {
-            padding: 5px 15px 5px 70px
-        }
-        .submenu-link {
-            display: block;
-            color: rgba(255,255,255,.7);
-            padding: 12px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 14px;
-            position: relative;
-            transition: var(--transition)
-        }
-        .submenu-link.active,
-        .submenu-link:hover {
-            color: var(--secondary);
-            background: rgba(245,158,11,.1);
-            padding-left: 20px
-        }
-        .submenu-link::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--secondary);
-            font-size: 18px
-        }
+
         .main {
             margin-left: 280px;
             flex: 1;
@@ -1086,60 +967,7 @@ if ($eventId > 0) {
 </head>
 <body>
     <div class="wrapper">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <img src="../images/alvetrix.png" alt="Logo">
-                </div>
-                <div class="academy-name">
-                    <?php echo htmlspecialchars($academy_name); ?>
-                </div>
-                <div class="academy-email">
-                    <?php echo htmlspecialchars($email); ?>
-                </div>
-            </div>
-            <div class="menu">
-                <?php foreach ($menu_items as $key => $item):
-                    $isActive = false;
-                    $isSubmenuOpen = false;
-                    if ($item['submenu']) {
-                        foreach ($item['items'] as $subUrl) {
-                            if ($current_page === $subUrl) {
-                                $isActive = true;
-                                $isSubmenuOpen = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        $isActive = $key === 'event' ? in_array($current_page, ['event.php', 'event_create.php', 'event_edit.php', 'event_value.php'], true) : ($current_page === $item['url']);
-                    }
-                ?>
-                    <div class="menu-item">
-                        <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" 
-                           class="menu-link <?php echo $isActive ? 'active' : ''; ?>" 
-                           data-menu="<?php echo $key; ?>">
-                            <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                            <span class="menu-text"><?php echo $item['name']; ?></span>
-                            <?php if ($item['submenu']): ?>
-                                <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
-                            <?php endif; ?>
-                        </a>
-                        <?php if ($item['submenu']): ?>
-                            <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                                <?php foreach ($item['items'] as $subKey => $subUrl): ?>
-                                    <div class="submenu-item">
-                                        <a href="<?php echo $subUrl; ?>" 
-                                           class="submenu-link <?php echo $current_page === $subUrl ? 'active' : ''; ?>">
-                                            <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
-                                        </a>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
         <div class="main">
             <div class="topbar">
@@ -1630,5 +1458,6 @@ if ($eventId > 0) {
             });
         }
     </script>
+<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
