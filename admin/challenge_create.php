@@ -1109,6 +1109,32 @@ const teamEventsMap = <?php echo json_encode($team_events_map ?? []); ?>;
 
 
 document.addEventListener('DOMContentLoaded', function() {
+    function normalizeEventName(value) {
+        return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function getTeamEvents(teamId) {
+        if (!teamId) return [];
+        const raw = teamEventsMap[String(teamId)] ?? teamEventsMap[Number(teamId)] ?? [];
+        if (Array.isArray(raw)) {
+            return raw.map(normalizeEventName).filter(Boolean);
+        }
+        if (typeof raw === 'string') {
+            return raw
+                .split(',')
+                .map(normalizeEventName)
+                .filter(Boolean);
+        }
+        return [];
+    }
+
+    function isTeamRegisteredInCategory(teamId, categoryName) {
+        const normalizedCategory = normalizeEventName(categoryName);
+        if (!normalizedCategory) return true;
+        const teamEvents = getTeamEvents(teamId);
+        return teamEvents.includes(normalizedCategory);
+    }
+
     // Update VS Display when teams are selected
     function updateVSDisplay() {
         const challengerId = document.getElementById('challenger_id').value;
@@ -1146,17 +1172,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (teamCategoryWarning) {
             const warningMessages = [];
-            if (selectedCategory && challengerId) {
-                const challengerEvents = teamEventsMap[challengerId] || [];
-                if (!challengerEvents.includes(selectedCategory)) {
+            if (selectedCategory && challengerId && !isTeamRegisteredInCategory(challengerId, selectedCategory)) {
                     warningMessages.push('Challenger tidak terdaftar di kategori yang dipilih.');
-                }
             }
-            if (selectedCategory && opponentId) {
-                const opponentEvents = teamEventsMap[opponentId] || [];
-                if (!opponentEvents.includes(selectedCategory)) {
+            if (selectedCategory && opponentId && !isTeamRegisteredInCategory(opponentId, selectedCategory)) {
                     warningMessages.push('Opponent tidak terdaftar di kategori yang dipilih.');
-                }
             }
 
             if (warningMessages.length > 0) {
@@ -1214,16 +1234,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const challengerEvents = teamEventsMap[challengerId] || [];
-        if (!challengerEvents.includes(sportType)) {
+        if (!isTeamRegisteredInCategory(challengerId, sportType)) {
             e.preventDefault();
             showCategoryWarning('Challenger tidak terdaftar di kategori yang dipilih.');
             toastr.error('Challenger tidak terdaftar pada kategori yang dipilih');
             return;
         }
 
-        const opponentEvents = teamEventsMap[opponentId] || [];
-        if (!opponentEvents.includes(sportType)) {
+        if (!isTeamRegisteredInCategory(opponentId, sportType)) {
             e.preventDefault();
             showCategoryWarning('Opponent tidak terdaftar di kategori yang dipilih.');
             toastr.error('Opponent tidak terdaftar pada kategori yang dipilih');
