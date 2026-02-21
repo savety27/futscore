@@ -487,14 +487,6 @@ body {
     text-align: right;
 }
 
-/* Mobile Menu */
-.menu-toggle {
-    display: none;
-}
-
-.menu-overlay {
-    display: none;
-}
 
 /* Alerts */
 .alert {
@@ -531,53 +523,7 @@ body {
 }
 
 @media screen and (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--secondary), #FFEC8B);
-        color: var(--primary);
-        border: none;
-        border-radius: 50%;
-        box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
-        z-index: 1001;
-        font-size: 24px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
 
-    .menu-overlay {
-        display: block;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 99;
-        opacity: 0;
-        visibility: hidden;
-        transition: var(--transition);
-        backdrop-filter: blur(2px);
-    }
-
-    
-
-    .sidebar {
-        transform: translateX(-100%);
-        box-shadow: none;
-        width: 280px;
-    }
-
-    .sidebar.active {
-        transform: translateX(0);
-        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
-    }
 
     .main {
         margin-left: 0;
