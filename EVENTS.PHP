@@ -1390,7 +1390,7 @@ if ($eventId > 0 && !empty($event)) {
                                 <?php endforeach; ?>
                             </select>
                             <div class="event-selector-search">
-                                <input id="eventSelectorInput" placeholder="Cari event (contoh: li)">
+                                <input id="eventSelectorInput" placeholder="Cari event .....">
                             </div>
                         </div>
                     </div>
