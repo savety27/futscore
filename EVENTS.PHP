@@ -146,7 +146,7 @@ if ($eventId > 0 && !empty($event)) {
         $categorySql = "SELECT sport_type AS category_name, COUNT(*) AS total_matches
                         FROM challenges
                         WHERE event_id = ?
-                          AND status = 'accepted'
+                          AND status IN ('accepted', 'completed')
                           AND sport_type IS NOT NULL
                           AND sport_type <> ''
                         GROUP BY sport_type
@@ -168,11 +168,11 @@ if ($eventId > 0 && !empty($event)) {
                         INNER JOIN (
                             SELECT challenger_id AS team_id
                             FROM challenges
-                            WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
+                            WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                             UNION
                             SELECT opponent_id AS team_id
                             FROM challenges
-                            WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
+                            WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                         ) participant ON participant.team_id = t.id
                         ORDER BY t.name ASC";
             $teamStmt = $conn->prepare($teamSql);
@@ -204,7 +204,7 @@ if ($eventId > 0 && !empty($event)) {
                          INNER JOIN challenges c ON g.match_id = c.id
                          INNER JOIN players p ON g.player_id = p.id
                          INNER JOIN teams t ON g.team_id = t.id
-                         WHERE c.event_id = ? AND c.status = 'accepted'
+                         WHERE c.event_id = ? AND c.status IN ('accepted', 'completed')
                          GROUP BY g.player_id, c.sport_type
                          ORDER BY total_goals DESC";
         $tsStmt = $conn->prepare($topScorerSql);
@@ -217,9 +217,7 @@ if ($eventId > 0 && !empty($event)) {
             if (!isset($eventTopScorersByCategory[$category])) {
                 $eventTopScorersByCategory[$category] = [];
             }
-            if (count($eventTopScorersByCategory[$category]) < 5) {
-                $eventTopScorersByCategory[$category][] = $tsRow;
-            }
+            $eventTopScorersByCategory[$category][] = $tsRow;
         }
 
         // Fetch Liga Top Scorers
@@ -230,10 +228,10 @@ if ($eventId > 0 && !empty($event)) {
                        INNER JOIN challenges c ON g.match_id = c.id
                        INNER JOIN players p ON g.player_id = p.id
                        INNER JOIN teams t ON g.team_id = t.id
-                       WHERE c.event_id = ? AND c.status = 'accepted'
+                       WHERE c.event_id = ? AND c.status IN ('accepted', 'completed')
                        GROUP BY g.player_id
                        ORDER BY total_goals DESC
-                       LIMIT 6";
+                       LIMIT 10";
         $tsLigaStmt = $conn->prepare($topLigaSql);
         $tsLigaStmt->bind_param("i", $eventId);
         $tsLigaStmt->execute();
@@ -551,6 +549,42 @@ if ($eventId > 0 && !empty($event)) {
 }
 .event-chip.open { background: rgba(16, 185, 129, 0.12); color: #047857; }
 .event-chip.closed { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+.event-selector-search {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.event-selector-select {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #0f172a;
+    background: #fff;
+    margin-bottom: 10px;
+}
+.event-selector-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
+.event-selector-search input {
+    flex: 1;
+    height: 44px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #0f172a;
+    background: #fff;
+}
+.event-selector-search input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
 .event-desc {
     margin-top: 18px;
     padding: 18px;
@@ -608,10 +642,10 @@ if ($eventId > 0 && !empty($event)) {
     color: #2563eb;
     text-decoration: none;
 }
-.event-standing-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid #dbe6f3; border-radius: 12px; }
+.event-standing-wrap { overflow-x: auto; margin-top: 14px; border: 2px solid #c8d7eb; border-radius: 12px; }
 .event-standing-table { width: 100%; border-collapse: collapse; min-width: 980px; }
-.event-standing-table th, .event-standing-table td { padding: 8px 10px; border-bottom: 1px solid #edf2f7; font-size: 13px; text-align: center; }
-.event-standing-table thead th { background: #0f172a; color: #fff; }
+.event-standing-table th, .event-standing-table td { padding: 10px 10px; border-bottom: 2px solid #d9e3f1; font-size: 13px; text-align: center; }
+.event-standing-table thead th { background: #0f172a; color: #fff; border-bottom: 2px solid #94a3b8; }
 .event-standing-table th:nth-child(2), .event-standing-table td:nth-child(2) { text-align: left; }
 .event-card-note { margin: 8px 0 0 0; color: #475569; font-size: 12px; }
 .card-badge {
@@ -658,6 +692,12 @@ if ($eventId > 0 && !empty($event)) {
 }
 .suspend-pill.active { background: rgba(239, 68, 68, 0.14); color: #991b1b; }
 .suspend-pill.done { background: rgba(16, 185, 129, 0.14); color: #065f46; }
+.event-section-divider {
+    margin: 34px 0 22px;
+    border-top: 7px dashed #9fb7d8;
+    padding-top: 20px;
+    padding-bottom: 12px;
+}
 .event-bracket-wrap {
     margin-top: 14px;
     background: radial-gradient(circle at 20% 0%, #f8fbff 0%, #eef4fb 48%, #e9f1f9 100%);
@@ -753,8 +793,11 @@ if ($eventId > 0 && !empty($event)) {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
+    overflow-y: visible;
     gap: 14px;
+    padding-top: 10px;
     padding-bottom: 12px;
+    position: relative;
 }
 .top-scorer-grid::-webkit-scrollbar {
     height: 6px;
@@ -766,11 +809,34 @@ if ($eventId > 0 && !empty($event)) {
 .top-scorer-card {
     flex: 0 0 160px;
     background: #e9eff5;
-    border: 1px solid #d1d5db;
+    border: 3px solid #c0d0e4;
     border-radius: 12px;
     padding: 12px;
     text-align: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease, background .24s ease;
+}
+.top-scorer-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 45%, rgba(255,255,255,0) 70%);
+    transform: translateX(-130%);
+    opacity: 0;
+    pointer-events: none;
+}
+.top-scorer-card:hover {
+    transform: translateY(-8px);
+    border-color: #60a5fa;
+    background: #f4f8ff;
+    box-shadow: 0 14px 26px rgba(15, 39, 68, 0.16);
+    z-index: 3;
+}
+.top-scorer-card:hover::after {
+    opacity: 1;
+    animation: scorerShine .72s ease;
 }
 .top-scorer-photo {
     width: 100%;
@@ -780,6 +846,12 @@ if ($eventId > 0 && !empty($event)) {
     margin-bottom: 10px;
     background: #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform .24s ease, filter .24s ease, box-shadow .24s ease;
+}
+.top-scorer-card:hover .top-scorer-photo {
+    transform: scale(1.04);
+    filter: saturate(1.08);
+    box-shadow: 0 10px 20px rgba(15, 39, 68, 0.16);
 }
 .top-scorer-name {
     font-size: 13px;
@@ -789,6 +861,10 @@ if ($eventId > 0 && !empty($event)) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color .2s ease;
+}
+.top-scorer-card:hover .top-scorer-name {
+    color: #0f2744;
 }
 .top-scorer-team {
     display: flex;
@@ -813,6 +889,15 @@ if ($eventId > 0 && !empty($event)) {
     font-size: 16px;
     font-weight: 700;
     color: #475569;
+    transition: transform .22s ease, color .22s ease;
+}
+.top-scorer-card:hover .top-scorer-goals {
+    transform: scale(1.05);
+    color: #1d4ed8;
+}
+@keyframes scorerShine {
+    from { transform: translateX(-130%); }
+    to { transform: translateX(130%); }
 }
 </style>
 
@@ -1106,7 +1191,8 @@ if ($eventId > 0 && !empty($event)) {
                                 <?php endforeach; ?>
                             <?php endif; ?>
 
-                            <h4 style="margin:18px 0 8px 0;">Status Suspend Pemain</h4>
+                            <div class="event-section-divider"></div>
+                            <h4 style="margin:0 0 8px 0;">Status Suspend Pemain</h4>
                             <?php if (!$hasEventValueTables): ?>
                                 <p style="margin:0; color:#64748b;">Data kartu pemain belum tersedia.</p>
                             <?php elseif (empty($eventPlayerCardsByCategory)): ?>
@@ -1297,12 +1383,15 @@ if ($eventId > 0 && !empty($event)) {
                     <div class="team-filter-card">
                         <label class="team-filter-label" for="eventSelector">Pilih Event</label>
                         <div class="team-selector">
-                            <select id="eventSelector" onchange="if(this.value) window.location.href='EVENTS.PHP?id=' + this.value">
-                                <option value="">Pilih event dari dropdown atau daftar di bawah</option>
+                            <select id="eventSelector" class="event-selector-select" onchange="if(this.value) window.location.href='EVENTS.PHP?id=' + this.value">
+                                <option value="">Pilih event dari dropdown</option>
                                 <?php foreach ($events as $ev): ?>
                                     <option value="<?php echo (int) $ev['id']; ?>"><?php echo htmlspecialchars($ev['name']); ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <div class="event-selector-search">
+                                <input id="eventSelectorInput" placeholder="Cari event (contoh: li)">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1315,9 +1404,14 @@ if ($eventId > 0 && !empty($event)) {
                             <p>Belum ada event yang tersedia.</p>
                         </div>
                     <?php else: ?>
+                        <div class="empty-state" id="eventSearchEmpty" style="display:none;">
+                            <i class="fas fa-search"></i>
+                            <h4>Event tidak ditemukan</h4>
+                            <p>Coba kata kunci lain untuk mencari event.</p>
+                        </div>
                         <div class="teams-grid team-directory-grid">
                             <?php foreach ($events as $ev): ?>
-                                <a href="EVENTS.PHP?id=<?php echo (int) $ev['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo (int) $ev['id']; ?>">
+                                <a href="EVENTS.PHP?id=<?php echo (int) $ev['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo (int) $ev['id']; ?>" data-event-name="<?php echo htmlspecialchars(strtolower((string)($ev['name'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php if (!empty($ev['image'])): ?>
                                         <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars($ev['image']); ?>" alt="<?php echo htmlspecialchars($ev['name']); ?>" class="event-card-image" onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                                     <?php else: ?>
@@ -1382,6 +1476,73 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
         if (window.innerWidth > 992) setSidebarOpen(false);
     });
 }
+
+(function() {
+    const input = document.getElementById('eventSelectorInput');
+    const select = document.getElementById('eventSelector');
+    const cards = Array.from(document.querySelectorAll('.team-directory-card[data-event-name]'));
+    const emptyState = document.getElementById('eventSearchEmpty');
+    if (!input || !select) return;
+
+    const defaultOption = select.options[0] ? { value: '', text: select.options[0].text } : { value: '', text: 'Pilih event dari dropdown' };
+    const allOptions = Array.from(select.options)
+        .slice(1)
+        .map(function(opt) {
+            return { value: String(opt.value || ''), text: String(opt.text || '') };
+        });
+
+    function renderFilteredOptions(keyword) {
+        const normalized = String(keyword || '').trim().toLowerCase();
+        const filtered = normalized === ''
+            ? allOptions
+            : allOptions.filter(function(item) {
+                return item.text.toLowerCase().includes(normalized);
+            });
+
+        select.innerHTML = '';
+        const top = document.createElement('option');
+        top.value = defaultOption.value;
+        top.textContent = defaultOption.text;
+        select.appendChild(top);
+
+        filtered.forEach(function(item) {
+            const opt = document.createElement('option');
+            opt.value = item.value;
+            opt.textContent = item.text;
+            select.appendChild(opt);
+        });
+
+        if (!filtered.length) {
+            const none = document.createElement('option');
+            none.value = '';
+            none.textContent = 'Tidak ada event yang cocok';
+            none.disabled = true;
+            select.appendChild(none);
+        }
+    }
+
+    function renderFilteredCards(keyword) {
+        if (!cards.length) return;
+        const normalized = String(keyword || '').trim().toLowerCase();
+        let visibleCount = 0;
+
+        cards.forEach(function(card) {
+            const eventName = String(card.getAttribute('data-event-name') || '').trim().toLowerCase();
+            const isVisible = normalized === '' || eventName.includes(normalized);
+            card.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount += 1;
+        });
+
+        if (emptyState) {
+            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+
+    input.addEventListener('input', function() {
+        renderFilteredOptions(input.value);
+        renderFilteredCards(input.value);
+    });
+})();
 </script>
 <script>
 (function() {
