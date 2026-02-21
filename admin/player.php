@@ -851,7 +851,7 @@ body {
 }
 
 /* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
 
     .main {
         margin-left: 240px;
@@ -860,27 +860,78 @@ body {
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) {
+
 
     
+
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 80px; /* Leave space for bottom menu toggle */
+    }
+
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .greeting {
+        flex: none;
+        width: 100%;
+    }
+
+    .user-actions {
+        width: 100%;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .page-title {
+        flex: none;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .search-bar {
+        flex: none;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: none;
+        min-width: 100%;
+    }
+
+    .search-input-wrap, .status-filter-select {
+        width: 100%;
+    }
 
     /* Compact buttons */
     .btn {
         padding: 10px 18px;
         font-size: 14px;
+        width: 100%;
+        justify-content: center;
     }
 
     .logout-btn {
         padding: 10px 20px;
         font-size: 14px;
+        width: 100%;
+        justify-content: center;
     }
 
     /* Stack action buttons vertically */
     .action-buttons {
         flex-direction: column;
-    }
-
-    .btn {
         width: 100%;
     }
 }
@@ -1316,50 +1367,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
-
-    if (menuToggle && sidebar && overlay) {
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
 
     // Handle image loading errors
     document.querySelectorAll('.player-photo').forEach(img => {

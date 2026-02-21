@@ -133,6 +133,9 @@ body {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -195,6 +198,8 @@ body {
     padding: 25px;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .page-title {
@@ -468,28 +473,197 @@ body {
 
 
 /* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
 
     .main {
         margin-left: 240px;
         width: calc(100% - 240px);
         max-width: calc(100vw - 240px);
+        padding: 24px;
+    }
+
+    .topbar {
+        margin-bottom: 28px;
+    }
+
+    .page-header {
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .form-container {
+        padding: 24px;
+    }
+
+    .form-grid {
+        gap: 16px;
     }
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 16px;
+    }
 
-    
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 20px;
+        padding: 16px;
+        border-radius: 16px;
+    }
 
-    /* Compact buttons */
-    .btn {
+    .greeting h1 {
+        font-size: 22px;
+        line-height: 1.3;
+    }
+
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .user-actions {
+        width: 100%;
+    }
+
+    .logout-btn {
+        width: 100%;
+        justify-content: center;
         padding: 10px 18px;
         font-size: 14px;
     }
 
-    .logout-btn {
-        padding: 10px 20px;
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .page-title {
+        width: 100%;
+        font-size: 22px;
+        gap: 10px;
+    }
+
+    .page-title i {
+        font-size: 24px;
+    }
+
+    .page-header > .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-container {
+        padding: 18px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .form-section {
+        margin-bottom: 22px;
+        padding-bottom: 16px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 14px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        font-size: 15px;
+        padding: 11px 14px;
+    }
+
+    .form-textarea {
+        min-height: 120px;
+    }
+
+    .checkbox-group {
+        align-items: flex-start;
+    }
+
+    .checkbox-group input {
+        width: 18px;
+        height: 18px;
+        margin-right: 0;
+        margin-top: 2px;
+        accent-color: var(--primary);
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        margin-top: 20px;
+        padding-top: 16px;
+        gap: 10px;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .alert {
+        align-items: flex-start;
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    .main {
+        padding: 12px;
+    }
+
+    .topbar,
+    .page-header,
+    .form-container {
+        padding: 14px;
+    }
+
+    .greeting h1 {
+        font-size: 20px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .page-title i {
+        font-size: 22px;
+    }
+
+    .section-title {
+        font-size: 17px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
         font-size: 14px;
     }
 }
@@ -670,70 +844,21 @@ Contoh:
 <script>
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile Menu Toggle Functionality
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
+    const venueForm = document.getElementById('venueForm');
+    const capacityInput = document.getElementById('capacity');
 
-    if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
+    if (!venueForm || !capacityInput) {
+        return;
     }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
 
-    // Form Validation
-    const form = document.getElementById('venueForm');
-    form.addEventListener('submit', function(e) {
-        const name = document.getElementById('name').value.trim();
-        const location = document.getElementById('location').value.trim();
-        const capacity = document.getElementById('capacity').value.trim();
+    venueForm.addEventListener('submit', function(e) {
+        const capacityValue = capacityInput.value.trim();
+        const capacityNum = Number.parseInt(capacityValue, 10);
 
-        if (!name || !location || !capacity) {
-            e.preventDefault();
-            toastr.error('Harap isi semua field yang wajib diisi (*)');
-            return;
-        }
-
-        const capacityNum = parseInt(capacity);
-        if (capacityNum < 1 || capacityNum > 100000) {
+        if (!Number.isFinite(capacityNum) || capacityNum < 1 || capacityNum > 100000) {
             e.preventDefault();
             toastr.error('Kapasitas harus antara 1 dan 100.000');
+            capacityInput.focus();
             return;
         }
     });

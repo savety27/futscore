@@ -91,6 +91,9 @@ body {
     flex: 1;
     padding: 30px;
     margin-left: 280px;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
     transition: var(--transition);
 }
 
@@ -153,6 +156,8 @@ body {
     padding: 25px;
     border-radius: 20px;
     box-shadow: var(--card-shadow);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .page-title {
@@ -205,6 +210,7 @@ body {
 .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -286,6 +292,8 @@ body {
     font-weight: 700;
     color: var(--primary);
     margin-bottom: 5px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .stat-label {
@@ -364,6 +372,29 @@ body {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
+.venue-summary {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.venue-name {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+.venue-location {
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.info-header-status .badge {
+    padding: 8px 16px;
+}
+
 /* Badge Styles */
 .badge {
     padding: 4px 8px;
@@ -431,40 +462,241 @@ body {
 
 
 /* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
 
     .main {
         margin-left: 240px;
         width: calc(100% - 240px);
         max-width: calc(100vw - 240px);
+        padding: 24px;
+    }
+
+    .topbar {
+        margin-bottom: 28px;
+    }
+
+    .page-header {
+        padding: 20px;
+    }
+
+    .stats-grid {
+        gap: 16px;
+    }
+
+    .info-card {
+        padding: 24px;
     }
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 16px;
+    }
 
-    
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 20px;
+        padding: 16px;
+        border-radius: 16px;
+    }
 
-    /* Compact buttons */
-    .btn {
+    .greeting h1 {
+        font-size: 22px;
+        line-height: 1.3;
+    }
+
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .user-actions {
+        width: 100%;
+    }
+
+    .logout-btn {
+        width: 100%;
+        justify-content: center;
         padding: 10px 18px;
         font-size: 14px;
     }
 
-    .logout-btn {
-        padding: 10px 20px;
-        font-size: 14px;
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 16px;
+        margin-bottom: 20px;
     }
-    
-    /* Extra grid optimizations */
+
+    .page-title {
+        width: 100%;
+        font-size: 22px;
+        gap: 10px;
+    }
+
+    .page-title i {
+        font-size: 24px;
+    }
+
+    .page-header .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .page-header .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
     }
-    
+
+    .stat-card {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .stat-icon {
+        font-size: 30px;
+        margin-bottom: 12px;
+    }
+
+    .stat-number {
+        font-size: 20px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+    }
+
+    .info-card {
+        padding: 18px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .info-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+    }
+
+    .info-title {
+        font-size: 19px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .info-item {
+        margin-bottom: 0;
+    }
+
+    .info-value {
+        overflow-wrap: anywhere;
+    }
+
+    .venue-summary {
+        margin-bottom: 20px;
+    }
+
     .venue-icon-large {
         width: 100px;
         height: 100px;
         font-size: 40px;
+        margin-bottom: 16px;
+    }
+
+    .venue-name {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .venue-location {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .facilities-display {
+        padding: 14px;
+        font-size: 13px;
+    }
+
+    .empty-state {
+        padding: 24px 16px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    .main {
+        padding: 12px;
+    }
+
+    .topbar,
+    .page-header,
+    .info-card {
+        padding: 14px;
+    }
+
+    .greeting h1 {
+        font-size: 20px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .page-title i {
+        font-size: 22px;
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-icon {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .stat-number {
+        font-size: 17px;
+    }
+
+    .venue-icon-large {
+        width: 84px;
+        height: 84px;
+        font-size: 32px;
+    }
+
+    .venue-name {
+        font-size: 22px;
+    }
+
+    .facilities-display {
+        padding: 12px;
+        font-size: 12px;
     }
 }
 @keyframes slideDown {
@@ -490,7 +722,7 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Venue Details 🏟️</h1>
+                <h1>Venue Details</h1>
                 <p>Detail informasi venue: <?php echo htmlspecialchars($venue_data['name'] ?? ''); ?></p>
             </div>
             
@@ -562,24 +794,24 @@ body {
                     <i class="fas fa-info-circle"></i>
                     Informasi Venue
                 </div>
-                <div>
+                <div class="info-header-status">
                     <?php if ($venue_data['is_active']): ?>
-                        <span class="badge badge-success" style="padding: 8px 16px;">AKTIF</span>
+                        <span class="badge badge-success">AKTIF</span>
                     <?php else: ?>
-                        <span class="badge badge-danger" style="padding: 8px 16px;">NON-AKTIF</span>
+                        <span class="badge badge-danger">NON-AKTIF</span>
                     <?php endif; ?>
                 </div>
             </div>
             
-            <div style="text-align: center; margin-bottom: 30px;">
+            <div class="venue-summary">
                 <div class="venue-icon-large">
                     <i class="fas fa-map-marker-alt"></i>
                 </div>
                 
-                <h2 style="font-size: 28px; color: #333; margin-bottom: 10px;">
+                <h2 class="venue-name">
                     <?php echo htmlspecialchars($venue_data['name'] ?? ''); ?>
                 </h2>
-                <p style="color: #666; margin-bottom: 15px;">
+                <p class="venue-location">
                     <i class="fas fa-map-pin"></i>
                     Lokasi: <?php echo htmlspecialchars($venue_data['location'] ?? ''); ?>
                 </p>
@@ -658,51 +890,6 @@ body {
 
 document.addEventListener('DOMContentLoaded', function() {
     // Mobile Menu Toggle Functionality
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
-
-    if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
 });
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>

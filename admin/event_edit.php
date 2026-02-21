@@ -303,7 +303,7 @@ body {
 .submenu-item { padding: 5px 15px 5px 70px; }
 .submenu-link { display: block; color: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: var(--transition); position: relative; }
 .submenu-link.active, .submenu-link:hover { color: var(--secondary); background: rgba(245,158,11,0.1); padding-left: 20px; }
-.submenu-link::before { content: "•"; position: absolute; left: 0; color: var(--secondary); font-size: 18px; }
+.submenu-link::before { content: "\2022"; position: absolute; left: 0; color: var(--secondary); font-size: 18px; }
 .main { margin-left: 280px; flex: 1; padding: 28px; }
 .topbar, .page-header, .form-container { background: #fff; border-radius: 18px; box-shadow: var(--card-shadow); }
 .topbar { padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; animation: slideDown 0.5s ease-out; }
@@ -415,63 +415,6 @@ body {
 <body>
 <div class="wrapper">
     <?php include __DIR__ . '/includes/sidebar.php'; ?>
-
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-container">
-                <div class="logo">
-                    <img src="../images/alvetrix.png" alt="Logo">
-                </div>
-            </div>
-            <div class="academy-info">
-                <div class="academy-name"><?php echo htmlspecialchars($academy_name); ?></div>
-                <div class="academy-email"><?php echo htmlspecialchars($email); ?></div>
-            </div>
-        </div>
-        <div class="menu">
-            <?php foreach ($menu_items as $key => $item): ?>
-            <?php
-                $isActive = false;
-                $isSubmenuOpen = false;
-                if ($item['submenu']) {
-                    foreach ($item['items'] as $subUrl) {
-                        if ($current_page === $subUrl) {
-                            $isActive = true;
-                            $isSubmenuOpen = true;
-                            break;
-                        }
-                    }
-                } else {
-                    if ($key === 'event') {
-                        $isActive = in_array($current_page, ['event.php', 'event_create.php', 'event_edit.php'], true);
-                    } else {
-                        $isActive = ($current_page === $item['url']);
-                    }
-                }
-            ?>
-            <div class="menu-item">
-                <a href="<?php echo $item['submenu'] ? '#' : $item['url']; ?>" class="menu-link <?php echo $isActive ? 'active' : ''; ?>" data-menu="<?php echo $key; ?>">
-                    <span class="menu-icon"><?php echo $item['icon']; ?></span>
-                    <span class="menu-text"><?php echo $item['name']; ?></span>
-                    <?php if ($item['submenu']): ?>
-                    <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
-                    <?php endif; ?>
-                </a>
-                <?php if ($item['submenu']): ?>
-                <div class="submenu <?php echo $isSubmenuOpen ? 'open' : ''; ?>" id="submenu-<?php echo $key; ?>">
-                    <?php foreach ($item['items'] as $subKey => $subUrl): ?>
-                    <div class="submenu-item">
-                        <a href="<?php echo $subUrl; ?>" class="submenu-link <?php echo $current_page === $subUrl ? 'active' : ''; ?>">
-                            <?php echo ucwords(str_replace('_', ' ', $subKey)); ?>
-                        </a>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
 
     <div class="main">
         <div class="topbar">
@@ -694,20 +637,6 @@ document.getElementById('eventForm').addEventListener('submit', function (e) {
         if (typeof toastr !== 'undefined') {
             toastr.error('Tanggal selesai harus lebih besar atau sama dengan tanggal mulai.');
         }
-    }
-});
-
-document.querySelectorAll('.menu-link').forEach(function(link) {
-    if (link.querySelector('.menu-arrow')) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const submenu = this.nextElementSibling;
-            const arrow = this.querySelector('.menu-arrow');
-            if (submenu) {
-                submenu.classList.toggle('open');
-                arrow.classList.toggle('rotate');
-            }
-        });
     }
 });
 </script>

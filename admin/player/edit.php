@@ -690,26 +690,277 @@ select.form-control {
 /* =========================================
    MOBILE RESPONSIVE DESIGN
    ========================================= */
-
-
-
 /* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
-
+@media screen and (max-width: 1024px) {
     .main {
         margin-left: 240px;
+        width: calc(100% - 240px);
+        max-width: calc(100vw - 240px);
     }
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
-
-    
-    
-    .tab-btn {
-        min-width: 100%;
+@media screen and (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        padding: 20px 15px;
+        width: 100%;
+        max-width: 100vw;
     }
-}
+
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        margin-bottom: 22px;
+        padding: 20px;
+    }
+
+    .user-actions {
+        width: 100%;
+    }
+
+    .logout-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 16px;
+    }
+
+    .container {
+        border-radius: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .header > div:last-child {
+        display: none;
+    }
+
+    .back-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .page-title {
+        width: 100%;
+        font-size: 21px;
+        line-height: 1.3;
+        gap: 10px;
+    }
+
+    .page-title span {
+        word-break: break-word;
+    }
+
+    .form-container {
+        padding: 20px;
+    }
+
+    .tabs {
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        padding-bottom: 8px;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab-btn {
+        flex: 0 0 auto;
+        min-width: max-content;
+        padding: 11px 16px;
+        min-height: 44px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-control {
+        min-height: 44px;
+    }
+
+    .radio-group {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .radio-option {
+        flex: 1 1 140px;
+        min-height: 42px;
+    }
+
+    .file-upload {
+        padding: 18px;
+    }
+
+    .file-upload i {
+        font-size: 32px;
+    }
+
+    .photo-preview {
+        width: 120px;
+        height: 120px;
+    }
+
+    .default-photo i {
+        font-size: 50px;
+    }
+
+    .document-preview img {
+        height: 100px;
+    }
+
+    .skills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .skill-item {
+        padding: 12px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    .alert {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .kk-error-message {
+        align-items: flex-start;
+        padding: 12px;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    .main {
+        padding: 16px 10px;
+    }
+
+    .topbar {
+        padding: 16px;
+    }
+
+    .greeting h1 {
+        font-size: 21px;
+    }
+
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .container {
+        border-radius: 14px;
+    }
+
+    .header {
+        padding: 16px;
+    }
+
+    .back-btn {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .page-title {
+        font-size: 18px;
+    }
+
+    .page-title i {
+        font-size: 20px;
+    }
+
+    .form-container {
+        padding: 16px;
+    }
+
+    .tabs {
+        margin-bottom: 20px;
+        padding-bottom: 6px;
+    }
+
+    .tab-btn {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .form-control {
+        padding: 11px 13px;
+        font-size: 14px;
+    }
+
+    .file-upload {
+        padding: 14px;
+    }
+
+    .file-upload p {
+        font-size: 14px;
+    }
+
+    .file-upload small {
+        font-size: 12px;
+    }
+
+    .photo-preview {
+        width: 105px;
+        height: 105px;
+    }
+
+    .default-photo i {
+        font-size: 42px;
+    }
+
+    .document-preview {
+        padding: 12px;
+    }
+
+    .document-preview img {
+        height: 85px;
+    }
+
+    .skill-name {
+        font-size: 13px;
+    }
+
+    .skill-value {
+        font-size: 14px;
+    }
+
+    .btn,
+    .logout-btn {
+        font-size: 14px;
+    }
+
+    .kk-error-message {
+        font-size: 13px;
+    }
+}
 </style>
 </head>
 <body>
@@ -1204,71 +1455,36 @@ select.form-control {
 </div>
 
 <script>
-// Mobile Menu Toggle Functionality
+// Tabs functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-    if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
+    if (!tabButtons.length || !tabContents.length) {
+        return;
+    }
 
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tabId = this.dataset.tab;
+            if (!tabId) {
+                return;
+            }
 
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            const targetContent = document.getElementById(tabId + 'Tab');
+            if (targetContent) {
+                targetContent.classList.add('active');
             }
         });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
-});
-
-// Tab Navigation
-document.querySelectorAll('.tab-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        const tabId = button.getAttribute('data-tab');
-        
-        // Update active tab button
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        button.classList.add('active');
-        
-        // Show selected tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(tabId + 'Tab').classList.add('active');
     });
 });
 

@@ -965,62 +965,7 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Close menu when clicking overlay
-    menuOverlay.addEventListener('click', function() {
-        sidebar.classList.remove('active');
-        document.body.classList.remove('menu-open');
-        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    });
-    
-    // Auto close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && !menuOverlay.contains(e.target)) {
-                if (sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            }
-        }
-    });
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
-
-    // Password toggle functionality
-    document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const passwordInput = document.getElementById(targetId);
-            const icon = this.querySelector('i');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-    });
-
-    // Tampilkan/sembunyikan field tim berdasarkan role
+// Tampilkan/sembunyikan field tim berdasarkan role
     const roleSelect = document.getElementById('role');
     const teamSelect = document.getElementById('team_id');
     

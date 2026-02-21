@@ -308,9 +308,10 @@ body {
     cursor: pointer;
 }
 
-.action-buttons {
+.page-header .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -458,9 +459,10 @@ body {
     min-width: 150px;
 }
 
-.action-buttons {
+.action-cell .action-buttons {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .action-btn {
@@ -645,29 +647,328 @@ body {
 
 
 /* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
 
     .main {
         margin-left: 240px;
         width: calc(100% - 240px);
         max-width: calc(100vw - 240px);
+        padding: 24px;
+    }
+
+    .topbar {
+        margin-bottom: 28px;
+    }
+
+    .page-header {
+        padding: 20px;
+    }
+
+    .search-bar {
+        flex: 1 1 320px;
+        width: auto;
+        max-width: 100%;
     }
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) {
+    .main {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 16px;
+    }
 
-    
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 20px;
+        padding: 16px;
+        border-radius: 16px;
+    }
 
-    /* Compact buttons */
+    .greeting h1 {
+        font-size: 22px;
+        line-height: 1.3;
+    }
+
+    .greeting p {
+        font-size: 13px;
+    }
+
+    .user-actions {
+        width: 100%;
+    }
+
+    .logout-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .page-header {
+        padding: 16px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        gap: 12px;
+    }
+
+    .page-title {
+        width: 100%;
+        font-size: 22px;
+        gap: 10px;
+    }
+
+    .page-title i {
+        font-size: 24px;
+    }
+
+    .search-bar {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .search-bar input {
+        padding: 13px 44px 13px 16px;
+        font-size: 15px;
+    }
+
+    .search-bar button {
+        right: 12px;
+        font-size: 16px;
+    }
+
+    .page-header .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .page-header .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-container {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+        overflow: visible;
+        margin-bottom: 20px;
+    }
+
+    .data-table {
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+    .data-table thead {
+        display: none;
+    }
+
+    .data-table tbody {
+        display: block;
+    }
+
+    .data-table tbody tr {
+        display: block;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(221, 231, 244, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(15, 39, 68, 0.08);
+        padding: 12px 14px;
+        margin-bottom: 10px;
+    }
+
+    .data-table tbody tr:hover {
+        transform: none;
+        box-shadow: 0 8px 20px rgba(15, 39, 68, 0.12);
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .data-table tbody tr:first-child:hover {
+        transform: none;
+    }
+
+    .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+        padding: 8px 0;
+        border-bottom: 1px dashed rgba(15, 39, 68, 0.15);
+        background: transparent;
+        border-radius: 0;
+        text-align: right;
+        font-size: 13px;
+        min-width: 0;
+    }
+
+    .data-table td::before {
+        content: attr(data-label);
+        color: var(--primary);
+        font-weight: 700;
+        text-align: left;
+        min-width: 120px;
+        flex: 0 0 120px;
+    }
+
+    .data-table td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .data-table td[colspan] {
+        display: block;
+        text-align: center !important;
+        border-bottom: none;
+        padding: 0 !important;
+    }
+
+    .data-table td[colspan]::before {
+        content: none;
+    }
+
+    .data-table td[colspan] .empty-state {
+        padding: 26px 16px !important;
+        border-radius: 16px;
+    }
+
+    .data-table .name-cell,
+    .data-table .location-cell,
+    .data-table .facilities-cell,
+    .data-table .date-cell,
+    .data-table .status-cell {
+        text-align: right;
+        font-size: 13px;
+    }
+
+    .data-table .capacity-cell {
+        text-align: right;
+        background: transparent;
+        border-radius: 0;
+        padding: 8px 0;
+        min-width: 0;
+    }
+
+    .data-table .facilities-cell {
+        max-width: none;
+        word-break: break-word;
+    }
+
+    .data-table .action-cell {
+        min-width: 0;
+    }
+
+    .data-table .action-cell .action-buttons {
+        justify-content: flex-end;
+    }
+
+    .data-table .action-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    .pagination {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .page-link {
+        padding: 10px 14px;
+        font-size: 14px;
+        min-width: 42px;
+        text-align: center;
+    }
+
+    .alert {
+        align-items: flex-start;
+        font-size: 14px;
+    }
+
     .btn {
         padding: 10px 18px;
         font-size: 14px;
     }
 
-    .logout-btn {
-        padding: 10px 20px;
+    .modal-content {
+        width: calc(100% - 24px);
+        border-radius: 16px;
+        padding: 22px 18px;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+@media screen and (max-width: 480px) {
+    .main {
+        padding: 12px;
+    }
+
+    .topbar {
+        padding: 14px;
+    }
+
+    .greeting h1 {
+        font-size: 20px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .search-bar input {
+        padding: 12px 40px 12px 14px;
         font-size: 14px;
+    }
+
+    .data-table tbody tr {
+        padding: 10px 12px;
+    }
+
+    .data-table td {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        gap: 4px;
+    }
+
+    .data-table td::before {
+        min-width: 0;
+        flex: 0 0 auto;
+    }
+
+    .data-table .name-cell,
+    .data-table .location-cell,
+    .data-table .facilities-cell,
+    .data-table .date-cell,
+    .data-table .status-cell,
+    .data-table .capacity-cell {
+        text-align: left;
+    }
+
+    .data-table .action-cell .action-buttons {
+        justify-content: flex-start;
+    }
+
+    .pagination {
+        justify-content: center;
     }
 }
 
@@ -686,7 +987,7 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
-}
+}
 
 /* Delete Modal */
 .modal {
@@ -777,7 +1078,7 @@ body {
         <div class="topbar">
             <div class="greeting">
                 <h1>Venue Management 🏟️</h1>
-                <p>Kelola data venue dengan mudah dan cepat</p>
+                <p>Kelola data venue dengan mudah and cepat</p>
             </div>
             
             <div class="user-actions">
@@ -850,33 +1151,33 @@ body {
                         <?php $no = $offset + 1; ?>
                         <?php foreach($venues as $venue): ?>
                         <tr>
-                            <td class="capacity-cell"><?php echo $no++; ?></td>
-                            <td class="name-cell">
+                            <td class="capacity-cell" data-label="No"><?php echo $no++; ?></td>
+                            <td class="name-cell" data-label="Nama Venue">
                                 <strong><?php echo htmlspecialchars($venue['name'] ?? ''); ?></strong>
                             </td>
-                            <td class="location-cell">
+                            <td class="location-cell" data-label="Lokasi">
                                 <?php echo htmlspecialchars($venue['location'] ?? ''); ?>
                             </td>
-                            <td class="capacity-cell">
+                            <td class="capacity-cell" data-label="Kapasitas">
                                 <span class="badge badge-primary"><?php echo number_format($venue['capacity']); ?> orang</span>
                             </td>
-                            <td class="facilities-cell">
+                            <td class="facilities-cell" data-label="Fasilitas">
                                 <?php echo !empty($venue['facilities']) ? htmlspecialchars($venue['facilities']) : '-'; ?>
                             </td>
-                            <td class="status-cell">
+                            <td class="status-cell" data-label="Status">
                                 <?php if ($venue['is_active']): ?>
                                     <span class="badge badge-success">Aktif</span>
                                 <?php else: ?>
                                     <span class="badge badge-danger">Non-Aktif</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="date-cell">
+                            <td class="date-cell" data-label="Tanggal Dibuat">
                                 <?php echo date('d M Y', strtotime($venue['created_at'])); ?>
                             </td>
-                            <td class="date-cell">
+                            <td class="date-cell" data-label="Terakhir Update">
                                 <?php echo date('d M Y', strtotime($venue['updated_at'])); ?>
                             </td>
-                            <td class="action-cell">
+                            <td class="action-cell" data-label="Aksi">
                                 <div class="action-buttons">
                                     <a href="venue_view.php?id=<?php echo $venue['id']; ?>" 
                                        class="action-btn btn-view">
@@ -980,53 +1281,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Mobile Menu Toggle Functionality
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
-
-    if (menuToggle && sidebar && overlay) {
-        // Toggle menu when clicking hamburger button
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
-
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', function() {
             if (currentVenueId) {
@@ -1087,4 +1341,3 @@ function exportVenues() {
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
-

@@ -1158,6 +1158,26 @@ body {
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Team</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus team <strong>"<span id="deleteTeamName"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
@@ -1165,7 +1185,7 @@ let currentTeamId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     const deleteTeamName = document.getElementById('deleteTeamName');
-    const modal = document.getElementById('deleteModal');
+    const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
     document.querySelectorAll('.btn-delete[data-team-id]').forEach(function (btn) {
@@ -1174,47 +1194,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (deleteTeamName) {
                 deleteTeamName.textContent = this.getAttribute('data-team-name') || '-';
             }
-            if (modal) {
-                modal.style.display = 'flex';
+            if (deleteModal) {
+                deleteModal.style.display = 'flex';
             }
         });
     });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
     
-    // Menu toggle functionality (untuk Submenu)
-    document.querySelectorAll('.menu-link').forEach(link => {
-        if (link.querySelector('.menu-arrow')) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const submenu = this.nextElementSibling;
-                const arrow = this.querySelector('.menu-arrow');
-                
-                if (submenu) {
-                    submenu.classList.toggle('open');
-                    arrow.classList.toggle('rotate');
-                }
-            });
-        }
-    });
-
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', function() {
             if (currentTeamId) {
@@ -1222,50 +1207,61 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+    }
 });
 
-function closeModal() {
-    const modal = document.getElementById('deleteModal');
-    if (modal) {
-        modal.style.display = 'none';
+function closeDeleteModal() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.style.display = 'none';
     }
     currentTeamId = null;
 }
 
-// Close modal when clicking outside
-const modal = document.getElementById('deleteModal');
-if (modal) {
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-}
-
 function deleteTeam(teamId) {
-    fetch(`team_delete.php?id=${teamId}`, {
+    fetch(`team_delete.php?id=${encodeURIComponent(teamId)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
+    .then(async response => {
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch (err) {
+            throw new Error(`Invalid server response (${response.status})`);
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error ${response.status}`);
+        }
+
+        return data;
+    })
     .then(data => {
         if (data.success) {
-            closeModal();
+            closeDeleteModal();
             toastr.success('Team berhasil dihapus!');
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
-            toastr.error('Error: ' + data.message);
-            closeModal();
+            toastr.error('Error: ' + (data.message || 'Gagal menghapus team.'));
+            closeDeleteModal();
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        toastr.error('Terjadi kesalahan saat menghapus team.');
-        closeModal();
+        toastr.error(error.message || 'Terjadi kesalahan saat menghapus team.');
+        closeDeleteModal();
     });
 }
 
