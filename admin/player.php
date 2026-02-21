@@ -860,27 +860,78 @@ body {
 }
 
 /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) {
+
 
     
+
+    .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 80px; /* Leave space for bottom menu toggle */
+    }
+
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .greeting {
+        flex: none;
+        width: 100%;
+    }
+
+    .user-actions {
+        width: 100%;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .page-title {
+        flex: none;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .search-bar {
+        flex: none;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: none;
+        min-width: 100%;
+    }
+
+    .search-input-wrap, .status-filter-select {
+        width: 100%;
+    }
 
     /* Compact buttons */
     .btn {
         padding: 10px 18px;
         font-size: 14px;
+        width: 100%;
+        justify-content: center;
     }
 
     .logout-btn {
         padding: 10px 20px;
         font-size: 14px;
+        width: 100%;
+        justify-content: center;
     }
 
     /* Stack action buttons vertically */
     .action-buttons {
         flex-direction: column;
-    }
-
-    .btn {
         width: 100%;
     }
 }
