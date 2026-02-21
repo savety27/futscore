@@ -532,25 +532,258 @@ try {
         /* =========================================
            MOBILE RESPONSIVE DESIGN
            ========================================= */
-
-        
-
         /* ===== TABLET (max-width: 1024px) ===== */
         @media screen and (max-width: 1024px) {
-
             .main {
                 margin-left: 240px;
+                width: calc(100% - 240px);
+                max-width: calc(100vw - 240px);
             }
         }
 
         /* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
         @media screen and (max-width: 768px) {
+            .main {
+                margin-left: 0;
+                padding: 20px 15px;
+                width: 100%;
+                max-width: 100vw;
+            }
 
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+                margin-bottom: 22px;
+                padding: 20px;
+            }
 
-            
-            
+            .user-actions {
+                width: 100%;
+            }
+
+            .logout-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 16px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+                line-height: 1.3;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .form-section {
+                margin-bottom: 28px;
+                padding-bottom: 24px;
+            }
+
             .section-title {
                 font-size: 18px;
+                margin-bottom: 16px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-control {
+                min-height: 44px;
+            }
+
+            .date-input {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .radio-group {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .radio-option {
+                flex: 1 1 140px;
+                min-height: 42px;
+            }
+
+            .file-upload {
+                padding: 18px;
+            }
+
+            .file-preview {
+                grid-template-columns: 1fr;
+            }
+
+            .file-item {
+                padding: 12px;
+            }
+
+            .skill-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .skill-item {
+                padding: 14px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+                min-height: 44px;
+            }
+
+            .alert {
+                align-items: flex-start;
+                padding: 12px 14px;
+                gap: 10px;
+            }
+
+            .verify-input-wrapper {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .verify-btn {
+                width: 100%;
+                justify-content: center;
+                min-height: 44px;
+            }
+
+            .verify-details .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 3px;
+            }
+
+            .kk-error-message {
+                padding: 12px;
+                align-items: flex-start;
+            }
+        }
+
+        /* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
+        @media screen and (max-width: 480px) {
+            .main {
+                padding: 16px 10px;
+            }
+
+            .topbar {
+                padding: 16px;
+            }
+
+            .greeting h1 {
+                font-size: 21px;
+            }
+
+            .greeting p {
+                font-size: 13px;
+            }
+
+            .header {
+                padding: 16px;
+                border-radius: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                gap: 10px;
+            }
+
+            .form-container {
+                padding: 16px;
+                border-radius: 16px;
+            }
+
+            .form-section {
+                margin-bottom: 22px;
+                padding-bottom: 18px;
+            }
+
+            .section-title {
+                font-size: 17px;
+            }
+
+            .form-label {
+                font-size: 13px;
+            }
+
+            .form-control {
+                padding: 11px 13px;
+                font-size: 14px;
+            }
+
+            .file-upload {
+                padding: 14px;
+            }
+
+            .file-upload p {
+                font-size: 14px;
+            }
+
+            .file-preview {
+                gap: 10px;
+            }
+
+            .file-item img {
+                width: 34px;
+                height: 34px;
+            }
+
+            .skill-item {
+                padding: 12px;
+            }
+
+            .skill-name {
+                font-size: 13px;
+            }
+
+            .skill-value {
+                font-size: 16px;
+            }
+
+            .btn,
+            .logout-btn {
+                font-size: 14px;
+            }
+
+            .note {
+                font-size: 11px;
+            }
+
+            .kk-error-message {
+                font-size: 13px;
+            }
+
+            .verify-feedback {
+                font-size: 11px;
+            }
+
+            .verify-details {
+                padding: 10px 12px;
+                font-size: 12px;
             }
         }
 
@@ -1156,9 +1389,15 @@ try {
 </div>
 
 <script>
-    // Mobile Menu Toggle Functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        );
+    // File upload setup helper
+    function setupFileUpload(uploadArea, fileInputField, previewContainer, isRequired = false) {
+        if (!uploadArea || !fileInputField || !previewContainer) {
+            return;
+        }
+
+        uploadArea.addEventListener('click', () => {
+            fileInputField.click();
+        });
 
         // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
