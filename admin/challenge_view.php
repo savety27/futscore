@@ -809,7 +809,6 @@ body {
                     <?php endif; ?>
                     <div class="team-name"><?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?></div>
                     <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['challenger_coach'] ?? ''); ?></div>
-                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['challenger_sport'] ?? ''); ?></div>
                 </div>
                 
                 <div class="vs-center">
@@ -835,7 +834,6 @@ body {
                     <?php endif; ?>
                     <div class="team-name"><?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?></div>
                     <div class="team-coach">Coach: <?php echo htmlspecialchars($challenge_data['opponent_coach'] ?? ''); ?></div>
-                    <div class="team-sport"><?php echo htmlspecialchars($challenge_data['opponent_sport'] ?? ''); ?></div>
                 </div>
             </div>
         </div>

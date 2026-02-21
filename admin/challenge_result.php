@@ -19,6 +19,38 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('adminHasColumn')) {
+    function adminHasColumn(PDO $conn, $tableName, $columnName) {
+        try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+            if ($safeTable === '') {
+                return false;
+            }
+            $quotedColumn = $conn->quote((string) $columnName);
+            $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+if (!function_exists('adminHasTable')) {
+    function adminHasTable(PDO $conn, $tableName) {
+        try {
+            $quotedTable = $conn->quote((string) $tableName);
+            $stmt = $conn->query("SHOW TABLES LIKE {$quotedTable}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+$challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
+$events_table_exists = adminHasTable($conn, 'events');
+$can_join_event_name = $challenge_has_event_id && $events_table_exists;
+
 
 // Get admin info
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
@@ -39,11 +71,15 @@ $challenge_data = null;
 
 // Fetch challenge data
 try {
+    $event_select = $can_join_event_name ? "e.name as event_name," : "NULL as event_name,";
+    $event_join = $can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "";
     $stmt = $conn->prepare("
         SELECT c.*, 
+        {$event_select}
         t1.name as challenger_name, t1.logo as challenger_logo,
         t2.name as opponent_name, t2.logo as opponent_logo
         FROM challenges c
+        {$event_join}
         LEFT JOIN teams t1 ON c.challenger_id = t1.id
         LEFT JOIN teams t2 ON c.opponent_id = t2.id
         WHERE c.id = ?
@@ -66,15 +102,40 @@ try {
     $match_stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
     // Get players for both teams
+    $challenge_category = trim((string)($challenge_data['sport_type'] ?? ''));
+
     $team1_players = [];
-    $stmtP1 = $conn->prepare("SELECT id, name, jersey_number FROM players WHERE team_id = ? AND status = 'active' ORDER BY name ASC");
-    $stmtP1->execute([$challenge_data['challenger_id']]);
+    $team1PlayerSql = "SELECT id, name, jersey_number FROM players WHERE team_id = ? AND status = 'active'";
+    $team1PlayerParams = [(int)$challenge_data['challenger_id']];
+    if ($challenge_category !== '') {
+        $team1PlayerSql .= " AND sport_type = ?";
+        $team1PlayerParams[] = $challenge_category;
+    }
+    $team1PlayerSql .= " ORDER BY name ASC";
+    $stmtP1 = $conn->prepare($team1PlayerSql);
+    $stmtP1->execute($team1PlayerParams);
     $team1_players = $stmtP1->fetchAll(PDO::FETCH_ASSOC);
 
     $team2_players = [];
-    $stmtP2 = $conn->prepare("SELECT id, name, jersey_number FROM players WHERE team_id = ? AND status = 'active' ORDER BY name ASC");
-    $stmtP2->execute([$challenge_data['opponent_id']]);
+    $team2PlayerSql = "SELECT id, name, jersey_number FROM players WHERE team_id = ? AND status = 'active'";
+    $team2PlayerParams = [(int)$challenge_data['opponent_id']];
+    if ($challenge_category !== '') {
+        $team2PlayerSql .= " AND sport_type = ?";
+        $team2PlayerParams[] = $challenge_category;
+    }
+    $team2PlayerSql .= " ORDER BY name ASC";
+    $stmtP2 = $conn->prepare($team2PlayerSql);
+    $stmtP2->execute($team2PlayerParams);
     $team2_players = $stmtP2->fetchAll(PDO::FETCH_ASSOC);
+
+    $team1PlayerLookup = [];
+    foreach ($team1_players as $player) {
+        $team1PlayerLookup[(int)($player['id'] ?? 0)] = true;
+    }
+    $team2PlayerLookup = [];
+    foreach ($team2_players as $player) {
+        $team2PlayerLookup[(int)($player['id'] ?? 0)] = true;
+    }
 
     // Get existing goals
     $existing_goals = [];
@@ -117,6 +178,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ($form_data['team1_possession'] > 0 || $form_data['team2_possession'] > 0)) {
         // Just warn or auto-adjust? Let's just accept it but maybe the UI should help.
         // For now, allow it.
+    }
+
+    // Validate goal scorers must belong to selected challenge category and proper team.
+    if (isset($_POST['goal_player_id']) && is_array($_POST['goal_player_id'])) {
+        foreach ($_POST['goal_player_id'] as $index => $rawPlayerId) {
+            $playerId = (int)$rawPlayerId;
+            if ($playerId <= 0) {
+                continue;
+            }
+
+            $teamId = (int)($_POST['goal_team_id'][$index] ?? 0);
+            $minute = (int)($_POST['goal_minute'][$index] ?? 0);
+
+            if ($minute <= 0 || $teamId <= 0) {
+                $errors['goal_players'] = "Data pencetak gol belum lengkap.";
+                break;
+            }
+
+            $isTeam1Valid = $teamId === (int)$challenge_data['challenger_id'] && isset($team1PlayerLookup[$playerId]);
+            $isTeam2Valid = $teamId === (int)$challenge_data['opponent_id'] && isset($team2PlayerLookup[$playerId]);
+
+            if (!$isTeam1Valid && !$isTeam2Valid) {
+                $errors['goal_players'] = "Pencetak gol harus pemain aktif sesuai kategori challenge.";
+                break;
+            }
+        }
     }
     
     // Determine winner
@@ -744,7 +831,7 @@ body {
         flex: 1;
         justify-content: center;
     }
-    
+
     /* Form Layout adaptations */
     .form-grid {
         grid-template-columns: 1fr;
@@ -1022,6 +1109,16 @@ body {
                         <i class="fas fa-futbol"></i>
                         Pencetak Gol
                     </div>
+                    <?php if (isset($errors['goal_players'])): ?>
+                        <div class="alert alert-danger" style="margin-bottom: 12px;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <?php echo $errors['goal_players']; ?>
+                        </div>
+                    <?php endif; ?>
+                    <div class="note" style="margin-bottom: 12px;">
+                        Daftar pemain otomatis difilter sesuai kategori challenge:
+                        <strong><?php echo htmlspecialchars($challenge_data['sport_type'] ?? '-'); ?></strong>
+                    </div>
                     
                     <div id="goal-entries">
                         <!-- Goal rows will be added here -->
@@ -1212,6 +1309,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const jn = p.jersey_number ? ` (#${p.jersey_number})` : '';
                 pOpts += `<option value="${p.id}">${p.name}${jn}</option>`;
             });
+            if (!players.length) {
+                pOpts += '<option value="" disabled>(Tidak ada pemain aktif di kategori ini)</option>';
+            }
             playerSelect.innerHTML = pOpts;
         }
 
