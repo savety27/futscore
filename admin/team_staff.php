@@ -1246,32 +1246,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    
-        }
-    });
-
-    if (confirmDeleteBtn) {
+if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', function() {
             if (currentStaffId) {
                 deleteStaff(currentStaffId);
@@ -1388,7 +1363,7 @@ function viewCertificateImage(filename, title) {
     modal.innerHTML = `
         <div style="position: relative;">
             <button onclick="this.parentElement.parentElement.remove()" 
-                    style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
+                    style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
             <img src="../uploads/certificates/${filename}" 
                  alt="${title}" 
                  style="max-width: 90vw; max-height: 90vh; border-radius: 5px;">

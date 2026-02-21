@@ -126,7 +126,11 @@ if (empty($_sb_initials)) $_sb_initials = 'A';
                     }
                 }
             } else {
-                if ($current_page === $item['url'] || $current_page === basename($item['url'])) {
+                $itemUrl = basename($item['url']);
+                $itemSlug = pathinfo($itemUrl, PATHINFO_FILENAME);
+                $isRelatedPage = (strpos($current_page, $itemSlug . '_') === 0);
+
+                if ($current_page === $itemUrl || $isRelatedPage) {
                     $isActive = true;
                 }
             }
@@ -138,7 +142,7 @@ if (empty($_sb_initials)) $_sb_initials = 'A';
                 <span class="menu-icon"><i class="<?php echo $item['icon']; ?>"></i></span>
                 <span class="menu-text"><?php echo $item['name']; ?></span>
                 <?php if ($item['submenu']): ?>
-                <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">›</span>
+                <span class="menu-arrow <?php echo $isSubmenuOpen ? 'rotate' : ''; ?>">&rsaquo;</span>
                 <?php endif; ?>
             </a>
             

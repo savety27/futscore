@@ -962,29 +962,7 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Close menu when clicking overlay
-    menuOverlay.addEventListener('click', function() {
-        sidebar.classList.remove('active');
-        document.body.classList.remove('menu-open');
-        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    });
-    
-    // Auto close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && !menuOverlay.contains(e.target)) {
-                if (sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            }
-        }
-    });
-    
-    
-
-    // Tampilkan/sembunyikan field tim berdasarkan role
+// Tampilkan/sembunyikan field tim berdasarkan role
     const roleSelect = document.getElementById('role');
     const teamSelect = document.getElementById('team_id');
     
@@ -1104,3 +1082,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
+

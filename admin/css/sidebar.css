@@ -1,5 +1,5 @@
 /* =============================================================
-   ALVETRIX ADMIN SIDEBAR — Modern Dark Glassmorphism
+   ALVETRIX ADMIN SIDEBAR â€” Modern Dark Glassmorphism
    ============================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
@@ -206,7 +206,7 @@
     padding: 11px 16px;
     color: var(--sb-text);
     text-decoration: none;
-    transition: all var(--sb-transition-fast);
+    transition: background-color var(--sb-transition-fast), color var(--sb-transition-fast), transform var(--sb-transition-fast);
     position: relative;
     border-radius: 12px;
     gap: 14px;
@@ -312,7 +312,7 @@
     color: var(--sb-text);
     text-decoration: none;
     border-radius: 8px;
-    transition: all var(--sb-transition-fast);
+    transition: background-color var(--sb-transition-fast), color var(--sb-transition-fast), padding-left var(--sb-transition-fast);
     position: relative;
     font-size: 13px;
     font-weight: 400;
@@ -325,7 +325,7 @@
     height: 5px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.2);
-    transition: all var(--sb-transition-fast);
+    transition: background-color var(--sb-transition-fast), box-shadow var(--sb-transition-fast), width var(--sb-transition-fast), height var(--sb-transition-fast);
     flex-shrink: 0;
 }
 
@@ -459,6 +459,10 @@
 /* ===== MOBILE (max-width: 768px) ===== */
 @media screen and (max-width: 768px) {
 
+    body.menu-open {
+        overflow: hidden;
+    }
+
     /* Show Mobile Menu Toggle Button */
     .menu-toggle {
         display: flex;
@@ -477,7 +481,7 @@
         z-index: 1001;
         font-size: 22px;
         cursor: pointer;
-        transition: all var(--sb-transition);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .menu-toggle:hover {
@@ -494,12 +498,40 @@
         width: 280px;
         transform: translateX(-100%);
         box-shadow: none;
+        will-change: transform;
+        contain: paint;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .sidebar::before,
+    .sidebar::after,
+    .logo-container::before {
+        display: none;
+        animation: none !important;
+    }
+
+    .menu-item {
+        animation: none;
+        opacity: 1;
+    }
+
+    .menu-link::before {
+        display: none;
+    }
+
+    .menu-link:hover {
+        transform: none;
+    }
+
+    .menu-link.active .menu-icon {
+        text-shadow: none;
     }
 
     /* Sidebar: Show when active */
     .sidebar.active {
         transform: translateX(0);
-        box-shadow: 8px 0 40px rgba(0, 0, 0, 0.4);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.35);
     }
 
     /* Overlay */
@@ -514,13 +546,13 @@
         z-index: 99;
         opacity: 0;
         visibility: hidden;
-        transition: all var(--sb-transition);
-        backdrop-filter: blur(4px);
+        transition: opacity 0.2s ease, visibility 0s linear 0.2s;
     }
 
     body.menu-open .menu-overlay {
         opacity: 1;
         visibility: visible;
+        transition-delay: 0s;
     }
 }
 

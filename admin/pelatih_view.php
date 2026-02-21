@@ -1000,30 +1000,6 @@ body {
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Close menu when clicking overlay
-    menuOverlay.addEventListener('click', function() {
-        sidebar.classList.remove('active');
-        document.body.classList.remove('menu-open');
-        menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    });
-    
-    // Auto close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target) && !menuOverlay.contains(e.target)) {
-                if (sidebar.classList.contains('active')) {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                }
-            }
-        }
-    });
-    
-    
-</script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>

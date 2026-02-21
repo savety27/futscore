@@ -1109,30 +1109,6 @@ const teamEventsMap = <?php echo json_encode($team_events_map ?? []); ?>;
 
 
 document.addEventListener('DOMContentLoaded', function() {
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    
-        }
-    });
-
     // Update VS Display when teams are selected
     function updateVSDisplay() {
         const challengerId = document.getElementById('challenger_id').value;
