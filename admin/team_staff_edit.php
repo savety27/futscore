@@ -1024,19 +1024,6 @@ body {
     }
 
 }
-
-.sidebar,
-.sidebar *,
-.menu-link,
-.menu-arrow,
-.submenu,
-.submenu-link,
-
-.menu-link:hover,
-.submenu-link:hover,
-.menu-arrow.rotate {
-    transform: none !important;
-}
 </style>
 </head>
 <body>
@@ -1411,30 +1398,7 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    // Menu toggle functionality (untuk Submenu)
-    
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
 
     // File Upload Logic untuk foto
     const photoUpload = document.getElementById('photoUpload');

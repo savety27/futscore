@@ -690,20 +690,6 @@ body {
         transform: translateY(0);
     }
 }
-
-
-.sidebar,
-.sidebar *,
-.menu-link,
-.menu-arrow,
-.submenu,
-.submenu-link,
-
-.menu-link:hover,
-.submenu-link:hover,
-.menu-arrow.rotate {
-    transform: none !important;
-}
 </style>
 </head>
 <body>
@@ -1021,31 +1007,6 @@ body {
         </div>
     </div>
 </div>
-
-<script>
-
-document.addEventListener('DOMContentLoaded', function() {
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    
-</script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>

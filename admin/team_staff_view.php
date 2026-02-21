@@ -683,19 +683,6 @@ tbody tr:hover {
     }
 
 }
-
-.sidebar,
-.sidebar *,
-.menu-link,
-.menu-arrow,
-.submenu,
-.submenu-link,
-
-.menu-link:hover,
-.submenu-link:hover,
-.menu-arrow.rotate {
-    transform: none !important;
-}
 </style>
 </head>
 <body>
@@ -992,28 +979,6 @@ tbody tr:hover {
 </div>
 
 <script>
-
-        // Close menu when clicking overlay
-        overlay.addEventListener('click', function() {
-            sidebar.classList.remove('active');
-            document.body.classList.remove('menu-open');
-        });
-
-        // Close menu when clicking a menu link (better UX on mobile)
-        const menuLinks = document.querySelectorAll('.menu-link');
-        menuLinks.forEach(function(link) {
-            // Only close if it's not a submenu toggle
-            if (!link.querySelector('.menu-arrow')) {
-                link.addEventListener('click', function() {
-                    sidebar.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-        });
-    }
-    
-    
-
 function viewCertificateImage(filename, title) {
     // Tampilkan gambar di modal baru
     const modal = document.createElement('div');
