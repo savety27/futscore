@@ -720,18 +720,6 @@ body {
     color: var(--primary);
 }
 
-.sidebar,
-.sidebar *,
-.menu-link,
-.menu-arrow,
-.submenu,
-.submenu-link,
-
-.menu-link:hover,
-.submenu-link:hover,
-.menu-arrow.rotate {
-    transform: none !important;
-}
 </style>
 </head>
 <body>
