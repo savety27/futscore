@@ -35,6 +35,9 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($result['player_count'] > 0) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         echo json_encode(['success' => false, 'message' => 'Tidak dapat menghapus team yang masih memiliki players. Pindahkan players terlebih dahulu.']);
         exit;
     }
@@ -45,6 +48,9 @@ try {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($result['staff_count'] > 0) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         echo json_encode(['success' => false, 'message' => 'Tidak dapat menghapus team yang masih memiliki staff. Pindahkan staff terlebih dahulu.']);
         exit;
     }
@@ -53,6 +59,14 @@ try {
     $stmt = $conn->prepare("SELECT logo FROM teams WHERE id = ?");
     $stmt->execute([$team_id]);
     $team = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$team) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        echo json_encode(['success' => false, 'message' => 'Team tidak ditemukan']);
+        exit;
+    }
     
     // Delete team
     $stmt = $conn->prepare("DELETE FROM teams WHERE id = ?");
@@ -60,8 +74,18 @@ try {
     
     if ($success) {
         // Delete team logo if exists
-        if (!empty($team['logo']) && file_exists('../' . $team['logo'])) {
-            @unlink('../' . $team['logo']);
+        if (!empty($team['logo'])) {
+            $logo_path = $team['logo'];
+            // Normalize path: handle both bare filenames and images/teams/ prefixed paths
+            if (strpos($logo_path, 'images/teams/') === false) {
+                $full_path = '../images/teams/' . $logo_path;
+            } else {
+                $full_path = '../' . $logo_path;
+            }
+            
+            if (file_exists($full_path)) {
+                @unlink($full_path);
+            }
         }
         
         $conn->commit();
@@ -72,7 +96,9 @@ try {
     }
     
 } catch (PDOException $e) {
-    $conn->rollBack();
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?>
