@@ -263,6 +263,8 @@ body {
 .action-buttons { display: flex; gap: 10px; }
 .btn { padding: 12px 20px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
 .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+.btn-export { background: linear-gradient(135deg, var(--success), #4CAF50); color: white; box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2); }
+.btn-export:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3); }
 .table-container { background: rgba(255, 255, 255, 0.9); border-radius: 24px; overflow: hidden; box-shadow: var(--premium-shadow); overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; min-width: 1020px; }
 .data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); color: white; }
@@ -402,6 +404,7 @@ body {
             </div>
             <div class="action-buttons">
                 <a href="event_create.php" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah Event</a>
+                <button type="button" class="btn btn-export" onclick="exportEvents()"><i class="fas fa-download"></i> Export Excel</button>
             </div>
         </div>
 
@@ -652,6 +655,9 @@ function deleteEvent(eventId) {
     });
 }
 
+function exportEvents() {
+    window.location.href = 'event_export.php' + (window.location.search ? window.location.search + '&export=excel' : '?export=excel');
+}
 
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
