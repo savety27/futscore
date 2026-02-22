@@ -41,6 +41,10 @@ function formatUsiaFromDateOfBirth($value)
 }
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $page = $page < 1 ? 1 : $page;
 $limit = 10;
@@ -49,25 +53,28 @@ $offset = ($page - 1) * $limit;
 $base_query = "SELECT p.*, (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = p.id) AS license_count
                FROM perangkat p WHERE 1=1";
 $count_query = "SELECT COUNT(*) AS total FROM perangkat p WHERE 1=1";
+$params = [];
 
 // Handle search condition (same pattern as team.php)
 if ($search !== '') {
     $search_term = "%{$search}%";
     $base_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
     $count_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
+    $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
+}
+
+if ($filter_active !== '') {
+    $base_query .= " AND p.is_active = ?";
+    $count_query .= " AND p.is_active = ?";
+    $params[] = (int) $filter_active;
 }
 
 $base_query .= " ORDER BY p.created_at DESC";
 
 try {
     // Count total records
-    if ($search !== '') {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term, $search_term, $search_term]);
-    } else {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-    }
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($params);
 
     $total_data = (int)($stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
     $total_pages = (int)ceil($total_data / $limit);
@@ -77,21 +84,13 @@ try {
 
     // Get data with pagination
     $query = $base_query . " LIMIT ? OFFSET ?";
-    if ($search !== '') {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $search_term);
-        $stmt->bindValue(6, $search_term);
-        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+    $stmt = $conn->prepare($query);
+    $bindIndex = 1;
+    foreach ($params as $param) {
+        $stmt->bindValue($bindIndex++, $param, is_int($param) ? PDO::PARAM_INT : PDO::PARAM_STR);
     }
+    $stmt->bindValue($bindIndex++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($bindIndex, $offset, PDO::PARAM_INT);
 
     $stmt->execute();
     $perangkat_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -119,7 +118,8 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-ser
 .logout-btn{background:linear-gradient(135deg,var(--danger) 0%,#B71C1C 100%);color:#fff;padding:12px 28px;border-radius:12px;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:10px}
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);padding:25px;gap:15px;flex-wrap:wrap;border:1px solid rgba(255,255,255,.6)}.page-title{font-size:28px;color:var(--primary);display:flex;align-items:center;gap:12px}.page-title i{color:var(--secondary)}
 .search-bar{position:relative;width:400px;max-width:100%}.search-bar input{width:100%;padding:15px 50px 15px 20px;border:2px solid #e0e0e0;border-radius:12px;font-size:16px;background:#f8f9fa}.search-bar input:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(10,36,99,.1)}.search-bar button{position:absolute;right:15px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--primary);font-size:18px;cursor:pointer}
-.btn{padding:12px 25px;border-radius:12px;border:none;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-size:15px}.btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff}.btn-secondary{background:#6c757d;color:#fff}.btn-danger{background:var(--danger);color:#fff}
+.filter-container{margin-bottom:24px}.perangkat-filter-card{padding:16px;border:1px solid #dbe5f3;border-radius:14px;background:linear-gradient(180deg,#fff 0%,#f7fbff 100%);box-shadow:0 8px 20px rgba(10,36,99,.06)}.perangkat-filter-form{display:grid;grid-template-columns:minmax(260px,1fr) minmax(180px,.55fr) auto;gap:12px;align-items:center}.perangkat-search-group{position:relative}.perangkat-search-group i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#7b8797;font-size:13px}.perangkat-search-input,.perangkat-filter-select{width:100%;height:42px;border:1px solid #d3dcea;border-radius:10px;background:#fff;color:#1f2937;font-size:14px;transition:all .2s ease}.perangkat-search-input{padding:0 12px 0 36px}.perangkat-filter-select{padding:0 12px}.perangkat-search-input:focus,.perangkat-filter-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,36,99,.12)}.perangkat-filter-actions{display:flex;gap:8px}.btn-filter,.clear-filter-btn{height:42px;padding:0 14px;border-radius:10px;border:1px solid transparent;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;cursor:pointer}.btn-filter{background:linear-gradient(135deg,var(--primary),#1a4f9e);color:#fff}.btn-filter:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(10,36,99,.22)}.clear-filter-btn{background:#fff;border-color:#d3dcea;color:#3b4a5f}.clear-filter-btn:hover{background:#f2f6fc}
+.btn{padding:12px 25px;border-radius:12px;border:none;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-size:15px}.btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff}.btn-success{background:linear-gradient(135deg,var(--success),#4CAF50);color:#fff;box-shadow:0 5px 15px rgba(46,125,50,.2)}.btn-success:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(46,125,50,.3)}.btn-secondary{background:#6c757d;color:#fff}.btn-danger{background:var(--danger);color:#fff}
 .table-container{background:rgba(255,255,255,.9);backdrop-filter:blur(5px);overflow:auto;border-radius:24px;margin-bottom:30px;max-width:100%;border:1px solid rgba(255,255,255,.8)}.data-table{width:100%;border-collapse:collapse;min-width:1200px}.data-table thead{background:linear-gradient(135deg,var(--primary),#1a365d);color:#fff}.data-table th{padding:12px 8px;text-align:left;font-weight:600;border-bottom:2px solid var(--secondary);font-size:12px;white-space:nowrap}.data-table tbody tr{border-bottom:1px solid #f0f0f0;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative}.data-table tbody tr:hover{background:#eef5ff;transform:translateY(-3px);box-shadow:0 12px 24px rgba(10,36,99,.2),0 0 0 1px rgba(76,138,255,.35);z-index:2}.data-table tbody tr:first-child:hover{transform:translateY(0)}.data-table td{padding:8px;border-bottom:1px solid #f0f0f0;font-size:12px}
 .staff-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #e0e0e0}.badge{display:inline-block;padding:6px 10px;border-radius:14px;font-size:12px;font-weight:600}.badge-success{background:rgba(46,125,50,.1);color:var(--success)}.badge-danger{background:rgba(211,47,47,.1);color:var(--danger)}
 .certificate-count{display:inline-block;padding:6px 12px;background:#e8f5e9;color:var(--success);border-radius:20px;font-weight:600;cursor:pointer;transition:.2s}.certificate-count:hover{background:var(--success);color:#fff}.action-buttons{display:flex;gap:8px}.action-btn{width:36px;height:36px;border-radius:10px;border:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
@@ -129,7 +129,7 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-ser
 .alert{padding:15px 20px;border-radius:12px;margin-bottom:18px}.alert-danger{background:rgba(211,47,47,.1);border-left:4px solid var(--danger);color:var(--danger)}.alert-success{background:rgba(46,125,50,.1);border-left:4px solid var(--success);color:var(--success)}
 .empty-state{text-align:center;padding:50px 20px;color:var(--gray)}.empty-state i{font-size:56px;opacity:.25;margin-bottom:10px}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}.modal-content{background:#fff;padding:30px;border-radius:20px;max-width:500px;width:90%}.modal-header{display:flex;align-items:center;gap:12px;color:var(--danger);margin-bottom:12px}.modal-body p{margin:8px 0;color:var(--dark)}.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:15px}
-@media (max-width:768px){.main{margin-left:0;padding:20px 15px;width:100%;max-width:100vw}.topbar,.page-header{flex-direction:column;align-items:flex-start}.page-title{font-size:24px}.search-bar{width:100%;max-width:100%}}
+@media (max-width:768px){.main{margin-left:0;padding:20px 15px;width:100%;max-width:100vw}.topbar,.page-header{flex-direction:column;align-items:flex-start}.page-title{font-size:24px}.search-bar{width:100%;max-width:100%}.perangkat-filter-form{grid-template-columns:1fr}.perangkat-filter-actions .btn-filter,.perangkat-filter-actions .clear-filter-btn{width:100%;justify-content:center}}
 </style>
 </head>
 <body>
@@ -148,13 +148,38 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-ser
 
         <div class="page-header">
             <div class="page-title"><i class="fas fa-user-tie"></i><span>Daftar Perangkat</span></div>
-            <form method="GET" action="perangkat.php" class="search-bar" id="searchForm">
-                <input type="hidden" name="page" value="1">
-                <input type="text" name="search" placeholder="Cari perangkat (nama, no.KTP, usia)" value="<?php echo htmlspecialchars($search); ?>">
-                <button type="submit"><i class="fas fa-search"></i></button>
-            </form>
             <div class="action-buttons">
                 <a href="perangkat_create.php" class="btn btn-primary"><i class="fas fa-plus"></i>Tambah Staff</a>
+                <button type="button" class="btn btn-success" onclick="exportPerangkat()"><i class="fas fa-download"></i>Export Excel</button>
+            </div>
+        </div>
+
+        <div class="filter-container">
+            <div class="perangkat-filter-card">
+                <form method="GET" action="" class="perangkat-filter-form" id="searchForm">
+                    <input type="hidden" name="page" value="1">
+                    <div class="perangkat-search-group">
+                        <i class="fas fa-search"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            class="perangkat-search-input"
+                            placeholder="Cari perangkat (nama, no.KTP, email, telepon, kota, provinsi)..."
+                            value="<?php echo htmlspecialchars($search); ?>"
+                        >
+                    </div>
+                    <select name="active" class="perangkat-filter-select">
+                        <option value="">Semua Status</option>
+                        <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
+                        <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Nonaktif</option>
+                    </select>
+                    <div class="perangkat-filter-actions">
+                        <button type="submit" class="btn-filter"><i class="fas fa-filter"></i>Terapkan</button>
+                        <?php if ($search !== '' || $filter_active !== ''): ?>
+                            <a href="perangkat.php" class="clear-filter-btn"><i class="fas fa-times"></i>Reset</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -218,7 +243,6 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-ser
                                     <i class="fas fa-user-tie"></i>
                                     <h3>Belum Ada Data Staff</h3>
                                     <p>Mulai dengan menambahkan staff pertama Anda menggunakan tombol "Add Staff" di atas.</p>
-                                    <a href="perangkat_create.php" class="btn btn-primary" style="margin-top:15px;"><i class="fas fa-plus"></i>Tambah Staff Pertama</a>
                                 </div>
                             </td>
                         </tr>
@@ -229,9 +253,9 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-ser
 
         <?php if ($total_pages > 1): ?>
             <div class="pagination">
-                <?php if ($page > 1): ?><a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link"><i class="fas fa-chevron-left"></i></a><?php else: ?><span class="page-link disabled"><i class="fas fa-chevron-left"></i></span><?php endif; ?>
-                <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?><a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a><?php endfor; ?>
-                <?php if ($page < $total_pages): ?><a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link"><i class="fas fa-chevron-right"></i></a><?php else: ?><span class="page-link disabled"><i class="fas fa-chevron-right"></i></span><?php endif; ?>
+                <?php if ($page > 1): ?><a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&active=<?php echo urlencode($filter_active); ?>" class="page-link"><i class="fas fa-chevron-left"></i></a><?php else: ?><span class="page-link disabled"><i class="fas fa-chevron-left"></i></span><?php endif; ?>
+                <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?><a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&active=<?php echo urlencode($filter_active); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a><?php endfor; ?>
+                <?php if ($page < $total_pages): ?><a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&active=<?php echo urlencode($filter_active); ?>" class="page-link"><i class="fas fa-chevron-right"></i></a><?php else: ?><span class="page-link disabled"><i class="fas fa-chevron-right"></i></span><?php endif; ?>
             </div>
         <?php endif; ?>
     </div>
@@ -426,6 +450,10 @@ document.getElementById('licensesModal').addEventListener('click', function(e) {
         closeLicensesModal();
     }
 });
+
+function exportPerangkat() {
+    window.location.href = 'perangkat_export.php' + (window.location.search ? window.location.search + '&export=excel' : '?export=excel');
+}
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>

@@ -1206,10 +1206,6 @@ body {
                                     </div>
                                     <h3>Belum Ada Data Venue</h3>
                                     <p>Mulai dengan menambahkan venue pertama Anda menggunakan tombol "Add Venue" di atas.</p>
-                                    <a href="venue_create.php" class="btn btn-primary" style="margin-top: 20px;">
-                                        <i class="fas fa-plus"></i>
-                                        Tambah Venue Pertama
-                                    </a>
                                 </div>
                             </td>
                         </tr>

@@ -1105,10 +1105,6 @@ body {
                                     </div>
                                     <h3>Belum Ada Data Team</h3>
                                     <p>Mulai dengan menambahkan team pertama Anda menggunakan tombol "Add Team" di atas.</p>
-                                    <a href="team_create.php" class="btn btn-primary" style="margin-top: 20px;">
-                                        <i class="fas fa-plus"></i>
-                                        Tambah Team Pertama
-                                    </a>
                                 </div>
                             </td>
                         </tr>

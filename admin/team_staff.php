@@ -1161,10 +1161,6 @@ body {
                                     </div>
                                     <h3>Belum Ada Data Staff</h3>
                                     <p>Mulai dengan menambahkan staff pertama Anda menggunakan tombol "Add Staff" di atas.</p>
-                                    <a href="team_staff_create.php" class="btn btn-primary" style="margin-top: 20px;">
-                                        <i class="fas fa-plus"></i>
-                                        Tambah Staff Pertama
-                                    </a>
                                 </div>
                             </td>
                         </tr>

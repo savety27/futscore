@@ -1276,10 +1276,6 @@ body {
                                     </div>
                                     <h3>Belum Ada Data Player</h3>
                                     <p>Mulai dengan menambahkan player pertama Anda menggunakan tombol "Add New Player" di atas.</p>
-                                    <a href="player/add.php" class="btn btn-primary" style="margin-top: 20px;">
-                                        <i class="fas fa-plus"></i>
-                                        Tambah Player Pertama
-                                    </a>
                                 </div>
                             </td>
                         </tr>

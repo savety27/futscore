@@ -997,10 +997,6 @@ body {
                                     </div>
                                     <h3>Belum Ada Data Pelatih</h3>
                                     <p>Mulai dengan menambahkan pelatih pertama Anda menggunakan tombol "Tambah Pelatih" di atas.</p>
-                                    <a href="pelatih_create.php" class="btn btn-primary" style="margin-top: 20px;">
-                                        <i class="fas fa-plus"></i>
-                                        Tambah Pelatih Pertama
-                                    </a>
                                 </div>
                             </td>
                         </tr>
