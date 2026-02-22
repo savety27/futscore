@@ -32,15 +32,15 @@ $offset = ($page - 1) * $limit;
 $conn = $db->getConnection();
 
 // Query for Total Records (for pagination)
-$count_query = "SELECT COUNT(*) as total FROM team_staff ts WHERE ts.is_active = 1";
+$count_query = "SELECT COUNT(*) as total FROM perangkat p WHERE p.is_active = 1";
 if (!empty($search)) {
-    $count_query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ?)";
+    $count_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
 }
 
 $stmt_count = $conn->prepare($count_query);
 if (!empty($search)) {
     $search_param = "%$search%";
-    $stmt_count->bind_param("ssss", $search_param, $search_param, $search_param, $search_param);
+    $stmt_count->bind_param("ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
 }
 $stmt_count->execute();
 $count_result = $stmt_count->get_result();
@@ -49,65 +49,46 @@ if ($count_result) {
 } else {
     $total_records = 0;
 }
-$total_pages = ceil($total_records / $limit);
+$total_pages = max(1, (int)ceil($total_records / $limit));
 
-// Query for Staff Data with Team Info and Counts
+// Query for Perangkat Data with license counts
 $query = "SELECT 
-    ts.*, 
-    t.name as team_name, 
-    t.logo as team_logo,
-    t.alias as team_alias,
-    (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
-    FROM team_staff ts 
-    LEFT JOIN teams t ON ts.team_id = t.id 
-    WHERE ts.is_active = 1";
+    p.*,
+    (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = p.id) as certificate_count
+    FROM perangkat p
+    WHERE p.is_active = 1";
     
 if (!empty($search)) {
-    $query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ?)";
+    $query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
 }
-$query .= " ORDER BY ts.created_at DESC LIMIT ? OFFSET ?";
+$query .= " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($query);
 if (!empty($search)) {
-    $stmt->bind_param("ssssii", $search_param, $search_param, $search_param, $search_param, $limit, $offset);
+    $stmt->bind_param("ssssssii", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $limit, $offset);
 } else {
     $stmt->bind_param("ii", $limit, $offset);
 }
 $stmt->execute();
 $result = $stmt->get_result();
-$staffs = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+$perangkatRows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
 // Helper Functions
-function calculateStaffAge($birth_date) {
-    if (empty($birth_date) || $birth_date == '0000-00-00') return '-';
-    $birth = new DateTime($birth_date);
-    $today = new DateTime();
-    $diff = $today->diff($birth);
-    
-    if ($diff->y == 0 && $diff->m == 0) {
-        return 'Baru lahir';
-    } elseif ($diff->y == 0) {
-        return $diff->m . ' bulan';
-    } else {
-        return $diff->y . ' tahun';
-    }
-}
+function calculatePerangkatAge($birthDateRaw) {
+    if (empty($birthDateRaw) || $birthDateRaw === '0000-00-00') return '-';
 
-function formatPosition($position) {
-    $position_labels = [
-        'manager' => 'Manager',
-        'headcoach' => 'Head Coach',
-        'coach' => 'Coach',
-        'goalkeeper_coach' => 'GK Coach',
-        'medic' => 'Medic',
-        'official' => 'Official',
-        'assistant_coach' => 'Asst. Coach',
-        'fitness_coach' => 'Fitness Coach',
-        'analyst' => 'Analyst',
-        'scout' => 'Scout'
-    ];
-    
-    return $position_labels[$position] ?? ucfirst(str_replace('_', ' ', $position ?? ''));
+    $dob = DateTimeImmutable::createFromFormat('Y-m-d', (string)$birthDateRaw);
+    if ($dob && $dob->format('Y-m-d') === (string)$birthDateRaw) {
+        $today = new DateTimeImmutable('today');
+        if ($dob > $today) return '-';
+        return (string)$dob->diff($today)->y . ' tahun';
+    }
+
+    if (is_numeric($birthDateRaw)) {
+        return max(0, (int)$birthDateRaw) . ' tahun';
+    }
+
+    return '-';
 }
 
 // Helper function to check file exists and return correct path
@@ -157,7 +138,7 @@ function getFileUrl($filename, $directory, $defaultIcon = 'fa-user') {
 
 
 // Page Metadata
-$pageTitle = "Staff List";
+$pageTitle = "Perangkat Pertandingan";
 ?>
 
 <!DOCTYPE html>
@@ -840,7 +821,7 @@ $pageTitle = "Staff List";
 <div class="modal-overlay" id="certificateModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title"><i class="fas fa-certificate"></i> <span id="modalStaffName">Lisensi Staf</span></h2>
+            <h2 class="modal-title"><i class="fas fa-certificate"></i> <span id="modalPerangkatName">Lisensi Perangkat</span></h2>
             <button class="close-modal" onclick="closeCertificateModal()">&times;</button>
         </div>
         <div class="modal-body">
@@ -893,8 +874,8 @@ $pageTitle = "Staff List";
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown show">
                     <a href="player.php">Pemain</a>
-                    <a href="staff.php" class="active">Staf Team</a>
-                    <a href="perangkat.php">Perangkat Pertandingan</a>
+                    <a href="staff.php">Staf Team</a>
+                    <a href="perangkat.php" class="active">Perangkat Pertandingan</a>
                 </div>
             </div>
             <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
@@ -924,15 +905,15 @@ $pageTitle = "Staff List";
             <div class="dashboard-header-inner">
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
-                    <h1>STAF TEAM</h1>
-                    <p class="header-subtitle">Direktori staff, lisensi, dan afiliasi team untuk memantau peran kunci di setiap skuad.</p>
+                    <h1>PERANGKAT PERTANDINGAN</h1>
+                    <p class="header-subtitle">Direktori perangkat, lisensi, dan identitas resmi untuk memantau kualitas personel pertandingan.</p>
                 </div>
                 <div class="header-actions">
                     <div class="header-stat">
-                        <span class="stat-label">Total Staf Aktif</span>
+                        <span class="stat-label">Total Perangkat Aktif</span>
                         <span class="stat-value"><?php echo number_format($total_records); ?></span>
                     </div>
-                    <a href="team.php" class="btn-secondary"><i class="fas fa-users"></i> Lihat Team</a>
+                    <a href="match.php" class="btn-secondary"><i class="fas fa-futbol"></i> Lihat Match</a>
                 </div>
             </div>
         </header>
@@ -941,15 +922,15 @@ $pageTitle = "Staff List";
             <div class="filter-card staff-filter-card">
                 <form action="" method="GET" class="filter-row">
                     <div class="filter-group">
-                        <label for="search">Pencarian Staf</label>
+                        <label for="search">Pencarian Perangkat</label>
                         <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" 
-                               placeholder="Cari staf (nama, email, telepon, jabatan)...">
+                               placeholder="Cari perangkat (nama, no. KTP, email, telepon, kota, provinsi)...">
                     </div>
                     <div class="filter-actions-new">
                         <button type="submit" class="btn-filter-apply">
                             <i class="fas fa-search"></i> Cari
                         </button>
-                        <a href="staff.php" class="btn-filter-reset">
+                        <a href="perangkat.php" class="btn-filter-reset">
                             <i class="fas fa-redo"></i> Atur Ulang
                         </a>
                     </div>
@@ -963,7 +944,7 @@ $pageTitle = "Staff List";
                         <span class="summary-value"><?php echo min($offset + 1, $total_records); ?> - <?php echo min($offset + $limit, $total_records); ?></span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Total Staf</span>
+                        <span class="summary-label">Total Perangkat</span>
                         <span class="summary-value"><?php echo number_format($total_records); ?></span>
                     </div>
                 </div>
@@ -975,20 +956,20 @@ $pageTitle = "Staff List";
                         <tr>
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
-                            <th>Nama Staf</th>
-                            <th>Team</th>
-                            <th class="col-position">Jabatan</th>
+                            <th>Nama Perangkat</th>
+                            <th>No. KTP</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th>Status</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($staffs)): ?>
+                        <?php if (empty($perangkatRows)): ?>
                             <tr>
                                 <td colspan="8" class="no-data">
                                     <i class="fas fa-user-slash"></i>
-                                    <p>Tidak ada staf ditemukan</p>
+                                    <p>Tidak ada perangkat ditemukan</p>
                                     <?php if (!empty($search)): ?>
                                         <p class="no-data-keyword">
                                             Kata kunci: "<?php echo htmlspecialchars($search); ?>"
@@ -999,107 +980,72 @@ $pageTitle = "Staff List";
                         <?php else: ?>
                             <?php 
                             $no = $offset + 1;
-                            foreach ($staffs as $s): 
-                                $position_class = $s['position'] . '-badge';
-                                
-                                // Get staff photo info
-                                $staff_photo = getFileUrl($s['photo'], 'staff', 'fa-user-tie');
-                                
-                                // Get team logo info
-                                $team_logo = getFileUrl($s['team_logo'], 'teams', 'fa-users');
+                            foreach ($perangkatRows as $p):
+                                $perangkat_photo = getFileUrl($p['photo'], 'perangkat', 'fa-user-tie');
                             ?>
                             <tr>
-                                <!-- Kolom No -->
                                 <td class="col-no" data-label="No"><?php echo $no++; ?></td>
                                 
-                                <!-- Kolom Foto Staff -->
                                 <td class="col-photo" data-label="Foto">
                                     <div class="staff-photo-wrapper">
-                                        <?php if ($staff_photo['found']): ?>
-                                            <img src="<?php echo $staff_photo['url']; ?>" 
+                                        <?php if ($perangkat_photo['found']): ?>
+                                            <img src="<?php echo $perangkat_photo['url']; ?>" 
                                                  class="staff-img-sm" 
-                                                 alt="<?php echo htmlspecialchars($s['name'] ?? ''); ?>"
+                                                 alt="<?php echo htmlspecialchars($p['name'] ?? ''); ?>"
                                                  onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <?php endif; ?>
                                         
-                                        <div class="photo-placeholder" style="<?php echo $staff_photo['found'] ? 'display: none;' : ''; ?>">
-                                            <i class="fas <?php echo $staff_photo['icon']; ?>"></i>
-                                        </div>
-                                        
-                                        <!-- Team Badge/Lambang di bawah foto -->
-                                        <div class="team-badge">
-                                            <?php if ($team_logo['found']): ?>
-                                                <img src="<?php echo $team_logo['url']; ?>" 
-                                                     class="team-badge-img" 
-                                                     alt="<?php echo htmlspecialchars($s['team_name'] ?? ''); ?>"
-                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <?php endif; ?>
-                                            
-                                            <div class="team-badge-placeholder" style="<?php echo $team_logo['found'] ? 'display: none;' : ''; ?>">
-                                                <i class="fas <?php echo $team_logo['icon']; ?>"></i>
-                                            </div>
+                                        <div class="photo-placeholder" style="<?php echo $perangkat_photo['found'] ? 'display: none;' : ''; ?>">
+                                            <i class="fas <?php echo $perangkat_photo['icon']; ?>"></i>
                                         </div>
                                     </div>
                                 </td>
                                 
-                                <!-- Kolom Nama -->
                                 <td class="col-name" data-label="Nama">
-                                    <div class="staff-name"><?php echo htmlspecialchars($s['name'] ?? ''); ?></div>
+                                    <div class="staff-name"><?php echo htmlspecialchars($p['name'] ?? ''); ?></div>
                                     <div class="staff-contact">
-                                        <?php if (!empty($s['email'])): ?>
-                                            <div><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($s['email'] ?? ''); ?></div>
+                                        <?php if (!empty($p['email'])): ?>
+                                            <div><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($p['email'] ?? ''); ?></div>
                                         <?php endif; ?>
-                                        <?php if (!empty($s['phone'])): ?>
-                                            <div><i class="fas fa-phone"></i> <?php echo htmlspecialchars($s['phone'] ?? ''); ?></div>
+                                        <?php if (!empty($p['phone'])): ?>
+                                            <div><i class="fas fa-phone"></i> <?php echo htmlspecialchars($p['phone'] ?? ''); ?></div>
                                         <?php endif; ?>
                                     </div>
                                 </td>
                                 
-                                <!-- Kolom Team -->
-                                <td class="col-team" data-label="Team">
-                                    <div class="team-display">
-                                        <?php if ($team_logo['found']): ?>
-                                            <img src="<?php echo $team_logo['url']; ?>" 
-                                                 class="team-logo" 
-                                                 alt="<?php echo htmlspecialchars($s['team_name'] ?? ''); ?>"
-                                                 onerror="this.style.display='none'">
-                                        <?php endif; ?>
-                                        <div class="team-info">
-                                            <span class="team-name"><?php echo htmlspecialchars($s['team_name'] ?: '-'); ?></span>
-                                            <?php if (!empty($s['team_alias'])): ?>
-                                                <span class="team-alias"><?php echo htmlspecialchars($s['team_alias'] ?? ''); ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
+                                <td data-label="No. KTP">
+                                    <?php echo !empty($p['no_ktp']) ? htmlspecialchars($p['no_ktp']) : '-'; ?>
                                 </td>
                                 
-                                <!-- Kolom Jabatan -->
-                                <td class="col-position" data-label="Jabatan">
-                                    <span class="position-badge <?php echo $position_class; ?>">
-                                        <?php echo formatPosition($s['position']); ?>
-                                    </span>
-                                </td>
+                                <td class="col-age" data-label="Usia"><?php echo htmlspecialchars(calculatePerangkatAge($p['age'] ?? null)); ?></td>
                                 
-                                <!-- Kolom Usia -->
-                                <td class="col-age" data-label="Usia"><?php echo calculateStaffAge($s['birth_date']); ?></td>
-                                
-                                <!-- Kolom Lisensi -->
                                 <td class="col-certificate" data-label="Lisensi">
-                                    <?php if ($s['certificate_count'] > 0): ?>
+                                    <?php if ((int)($p['certificate_count'] ?? 0) > 0): ?>
                                         <div class="cert-count" 
-                                             onclick="loadCertificates(<?php echo $s['id']; ?>, '<?php echo htmlspecialchars(addslashes($s['name'] ?? '')); ?>')">
+                                             onclick="loadLicenses(<?php echo (int)$p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['name'] ?? '')); ?>')">
                                             <i class="fas fa-certificate"></i>
-                                            <span><?php echo $s['certificate_count']; ?></span>
+                                            <span><?php echo (int)$p['certificate_count']; ?></span>
                                         </div>
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
                                 </td>
+
+                                <td data-label="Status">
+                                    <?php if ((int)($p['is_active'] ?? 0) === 1): ?>
+                                        <span class="position-badge manager-badge">Aktif</span>
+                                    <?php else: ?>
+                                        <span class="position-badge medic-badge">Nonaktif</span>
+                                    <?php endif; ?>
+                                </td>
                                 
-                                <!-- Kolom Created At -->
                                 <td class="col-created" data-label="Dibuat">
-                                    <?php echo date('d M Y', strtotime($s['created_at'])); ?><br>
-                                    <small><?php echo date('H:i', strtotime($s['created_at'])); ?></small>
+                                    <?php if (!empty($p['created_at'])): ?>
+                                        <?php echo date('d M Y', strtotime($p['created_at'])); ?><br>
+                                        <small><?php echo date('H:i', strtotime($p['created_at'])); ?></small>
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -1220,15 +1166,15 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
     });
 }
 
-// Function to load certificates - FIXED VERSION
-function loadCertificates(staffId, staffName) {
-    console.log('Loading certificates for:', staffName, 'ID:', staffId);
+// Function to load perangkat licenses
+function loadLicenses(perangkatId, perangkatName) {
+    console.log('Loading licenses for:', perangkatName, 'ID:', perangkatId);
     
     const modal = document.getElementById('certificateModal');
-    const modalTitle = document.getElementById('modalStaffName');
+    const modalTitle = document.getElementById('modalPerangkatName');
     const content = document.getElementById('certificateContent');
     
-    modalTitle.textContent = `Lisensi: ${staffName}`;
+    modalTitle.textContent = `Lisensi: ${perangkatName}`;
     content.innerHTML = `
         <div class="loading-container">
             <div class="spinner"></div>
@@ -1239,8 +1185,8 @@ function loadCertificates(staffId, staffName) {
     modal.style.display = 'flex';
     
     // URL yang benar untuk AJAX request
-    const ajaxPath = 'includes/ajax_get_certificates.php';
-    const url = `${ajaxPath}?staff_id=${staffId}`;
+    const ajaxPath = 'includes/ajax_get_perangkat_licenses.php';
+    const url = `${ajaxPath}?perangkat_id=${perangkatId}`;
     
     console.log('Fetching certificates from:', url);
     
@@ -1264,7 +1210,7 @@ function loadCertificates(staffId, staffName) {
                     <div class="no-certificates">
                         <i class="fas fa-file-alt"></i>
                         <h3>Tidak Ada Lisensi</h3>
-                        <p>Staff ini belum memiliki lisensi.</p>
+                        <p>Perangkat ini belum memiliki lisensi.</p>
                     </div>
                 `;
             }
@@ -1273,7 +1219,7 @@ function loadCertificates(staffId, staffName) {
             console.error('Error loading certificates:', error);
             
             // Debug: test with direct URL
-            const testUrl = ajaxPath + '?staff_id=' + staffId;
+            const testUrl = ajaxPath + '?perangkat_id=' + perangkatId;
             content.innerHTML = `
                 <div class="no-certificates">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -1282,12 +1228,12 @@ function loadCertificates(staffId, staffName) {
                     <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
                         <small>Debug info:</small><br>
                         <small>URL: ${testUrl}</small><br>
-                        <small>Staff ID: ${staffId}</small>
+                        <small>Perangkat ID: ${perangkatId}</small>
                     </div>
                     <p style="font-size: 12px; color: #666;">
                         Pastikan file <code>${ajaxPath}</code> ada di server.
                     </p>
-                    <button onclick="loadCertificates(${staffId}, '${staffName}')" 
+                    <button onclick="loadLicenses(${perangkatId}, '${perangkatName}')" 
                             style="margin-top: 15px; padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer;">
                         <i class="fas fa-redo"></i> Coba Lagi
                     </button>
@@ -1314,7 +1260,7 @@ function loadCertificates(staffId, staffName) {
             
             // Build file URL - gunakan SITE_URL yang sudah didefinisikan
             const fileUrl = cert.certificate_file ? 
-                `${SITE_URL}/uploads/certificates/${fileName}` : '#';
+                `${SITE_URL}/uploads/perangkat/licenses/${fileName}` : '#';
             
             const formattedDate = cert.issue_date ? 
                 new Date(cert.issue_date).toLocaleDateString('id-ID', {

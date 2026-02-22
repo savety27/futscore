@@ -270,24 +270,6 @@ function recomputeEventKls(PDO $conn, int $eventId, string $categoryName = ''): 
 
 ensureSchema($conn);
 
-$menu_items = [
-    'dashboard' => ['icon' => '🏠', 'name' => 'Dashboard', 'url' => 'dashboard.php', 'submenu' => false],
-    'master' => ['icon' => '📊', 'name' => 'Master Data', 'submenu' => true, 'items' => [
-        'player' => 'player.php',
-        'team' => 'team.php',
-        'team_staff' => 'team_staff.php',
-        'transfer' => 'transfer.php'
-    ]],
-    'event' => ['icon' => '🏆', 'name' => 'Event', 'url' => 'event.php', 'submenu' => false],
-    'challenge' => ['icon' => '⚔️', 'name' => 'Challenge', 'url' => 'challenge.php', 'submenu' => false],
-    'Venue' => ['icon' => '📍', 'name' => 'Venue', 'url' => 'venue.php', 'submenu' => false],
-    'Pelatih' => ['icon' => '👨‍🏫', 'name' => 'Pelatih', 'url' => 'pelatih.php', 'submenu' => false],
-    'Berita' => ['icon' => '📰', 'name' => 'Berita', 'url' => 'berita.php', 'submenu' => false]
-];
-
-$current_page = basename($_SERVER['PHP_SELF']);
-$academy_name = "Hi, Welcome...";
-$email = $_SESSION['admin_email'] ?? '';
 $event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 
 $eventId = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;

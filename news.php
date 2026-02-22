@@ -275,6 +275,7 @@ function getQueryString($exclude = []) {
                 <div id="playerDropdown" class="sidebar-dropdown">
                     <a href="player.php">Pemain</a>
                     <a href="staff.php">Staf Team</a>
+                    <a href="perangkat.php">Perangkat Pertandingan</a>
                 </div>
             </div>
             <a href="news.php" class="active"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>

@@ -22,6 +22,7 @@ $menu_items = [
             'player' => 'player.php',
             'team' => 'team.php',
             'team_staff' => 'team_staff.php',
+            'perangkat_pertandingan' => 'perangkat.php',
             'transfer' => 'transfer.php',
         ]
     ],
