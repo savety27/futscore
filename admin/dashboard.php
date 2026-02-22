@@ -405,8 +405,8 @@ body {
     }
 
     .logout-btn {
-        width: 100%;
-        justify-content: center;
+        padding: 10px 20px;
+        font-size: 14px;
     }
 }
 
