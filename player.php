@@ -5,6 +5,12 @@ require_once 'includes/header.php';
 ?>
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/player_redesign.css?v=<?php echo time(); ?>">
+<style>
+    .player-table-new .col-nik {
+        min-width: 170px;
+        white-space: nowrap;
+    }
+</style>
 <?php
 
 // Logic for Search and Pagination
@@ -286,7 +292,7 @@ function maskNIK($nik) {
                             <th class="col-center">Usia</th>
                             <th class="col-center">JK</th>
                             <th>NISN</th>
-                            <th>NIK</th>
+                            <th class="col-nik">NIK</th>
                             <th>Event</th>
                             <th>Dibuat Pada</th>
                         </tr>
@@ -336,7 +342,7 @@ function maskNIK($nik) {
                                 <td class="col-center" data-label="Usia"><?php echo calculateAgeV2($p['birth_date']); ?></td>
                                 <td class="col-center" data-label="JK"><?php echo $p['gender'] ?: '-'; ?></td>
                                 <td data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
-                                <td data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
+                                <td class="col-nik" data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
                                 <td data-label="Event">
 
                                     <?php 

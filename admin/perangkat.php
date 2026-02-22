@@ -214,7 +214,20 @@ body{font-family:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-ser
                                     <?php endif; ?>
                                 </td>
                                 <td><strong><?php echo htmlspecialchars($row['name']); ?></strong></td>
-                                <td><?php echo htmlspecialchars($row['no_ktp']); ?></td>
+                                <td>
+                                    <?php
+                                    $noKtp = trim((string) ($row['no_ktp'] ?? ''));
+                                    if ($noKtp !== '') {
+                                        if (strlen($noKtp) > 7) {
+                                            echo htmlspecialchars(substr($noKtp, 0, 3) . str_repeat('*', max(strlen($noKtp) - 7, 1)) . substr($noKtp, -4));
+                                        } else {
+                                            echo htmlspecialchars(substr($noKtp, 0, 1) . str_repeat('*', max(strlen($noKtp) - 2, 1)) . substr($noKtp, -1));
+                                        }
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
+                                </td>
                                 <td><?php echo htmlspecialchars(formatUsiaFromDateOfBirth($row['age'] ?? '')); ?></td>
                                 <td>
                                     <?php if ((int) $row['license_count'] > 0): ?>

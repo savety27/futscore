@@ -1014,7 +1014,18 @@ $pageTitle = "Perangkat Pertandingan";
                                 </td>
                                 
                                 <td data-label="No. KTP">
-                                    <?php echo !empty($p['no_ktp']) ? htmlspecialchars($p['no_ktp']) : '-'; ?>
+                                    <?php
+                                    $noKtp = trim((string)($p['no_ktp'] ?? ''));
+                                    if ($noKtp !== '') {
+                                        if (strlen($noKtp) > 7) {
+                                            echo htmlspecialchars(substr($noKtp, 0, 3) . str_repeat('*', max(strlen($noKtp) - 7, 1)) . substr($noKtp, -4));
+                                        } else {
+                                            echo htmlspecialchars(substr($noKtp, 0, 1) . str_repeat('*', max(strlen($noKtp) - 2, 1)) . substr($noKtp, -1));
+                                        }
+                                    } else {
+                                        echo '-';
+                                    }
+                                    ?>
                                 </td>
                                 
                                 <td class="col-age" data-label="Usia"><?php echo htmlspecialchars(calculatePerangkatAge($p['age'] ?? null)); ?></td>
