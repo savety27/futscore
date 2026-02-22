@@ -16,6 +16,11 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$team_id = isset($_GET['team_id']) ? (int) $_GET['team_id'] : 0;
+$filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 
 // Query untuk mengambil semua data staff
 $query = "SELECT ts.*, 
@@ -28,19 +33,32 @@ $query = "SELECT ts.*,
 
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ? OR t.name LIKE ?)";
+    $query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ? OR t.name LIKE ? OR t.alias LIKE ?)";
+}
+
+if ($team_id > 0) {
+    $query .= " AND t.id = ?";
+}
+
+if ($filter_active !== '') {
+    $query .= " AND ts.is_active = ?";
 }
 
 $query .= " ORDER BY ts.created_at DESC";
 
 try {
+    $stmt = $conn->prepare($query);
+    $params = [];
     if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term, $search_term]);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->execute();
+        $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
     }
+    if ($team_id > 0) {
+        $params[] = $team_id;
+    }
+    if ($filter_active !== '') {
+        $params[] = (int) $filter_active;
+    }
+    $stmt->execute($params);
     
     $staff_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

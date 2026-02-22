@@ -16,6 +16,12 @@ header('Expires: 0');
 try {
     // Get search parameter
     $search = isset($_GET['search']) ? $_GET['search'] : '';
+    $status_filter = isset($_GET['status']) ? strtolower(trim((string) $_GET['status'])) : '';
+    $team_id = isset($_GET['team_id']) ? (int) $_GET['team_id'] : 0;
+    $allowed_status = ['active', 'inactive'];
+    if (!in_array($status_filter, $allowed_status, true)) {
+        $status_filter = '';
+    }
     
     // Query untuk mengambil data players
     $query = "SELECT 
@@ -58,8 +64,18 @@ try {
     
     if (!empty($search)) {
         $search_term = "%{$search}%";
-        $query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ?)";
-        $params = array_merge($params, [$search_term, $search_term, $search_term]);
+        $query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ? OR p.email LIKE ?)";
+        $params = array_merge($params, [$search_term, $search_term, $search_term, $search_term]);
+    }
+
+    if (!empty($status_filter)) {
+        $query .= " AND p.status = ?";
+        $params[] = $status_filter;
+    }
+
+    if ($team_id > 0) {
+        $query .= " AND p.team_id = ?";
+        $params[] = $team_id;
     }
     
     // Order by name

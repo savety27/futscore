@@ -16,6 +16,10 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 
 // Query untuk mengambil semua data venues
 $query = "SELECT * FROM venues WHERE 1=1";
@@ -25,16 +29,22 @@ if (!empty($search)) {
     $query .= " AND (name LIKE ? OR location LIKE ? OR facilities LIKE ?)";
 }
 
+if ($filter_active !== '') {
+    $query .= " AND is_active = ?";
+}
+
 $query .= " ORDER BY created_at DESC";
 
 try {
+    $stmt = $conn->prepare($query);
+    $params = [];
     if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$search_term, $search_term, $search_term]);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->execute();
+        $params = [$search_term, $search_term, $search_term];
     }
+    if ($filter_active !== '') {
+        $params[] = (int) $filter_active;
+    }
+    $stmt->execute($params);
     
     $venues = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

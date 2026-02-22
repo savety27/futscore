@@ -487,6 +487,34 @@ body {
     text-align: right;
 }
 
+.transfer-history-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-export-transfer {
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--success), #4CAF50);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-export-transfer:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(46, 125, 50, 0.25);
+}
+
 
 /* Alerts */
 .alert {
@@ -569,7 +597,7 @@ body {
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Transfer Player</h1>
+                <h1>Transfer Player 🔁</h1>
                 <p>Kelola transfer pemain antar team</p>
             </div>
             
@@ -657,9 +685,14 @@ body {
             </div>
 
             <div class="transfer-card">
-                <h2 style="color: var(--primary); display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-history"></i> Riwayat Transfer
-                </h2>
+                <div class="transfer-history-head">
+                    <h2 style="color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-history"></i> Riwayat Transfer
+                    </h2>
+                    <button type="button" class="btn-export-transfer" onclick="exportTransfers()">
+                        <i class="fas fa-download"></i> Export Excel
+                    </button>
+                </div>
                 <div class="transfer-search">
                     <input type="text" id="transfer_search" placeholder="Cari pemain atau tim..." autocomplete="off">
                 </div>
@@ -834,6 +867,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function exportTransfers() {
+    const searchInput = document.getElementById('transfer_search');
+    const searchValue = searchInput ? searchInput.value.trim() : '';
+    if (searchValue !== '') {
+        window.location.href = 'transfer_export.php?search=' + encodeURIComponent(searchValue);
+        return;
+    }
+    window.location.href = 'transfer_export.php';
+}
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>

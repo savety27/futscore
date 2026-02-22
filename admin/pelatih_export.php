@@ -16,6 +16,10 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 
 // Query untuk mengambil semua data pelatih dengan JOIN ke tabel teams
 $query = "SELECT au.*, t.name as team_name 
@@ -28,16 +32,22 @@ if (!empty($search)) {
     $query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ?)";
 }
 
+if ($filter_active !== '') {
+    $query .= " AND au.is_active = ?";
+}
+
 $query .= " ORDER BY au.created_at DESC";
 
 try {
+    $stmt = $conn->prepare($query);
+    $params = [];
     if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term, $search_term]);
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->execute();
+        $params = [$search_term, $search_term, $search_term, $search_term, $search_term];
     }
+    if ($filter_active !== '') {
+        $params[] = (int) $filter_active;
+    }
+    $stmt->execute($params);
     
     $pelatih = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

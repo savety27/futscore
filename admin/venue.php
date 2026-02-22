@@ -24,6 +24,10 @@ if (!isset($conn) || !$conn) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 
 // Handle sorting
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'created_at';
@@ -56,6 +60,11 @@ if (!empty($search)) {
     $count_query .= " AND (v.name LIKE ? OR v.location LIKE ? OR v.facilities LIKE ?)";
 }
 
+if ($filter_active !== '') {
+    $base_query .= " AND v.is_active = ?";
+    $count_query .= " AND v.is_active = ?";
+}
+
 // Tambahkan sorting - PASTIKAN sorting ini ADA sebelum LIMIT
 $base_query .= " ORDER BY v.$sort $order";
 
@@ -65,38 +74,32 @@ $total_pages = 1;
 $venues = [];
 
 try {
-    // Count total records
+    $query_params = [];
     if (!empty($search)) {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } else {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
+        $query_params = [$search_term, $search_term, $search_term];
     }
+    if ($filter_active !== '') {
+        $query_params[] = (int) $filter_active;
+    }
+
+    // Count total records
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($query_params);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_data = $result['total'];
     
     $total_pages = ceil($total_data / $limit);
     
     // Get data with pagination - PASTIKAN sorting MASUK di query
     $query = $base_query . " LIMIT ? OFFSET ?";
-    
-    if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(5, $offset, PDO::PARAM_INT);
-        $stmt->execute();
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-        $stmt->execute();
+    $stmt = $conn->prepare($query);
+    $bind_index = 1;
+    foreach ($query_params as $param) {
+        $stmt->bindValue($bind_index++, $param, is_int($param) ? PDO::PARAM_INT : PDO::PARAM_STR);
     }
+    $stmt->bindValue($bind_index++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($bind_index, $offset, PDO::PARAM_INT);
+    $stmt->execute();
     
     $venues = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -306,6 +309,106 @@ body {
     color: var(--primary);
     font-size: 18px;
     cursor: pointer;
+}
+
+.filter-container {
+    margin-bottom: 24px;
+}
+
+.venue-filter-card {
+    padding: 16px;
+    border: 1px solid #dbe5f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
+}
+
+.venue-filter-form {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.55fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.venue-search-group {
+    position: relative;
+}
+
+.venue-search-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7b8797;
+    font-size: 13px;
+}
+
+.venue-search-input,
+.venue-filter-select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.venue-search-input {
+    padding: 0 12px 0 36px;
+}
+
+.venue-filter-select {
+    padding: 0 12px;
+}
+
+.venue-search-input:focus,
+.venue-filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
+}
+
+.venue-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-filter,
+.clear-filter-btn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-filter {
+    background: linear-gradient(135deg, var(--primary), #1a4f9e);
+    color: #ffffff;
+}
+
+.btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
+}
+
+.clear-filter-btn {
+    background: #ffffff;
+    border-color: #d3dcea;
+    color: #3b4a5f;
+}
+
+.clear-filter-btn:hover {
+    background: #f2f6fc;
 }
 
 .page-header .action-buttons {
@@ -664,10 +767,8 @@ body {
         padding: 20px;
     }
 
-    .search-bar {
-        flex: 1 1 320px;
-        width: auto;
-        max-width: 100%;
+    .venue-filter-form {
+        grid-template-columns: minmax(220px, 1fr) minmax(170px, 0.5fr) auto;
     }
 }
 
@@ -726,19 +827,14 @@ body {
         font-size: 24px;
     }
 
-    .search-bar {
+    .venue-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .venue-filter-actions .btn-filter,
+    .venue-filter-actions .clear-filter-btn {
         width: 100%;
-        max-width: 100%;
-    }
-
-    .search-bar input {
-        padding: 13px 44px 13px 16px;
-        font-size: 15px;
-    }
-
-    .search-bar button {
-        right: 12px;
-        font-size: 16px;
+        justify-content: center;
     }
 
     .page-header .action-buttons {
@@ -933,8 +1029,8 @@ body {
         font-size: 20px;
     }
 
-    .search-bar input {
-        padding: 12px 40px 12px 14px;
+    .venue-search-input,
+    .venue-filter-select {
         font-size: 14px;
     }
 
@@ -1096,14 +1192,6 @@ body {
                 <span>Daftar Venue</span>
             </div>
             
-            <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari venue (nama, lokasi, fasilitas)..." 
-                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
-                <button type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-            
             <div class="action-buttons">
                 <a href="venue_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
@@ -1113,6 +1201,44 @@ body {
                     <i class="fas fa-download"></i>
                     Export Excel
                 </button>
+            </div>
+        </div>
+
+        <div class="filter-container">
+            <div class="venue-filter-card">
+                <form method="GET" action="" class="venue-filter-form" id="searchForm">
+                    <input type="hidden" name="page" value="1">
+                    <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sort); ?>">
+                    <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>">
+
+                    <div class="venue-search-group">
+                        <i class="fas fa-search"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            class="venue-search-input"
+                            placeholder="Cari venue (nama, lokasi, fasilitas)..."
+                            value="<?php echo htmlspecialchars($search ?? ''); ?>"
+                        >
+                    </div>
+
+                    <select name="active" class="venue-filter-select">
+                        <option value="">Semua Status</option>
+                        <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
+                        <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Nonaktif</option>
+                    </select>
+
+                    <div class="venue-filter-actions">
+                        <button type="submit" class="btn-filter">
+                            <i class="fas fa-filter"></i> Terapkan
+                        </button>
+                        <?php if ($search !== '' || $filter_active !== ''): ?>
+                            <a href="?<?php echo http_build_query(['sort' => $sort, 'order' => $order]); ?>" class="clear-filter-btn">
+                                <i class="fas fa-times"></i> Reset
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
         </div>
 

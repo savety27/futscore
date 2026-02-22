@@ -345,65 +345,104 @@ body {
     min-width: 0;
 }
 
-.search-bar {
-    display: flex;
+.filter-container {
+    margin-bottom: 24px;
+}
+
+.player-filter-card {
+    padding: 16px;
+    border: 1px solid #dbe5f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
+}
+
+.player-filter-form {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.55fr) auto;
+    gap: 12px;
     align-items: center;
-    gap: 10px;
-    width: 100%;
-    max-width: 520px;
-    min-width: 260px;
 }
 
-.search-input-wrap {
+.player-search-group {
     position: relative;
-    flex: 1;
 }
 
-.search-input-wrap input {
-    width: 100%;
-    padding: 15px 50px 15px 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-}
-
-.search-input-wrap input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.search-input-wrap button {
+.player-search-group i {
     position: absolute;
-    right: 15px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 18px;
+    color: #7b8797;
+    font-size: 13px;
+}
+
+.player-search-input,
+.player-filter-select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.player-search-input {
+    padding: 0 12px 0 36px;
+}
+
+.player-filter-select {
+    padding: 0 12px;
+}
+
+.player-search-input:focus,
+.player-filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
+}
+
+.player-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-filter,
+.clear-filter-btn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
 }
 
-.status-filter-select {
-    min-width: 140px;
-    padding: 13px 14px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 14px;
-    background: #f8f9fa;
-    color: var(--dark);
-    transition: var(--transition);
+.btn-filter {
+    background: linear-gradient(135deg, var(--primary), #1a4f9e);
+    color: #ffffff;
 }
 
-.status-filter-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+.btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
+}
+
+.clear-filter-btn {
+    background: #ffffff;
+    border-color: #d3dcea;
+    color: #3b4a5f;
+}
+
+.clear-filter-btn:hover {
+    background: #f2f6fc;
 }
 
 .action-buttons {
@@ -841,11 +880,6 @@ body {
         min-width: 0;
     }
 
-    .search-bar {
-        flex: 1 1 420px;
-        max-width: none;
-    }
-
     .action-buttons {
         flex: 1 1 auto;
     }
@@ -902,17 +936,14 @@ body {
         margin-bottom: 5px;
     }
 
-    .search-bar {
-        flex: none;
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-        max-width: none;
-        min-width: 100%;
+    .player-filter-form {
+        grid-template-columns: 1fr;
     }
 
-    .search-input-wrap, .status-filter-select {
+    .player-filter-actions .btn-filter,
+    .player-filter-actions .clear-filter-btn {
         width: 100%;
+        justify-content: center;
     }
 
     /* Compact buttons */
@@ -1071,22 +1102,7 @@ body {
             <?php endif; ?>
         </div>
     </div>
-    
-    <form method="GET" action="" class="search-bar">
-        <?php if ($team_id > 0): ?>
-            <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
-        <?php endif; ?>
-        <select name="status" class="status-filter-select" onchange="this.form.submit()">
-            <option value="">Semua Status</option>
-            <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Aktif</option>
-            <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Non-aktif</option>
-        </select>
-        <div class="search-input-wrap">
-            <input type="text" name="search" placeholder="Cari player (nama, NIK, NISN)..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
-            <button type="submit"><i class="fas fa-search"></i></button>
-        </div>
-    </form>
-            
+
             <div class="action-buttons">
                 <a href="player/add.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
@@ -1096,6 +1112,52 @@ body {
                     <i class="fas fa-download"></i>
                     Export Excel
                 </button>
+            </div>
+        </div>
+
+        <div class="filter-container">
+            <div class="player-filter-card">
+                <form method="GET" action="" class="player-filter-form">
+                    <?php if ($team_id > 0): ?>
+                        <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
+                    <?php endif; ?>
+                    <input type="hidden" name="page" value="1">
+
+                    <div class="player-search-group">
+                        <i class="fas fa-search"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            class="player-search-input"
+                            placeholder="Cari player (nama, NIK, NISN, email)..."
+                            value="<?php echo htmlspecialchars($search ?? ''); ?>"
+                        >
+                    </div>
+
+                    <select name="status" class="player-filter-select">
+                        <option value="">Semua Status</option>
+                        <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>Aktif</option>
+                        <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>Nonaktif</option>
+                    </select>
+
+                    <div class="player-filter-actions">
+                        <button type="submit" class="btn-filter">
+                            <i class="fas fa-filter"></i> Terapkan
+                        </button>
+                        <?php if ($search !== '' || $status_filter !== ''): ?>
+                            <?php
+                                $player_reset_params = [];
+                                if ($team_id > 0) {
+                                    $player_reset_params['team_id'] = $team_id;
+                                }
+                                $player_reset_href = 'player.php' . (!empty($player_reset_params) ? ('?' . http_build_query($player_reset_params)) : '');
+                            ?>
+                            <a href="<?php echo htmlspecialchars($player_reset_href); ?>" class="clear-filter-btn">
+                                <i class="fas fa-times"></i> Reset
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
         </div>
 

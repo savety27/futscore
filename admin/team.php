@@ -23,6 +23,10 @@ if (!isset($conn) || !$conn) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -47,6 +51,11 @@ if (!empty($search)) {
     $count_query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR te.event_name LIKE ?)";
 }
 
+if ($filter_active !== '') {
+    $base_query .= " AND t.is_active = ?";
+    $count_query .= " AND t.is_active = ?";
+}
+
 $base_query .= " GROUP BY t.id ORDER BY t.created_at DESC";
 
 // Get total data
@@ -56,44 +65,47 @@ $teams = [];
 
 try {
     // Count total records
+    $count_params = [];
     if (!empty($search)) {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$search_term, $search_term, $search_term, $search_term]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } else {
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
+        $count_params = [$search_term, $search_term, $search_term, $search_term];
     }
+    if ($filter_active !== '') {
+        $count_params[] = (int) $filter_active;
+    }
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($count_params);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_data = $result['total'];
     
     $total_pages = ceil($total_data / $limit);
     
     // Get data with pagination
     $query = $base_query . " LIMIT ? OFFSET ?";
-    
+    $stmt = $conn->prepare($query);
+    $bind_index = 1;
     if (!empty($search)) {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(6, $offset, PDO::PARAM_INT);
-        $stmt->execute();
-    } else {
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->bindValue($bind_index++, $search_term);
+        $stmt->bindValue($bind_index++, $search_term);
+        $stmt->bindValue($bind_index++, $search_term);
+        $stmt->bindValue($bind_index++, $search_term);
     }
+    if ($filter_active !== '') {
+        $stmt->bindValue($bind_index++, (int) $filter_active, PDO::PARAM_INT);
+    }
+    $stmt->bindValue($bind_index++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($bind_index, $offset, PDO::PARAM_INT);
+    $stmt->execute();
     
     $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
 }
+
+$pagination_params = [
+    'search' => $search,
+    'active' => $filter_active
+];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -261,6 +273,106 @@ body {
     color: var(--primary);
     font-size: 18px;
     cursor: pointer;
+}
+
+.filter-container {
+    margin-bottom: 24px;
+}
+
+.team-filter-card {
+    padding: 16px;
+    border: 1px solid #dbe5f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
+}
+
+.team-filter-form {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.55fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.team-search-group {
+    position: relative;
+}
+
+.team-search-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7b8797;
+    font-size: 13px;
+}
+
+.team-search-input,
+.team-filter-select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.team-search-input {
+    padding: 0 12px 0 36px;
+}
+
+.team-filter-select {
+    padding: 0 12px;
+}
+
+.team-search-input:focus,
+.team-filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
+}
+
+.team-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-filter,
+.clear-filter-btn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-filter {
+    background: linear-gradient(135deg, var(--primary), #1a4f9e);
+    color: #ffffff;
+}
+
+.btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
+}
+
+.clear-filter-btn {
+    background: #ffffff;
+    border-color: #d3dcea;
+    color: #3b4a5f;
+}
+
+.clear-filter-btn:hover {
+    background: #f2f6fc;
 }
 
 .action-buttons {
@@ -840,6 +952,18 @@ body {
     transform: scale(0.95);
 }
 
+@media screen and (max-width: 768px) {
+    .team-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .team-filter-actions .btn-filter,
+    .team-filter-actions .clear-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* Make it clear it's clickable with cursor */
 .count-link {
     cursor: pointer;
@@ -943,15 +1067,7 @@ body {
                 <i class="fas fa-users"></i>
                 <span>Daftar Team</span>
             </div>
-            
-            <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari team (nama, alias, coach, event)..." 
-                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
-                <button type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-            
+
             <div class="action-buttons">
                 <a href="team_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
@@ -961,6 +1077,42 @@ body {
                     <i class="fas fa-download"></i>
                     Export Excel
                 </button>
+            </div>
+        </div>
+
+        <div class="filter-container">
+            <div class="team-filter-card">
+                <form method="GET" action="" class="team-filter-form" id="searchForm">
+                    <input type="hidden" name="page" value="1">
+
+                    <div class="team-search-group">
+                        <i class="fas fa-search"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            class="team-search-input"
+                            placeholder="Cari team (nama, alias, manager, event)..."
+                            value="<?php echo htmlspecialchars($search ?? ''); ?>"
+                        >
+                    </div>
+
+                    <select name="active" class="team-filter-select">
+                        <option value="">Semua Status</option>
+                        <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
+                        <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Nonaktif</option>
+                    </select>
+
+                    <div class="team-filter-actions">
+                        <button type="submit" class="btn-filter">
+                            <i class="fas fa-filter"></i> Terapkan
+                        </button>
+                        <?php if ($search !== '' || $filter_active !== ''): ?>
+                            <a href="team.php" class="clear-filter-btn">
+                                <i class="fas fa-times"></i> Reset
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -1117,7 +1269,7 @@ body {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($pagination_params, ['page' => $page - 1])); ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-left"></i>
                 </a>
@@ -1133,14 +1285,14 @@ body {
             
             for ($i = $start_page; $i <= $end_page; $i++): 
             ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($pagination_params, ['page' => $i])); ?>" 
                    class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
                    <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>" 
+                <a href="?<?php echo http_build_query(array_merge($pagination_params, ['page' => $page + 1])); ?>" 
                    class="page-link">
                     <i class="fas fa-chevron-right"></i>
                 </a>
