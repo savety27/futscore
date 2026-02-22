@@ -475,11 +475,12 @@ body {
 }
 
 .data-table th {
-    padding: 15px;
+    padding: 12px 8px;
     text-align: left;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
-    font-size: 14px;
+    font-size: 12px;
+    white-space: nowrap;
 }
 
 .data-table tbody tr {
@@ -501,26 +502,26 @@ body {
 }
 
 .data-table td {
-    padding: 12px 15px;
+    padding: 8px;
     vertical-align: middle;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .photo-cell {
-    width: 70px;
+    width: 60px;
 }
 
 .player-photo {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #e0e0e0;
 }
 
 .default-photo {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--secondary), #FFEC8B);
     display: flex;
@@ -530,22 +531,22 @@ body {
 }
 
 .default-photo i {
-    font-size: 24px;
+    font-size: 20px;
     color: var(--primary);
 }
 
 .team-cell {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .team-logo {
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #e0e0e0;
+    border: 1px solid #e0e0e0;
 }
 
 .team-name {
@@ -559,14 +560,14 @@ body {
     color: var(--primary);
     background: #f0f7ff;
     border-radius: 8px;
-    padding: 8px 0;
-    min-width: 50px;
+    padding: 6px 0;
+    min-width: 40px;
 }
 
 .age-cell {
     text-align: center;
     color: var(--gray);
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .gender-cell {
@@ -575,11 +576,11 @@ body {
 
 .gender-badge {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .gender-male {
@@ -606,13 +607,13 @@ body {
 
 .sport-badge {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     background: linear-gradient(135deg, var(--secondary), #FFEC8B);
     color: var(--primary);
-    min-width: 80px;
+    min-width: 70px;
 }
 
 .status-cell {
@@ -621,11 +622,11 @@ body {
 
 .status-badge {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 4px 8px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    min-width: 90px;
+    min-width: 80px;
     text-transform: uppercase;
 }
 
@@ -655,11 +656,11 @@ body {
 
 .date-cell {
     color: var(--gray);
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .action-cell {
-    min-width: 150px;
+    min-width: 120px;
 }
 
 .action-buttons-small {
@@ -668,8 +669,8 @@ body {
 }
 
 .action-btn {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
     border: none;
     display: flex;
@@ -677,7 +678,7 @@ body {
     justify-content: center;
     cursor: pointer;
     transition: var(--transition);
-    font-size: 14px;
+    font-size: 13px;
     text-decoration: none;
 }
 
@@ -1128,14 +1129,14 @@ body {
                         <th>Photo</th>
                         <th>Nama</th>
                         <th>Team</th>
-                        <th>No</th>
+                        <th>#</th>
                         <th>Usia</th>
                         <th>JK</th>
                         <th>NISN</th>
                         <th>NIK</th>
                         <th>Event</th>
                         <th>Status</th>
-                        <th>Tanggal Dibuat</th>
+                        <th>Dibuat</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -1144,7 +1145,7 @@ body {
                         <?php $no = $offset + 1; ?>
                         <?php foreach($players as $player): ?>
                         <tr>
-                            <td class="number-cell"><?php echo $no++; ?></td>
+                            <td class="number-cell" style="background: transparent;"><?php echo $no++; ?></td>
                             <td class="photo-cell">
                                 <?php 
                                 $photo_displayed = false;
