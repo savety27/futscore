@@ -3131,3 +3131,16 @@
 }
 
 
+/* Override legacy green accents from css/style.css on home/dashboard cards */
+.dashboard-wrapper .match-details i,
+.dashboard-wrapper .news-views i,
+.dashboard-wrapper .view-profile,
+.dashboard-wrapper .view-profile i,
+.dashboard-wrapper .winner-premium-card:hover .view-profile,
+.dashboard-wrapper .winner-premium-card:hover .view-profile i {
+    color: var(--navy) !important;
+}
+
+.dashboard-wrapper .player-photo {
+    border-color: var(--navy) !important;
+}
