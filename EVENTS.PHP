@@ -593,6 +593,30 @@ if ($eventId > 0 && !empty($event)) {
     border: 1px solid #e2e8f0;
     line-height: 1.65;
 }
+/* Modal Styles for Team Info */
+.team-ds-modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 15px; }
+.team-ds-modal.active { display: flex; animation: fadeInModal 0.2s ease; }
+.team-ds-modal-content { background: #fff; width: 100%; max-width: 900px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; max-height: 90vh; display: flex; flex-direction: column; }
+.team-ds-modal-header { padding: 18px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+.team-ds-modal-title { font-size: 16px; font-weight: 700; color: #64748b; }
+.team-ds-close { background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1; }
+.team-ds-close:hover { color: #ef4444; }
+.team-ds-modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+.team-ds-info-wrap { text-align: center; margin-bottom: 24px; }
+.team-ds-logo-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
+.team-ds-logo { width: 44px; height: 44px; object-fit: contain; }
+.team-ds-name { font-size: 24px; font-weight: 600; color: #334155; }
+.team-ds-subtitle { font-size: 14px; color: #64748b; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.team-ds-stats { font-size: 13px; font-weight: 600; color: #334155; }
+.team-ds-table-wrap { overflow-x: auto; background: #0f172a; border-radius: 12px; margin-top: 10px; }
+.team-ds-table { width: 100%; border-collapse: collapse; min-width: 760px; color: #fff; }
+.team-ds-table th { padding: 12px 10px; font-size: 13px; font-weight: 700; border-bottom: 2px solid #1e293b; text-align: center; }
+.team-ds-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid #1e293b; text-align: center; background: #fff; color: #334155; }
+.team-ds-table td.ts-player-col { text-align: left; display: flex; align-items: center; gap: 10px; }
+.team-ds-table .ts-head-icon { width:16px; height:16px; vertical-align:middle; filter: brightness(0) invert(1); }
+.ts-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; }
+.ts-player-name { text-transform: uppercase; font-weight: 500; }
+@keyframes fadeInModal { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 .event-participant-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1089,7 +1113,11 @@ if ($eventId > 0 && !empty($event)) {
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <a class="event-team-info-link" href="<?php echo htmlspecialchars($teamLink); ?>" title="Lihat pertandingan team">
+                                                                    <a class="event-team-info-link team-ds-trigger" href="javascript:void(0)" 
+                                                                       data-event-id="<?php echo $eventId; ?>" 
+                                                                       data-team-id="<?php echo $teamId; ?>" 
+                                                                       data-category="<?php echo htmlspecialchars($group['category_name'] ?? ''); ?>" 
+                                                                       title="Info Peserta">
                                                                         <i class="fas fa-circle-info"></i>
                                                                     </a>
                                                                 </td>
@@ -1442,6 +1470,23 @@ if ($eventId > 0 && !empty($event)) {
     </div>
 </div>
 
+<!-- Team Info Modal -->
+<div class="team-ds-modal" id="teamInfoModal">
+    <div class="team-ds-modal-content">
+        <div class="team-ds-modal-header">
+            <div class="team-ds-modal-title" id="dsModalHeaderTitle">Info Peserta LIGA:</div>
+            <button class="team-ds-close" onclick="closeTeamInfoModal()">&times;</button>
+        </div>
+        <div class="team-ds-modal-body" id="teamInfoModalBody">
+            <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 10px;">Memuat data tim...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 function toggleDropdown(element, dropdownId) {
     const dropdown = document.getElementById(dropdownId);
@@ -1544,6 +1589,99 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
         renderFilteredCards(input.value);
     });
 })();
+
+// TEAM INFO MODAL LOGIC
+function openTeamInfoModal(eventId, teamId, category) {
+    const modal = document.getElementById('teamInfoModal');
+    const body = document.getElementById('teamInfoModalBody');
+    const headerTitle = document.getElementById('dsModalHeaderTitle');
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    body.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 0;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top: 10px;">Memuat data tim...</p></div>';
+    
+    fetch('<?php echo SITE_URL; ?>/api/get_team_event_info.php?event_id=' + eventId + '&team_id=' + teamId + '&sport_type=' + encodeURIComponent(category))
+        .then(res => res.json())
+        .then(data => {
+            if(!data.success) {
+                body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>' + (data.error || 'Gagal memuat data') + '</p></div>';
+                return;
+            }
+            
+            headerTitle.textContent = 'Info Peserta ' + data.event_name + ':';
+            
+            let html = '<div class="team-ds-info-wrap">';
+            html += '<div class="team-ds-logo-wrap">';
+            html += '<img src="<?php echo SITE_URL; ?>/images/teams/' + data.team.logo + '" class="team-ds-logo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">';
+            html += '<div class="team-ds-name">' + data.team.name + '</div>';
+            html += '</div>';
+            
+            html += '<div class="team-ds-subtitle">';
+            html += '<img src="<?php echo SITE_URL; ?>/images/events/alvetrix-mini.png" style="height:14px; width:auto; display:none;" onerror="this.style.display=\'none\'">';
+            html += data.event_name + ' (' + data.category + ')';
+            html += '</div>';
+            
+            const stats = data.stats;
+            html += '<div class="team-ds-stats">';
+            html += '<b>Total:</b> Player (' + stats.total_players + '), Goal (' + stats.total_goals + '), ';
+            html += '<span style="color:#b91c1c;">🟥</span> (' + stats.red + '), <span style="color:#ca8a04;">🟨</span> (' + stats.yellow + '), <span style="color:#15803d;">🟩</span> (' + stats.green + '), PT (' + stats.pt + ')';
+            html += '</div></div>';
+            
+            html += '<div class="team-ds-table-wrap">';
+            html += '<table class="team-ds-table">';
+            html += '<thead><tr>';
+            html += '<th>No</th>';
+            html += '<th style="text-align:left;">Player <i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>Jersey <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>Match <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>Goal<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>🟥<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>🟨<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>🟩<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '<th>Play <br>Time<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+            html += '</tr></thead><tbody>';
+            
+            if (data.players.length === 0) {
+                html += '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">Belum ada pemain di kategori ini</td></tr>';
+            } else {
+                data.players.forEach((p, index) => {
+                    html += '<tr>';
+                    html += '<td style="color:#64748b;">' + (index + 1) + '</td>';
+                    html += '<td class="ts-player-col">';
+                    html += '<img src="<?php echo SITE_URL; ?>/images/players/' + p.photo + '" class="ts-photo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/players/default-player.jpg\'">';
+                    html += '<span class="ts-player-name">' + p.name + '</span>';
+                    html += '</td>';
+                    html += '<td>' + p.jersey_number + '</td>';
+                    html += '<td>' + p.matches + ' <i class="fas fa-info-circle text-primary" style="font-size:10px; color:#3b82f6;"></i></td>';
+                    html += '<td>' + p.goals + '</td>';
+                    html += '<td>' + p.red + '</td>';
+                    html += '<td>' + p.yellow + '</td>';
+                    html += '<td>' + p.green + '</td>';
+                    html += '<td>' + p.play_time + '</td>';
+                    html += '</tr>';
+                });
+            }
+            
+            html += '</tbody></table></div>';
+            
+            body.innerHTML = html;
+        })
+        .catch(err => {
+            body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Terjadi kesalahan koneksi.</p></div>';
+        });
+}
+
+function closeTeamInfoModal() {
+    document.getElementById('teamInfoModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+document.querySelectorAll('.team-ds-trigger').forEach(btn => {
+    btn.addEventListener('click', function() {
+        openTeamInfoModal(this.dataset.eventId, this.dataset.teamId, this.dataset.category);
+    });
+});
 </script>
 <script>
 (function() {
