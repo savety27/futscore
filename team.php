@@ -18,29 +18,82 @@ if ($teamId > 0) {
     $players = getPlayersByTeamId($teamId);
     $staff = getTeamStaffByTeamId($teamId);
     
-    // Get events this team participated in
+    // SMART MATCH: Get event participation (Official & Team History)
     $conn = $db->getConnection();
-    $eventSql = "SELECT ev.event_name AS event_key, ev.event_name
-                 FROM (
-                     SELECT te.event_name AS event_name
-                     FROM team_events te
-                     WHERE te.team_id = ?
-
-                     UNION
-
-                     SELECT c.sport_type AS event_name
-                     FROM challenges c
-                     WHERE c.challenger_id = ? OR c.opponent_id = ?
-                 ) ev
-                 WHERE ev.event_name IS NOT NULL AND ev.event_name <> ''
-                 ORDER BY ev.event_name ASC";
-    $eventStmt = $conn->prepare($eventSql);
-    $eventStmt->bind_param("iii", $teamId, $teamId, $teamId);
-    $eventStmt->execute();
-    $eventsResult = $eventStmt->get_result();
-    $events = [];
-    while ($row = $eventsResult->fetch_assoc()) {
-        $events[] = $row;
+    
+    // Optimized Query: Combines all sources and matches with official events in one go
+    // This structure preserves multiple IDs for the same name while deduplicating identical events
+    $participationSql = "
+        SELECT 
+            COALESCE(e.name, matched.event_name) as event_name,
+            e.id as event_id,
+            e.category,
+            e.start_date,
+            e.end_date,
+            e.location,
+            e.image,
+            CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END as is_official
+        FROM (
+            SELECT 
+                MAX(s.source_name) as event_name,
+                s.best_id
+            FROM (
+                SELECT 
+                    s.source_name,
+                    COALESCE(s.source_id, (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') ORDER BY start_date DESC, id DESC LIMIT 1)) as best_id
+                FROM (
+                    SELECT e.name as source_name, e.id as source_id 
+                    FROM events e 
+                    JOIN event_team_values etv ON e.id = etv.event_id 
+                    WHERE etv.team_id = ?
+                    
+                    UNION
+                    
+                    SELECT sport_type as source_name, event_id as source_id 
+                    FROM challenges 
+                    WHERE (challenger_id = ? OR opponent_id = ?) 
+                      AND sport_type IS NOT NULL AND sport_type <> ''
+                      
+                    UNION
+                    
+                    SELECT event_name as source_name, NULL as source_id 
+                    FROM team_events 
+                    WHERE team_id = ?
+                ) s
+            ) s
+            GROUP BY s.best_id, (CASE WHEN s.best_id IS NULL THEN s.source_name ELSE '' END)
+        ) matched
+        LEFT JOIN events e ON matched.best_id = e.id
+        ORDER BY is_official DESC, e.start_date DESC
+    ";
+    
+    $pStmt = $conn->prepare($participationSql);
+    $pStmt->bind_param("iiii", $teamId, $teamId, $teamId, $teamId);
+    $pStmt->execute();
+    $pResult = $pStmt->get_result();
+    
+    $participations = [];
+    $events = []; // For roster tabs
+    
+    while ($row = $pResult->fetch_assoc()) {
+        $isOfficial = (bool)$row['is_official'];
+        
+        $participations[] = [
+            'event_id' => $row['event_id'],
+            'event_name' => $row['event_name'],
+            'category' => $row['category'] ?? ($isOfficial ? 'Official Event' : 'Tournament / Cabor'),
+            'start_date' => $row['start_date'],
+            'end_date' => $row['end_date'],
+            'location' => $row['location'] ?? ($isOfficial ? 'Tournament Venue' : 'Team Record'),
+            'image' => $row['image'],
+            'is_official' => $isOfficial
+        ];
+        
+        // Populate events list for tabs (replaces the second query)
+        $events[] = [
+            'event_key' => $row['event_name'],
+            'event_name' => $row['event_name']
+        ];
     }
     
     $pageTitle = $team['name'];
@@ -67,6 +120,134 @@ if ($teamId > 0) {
 
 .event-meta-label {
     color: #0f172a !important;
+}
+
+/* Participation Table Styles */
+.participation-section {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.participation-table-container {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.participation-row {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.participation-row:last-child {
+    border-bottom: none;
+}
+
+.participation-row.is-link:hover {
+    background-color: #f8fafc;
+    transform: translateX(4px);
+}
+
+.participation-event-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 16px;
+}
+
+.participation-event-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 4px;
+}
+
+.participation-event-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.participation-event-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+.participation-event-category {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-pill-small {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.status-official { background: #dcfce7; color: #166534; }
+.status-history { background: #f1f5f9; color: #64748b; }
+
+.participation-meta {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+}
+
+.participation-meta-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+}
+
+.participation-meta-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.participation-meta-value {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.participation-arrow {
+    color: #cbd5e1;
+    margin-left: 16px;
+    transition: transform 0.2s ease;
+}
+
+.participation-row.is-link:hover .participation-arrow {
+    color: #2563eb;
+    transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+    .participation-meta {
+        display: none;
+    }
+    .participation-row {
+        padding: 12px 16px;
+    }
 }
 </style>
 
@@ -182,7 +363,7 @@ if ($teamId > 0) {
                     <div class="team-profile-card">
                         <div class="team-profile-identity">
                             <div class="team-logo-shell">
-                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
+                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
                                      alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                                      class="team-logo-profile"
                                      onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
@@ -251,6 +432,73 @@ if ($teamId > 0) {
                         </div>
                     </div>
                 </div>
+
+                <?php if (!empty($participations)): ?>
+                <!-- EVENT PARTICIPATION SECTION -->
+                <div class="container section-container participation-section">
+                    <div class="section-header">
+                        <h2 class="section-title">RIWAYAT PARTISIPASI</h2>
+                    </div>
+                    
+                    <div class="participation-table-container">
+                        <?php foreach ($participations as $p): ?>
+                            <?php 
+                                $isLink = !empty($p['event_id']);
+                                $rowTag = $isLink ? 'a' : 'div';
+                                $rowAttr = $isLink ? 'href="events.php?id=' . (int)$p['event_id'] . '"' : '';
+                            ?>
+                            <<?php echo $rowTag; ?> <?php echo $rowAttr; ?> class="participation-row <?php echo $isLink ? 'is-link' : ''; ?>">
+                                <div class="participation-event-info">
+                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars(!empty($p['image']) ? $p['image'] : 'default-event.png'); ?>" 
+                                         alt="<?php echo htmlspecialchars($p['event_name']); ?>" 
+                                         class="participation-event-logo"
+                                         onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
+                                    <div class="participation-event-details">
+                                        <span class="participation-event-name"><?php echo htmlspecialchars($p['event_name']); ?></span>
+                                        <div class="participation-event-category">
+                                            <span><?php echo htmlspecialchars($p['category']); ?></span>
+                                            <?php if($p['is_official']): ?>
+                                                <span class="status-pill-small status-official">Official</span>
+                                            <?php else: ?>
+                                                <span class="status-pill-small status-history">History</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="participation-meta">
+                                    <div class="participation-meta-item">
+                                        <span class="participation-meta-label">PERIODE</span>
+                                        <span class="participation-meta-value">
+                                            <?php 
+                                            if (!empty($p['start_date'])) {
+                                                $start = strtotime($p['start_date']);
+                                                $end = !empty($p['end_date']) ? strtotime($p['end_date']) : null;
+                                                echo date('d M', $start) . ($end ? ' - ' . date('d M Y', $end) : date(' Y', $start));
+                                            } else {
+                                                echo 'Records Found';
+                                            }
+                                            ?>
+                                        </span>
+                                    </div>
+                                    <div class="participation-meta-item">
+                                        <span class="participation-meta-label">LOKASI</span>
+                                        <span class="participation-meta-value"><?php echo htmlspecialchars($p['location'] ?? '-'); ?></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="participation-arrow">
+                                    <?php if($isLink): ?>
+                                        <i class="fas fa-chevron-right"></i>
+                                    <?php else: ?>
+                                        <i class="fas fa-info-circle" style="opacity: 0.3;"></i>
+                                    <?php endif; ?>
+                                </div>
+                            </<?php echo $rowTag; ?>>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
                 
                 <div class="container section-container team-roster-section">
                     <div class="section-header">
@@ -777,7 +1025,8 @@ if ($teamId > 0) {
                     const filtered = playersData.filter(p => {
                         const st = (p.sport_type || '').trim().toLowerCase();
                         const ev = (eventId || '').trim().toLowerCase();
-                        return st === ev;
+                        // Fuzzy match: either the sport_type is in the event name, or vice versa
+                        return ev.includes(st) || st.includes(ev) || st === ev;
                     });
 
                     if (filtered.length === 0) {
@@ -855,7 +1104,7 @@ if ($teamId > 0) {
                             <?php foreach ($allTeams as $team): ?>
                                 <a href="team.php?id=<?php echo $team['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo $team['id']; ?>">
                                     <div class="team-logo-frame">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
                                              alt="<?php echo htmlspecialchars($team['name']); ?>"
                                              class="team-logo-lg"
                                              onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
