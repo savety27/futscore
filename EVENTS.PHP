@@ -1963,6 +1963,22 @@ if ($eventId > 0 && !empty($event)) {
     </div>
 </div>
 
+<!-- Player Match History Modal (nested over team modal) -->
+<div class="team-ds-modal" id="playerMatchHistoryModal" style="z-index:10099;">
+    <div class="team-ds-modal-content" style="max-width:820px;">
+        <div class="team-ds-modal-header">
+            <div class="team-ds-modal-title" id="pmhModalTitle">Match <span id="pmhPlayerName"></span>:</div>
+            <button class="team-ds-close" onclick="closePlayerMatchHistory()">&times;</button>
+        </div>
+        <div class="team-ds-modal-body" id="playerMatchHistoryBody">
+            <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 10px;">Memuat riwayat match...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     function toggleDropdown(element, dropdownId) {
@@ -2161,7 +2177,7 @@ if ($eventId > 0 && !empty($event)) {
                         html += '<span class="ts-player-name">' + p.name + '</span>';
                         html += '</td>';
                         html += '<td>' + p.jersey_number + '</td>';
-                        html += '<td>' + p.matches + ' <i class="fas fa-info-circle text-primary" style="font-size:10px; color:#3b82f6;"></i></td>';
+                        html += '<td>' + p.matches + ' <button class="pmh-trigger" title="Lihat Riwayat Match" style="background:none;border:none;cursor:pointer;padding:0 2px;color:#3b82f6;" onclick="openPlayerMatchHistory(' + eventId + ',' + p.id + ',' + teamId + ',\'' + encodeURIComponent(category) + '\');"><i class="fas fa-info-circle" style="font-size:11px;"></i></button></td>';
                         html += '<td>' + p.goals + '</td>';
                         html += '<td>' + p.red + '</td>';
                         html += '<td>' + p.yellow + '</td>';
@@ -2182,8 +2198,107 @@ if ($eventId > 0 && !empty($event)) {
 
     function closeTeamInfoModal() {
         document.getElementById('teamInfoModal').classList.remove('active');
+        document.getElementById('playerMatchHistoryModal').classList.remove('active');
         document.body.style.overflow = '';
     }
+
+    // ── Player Match History Modal ──────────────────────────────────────────
+    function openPlayerMatchHistory(eventId, playerId, teamId, category) {
+        const modal  = document.getElementById('playerMatchHistoryModal');
+        const body   = document.getElementById('playerMatchHistoryBody');
+        const title  = document.getElementById('pmhPlayerName');
+
+        modal.classList.add('active');
+        body.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px 0;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat riwayat match...</p></div>';
+
+        const url = '<?php echo SITE_URL; ?>/api/get_player_match_history.php'
+            + '?event_id=' + eventId
+            + '&player_id=' + playerId
+            + '&team_id='   + teamId
+            + '&sport_type=' + encodeURIComponent(decodeURIComponent(category));
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    body.innerHTML = '<div style="text-align:center;color:#ef4444;padding:30px;"><i class="fas fa-exclamation-triangle fa-2x"></i><p>' + (data.error || 'Gagal memuat data') + '</p></div>';
+                    return;
+                }
+
+                title.textContent = data.player_name + ' di ' + data.event_name;
+
+                const cards = data.cards;
+                let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">';
+                html += '<span style="font-size:13px;font-weight:600;color:#334155;">Jersey: <b>#' + data.jersey_number + '</b></span>';
+                html += '<span class="card-badge red">' + '🟥 ' + cards.red + '</span>';
+                html += '<span class="card-badge yellow">' + '🟨 ' + cards.yellow + '</span>';
+                html += '<span class="card-badge green">' + '🟩 ' + cards.green + '</span>';
+                html += '</div>';
+
+                html += '<div class="team-ds-table-wrap"><table class="team-ds-table" style="min-width:600px;">';
+                html += '<thead><tr>'
+                    + '<th>No</th>'
+                    + '<th style="text-align:left;">Date</th>'
+                    + '<th style="text-align:left;">Opponent</th>'
+                    + '<th>Info</th>'
+                    + '<th>Score</th>'
+                    + '<th>Result</th>'
+                    + '<th>Goal</th>'
+                    + '</tr></thead><tbody>';
+
+                if (!data.matches.length) {
+                    html += '<tr><td colspan="7" style="padding:24px;text-align:center;color:#64748b;">Belum ada match yang dimainkan di event ini</td></tr>';
+                } else {
+                    data.matches.forEach((m, idx) => {
+                        const logoUrl = resolveTeamLogoUrlClient(m.opp_team_logo);
+                        const scoreStr = (m.my_score !== null && m.their_score !== null)
+                            ? m.my_score + ' - ' + m.their_score : '-';
+
+                        let resultHtml = '-';
+                        if (m.result === 'W') resultHtml = '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">W</span>';
+                        else if (m.result === 'L') resultHtml = '<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">L</span>';
+                        else if (m.result === 'D') resultHtml = '<span style="background:#d97706;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">D</span>';
+
+                        // Format date
+                        let dateStr = m.date || '-';
+                        try {
+                            const d = new Date(m.date);
+                            if (!isNaN(d.getTime())) {
+                                dateStr = d.toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                            }
+                        } catch(e) {}
+
+                        html += '<tr>'
+                            + '<td style="color:#64748b;">' + (idx + 1) + '</td>'
+                            + '<td style="text-align:left;white-space:nowrap;font-size:12px;">' + dateStr + '</td>'
+                            + '<td style="text-align:left;"><div style="display:flex;align-items:center;gap:8px;">'
+                            +   '<img src="' + logoUrl + '" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #dbe6f3;" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">'
+                            +   '<span style="font-size:12px;font-weight:600;">' + m.opp_team_name + '</span>'
+                            + '</div></td>'
+                            + '<td style="font-size:11px;color:#475569;">' + (m.match_info && m.match_info !== '-' ? m.match_info : '-') + '</td>'
+                            + '<td style="font-weight:700;">' + scoreStr + '</td>'
+                            + '<td>' + resultHtml + '</td>'
+                            + '<td>' + m.goals + '</td>'
+                            + '</tr>';
+                    });
+                }
+
+                html += '</tbody></table></div>';
+                body.innerHTML = html;
+            })
+            .catch(() => {
+                body.innerHTML = '<div style="text-align:center;color:#ef4444;padding:30px;"><i class="fas fa-exclamation-triangle fa-2x"></i><p>Terjadi kesalahan koneksi.</p></div>';
+            });
+    }
+
+    function closePlayerMatchHistory() {
+        document.getElementById('playerMatchHistoryModal').classList.remove('active');
+    }
+
+    // Close nested modal if clicks on backdrop
+    document.getElementById('playerMatchHistoryModal').addEventListener('click', function(e) {
+        if (e.target === this) closePlayerMatchHistory();
+    });
 
     document.querySelectorAll('.team-ds-trigger').forEach(btn => {
         btn.addEventListener('click', function() {
