@@ -22,10 +22,10 @@ if ($teamId > 0) {
     $conn = $db->getConnection();
     
     // Optimized Query: Combines all sources and matches with official events in one go
-    // This structure avoids ONLY_FULL_GROUP_BY issues by resolving IDs in a subquery
+    // This structure preserves multiple IDs for the same name while deduplicating identical events
     $participationSql = "
         SELECT 
-            matched.event_name,
+            COALESCE(e.name, matched.event_name) as event_name,
             e.id as event_id,
             e.category,
             e.start_date,
@@ -35,28 +35,33 @@ if ($teamId > 0) {
             CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END as is_official
         FROM (
             SELECT 
-                s.source_name as event_name,
-                COALESCE(MAX(s.source_id), (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') ORDER BY start_date DESC, id DESC LIMIT 1)) as best_id
+                MAX(s.source_name) as event_name,
+                s.best_id
             FROM (
-                SELECT e.name as source_name, e.id as source_id 
-                FROM events e 
-                JOIN event_team_values etv ON e.id = etv.event_id 
-                WHERE etv.team_id = ?
-                
-                UNION
-                
-                SELECT sport_type as source_name, event_id as source_id 
-                FROM challenges 
-                WHERE (challenger_id = ? OR opponent_id = ?) 
-                  AND sport_type IS NOT NULL AND sport_type <> ''
-                  
-                UNION
-                
-                SELECT event_name as source_name, NULL as source_id 
-                FROM team_events 
-                WHERE team_id = ?
+                SELECT 
+                    s.source_name,
+                    COALESCE(s.source_id, (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') ORDER BY start_date DESC, id DESC LIMIT 1)) as best_id
+                FROM (
+                    SELECT e.name as source_name, e.id as source_id 
+                    FROM events e 
+                    JOIN event_team_values etv ON e.id = etv.event_id 
+                    WHERE etv.team_id = ?
+                    
+                    UNION
+                    
+                    SELECT sport_type as source_name, event_id as source_id 
+                    FROM challenges 
+                    WHERE (challenger_id = ? OR opponent_id = ?) 
+                      AND sport_type IS NOT NULL AND sport_type <> ''
+                      
+                    UNION
+                    
+                    SELECT event_name as source_name, NULL as source_id 
+                    FROM team_events 
+                    WHERE team_id = ?
+                ) s
             ) s
-            GROUP BY s.source_name
+            GROUP BY s.best_id, (CASE WHEN s.best_id IS NULL THEN s.source_name ELSE '' END)
         ) matched
         LEFT JOIN events e ON matched.best_id = e.id
         ORDER BY is_official DESC, e.start_date DESC
