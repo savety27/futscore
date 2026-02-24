@@ -73,6 +73,28 @@ try {
         ];
     }
 
+    // 6. Per-player match count from lineups (how many matches each player actually played in this event)
+    $mcSql = "
+        SELECT l.player_id, COUNT(DISTINCT l.match_id) AS match_count
+        FROM lineups l
+        INNER JOIN challenges c ON l.match_id = c.id
+        WHERE c.event_id = ?
+          AND l.team_id  = ?
+          AND c.status IN ('accepted', 'completed')
+    ";
+    $mcParams = [$eventId, $teamId];
+    if ($sportType !== '') {
+        $mcSql   .= " AND c.sport_type = ?";
+        $mcParams[] = $sportType;
+    }
+    $mcSql .= " GROUP BY l.player_id";
+    $stmtMatchCount = $conn->prepare($mcSql);
+    $stmtMatchCount->execute($mcParams);
+    $matchCountMap = [];
+    while ($row = $stmtMatchCount->fetch(PDO::FETCH_ASSOC)) {
+        $matchCountMap[(int)$row['player_id']] = (int)$row['match_count'];
+    }
+
     $playerList = [];
     $totalPlayerGoals = 0;
     $totalRed = 0;
@@ -94,7 +116,7 @@ try {
             'name' => $p['name'],
             'photo' => $p['photo'] ? $p['photo'] : 'default-player.jpg',
             'jersey_number' => $p['jersey_number'] ? $p['jersey_number'] : '-',
-            'matches' => $eventVal ? $eventVal['mn'] : 0, // Placeholder for individual matches
+            'matches' => $matchCountMap[$pId] ?? 0, // Per-player match count from lineups
             'goals' => $goals,
             'red' => $c['red'],
             'yellow' => $c['yellow'],
