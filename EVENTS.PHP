@@ -5,19 +5,22 @@ require_once 'includes/header.php';
 $eventId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $conn = $db->getConnection();
 
-function hasColumnMySQLi($conn, $table, $column) {
+function hasColumnMySQLi($conn, $table, $column)
+{
     $table = $conn->real_escape_string($table);
     $column = $conn->real_escape_string($column);
     $result = $conn->query("SHOW COLUMNS FROM {$table} LIKE '{$column}'");
     return $result && $result->num_rows > 0;
 }
-function hasTableMySQLi($conn, $table) {
+function hasTableMySQLi($conn, $table)
+{
     $table = $conn->real_escape_string($table);
     $result = $conn->query("SHOW TABLES LIKE '{$table}'");
     return $result && $result->num_rows > 0;
 }
 
-function normalizeMatchTokensPublic($raw) {
+function normalizeMatchTokensPublic($raw)
+{
     $normalized = strtoupper(trim((string) $raw));
     if ($normalized === '') return [];
 
@@ -40,7 +43,8 @@ function normalizeMatchTokensPublic($raw) {
     return $mapped;
 }
 
-function renderMatchHistoryBadgesPublic($history) {
+function renderMatchHistoryBadgesPublic($history)
+{
     $tokens = normalizeMatchTokensPublic($history);
     if (empty($tokens)) {
         return '-';
@@ -57,7 +61,8 @@ function renderMatchHistoryBadgesPublic($history) {
     return $html;
 }
 
-function resolveMatchOutcomePublic($team1, $team2, $score1, $score2) {
+function resolveMatchOutcomePublic($team1, $team2, $score1, $score2)
+{
     $team1 = (int) $team1;
     $team2 = (int) $team2;
     if ($team1 <= 0 || $team2 <= 0) {
@@ -77,7 +82,8 @@ function resolveMatchOutcomePublic($team1, $team2, $score1, $score2) {
     return ['winner' => $team2, 'loser' => $team1, 'status' => 'done'];
 }
 
-function renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $teamId) {
+function renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $teamId)
+{
     $teamId = (int) $teamId;
     if ($teamId <= 0) {
         return '<span class="evb-team"><span class="evb-team-logo evb-team-logo-placeholder"></span><span class="evb-team-name">-</span></span>';
@@ -520,409 +526,751 @@ if ($eventId > 0 && !empty($event)) {
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
 <style>
-.event-poster-profile {
-    width: 160px;
-    height: 160px;
-    border-radius: 22px;
-    object-fit: contain;
-    background: #f8fafc;
-    border: 4px solid #fff;
-    box-shadow: 0 10px 25px rgba(15, 39, 68, 0.14);
-    padding: 6px;
-}
-.event-card-image {
-    width: 100%;
-    height: 170px;
-    object-fit: contain;
-    background: #f8fafc;
-    border-radius: 14px;
-    border: 1px solid #e2e8f0;
-    padding: 6px;
-}
-.event-chip {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-}
-.event-chip.open { background: rgba(16, 185, 129, 0.12); color: #047857; }
-.event-chip.closed { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
-.event-selector-search {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-.event-selector-select {
-    width: 100%;
-    height: 44px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 0 12px;
-    font-size: 14px;
-    color: #0f172a;
-    background: #fff;
-    margin-bottom: 10px;
-}
-.event-selector-select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
-}
-.event-selector-search input {
-    flex: 1;
-    height: 44px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 0 12px;
-    font-size: 14px;
-    color: #0f172a;
-    background: #fff;
-}
-.event-selector-search input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.15);
-}
-.event-desc {
-    margin-top: 18px;
-    padding: 18px;
-    border-radius: 14px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    line-height: 1.65;
-}
-/* Modal Styles for Team Info */
-.team-ds-modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 15px; }
-.team-ds-modal.active { display: flex; animation: fadeInModal 0.2s ease; }
-.team-ds-modal-content { background: #fff; width: 100%; max-width: 900px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; max-height: 90vh; display: flex; flex-direction: column; }
-.team-ds-modal-header { padding: 18px 24px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
-.team-ds-modal-title { font-size: 16px; font-weight: 700; color: #64748b; }
-.team-ds-close { background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1; }
-.team-ds-close:hover { color: #ef4444; }
-.team-ds-modal-body { padding: 24px; overflow-y: auto; flex: 1; }
-.team-ds-info-wrap { text-align: center; margin-bottom: 24px; }
-.team-ds-logo-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
-.team-ds-logo { width: 44px; height: 44px; object-fit: contain; }
-.team-ds-name { font-size: 24px; font-weight: 600; color: #334155; }
-.team-ds-subtitle { font-size: 14px; color: #64748b; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-.team-ds-stats { font-size: 13px; font-weight: 600; color: #334155; }
-.team-ds-table-wrap { overflow-x: auto; background: #0f172a; border-radius: 12px; margin-top: 10px; }
-.team-ds-table { width: 100%; border-collapse: collapse; min-width: 760px; color: #fff; }
-.team-ds-table th { padding: 12px 10px; font-size: 13px; font-weight: 700; border-bottom: 2px solid #1e293b; text-align: center; }
-.team-ds-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid #1e293b; text-align: center; background: #fff; color: #334155; }
-.team-ds-table td.ts-player-col { text-align: left; display: flex; align-items: center; gap: 10px; }
-.team-ds-table .ts-head-icon { width:16px; height:16px; vertical-align:middle; filter: brightness(0) invert(1); }
-.ts-photo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; }
-.ts-player-name { text-transform: uppercase; font-weight: 500; }
-@keyframes fadeInModal { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-.event-participant-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 18px;
-    margin-top: 16px;
-}
-.event-participant-card {
-    border: 1px solid #dbe6f3;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #fff;
-}
-.event-participant-head {
-    background: #0f172a;
-    color: #fff;
-    padding: 10px 12px;
-    font-weight: 700;
-    font-size: 14px;
-}
-.event-participant-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.event-participant-table th,
-.event-participant-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #edf2f7;
-    font-size: 13px;
-}
-.event-participant-table th {
-    text-align: left;
-    background: #f8fafc;
-}
-.event-team-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.event-team-logo {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid #dbe6f3;
-}
-.event-team-info-link {
-    color: #2563eb;
-    text-decoration: none;
-}
-.event-standing-wrap { overflow-x: auto; margin-top: 14px; border: 2px solid #c8d7eb; border-radius: 12px; }
-.event-standing-table { width: 100%; border-collapse: collapse; min-width: 980px; }
-.event-standing-table th, .event-standing-table td { padding: 10px 10px; border-bottom: 2px solid #d9e3f1; font-size: 13px; text-align: center; }
-.event-standing-table thead th { background: #0f172a; color: #fff; border-bottom: 2px solid #94a3b8; }
-.event-standing-table th:nth-child(2), .event-standing-table td:nth-child(2) { text-align: left; }
-.event-card-note { margin: 8px 0 0 0; color: #475569; font-size: 12px; }
-.card-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    height: 22px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 0 8px;
-    border: 1px solid transparent;
-}
-.card-badge.red { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
-.card-badge.yellow { background: #fef9c3; color: #a16207; border-color: #fde68a; }
-.card-badge.green { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.match-seq {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-.match-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    height: 20px;
-    border-radius: 5px;
-    padding: 0 5px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-}
-.match-pill.win { background: #16a34a; }
-.match-pill.lose { background: #dc2626; }
-.match-pill.draw { background: #d97706; }
-.suspend-pill {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-}
-.suspend-pill.active { background: rgba(239, 68, 68, 0.14); color: #991b1b; }
-.suspend-pill.done { background: rgba(16, 185, 129, 0.14); color: #065f46; }
-.event-section-divider {
-    margin: 34px 0 22px;
-    border-top: 7px dashed #9fb7d8;
-    padding-top: 20px;
-    padding-bottom: 12px;
-}
-.event-bracket-wrap {
-    margin-top: 14px;
-    background: radial-gradient(circle at 20% 0%, #f8fbff 0%, #eef4fb 48%, #e9f1f9 100%);
-    border: 1px solid #dbe5f3;
-    border-radius: 16px;
-    padding: 18px;
-}
-.event-bracket-title { margin: 0 0 8px 0; color: #1e293b; }
-.event-bracket-note { margin: 0 0 10px 0; color: #64748b; font-size: 12px; }
-.evb-canvas {
-    position: relative;
-    min-height: 540px;
-}
-.evb-match {
-    position: absolute;
-    width: 260px;
-    background: #fff;
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 10px 20px rgba(15,39,68,.08);
-}
-.evb-row {
-    display: grid;
-    grid-template-columns: 1fr 40px;
-    border-bottom: 1px solid #e5e7eb;
-    transition: background .2s ease;
-}
-.evb-row:last-child { border-bottom: none; }
-.evb-row.win {
-    background: linear-gradient(90deg,#0ea5e9 0%, #2563eb 100%);
-    color: #fff;
-}
-.evb-row.lose { background: #eef2f7; }
-.evb-row.linked-highlight {
-    background: linear-gradient(90deg,#166534 0%, #15803d 45%, #16a34a 100%) !important;
-    color: #fff !important;
-}
-.evb-name { padding: 8px 10px; font-size: 14px; }
-.evb-score { text-align: center; padding: 8px 0; font-weight: 800; font-size: 20px; }
-.evb-score.green { color: #16a34a; }
-.evb-score.red { color: #b91c1c; }
-.evb-row.win .evb-score.green,
-.evb-row.linked-highlight .evb-score { color: #fff !important; }
-.evb-rank {
-    position: absolute;
-    right: -62px;
-    width: 52px;
-    text-align: center;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
-    border-radius: 6px;
-    padding: 4px 0;
-    box-shadow: 0 8px 14px rgba(15,39,68,.18);
-}
-.evb-rank.first { top: 8px; background: #2563eb; }
-.evb-rank.second { top: 44px; background: #334155; }
-.evb-rank.third { top: 8px; background: #0f766e; }
-.evb-rank.fourth { top: 44px; background: #7c2d12; }
-.evb-line {
-    position: absolute;
-    border-color: #cbd5e1;
-    border-style: solid;
-    border-width: 0;
-}
-.evb-line.gold { border-color: #2563eb; }
-.evb-team {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-.evb-team-logo {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid rgba(148,163,184,.7);
-    background: #fff;
-    flex-shrink: 0;
-}
-.evb-team-logo-placeholder {
-    display: inline-block;
-    background: #cbd5e1;
-}
-@media (max-width: 1100px) {
-    .evb-canvas { min-height: unset; display: grid; gap: 12px; }
-    .evb-match { position: static; width: 100%; }
-    .evb-line, .evb-rank { display: none; }
-}
+    .event-poster-profile {
+        width: 160px;
+        height: 160px;
+        border-radius: 22px;
+        object-fit: contain;
+        background: #f8fafc;
+        border: 4px solid #fff;
+        box-shadow: 0 10px 25px rgba(15, 39, 68, 0.14);
+        padding: 6px;
+    }
 
-.top-scorer-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: visible;
-    gap: 14px;
-    padding-top: 10px;
-    padding-bottom: 12px;
-    position: relative;
-}
-.top-scorer-grid::-webkit-scrollbar {
-    height: 6px;
-}
-.top-scorer-grid::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-.top-scorer-card {
-    flex: 0 0 160px;
-    background: #e9eff5;
-    border: 3px solid #c0d0e4;
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    position: relative;
-    overflow: hidden;
-    transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease, background .24s ease;
-}
-.top-scorer-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 45%, rgba(255,255,255,0) 70%);
-    transform: translateX(-130%);
-    opacity: 0;
-    pointer-events: none;
-}
-.top-scorer-card:hover {
-    transform: translateY(-8px);
-    border-color: #60a5fa;
-    background: #f4f8ff;
-    box-shadow: 0 14px 26px rgba(15, 39, 68, 0.16);
-    z-index: 3;
-}
-.top-scorer-card:hover::after {
-    opacity: 1;
-    animation: scorerShine .72s ease;
-}
-.top-scorer-photo {
-    width: 100%;
-    height: 140px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    transition: transform .24s ease, filter .24s ease, box-shadow .24s ease;
-}
-.top-scorer-card:hover .top-scorer-photo {
-    transform: scale(1.04);
-    filter: saturate(1.08);
-    box-shadow: 0 10px 20px rgba(15, 39, 68, 0.16);
-}
-.top-scorer-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-    margin-bottom: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: color .2s ease;
-}
-.top-scorer-card:hover .top-scorer-name {
-    color: #0f2744;
-}
-.top-scorer-team {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #64748b;
-    margin-bottom: 8px;
-}
-.top-scorer-team-logo {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.top-scorer-goals {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #475569;
-    transition: transform .22s ease, color .22s ease;
-}
-.top-scorer-card:hover .top-scorer-goals {
-    transform: scale(1.05);
-    color: #1d4ed8;
-}
-@keyframes scorerShine {
-    from { transform: translateX(-130%); }
-    to { transform: translateX(130%); }
-}
+    .event-card-image {
+        width: 100%;
+        height: 170px;
+        object-fit: contain;
+        background: #f8fafc;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        padding: 6px;
+    }
+
+    .event-chip {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .event-chip.open {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+    }
+
+    .event-chip.closed {
+        background: rgba(239, 68, 68, 0.12);
+        color: #b91c1c;
+    }
+
+    .event-selector-search {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .event-selector-select {
+        width: 100%;
+        height: 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0 12px;
+        font-size: 14px;
+        color: #0f172a;
+        background: #fff;
+        margin-bottom: 10px;
+    }
+
+    .event-selector-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+    }
+
+    .event-selector-search input {
+        flex: 1;
+        height: 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 0 12px;
+        font-size: 14px;
+        color: #0f172a;
+        background: #fff;
+    }
+
+    .event-selector-search input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+    }
+
+    .event-desc {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        line-height: 1.65;
+    }
+
+    /* Modal Styles for Team Info */
+    .team-ds-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        padding: 15px;
+    }
+
+    .team-ds-modal.active {
+        display: flex;
+        animation: fadeInModal 0.2s ease;
+    }
+
+    .team-ds-modal-content {
+        background: #fff;
+        width: 100%;
+        max-width: 900px;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        position: relative;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .team-ds-modal-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .team-ds-modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .team-ds-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #94a3b8;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .team-ds-close:hover {
+        color: #ef4444;
+    }
+
+    .team-ds-modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .team-ds-info-wrap {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .team-ds-logo-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 6px;
+    }
+
+    .team-ds-logo {
+        width: 44px;
+        height: 44px;
+        object-fit: contain;
+    }
+
+    .team-ds-name {
+        font-size: 24px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .team-ds-subtitle {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .team-ds-stats {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .team-ds-table-wrap {
+        overflow-x: auto;
+        background: #0f172a;
+        border-radius: 12px;
+        margin-top: 10px;
+    }
+
+    .team-ds-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 760px;
+        color: #fff;
+    }
+
+    .team-ds-table th {
+        padding: 12px 10px;
+        font-size: 13px;
+        font-weight: 700;
+        border-bottom: 2px solid #1e293b;
+        text-align: center;
+    }
+
+    .team-ds-table td {
+        padding: 10px;
+        font-size: 13px;
+        border-bottom: 1px solid #1e293b;
+        text-align: center;
+        background: #fff;
+        color: #334155;
+    }
+
+    .team-ds-table td.ts-player-col {
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .team-ds-table .ts-head-icon {
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+        filter: brightness(0) invert(1);
+    }
+
+    .ts-photo {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+    }
+
+    .ts-player-name {
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    @keyframes fadeInModal {
+        from {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .event-participant-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+        margin-top: 16px;
+    }
+
+    .event-participant-card {
+        border: 1px solid #dbe6f3;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .event-participant-head {
+        background: #0f172a;
+        color: #fff;
+        padding: 10px 12px;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    .event-participant-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .event-participant-table th,
+    .event-participant-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 13px;
+    }
+
+    .event-participant-table th {
+        text-align: left;
+        background: #f8fafc;
+    }
+
+    .event-team-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .event-team-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #dbe6f3;
+    }
+
+    .event-team-info-link {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .event-standing-wrap {
+        overflow-x: auto;
+        margin-top: 14px;
+        border: 2px solid #c8d7eb;
+        border-radius: 12px;
+    }
+
+    .event-standing-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 980px;
+    }
+
+    .event-standing-table th,
+    .event-standing-table td {
+        padding: 10px 10px;
+        border-bottom: 2px solid #d9e3f1;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .event-standing-table thead th {
+        background: #0f172a;
+        color: #fff;
+        border-bottom: 2px solid #94a3b8;
+    }
+
+    .event-standing-table th:nth-child(2),
+    .event-standing-table td:nth-child(2) {
+        text-align: left;
+    }
+
+    .event-card-note {
+        margin: 8px 0 0 0;
+        color: #475569;
+        font-size: 12px;
+    }
+
+    .card-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 22px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 0 8px;
+        border: 1px solid transparent;
+    }
+
+    .card-badge.red {
+        background: #fee2e2;
+        color: #b91c1c;
+        border-color: #fecaca;
+    }
+
+    .card-badge.yellow {
+        background: #fef9c3;
+        color: #a16207;
+        border-color: #fde68a;
+    }
+
+    .card-badge.green {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #bbf7d0;
+    }
+
+    .match-seq {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .match-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 20px;
+        border-radius: 5px;
+        padding: 0 5px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .match-pill.win {
+        background: #16a34a;
+    }
+
+    .match-pill.lose {
+        background: #dc2626;
+    }
+
+    .match-pill.draw {
+        background: #d97706;
+    }
+
+    .suspend-pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .suspend-pill.active {
+        background: rgba(239, 68, 68, 0.14);
+        color: #991b1b;
+    }
+
+    .suspend-pill.done {
+        background: rgba(16, 185, 129, 0.14);
+        color: #065f46;
+    }
+
+    .event-section-divider {
+        margin: 34px 0 22px;
+        border-top: 7px dashed #9fb7d8;
+        padding-top: 20px;
+        padding-bottom: 12px;
+    }
+
+    .event-bracket-wrap {
+        margin-top: 14px;
+        background: radial-gradient(circle at 20% 0%, #f8fbff 0%, #eef4fb 48%, #e9f1f9 100%);
+        border: 1px solid #dbe5f3;
+        border-radius: 16px;
+        padding: 18px;
+    }
+
+    .event-bracket-title {
+        margin: 0 0 8px 0;
+        color: #1e293b;
+    }
+
+    .event-bracket-note {
+        margin: 0 0 10px 0;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .evb-canvas {
+        position: relative;
+        min-height: 540px;
+    }
+
+    .evb-match {
+        position: absolute;
+        width: 260px;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(15, 39, 68, .08);
+    }
+
+    .evb-row {
+        display: grid;
+        grid-template-columns: 1fr 40px;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background .2s ease;
+    }
+
+    .evb-row:last-child {
+        border-bottom: none;
+    }
+
+    .evb-row.win {
+        background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%);
+        color: #fff;
+    }
+
+    .evb-row.lose {
+        background: #eef2f7;
+    }
+
+    .evb-row.linked-highlight {
+        background: linear-gradient(90deg, #166534 0%, #15803d 45%, #16a34a 100%) !important;
+        color: #fff !important;
+    }
+
+    .evb-name {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .evb-score {
+        text-align: center;
+        padding: 8px 0;
+        font-weight: 800;
+        font-size: 20px;
+    }
+
+    .evb-score.green {
+        color: #16a34a;
+    }
+
+    .evb-score.red {
+        color: #b91c1c;
+    }
+
+    .evb-row.win .evb-score.green,
+    .evb-row.linked-highlight .evb-score {
+        color: #fff !important;
+    }
+
+    .evb-rank {
+        position: absolute;
+        right: -62px;
+        width: 52px;
+        text-align: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        border-radius: 6px;
+        padding: 4px 0;
+        box-shadow: 0 8px 14px rgba(15, 39, 68, .18);
+    }
+
+    .evb-rank.first {
+        top: 8px;
+        background: #2563eb;
+    }
+
+    .evb-rank.second {
+        top: 44px;
+        background: #334155;
+    }
+
+    .evb-rank.third {
+        top: 8px;
+        background: #0f766e;
+    }
+
+    .evb-rank.fourth {
+        top: 44px;
+        background: #7c2d12;
+    }
+
+    .evb-line {
+        position: absolute;
+        border-color: #cbd5e1;
+        border-style: solid;
+        border-width: 0;
+    }
+
+    .evb-line.gold {
+        border-color: #2563eb;
+    }
+
+    .evb-team {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .evb-team-logo {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(148, 163, 184, .7);
+        background: #fff;
+        flex-shrink: 0;
+    }
+
+    .evb-team-logo-placeholder {
+        display: inline-block;
+        background: #cbd5e1;
+    }
+
+    @media (max-width: 1100px) {
+        .evb-canvas {
+            min-height: unset;
+            display: grid;
+            gap: 12px;
+        }
+
+        .evb-match {
+            position: static;
+            width: 100%;
+        }
+
+        .evb-line,
+        .evb-rank {
+            display: none;
+        }
+    }
+
+    .top-scorer-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: visible;
+        gap: 14px;
+        padding-top: 10px;
+        padding-bottom: 12px;
+        position: relative;
+    }
+
+    .top-scorer-grid::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .top-scorer-grid::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    .top-scorer-card {
+        flex: 0 0 160px;
+        background: #e9eff5;
+        border: 3px solid #c0d0e4;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+        transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease, background .24s ease;
+    }
+
+    .top-scorer-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .45) 45%, rgba(255, 255, 255, 0) 70%);
+        transform: translateX(-130%);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .top-scorer-card:hover {
+        transform: translateY(-8px);
+        border-color: #60a5fa;
+        background: #f4f8ff;
+        box-shadow: 0 14px 26px rgba(15, 39, 68, 0.16);
+        z-index: 3;
+    }
+
+    .top-scorer-card:hover::after {
+        opacity: 1;
+        animation: scorerShine .72s ease;
+    }
+
+    .top-scorer-photo {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: transform .24s ease, filter .24s ease, box-shadow .24s ease;
+    }
+
+    .top-scorer-card:hover .top-scorer-photo {
+        transform: scale(1.04);
+        filter: saturate(1.08);
+        box-shadow: 0 10px 20px rgba(15, 39, 68, 0.16);
+    }
+
+    .top-scorer-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: color .2s ease;
+    }
+
+    .top-scorer-card:hover .top-scorer-name {
+        color: #0f2744;
+    }
+
+    .top-scorer-team {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .top-scorer-team-logo {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .top-scorer-goals {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #475569;
+        transition: transform .22s ease, color .22s ease;
+    }
+
+    .top-scorer-card:hover .top-scorer-goals {
+        transform: scale(1.05);
+        color: #1d4ed8;
+    }
+
+    @keyframes scorerShine {
+        from {
+            transform: translateX(-130%);
+        }
+
+        to {
+            transform: translateX(130%);
+        }
+    }
 </style>
 
 <div class="dashboard-wrapper">
@@ -968,7 +1316,7 @@ if ($eventId > 0 && !empty($event)) {
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
-                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL . '/pelatih/dashboard.php' : SITE_URL . '/admin/dashboard.php'); ?>">
                     <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
                 </a>
                 <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
@@ -1094,7 +1442,9 @@ if ($eventId > 0 && !empty($event)) {
                                                 </thead>
                                                 <tbody>
                                                     <?php if (empty($group['teams'])): ?>
-                                                        <tr><td colspan="3" style="color:#64748b;">Belum ada team</td></tr>
+                                                        <tr>
+                                                            <td colspan="3" style="color:#64748b;">Belum ada team</td>
+                                                        </tr>
                                                     <?php else: ?>
                                                         <?php foreach ($group['teams'] as $idx => $team): ?>
                                                             <?php
@@ -1106,18 +1456,18 @@ if ($eventId > 0 && !empty($event)) {
                                                                 <td>
                                                                     <div class="event-team-row">
                                                                         <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? 'default-team.png'); ?>"
-                                                                             alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
-                                                                             class="event-team-logo"
-                                                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                                            alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
+                                                                            class="event-team-logo"
+                                                                            onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                                                         <span><?php echo htmlspecialchars($team['name'] ?? '-'); ?></span>
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <a class="event-team-info-link team-ds-trigger" href="javascript:void(0)" 
-                                                                       data-event-id="<?php echo $eventId; ?>" 
-                                                                       data-team-id="<?php echo $teamId; ?>" 
-                                                                       data-category="<?php echo htmlspecialchars($group['category_name'] ?? ''); ?>" 
-                                                                       title="Info Peserta">
+                                                                    <a class="event-team-info-link team-ds-trigger" href="javascript:void(0)"
+                                                                        data-event-id="<?php echo $eventId; ?>"
+                                                                        data-team-id="<?php echo $teamId; ?>"
+                                                                        data-category="<?php echo htmlspecialchars($group['category_name'] ?? ''); ?>"
+                                                                        title="Info Peserta">
                                                                         <i class="fas fa-circle-info"></i>
                                                                     </a>
                                                                 </td>
@@ -1488,233 +1838,245 @@ if ($eventId > 0 && !empty($event)) {
 
 
 <script>
-function toggleDropdown(element, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-    dropdown.classList.toggle('show');
-    element.classList.toggle('open');
-}
+    function toggleDropdown(element, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        dropdown.classList.toggle('show');
+        element.classList.toggle('open');
+    }
 
-const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebarToggle');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-const setSidebarOpen = (open) => {
-    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
-    sidebar.classList.toggle('active', open);
-    sidebarOverlay.classList.toggle('active', open);
-    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
-    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-    document.body.classList.toggle('sidebar-open', open);
-};
+    const setSidebarOpen = (open) => {
+        if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+        sidebar.classList.toggle('active', open);
+        sidebarOverlay.classList.toggle('active', open);
+        sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+        sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+        document.body.classList.toggle('sidebar-open', open);
+    };
 
-if (sidebarToggle && sidebar && sidebarOverlay) {
-    sidebarToggle.addEventListener('click', () => {
-        const isOpen = sidebar.classList.contains('active');
-        setSidebarOpen(!isOpen);
-    });
-    sidebarOverlay.addEventListener('click', () => setSidebarOpen(false));
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') setSidebarOpen(false);
-    });
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 992) setSidebarOpen(false);
-    });
-}
-
-(function() {
-    const input = document.getElementById('eventSelectorInput');
-    const select = document.getElementById('eventSelector');
-    const cards = Array.from(document.querySelectorAll('.team-directory-card[data-event-name]'));
-    const emptyState = document.getElementById('eventSearchEmpty');
-    if (!input || !select) return;
-
-    const defaultOption = select.options[0] ? { value: '', text: select.options[0].text } : { value: '', text: 'Pilih event dari dropdown' };
-    const allOptions = Array.from(select.options)
-        .slice(1)
-        .map(function(opt) {
-            return { value: String(opt.value || ''), text: String(opt.text || '') };
+    if (sidebarToggle && sidebar && sidebarOverlay) {
+        sidebarToggle.addEventListener('click', () => {
+            const isOpen = sidebar.classList.contains('active');
+            setSidebarOpen(!isOpen);
         });
+        sidebarOverlay.addEventListener('click', () => setSidebarOpen(false));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setSidebarOpen(false);
+        });
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) setSidebarOpen(false);
+        });
+    }
 
-    function renderFilteredOptions(keyword) {
-        const normalized = String(keyword || '').trim().toLowerCase();
-        const filtered = normalized === ''
-            ? allOptions
-            : allOptions.filter(function(item) {
-                return item.text.toLowerCase().includes(normalized);
+    (function() {
+        const input = document.getElementById('eventSelectorInput');
+        const select = document.getElementById('eventSelector');
+        const cards = Array.from(document.querySelectorAll('.team-directory-card[data-event-name]'));
+        const emptyState = document.getElementById('eventSearchEmpty');
+        if (!input || !select) return;
+
+        const defaultOption = select.options[0] ? {
+            value: '',
+            text: select.options[0].text
+        } : {
+            value: '',
+            text: 'Pilih event dari dropdown'
+        };
+        const allOptions = Array.from(select.options)
+            .slice(1)
+            .map(function(opt) {
+                return {
+                    value: String(opt.value || ''),
+                    text: String(opt.text || '')
+                };
             });
 
-        select.innerHTML = '';
-        const top = document.createElement('option');
-        top.value = defaultOption.value;
-        top.textContent = defaultOption.text;
-        select.appendChild(top);
-
-        filtered.forEach(function(item) {
-            const opt = document.createElement('option');
-            opt.value = item.value;
-            opt.textContent = item.text;
-            select.appendChild(opt);
-        });
-
-        if (!filtered.length) {
-            const none = document.createElement('option');
-            none.value = '';
-            none.textContent = 'Tidak ada event yang cocok';
-            none.disabled = true;
-            select.appendChild(none);
-        }
-    }
-
-    function renderFilteredCards(keyword) {
-        if (!cards.length) return;
-        const normalized = String(keyword || '').trim().toLowerCase();
-        let visibleCount = 0;
-
-        cards.forEach(function(card) {
-            const eventName = String(card.getAttribute('data-event-name') || '').trim().toLowerCase();
-            const isVisible = normalized === '' || eventName.includes(normalized);
-            card.style.display = isVisible ? '' : 'none';
-            if (isVisible) visibleCount += 1;
-        });
-
-        if (emptyState) {
-            emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
-        }
-    }
-
-    input.addEventListener('input', function() {
-        renderFilteredOptions(input.value);
-        renderFilteredCards(input.value);
-    });
-})();
-
-// TEAM INFO MODAL LOGIC
-function openTeamInfoModal(eventId, teamId, category) {
-    const modal = document.getElementById('teamInfoModal');
-    const body = document.getElementById('teamInfoModalBody');
-    const headerTitle = document.getElementById('dsModalHeaderTitle');
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    body.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 0;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top: 10px;">Memuat data tim...</p></div>';
-    
-    fetch('<?php echo SITE_URL; ?>/api/get_team_event_info.php?event_id=' + eventId + '&team_id=' + teamId + '&sport_type=' + encodeURIComponent(category))
-        .then(res => res.json())
-        .then(data => {
-            if(!data.success) {
-                body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>' + (data.error || 'Gagal memuat data') + '</p></div>';
-                return;
-            }
-            
-            headerTitle.textContent = 'Info Peserta ' + data.event_name + ':';
-            
-            let html = '<div class="team-ds-info-wrap">';
-            html += '<div class="team-ds-logo-wrap">';
-            html += '<img src="<?php echo SITE_URL; ?>/images/teams/' + data.team.logo + '" class="team-ds-logo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">';
-            html += '<div class="team-ds-name">' + data.team.name + '</div>';
-            html += '</div>';
-            
-            html += '<div class="team-ds-subtitle">';
-            html += '<img src="<?php echo SITE_URL; ?>/images/events/alvetrix-mini.png" style="height:14px; width:auto; display:none;" onerror="this.style.display=\'none\'">';
-            html += data.event_name + ' (' + data.category + ')';
-            html += '</div>';
-            
-            const stats = data.stats;
-            html += '<div class="team-ds-stats">';
-            html += '<b>Total:</b> Player (' + stats.total_players + '), Goal (' + stats.total_goals + '), ';
-            html += '<span style="color:#b91c1c;">🟥</span> (' + stats.red + '), <span style="color:#ca8a04;">🟨</span> (' + stats.yellow + '), <span style="color:#15803d;">🟩</span> (' + stats.green + '), PT (' + stats.pt + ')';
-            html += '</div></div>';
-            
-            html += '<div class="team-ds-table-wrap">';
-            html += '<table class="team-ds-table">';
-            html += '<thead><tr>';
-            html += '<th>No</th>';
-            html += '<th style="text-align:left;">Player <i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>Jersey <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>Match <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>Goal<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>🟥<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>🟨<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>🟩<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '<th>Play <br>Time<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
-            html += '</tr></thead><tbody>';
-            
-            if (data.players.length === 0) {
-                html += '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">Belum ada pemain di kategori ini</td></tr>';
-            } else {
-                data.players.forEach((p, index) => {
-                    html += '<tr>';
-                    html += '<td style="color:#64748b;">' + (index + 1) + '</td>';
-                    html += '<td class="ts-player-col">';
-                    html += '<img src="<?php echo SITE_URL; ?>/images/players/' + p.photo + '" class="ts-photo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/players/default-player.jpg\'">';
-                    html += '<span class="ts-player-name">' + p.name + '</span>';
-                    html += '</td>';
-                    html += '<td>' + p.jersey_number + '</td>';
-                    html += '<td>' + p.matches + ' <i class="fas fa-info-circle text-primary" style="font-size:10px; color:#3b82f6;"></i></td>';
-                    html += '<td>' + p.goals + '</td>';
-                    html += '<td>' + p.red + '</td>';
-                    html += '<td>' + p.yellow + '</td>';
-                    html += '<td>' + p.green + '</td>';
-                    html += '<td>' + p.play_time + '</td>';
-                    html += '</tr>';
+        function renderFilteredOptions(keyword) {
+            const normalized = String(keyword || '').trim().toLowerCase();
+            const filtered = normalized === '' ?
+                allOptions :
+                allOptions.filter(function(item) {
+                    return item.text.toLowerCase().includes(normalized);
                 });
+
+            select.innerHTML = '';
+            const top = document.createElement('option');
+            top.value = defaultOption.value;
+            top.textContent = defaultOption.text;
+            select.appendChild(top);
+
+            filtered.forEach(function(item) {
+                const opt = document.createElement('option');
+                opt.value = item.value;
+                opt.textContent = item.text;
+                select.appendChild(opt);
+            });
+
+            if (!filtered.length) {
+                const none = document.createElement('option');
+                none.value = '';
+                none.textContent = 'Tidak ada event yang cocok';
+                none.disabled = true;
+                select.appendChild(none);
             }
-            
-            html += '</tbody></table></div>';
-            
-            body.innerHTML = html;
-        })
-        .catch(err => {
-            body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Terjadi kesalahan koneksi.</p></div>';
+        }
+
+        function renderFilteredCards(keyword) {
+            if (!cards.length) return;
+            const normalized = String(keyword || '').trim().toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach(function(card) {
+                const eventName = String(card.getAttribute('data-event-name') || '').trim().toLowerCase();
+                const isVisible = normalized === '' || eventName.includes(normalized);
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount += 1;
+            });
+
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        }
+
+        input.addEventListener('input', function() {
+            renderFilteredOptions(input.value);
+            renderFilteredCards(input.value);
         });
-}
+    })();
 
-function closeTeamInfoModal() {
-    document.getElementById('teamInfoModal').classList.remove('active');
-    document.body.style.overflow = '';
-}
+    // TEAM INFO MODAL LOGIC
+    function openTeamInfoModal(eventId, teamId, category) {
+        const modal = document.getElementById('teamInfoModal');
+        const body = document.getElementById('teamInfoModalBody');
+        const headerTitle = document.getElementById('dsModalHeaderTitle');
 
-document.querySelectorAll('.team-ds-trigger').forEach(btn => {
-    btn.addEventListener('click', function() {
-        openTeamInfoModal(this.dataset.eventId, this.dataset.teamId, this.dataset.category);
-    });
-});
-</script>
-<script>
-(function() {
-    const rows = Array.from(document.querySelectorAll('.evb-canvas .evb-row[data-team-id]'));
-    if (!rows.length) return;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
 
-    function clearLinked() {
-        rows.forEach(function(row) { row.classList.remove('linked-highlight'); });
+        body.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 0;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top: 10px;">Memuat data tim...</p></div>';
+
+        fetch('<?php echo SITE_URL; ?>/api/get_team_event_info.php?event_id=' + eventId + '&team_id=' + teamId + '&sport_type=' + encodeURIComponent(category))
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>' + (data.error || 'Gagal memuat data') + '</p></div>';
+                    return;
+                }
+
+                headerTitle.textContent = 'Info Peserta ' + data.event_name + ':';
+
+                let html = '<div class="team-ds-info-wrap">';
+                html += '<div class="team-ds-logo-wrap">';
+                html += '<img src="<?php echo SITE_URL; ?>/images/teams/' + data.team.logo + '" class="team-ds-logo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">';
+                html += '<div class="team-ds-name">' + data.team.name + '</div>';
+                html += '</div>';
+
+                html += '<div class="team-ds-subtitle">';
+                html += '<img src="<?php echo SITE_URL; ?>/images/events/alvetrix-mini.png" style="height:14px; width:auto; display:none;" onerror="this.style.display=\'none\'">';
+                html += data.event_name + ' (' + data.category + ')';
+                html += '</div>';
+
+                const stats = data.stats;
+                html += '<div class="team-ds-stats">';
+                html += '<b>Total:</b> Player (' + stats.total_players + '), Goal (' + stats.total_goals + '), ';
+                html += '<span style="color:#b91c1c;">🟥</span> (' + stats.red + '), <span style="color:#ca8a04;">🟨</span> (' + stats.yellow + '), <span style="color:#15803d;">🟩</span> (' + stats.green + '), PT (' + stats.pt + ')';
+                html += '</div></div>';
+
+                html += '<div class="team-ds-table-wrap">';
+                html += '<table class="team-ds-table">';
+                html += '<thead><tr>';
+                html += '<th>No</th>';
+                html += '<th style="text-align:left;">Player <i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Jersey <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Match <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Goal<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>🟥<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>🟨<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>🟩<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Play <br>Time<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '</tr></thead><tbody>';
+
+                if (data.players.length === 0) {
+                    html += '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">Belum ada pemain di kategori ini</td></tr>';
+                } else {
+                    data.players.forEach((p, index) => {
+                        html += '<tr>';
+                        html += '<td style="color:#64748b;">' + (index + 1) + '</td>';
+                        html += '<td class="ts-player-col">';
+                        html += '<img src="<?php echo SITE_URL; ?>/images/players/' + p.photo + '" class="ts-photo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/players/default-player.jpg\'">';
+                        html += '<span class="ts-player-name">' + p.name + '</span>';
+                        html += '</td>';
+                        html += '<td>' + p.jersey_number + '</td>';
+                        html += '<td>' + p.matches + ' <i class="fas fa-info-circle text-primary" style="font-size:10px; color:#3b82f6;"></i></td>';
+                        html += '<td>' + p.goals + '</td>';
+                        html += '<td>' + p.red + '</td>';
+                        html += '<td>' + p.yellow + '</td>';
+                        html += '<td>' + p.green + '</td>';
+                        html += '<td>' + p.play_time + '</td>';
+                        html += '</tr>';
+                    });
+                }
+
+                html += '</tbody></table></div>';
+
+                body.innerHTML = html;
+            })
+            .catch(err => {
+                body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Terjadi kesalahan koneksi.</p></div>';
+            });
     }
 
-    function applyLinked(teamId) {
-        if (!teamId || teamId === '0') return;
+    function closeTeamInfoModal() {
+        document.getElementById('teamInfoModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.team-ds-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openTeamInfoModal(this.dataset.eventId, this.dataset.teamId, this.dataset.category);
+        });
+    });
+</script>
+<script>
+    (function() {
+        const rows = Array.from(document.querySelectorAll('.evb-canvas .evb-row[data-team-id]'));
+        if (!rows.length) return;
+
+        function clearLinked() {
+            rows.forEach(function(row) {
+                row.classList.remove('linked-highlight');
+            });
+        }
+
+        function applyLinked(teamId) {
+            if (!teamId || teamId === '0') return;
+            rows.forEach(function(row) {
+                if (row.getAttribute('data-team-id') === teamId) {
+                    row.classList.add('linked-highlight');
+                }
+            });
+        }
+
         rows.forEach(function(row) {
-            if (row.getAttribute('data-team-id') === teamId) {
-                row.classList.add('linked-highlight');
-            }
+            row.addEventListener('mouseenter', function() {
+                clearLinked();
+                applyLinked(row.getAttribute('data-team-id'));
+            });
+            row.addEventListener('mouseleave', function() {
+                clearLinked();
+            });
         });
-    }
-
-    rows.forEach(function(row) {
-        row.addEventListener('mouseenter', function() {
-            clearLinked();
-            applyLinked(row.getAttribute('data-team-id'));
-        });
-        row.addEventListener('mouseleave', function() {
-            clearLinked();
-        });
-    });
-})();
+    })();
 </script>
 <script>
-const SITE_URL = '<?php echo SITE_URL; ?>';
+    const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 </body>
+
 </html>
