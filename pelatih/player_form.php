@@ -150,11 +150,11 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="required-field">Event</span>
+                            <span class="required-field">Kategori</span>
                             <span class="note">Wajib</span>
                         </label>
                         <select name="sport_type" class="form-control" required>
-                            <option value="">Pilih Event</option>
+                            <option value="">Pilih Kategori</option>
                             <?php foreach ($event_options as $sport): ?>
                                 <?php $selected = ($player['sport_type'] == $sport) ? 'selected' : ''; ?>
                                 <option value="<?php echo htmlspecialchars($sport); ?>" <?php echo $selected; ?>>

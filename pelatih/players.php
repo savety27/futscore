@@ -5,6 +5,8 @@ require_once 'config/database.php';
 require_once 'includes/header.php';
 
 $team_id = $_SESSION['team_id'] ?? 0;
+$filter_category = trim((string)($_GET['category'] ?? ''));
+$filter_search = trim((string)($_GET['q'] ?? ''));
 
 // Pagination settings
 $players_per_page = 10;
@@ -15,15 +17,42 @@ $offset = ($current_page_num - 1) * $players_per_page;
 $total_players = 0;
 $players = [];
 $total_pages = 1;
+$category_options = [];
 
 if ($team_id) {
     try {
+        $stmtCategory = $conn->prepare("SELECT DISTINCT sport_type 
+                                        FROM players 
+                                        WHERE team_id = :team_id 
+                                          AND sport_type IS NOT NULL 
+                                          AND sport_type <> '' 
+                                        ORDER BY sport_type ASC");
+        $stmtCategory->execute([':team_id' => $team_id]);
+        $category_options = $stmtCategory->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+        $where = ["team_id = :team_id"];
+        $params = [':team_id' => $team_id];
+
+        if ($filter_category !== '') {
+            $where[] = "sport_type = :sport_type";
+            $params[':sport_type'] = $filter_category;
+        }
+
+        if ($filter_search !== '') {
+            $where[] = "(name LIKE :search_name OR jersey_number LIKE :search_jersey)";
+            $search_like = '%' . $filter_search . '%';
+            $params[':search_name'] = $search_like;
+            $params[':search_jersey'] = $search_like;
+        }
+
+        $where_sql = implode(' AND ', $where);
+
         // Get total count
-        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM players WHERE team_id = ?");
-        $stmt->execute([$team_id]);
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM players WHERE $where_sql");
+        $stmt->execute($params);
         $total_result = $stmt->fetch();
-        $total_players = $total_result['total'];
-        $total_pages = ceil($total_players / $players_per_page);
+        $total_players = (int)($total_result['total'] ?? 0);
+        $total_pages = max(1, (int)ceil($total_players / $players_per_page));
 
         // Validate current page
         if ($current_page_num < 1) $current_page_num = 1;
@@ -37,16 +66,18 @@ if ($team_id) {
             id, name, position, jersey_number, birth_date, gender, 
             height, weight, phone, email, status, photo,
             dribbling, technique, speed, juggling, shooting, 
-            setplay_position, passing, control,
+            setplay_position, passing, control, sport_type,
             TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) as age
             FROM players 
-            WHERE team_id = ? 
+            WHERE $where_sql
             ORDER BY jersey_number ASC, name ASC
-            LIMIT ? OFFSET ?");
-        
-        $stmt->bindParam(1, $team_id, PDO::PARAM_INT);
-        $stmt->bindParam(2, $players_per_page, PDO::PARAM_INT);
-        $stmt->bindParam(3, $offset, PDO::PARAM_INT);
+            LIMIT :limit OFFSET :offset");
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->bindValue(':limit', $players_per_page, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         
         $players = $stmt->fetchAll();
@@ -55,12 +86,140 @@ if ($team_id) {
         error_log("Database error: " . $e->getMessage());
     }
 }
+
+$base_query_params = [];
+if ($filter_category !== '') {
+    $base_query_params['category'] = $filter_category;
+}
+if ($filter_search !== '') {
+    $base_query_params['q'] = $filter_search;
+}
+$build_page_url = function(int $page) use ($base_query_params): string {
+    $params = $base_query_params;
+    $params['page'] = $page;
+    return '?' . http_build_query($params);
+};
 ?>
 
 <style>
 /* Background only: baby-blue like dashboard */
 .main {
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
+.filter-container {
+    margin-bottom: 20px;
+}
+
+.players-filter-card {
+    padding: 16px;
+    border: 1px solid #dbe5f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
+}
+
+.players-filter-form {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(210px, 0.72fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.players-search-group {
+    position: relative;
+}
+
+.players-search-group i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7b8797;
+    font-size: 13px;
+}
+
+.players-search-input,
+.players-filter-select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.players-search-input {
+    padding: 0 12px 0 36px;
+}
+
+.players-filter-select {
+    padding: 0 12px;
+}
+
+.players-search-input:focus,
+.players-filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
+}
+
+.players-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.players-filter-actions .btn-filter,
+.players-filter-actions .clear-filter-btn {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.players-filter-actions .btn-filter {
+    background: linear-gradient(135deg, var(--primary), #1a4f9e);
+    color: #ffffff;
+}
+
+.players-filter-actions .btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
+}
+
+.players-filter-actions .clear-filter-btn {
+    background: #ffffff;
+    border-color: #d3dcea;
+    color: #3b4a5f;
+}
+
+.players-filter-actions .clear-filter-btn:hover {
+    background: #f2f6fc;
+}
+
+@media (max-width: 768px) {
+    .players-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .players-filter-actions {
+        width: 100%;
+    }
+
+    .players-filter-actions .btn-filter,
+    .players-filter-actions .clear-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 
@@ -91,10 +250,35 @@ if ($team_id) {
         </div>
     <?php endif; ?>
 
+    <div class="filter-container">
+        <div class="players-filter-card">
+            <form method="GET" class="players-filter-form">
+                <div class="players-search-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="q" class="players-search-input" placeholder="Cari nama atau nomor pemain..." value="<?php echo htmlspecialchars($filter_search); ?>">
+                </div>
+                <div>
+                    <select name="category" class="players-filter-select">
+                        <option value="">Semua Kategori</option>
+                        <?php foreach ($category_options as $category): ?>
+                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $filter_category === $category ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($category); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="players-filter-actions">
+                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Terapkan</button>
+                    <a href="players.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
-            <p>Tidak ada pemain ditemukan di team Anda.</p>
+            <p>Tidak ada pemain ditemukan.</p>
             <a href="player_form.php" class="btn-primary">Tambah Pemain Pertama Anda</a>
         </div>
     <?php else: ?>
@@ -106,6 +290,7 @@ if ($team_id) {
                         <th>Nama</th>
                         <th style="width: 80px;">Nomor</th>
                         <th>Posisi</th>
+                        <th>Kategori</th>
                         <th>Umur</th>
                         <th>Jenis Kelamin</th>
                         <th>Kontak</th>
@@ -207,6 +392,7 @@ if ($team_id) {
                                 <?php echo htmlspecialchars($player['position'] ?? ''); ?>
                             </span>
                         </td>
+                        <td><?php echo htmlspecialchars($player['sport_type'] ?? '-'); ?></td>
                         <td class="age-cell">
                             <?php echo htmlspecialchars($player['age'] ?? 'N/A'); ?> thn
                         </td>
@@ -314,10 +500,10 @@ if ($team_id) {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($current_page_num > 1): ?>
-                <a href="?page=1" class="page-link" title="Halaman Pertama">
+                <a href="<?php echo htmlspecialchars($build_page_url(1)); ?>" class="page-link" title="Halaman Pertama">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?page=<?php echo $current_page_num - 1; ?>" class="page-link" title="Sebelumnya">
+                <a href="<?php echo htmlspecialchars($build_page_url($current_page_num - 1)); ?>" class="page-link" title="Sebelumnya">
                     <i class="fas fa-angle-left"></i>
                 </a>
             <?php endif; ?>
@@ -331,7 +517,7 @@ if ($team_id) {
             <?php endif; ?>
             
             <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <a href="?page=<?php echo $i; ?>" 
+                <a href="<?php echo htmlspecialchars($build_page_url($i)); ?>" 
                    class="page-link <?php echo $i == $current_page_num ? 'active' : ''; ?>">
                     <?php echo $i; ?>
                 </a>
@@ -342,10 +528,10 @@ if ($team_id) {
             <?php endif; ?>
             
             <?php if ($current_page_num < $total_pages): ?>
-                <a href="?page=<?php echo $current_page_num + 1; ?>" class="page-link" title="Berikutnya">
+                <a href="<?php echo htmlspecialchars($build_page_url($current_page_num + 1)); ?>" class="page-link" title="Berikutnya">
                     <i class="fas fa-angle-right"></i>
                 </a>
-                <a href="?page=<?php echo $total_pages; ?>" class="page-link" title="Halaman Terakhir">
+                <a href="<?php echo htmlspecialchars($build_page_url($total_pages)); ?>" class="page-link" title="Halaman Terakhir">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             <?php endif; ?>
