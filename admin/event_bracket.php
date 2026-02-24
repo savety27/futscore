@@ -45,6 +45,148 @@ function ensureBracketSchema(PDO $conn): void
         UNIQUE KEY uq_event_sport (event_id, sport_type),
         INDEX idx_event_sport (event_id, sport_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+
+    $columnsToEnsure = [
+        'sf1_challenge_id' => "ALTER TABLE event_brackets ADD COLUMN sf1_challenge_id INT NULL AFTER sf1_team2_id",
+        'sf2_challenge_id' => "ALTER TABLE event_brackets ADD COLUMN sf2_challenge_id INT NULL AFTER sf2_team2_id",
+        'final_challenge_id' => "ALTER TABLE event_brackets ADD COLUMN final_challenge_id INT NULL AFTER sf2_score2",
+        'third_challenge_id' => "ALTER TABLE event_brackets ADD COLUMN third_challenge_id INT NULL AFTER final_challenge_id",
+    ];
+
+    foreach ($columnsToEnsure as $columnName => $alterSql) {
+        $stmt = $conn->prepare("
+            SELECT COUNT(*)
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'event_brackets'
+              AND COLUMN_NAME = ?
+        ");
+        $stmt->execute([$columnName]);
+        $exists = (int)$stmt->fetchColumn() > 0;
+        if (!$exists) {
+            $conn->exec($alterSql);
+        }
+    }
+}
+
+function hasColumnPDO(PDO $conn, string $table, string $column): bool
+{
+    $stmt = $conn->prepare("
+        SELECT COUNT(*)
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = ?
+          AND COLUMN_NAME = ?
+    ");
+    $stmt->execute([$table, $column]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
+function validateBracketChallengeId(PDO $conn, int $challengeId, int $eventId, string $category, int $teamA, int $teamB): bool
+{
+    if ($challengeId <= 0) {
+        return false;
+    }
+
+    $hasEventIdColumn = hasColumnPDO($conn, 'challenges', 'event_id');
+    if ($hasEventIdColumn && $eventId > 0) {
+        $sql = "SELECT id
+                FROM challenges
+                WHERE id = ?
+                  AND event_id = ?
+                  AND sport_type = ?
+                  AND (
+                      (challenger_id = ? AND opponent_id = ?)
+                      OR
+                      (challenger_id = ? AND opponent_id = ?)
+                  )
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$challengeId, $eventId, $category, $teamA, $teamB, $teamB, $teamA]);
+    } else {
+        $sql = "SELECT id
+                FROM challenges
+                WHERE id = ?
+                  AND sport_type = ?
+                  AND (
+                      (challenger_id = ? AND opponent_id = ?)
+                      OR
+                      (challenger_id = ? AND opponent_id = ?)
+                  )
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$challengeId, $category, $teamA, $teamB, $teamB, $teamA]);
+    }
+
+    return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function findBracketChallengeIdAuto(PDO $conn, int $eventId, string $category, int $teamA, int $teamB, ?int $scoreA = null, ?int $scoreB = null): int
+{
+    if ($teamA <= 0 || $teamB <= 0 || trim($category) === '') {
+        return 0;
+    }
+
+    $hasEventIdColumn = hasColumnPDO($conn, 'challenges', 'event_id');
+
+    if ($scoreA !== null && $scoreB !== null) {
+        if ($hasEventIdColumn && $eventId > 0) {
+            $sqlScore = "SELECT id
+                         FROM challenges
+                         WHERE event_id = ?
+                           AND sport_type = ?
+                           AND (
+                             (challenger_id = ? AND opponent_id = ? AND challenger_score = ? AND opponent_score = ?)
+                             OR
+                             (challenger_id = ? AND opponent_id = ? AND challenger_score = ? AND opponent_score = ?)
+                           )
+                         ORDER BY challenge_date DESC, id DESC
+                         LIMIT 1";
+            $stmtScore = $conn->prepare($sqlScore);
+            $stmtScore->execute([$eventId, $category, $teamA, $teamB, $scoreA, $scoreB, $teamB, $teamA, $scoreB, $scoreA]);
+        } else {
+            $sqlScore = "SELECT id
+                         FROM challenges
+                         WHERE sport_type = ?
+                           AND (
+                             (challenger_id = ? AND opponent_id = ? AND challenger_score = ? AND opponent_score = ?)
+                             OR
+                             (challenger_id = ? AND opponent_id = ? AND challenger_score = ? AND opponent_score = ?)
+                           )
+                         ORDER BY challenge_date DESC, id DESC
+                         LIMIT 1";
+            $stmtScore = $conn->prepare($sqlScore);
+            $stmtScore->execute([$category, $teamA, $teamB, $scoreA, $scoreB, $teamB, $teamA, $scoreB, $scoreA]);
+        }
+        $rowScore = $stmtScore->fetch(PDO::FETCH_ASSOC);
+        if (!empty($rowScore['id'])) {
+            return (int)$rowScore['id'];
+        }
+    }
+
+    if ($hasEventIdColumn && $eventId > 0) {
+        $sql = "SELECT id
+                FROM challenges
+                WHERE event_id = ?
+                  AND sport_type = ?
+                  AND ((challenger_id = ? AND opponent_id = ?) OR (challenger_id = ? AND opponent_id = ?))
+                ORDER BY challenge_date DESC, id DESC
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$eventId, $category, $teamA, $teamB, $teamB, $teamA]);
+    } else {
+        $sql = "SELECT id
+                FROM challenges
+                WHERE sport_type = ?
+                  AND ((challenger_id = ? AND opponent_id = ?) OR (challenger_id = ? AND opponent_id = ?))
+                ORDER BY challenge_date DESC, id DESC
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$category, $teamA, $teamB, $teamB, $teamA]);
+    }
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return (int)($row['id'] ?? 0);
 }
 
 function loadEventCategories(PDO $conn, int $eventId): array
@@ -271,32 +413,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Skor 3rd Place tidak boleh seri.';
         }
 
+        $sf1Outcome = resolveMatchOutcome($sf1Team1, $sf1Team2, $sf1Score1, $sf1Score2);
+        $sf2Outcome = resolveMatchOutcome($sf2Team1, $sf2Team2, $sf2Score1, $sf2Score2);
+        $finalTeam1 = (int)($sf1Outcome['winner'] ?? 0);
+        $finalTeam2 = (int)($sf2Outcome['winner'] ?? 0);
+        $thirdTeam1 = (int)($sf1Outcome['loser'] ?? 0);
+        $thirdTeam2 = (int)($sf2Outcome['loser'] ?? 0);
+
+        $sf1ChallengeId = findBracketChallengeIdAuto($conn, $eventId, $effectiveCategory, $sf1Team1, $sf1Team2, $sf1Score1, $sf1Score2);
+        $sf2ChallengeId = findBracketChallengeIdAuto($conn, $eventId, $effectiveCategory, $sf2Team1, $sf2Team2, $sf2Score1, $sf2Score2);
+        $finalChallengeId = findBracketChallengeIdAuto($conn, $eventId, $effectiveCategory, $finalTeam1, $finalTeam2, $finalScore1, $finalScore2);
+        $thirdChallengeId = findBracketChallengeIdAuto($conn, $eventId, $effectiveCategory, $thirdTeam1, $thirdTeam2, $thirdScore1, $thirdScore2);
+
         if (empty($errors)) {
             $stmt = $conn->prepare("INSERT INTO event_brackets (
                                         event_id, sport_type,
-                                        sf1_team1_id, sf1_team2_id, sf1_score1, sf1_score2,
-                                        sf2_team1_id, sf2_team2_id, sf2_score1, sf2_score2,
-                                        final_score1, final_score2, third_score1, third_score2
-                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                        sf1_team1_id, sf1_team2_id, sf1_challenge_id, sf1_score1, sf1_score2,
+                                        sf2_team1_id, sf2_team2_id, sf2_challenge_id, sf2_score1, sf2_score2,
+                                        final_challenge_id, final_score1, final_score2,
+                                        third_challenge_id, third_score1, third_score2
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                     ON DUPLICATE KEY UPDATE
                                         sf1_team1_id = VALUES(sf1_team1_id),
                                         sf1_team2_id = VALUES(sf1_team2_id),
+                                        sf1_challenge_id = VALUES(sf1_challenge_id),
                                         sf1_score1 = VALUES(sf1_score1),
                                         sf1_score2 = VALUES(sf1_score2),
                                         sf2_team1_id = VALUES(sf2_team1_id),
                                         sf2_team2_id = VALUES(sf2_team2_id),
+                                        sf2_challenge_id = VALUES(sf2_challenge_id),
                                         sf2_score1 = VALUES(sf2_score1),
                                         sf2_score2 = VALUES(sf2_score2),
+                                        final_challenge_id = VALUES(final_challenge_id),
                                         final_score1 = VALUES(final_score1),
                                         final_score2 = VALUES(final_score2),
+                                        third_challenge_id = VALUES(third_challenge_id),
                                         third_score1 = VALUES(third_score1),
                                         third_score2 = VALUES(third_score2),
                                         updated_at = CURRENT_TIMESTAMP");
             $stmt->execute([
                 $eventId, $effectiveCategory,
-                $sf1Team1, $sf1Team2, $sf1Score1, $sf1Score2,
-                $sf2Team1, $sf2Team2, $sf2Score1, $sf2Score2,
-                $finalScore1, $finalScore2, $thirdScore1, $thirdScore2
+                $sf1Team1, $sf1Team2, ($sf1ChallengeId > 0 ? $sf1ChallengeId : null), $sf1Score1, $sf1Score2,
+                $sf2Team1, $sf2Team2, ($sf2ChallengeId > 0 ? $sf2ChallengeId : null), $sf2Score1, $sf2Score2,
+                ($finalChallengeId > 0 ? $finalChallengeId : null), $finalScore1, $finalScore2,
+                ($thirdChallengeId > 0 ? $thirdChallengeId : null), $thirdScore1, $thirdScore2
             ]);
             $success = 'Bracket berhasil disimpan.';
         }
@@ -396,6 +556,10 @@ $sf1Team1 = (int)($bracket['sf1_team1_id'] ?? 0);
 $sf1Team2 = (int)($bracket['sf1_team2_id'] ?? 0);
 $sf2Team1 = (int)($bracket['sf2_team1_id'] ?? 0);
 $sf2Team2 = (int)($bracket['sf2_team2_id'] ?? 0);
+$sf1ChallengeId = (int)($bracket['sf1_challenge_id'] ?? 0);
+$sf2ChallengeId = (int)($bracket['sf2_challenge_id'] ?? 0);
+$finalChallengeId = (int)($bracket['final_challenge_id'] ?? 0);
+$thirdChallengeId = (int)($bracket['third_challenge_id'] ?? 0);
 $sf1Score1 = $bracket['sf1_score1'] ?? null;
 $sf1Score2 = $bracket['sf1_score2'] ?? null;
 $sf2Score1 = $bracket['sf2_score1'] ?? null;
@@ -902,7 +1066,6 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                             </div>
                         </div>
 
-                        <div class="section-divider"></div>
                         <div class="grid grid-4">
                             <div class="form-group">
                                 <label>Skor SF1 Team A</label>

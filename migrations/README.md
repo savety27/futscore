@@ -28,6 +28,11 @@ Do not expose migration or schema-debug scripts in public web routes.
 - File: `migration_add_uniform_choice_columns_to_challenges.sql`
 - Apply this migration before deploying `pelatih/match_lineup.php` changes that save selected kit colors per team.
 
+## Required migration for exact bracket-to-match links
+
+- File: `migration_add_challenge_id_columns_to_event_brackets.sql`
+- Apply this migration before deploying bracket pages that must link each slot (`SF1/SF2/Final/3rd`) to an exact `challenges.id`.
+
 Example command:
 
 ```bash
