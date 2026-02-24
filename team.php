@@ -358,7 +358,7 @@ if ($teamId > 0) {
                     <div class="team-profile-card">
                         <div class="team-profile-identity">
                             <div class="team-logo-shell">
-                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
+                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
                                      alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>" 
                                      class="team-logo-profile"
                                      onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
@@ -444,7 +444,7 @@ if ($teamId > 0) {
                             ?>
                             <<?php echo $rowTag; ?> <?php echo $rowAttr; ?> class="participation-row <?php echo $isLink ? 'is-link' : ''; ?>">
                                 <div class="participation-event-info">
-                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo !empty($p['image']) ? $p['image'] : 'default-event.png'; ?>" 
+                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars(!empty($p['image']) ? $p['image'] : 'default-event.png'); ?>" 
                                          alt="<?php echo htmlspecialchars($p['event_name']); ?>" 
                                          class="participation-event-logo"
                                          onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
@@ -1098,7 +1098,7 @@ if ($teamId > 0) {
                             <?php foreach ($allTeams as $team): ?>
                                 <a href="team.php?id=<?php echo $team['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo $team['id']; ?>">
                                     <div class="team-logo-frame">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $team['logo']; ?>" 
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
                                              alt="<?php echo htmlspecialchars($team['name']); ?>"
                                              class="team-logo-lg"
                                              onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
