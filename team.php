@@ -36,7 +36,7 @@ if ($teamId > 0) {
         FROM (
             SELECT 
                 s.source_name as event_name,
-                COALESCE(MAX(s.source_id), (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') LIMIT 1)) as best_id
+                COALESCE(MAX(s.source_id), (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') ORDER BY start_date DESC, id DESC LIMIT 1)) as best_id
             FROM (
                 SELECT e.name as source_name, e.id as source_id 
                 FROM events e 
@@ -1020,7 +1020,8 @@ if ($teamId > 0) {
                     const filtered = playersData.filter(p => {
                         const st = (p.sport_type || '').trim().toLowerCase();
                         const ev = (eventId || '').trim().toLowerCase();
-                        return st === ev;
+                        // Fuzzy match: either the sport_type is in the event name, or vice versa
+                        return ev.includes(st) || st.includes(ev) || st === ev;
                     });
 
                     if (filtered.length === 0) {
