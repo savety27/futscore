@@ -263,8 +263,8 @@ function recomputeEventKls(PDO $conn, int $eventId, string $categoryName = ''): 
     $rows = $rankStmt->fetchAll(PDO::FETCH_ASSOC);
 
     $updateStmt = $conn->prepare("UPDATE event_team_values SET kls = ? WHERE id = ?");
-    foreach ($rows as $idx => $row) {
-        $updateStmt->execute([$idx + 1, (int)$row['id']]);
+    foreach ($rows as $row) {
+        $updateStmt->execute([0, (int)$row['id']]);
     }
 }
 
@@ -540,8 +540,8 @@ if ($eventId > 0) {
                 if ((int)$a['gm'] !== (int)$b['gm']) return (int)$b['gm'] <=> (int)$a['gm'];
                 return strcmp((string)$a['team_name'], (string)$b['team_name']);
             });
-            foreach ($rows as $idx => &$row) {
-                $row['display_kls'] = $idx + 1;
+            foreach ($rows as &$row) {
+                $row['display_kls'] = (int)($row['kls'] ?? 0);
             }
             unset($row);
 
@@ -558,8 +558,8 @@ if ($eventId > 0) {
                 if ((int)$a['gm'] !== (int)$b['gm']) return (int)$b['gm'] <=> (int)$a['gm'];
                 return strcmp((string)$a['team_name'], (string)$b['team_name']);
             });
-            foreach ($rows as $idx => &$row) {
-                $row['display_kls'] = $idx + 1;
+            foreach ($rows as &$row) {
+                $row['display_kls'] = (int)($row['kls'] ?? 0);
             }
             unset($row);
 

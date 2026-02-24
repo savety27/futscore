@@ -502,7 +502,7 @@ if ($eventId > 0 && !empty($event)) {
                     return strcmp((string) ($a['team_name'] ?? ''), (string) ($b['team_name'] ?? ''));
                 });
                 foreach ($rows as $idx => &$row) {
-                    $row['display_kls'] = $idx + 1;
+                    $row['display_kls'] = (int) ($row['kls'] ?? 0);
                 }
                 unset($row);
 
@@ -526,7 +526,7 @@ if ($eventId > 0 && !empty($event)) {
                     return strcmp((string) ($a['team_name'] ?? ''), (string) ($b['team_name'] ?? ''));
                 });
                 foreach ($rows as $idx => &$row) {
-                    $row['display_kls'] = $idx + 1;
+                    $row['display_kls'] = (int) ($row['kls'] ?? 0);
                 }
                 unset($row);
                 $eventStandingsByCategory[$categoryName] = $rows;
@@ -546,7 +546,7 @@ if ($eventId > 0 && !empty($event)) {
                     return strcmp((string) ($a['team_name'] ?? ''), (string) ($b['team_name'] ?? ''));
                 });
                 foreach ($rows as $idx => &$row) {
-                    $row['display_kls'] = $idx + 1;
+                    $row['display_kls'] = (int) ($row['kls'] ?? 0);
                 }
                 unset($row);
                 $eventStandingsByCategory[$categoryName] = $rows;
@@ -1057,6 +1057,38 @@ if ($eventId > 0 && !empty($event)) {
         padding: 18px;
     }
 
+    .event-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        color: #475569;
+        border-radius: inherit;
+    }
+
+    .event-image-placeholder.profile {
+        width: 160px;
+        height: 160px;
+        border-radius: 22px;
+        border: 4px solid #fff;
+        box-shadow: 0 10px 25px rgba(15, 39, 68, 0.14);
+    }
+
+    .event-image-placeholder.card {
+        height: 170px !important;
+        min-height: 170px;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        padding: 6px;
+        margin-bottom: 0;
+    }
+
+    .event-image-placeholder i {
+        font-size: 24px;
+    }
+
     .event-bracket-title {
         margin: 0 0 8px 0;
         color: #1e293b;
@@ -1450,9 +1482,10 @@ if ($eventId > 0 && !empty($event)) {
                         <div class="team-profile-identity">
                             <div class="team-logo-shell" style="border-radius:26px;">
                                 <?php if (!empty($event['image'])): ?>
-                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars($event['image']); ?>" alt="<?php echo htmlspecialchars($event['name']); ?>" class="event-poster-profile" onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
+                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars($event['image']); ?>" alt="<?php echo htmlspecialchars($event['name']); ?>" class="event-poster-profile" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="event-image-placeholder profile" style="display:none;"><i class="fas fa-calendar-alt"></i></div>
                                 <?php else: ?>
-                                    <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="<?php echo htmlspecialchars($event['name']); ?>" class="event-poster-profile">
+                                    <div class="event-image-placeholder profile"><i class="fas fa-calendar-alt"></i></div>
                                 <?php endif; ?>
                             </div>
                             <div class="team-profile-text">
@@ -1885,9 +1918,10 @@ if ($eventId > 0 && !empty($event)) {
                             <?php foreach ($events as $ev): ?>
                                 <a href="EVENTS.PHP?id=<?php echo (int) $ev['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo (int) $ev['id']; ?>" data-event-name="<?php echo htmlspecialchars(strtolower((string)($ev['name'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php if (!empty($ev['image'])): ?>
-                                        <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars($ev['image']); ?>" alt="<?php echo htmlspecialchars($ev['name']); ?>" class="event-card-image" onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
+                                        <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars($ev['image']); ?>" alt="<?php echo htmlspecialchars($ev['name']); ?>" class="event-card-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="event-card-image event-image-placeholder card" style="display:none;"><i class="fas fa-calendar-alt"></i></div>
                                     <?php else: ?>
-                                        <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="<?php echo htmlspecialchars($ev['name']); ?>" class="event-card-image">
+                                        <div class="event-card-image event-image-placeholder card"><i class="fas fa-calendar-alt"></i></div>
                                     <?php endif; ?>
                                     <h3 class="team-name"><?php echo htmlspecialchars($ev['name']); ?></h3>
                                     <p class="team-label"><?php echo !empty($ev['category']) ? htmlspecialchars($ev['category']) : '-'; ?></p>

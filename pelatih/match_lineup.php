@@ -18,6 +18,16 @@ $position_options = [
     'FW' => 'Forward (FW)'
 ];
 
+function normalizeTextKey($value): string
+{
+    $text = trim((string)$value);
+    $text = preg_replace('/\s+/u', ' ', $text);
+    if (function_exists('mb_strtolower')) {
+        return mb_strtolower($text, 'UTF-8');
+    }
+    return strtolower($text);
+}
+
 // Verify challenge exists and pelatih owns one of the teams
 try {
 
@@ -127,6 +137,29 @@ if ($my_team_id == 0) {
     $stmtPlayers->execute($player_params);
     $players = $stmtPlayers->fetchAll(PDO::FETCH_ASSOC);
 
+    $suspended_players_map = [];
+    $suspend_event_id = (int)($challenge['event_id'] ?? 0);
+    $suspend_sport_type = trim((string)($challenge['sport_type'] ?? ''));
+    $suspend_sport_type_norm = normalizeTextKey($suspend_sport_type);
+    $stmtSuspended = $conn->prepare("SELECT event_id, player_id, sport_type, suspension_until
+                                     FROM player_event_cards
+                                     WHERE team_id = ?
+                                       AND suspension_until IS NOT NULL
+                                       AND suspension_until >= CURDATE()");
+    $stmtSuspended->execute([$my_team_id]);
+    $suspendedRows = $stmtSuspended->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($suspendedRows as $srow) {
+        $pid = (int)($srow['player_id'] ?? 0);
+        if ($pid <= 0) {
+            continue;
+        }
+        $suspend_until = (string)($srow['suspension_until'] ?? '');
+        if (!isset($suspended_players_map[$pid]) || $suspended_players_map[$pid] < $suspend_until) {
+            $suspended_players_map[$pid] = $suspend_until;
+        }
+    }
+
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
 }
@@ -138,6 +171,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $conn->beginTransaction();
+            $challenge_sport_type_norm = normalizeTextKey($challenge['sport_type'] ?? '');
+            $eligible_player_ids = [];
+            foreach ($players as $p) {
+                $pid = (int)($p['id'] ?? 0);
+                if ($pid <= 0) {
+                    continue;
+                }
+                $is_valid = normalizeTextKey($p['sport_type'] ?? '') === $challenge_sport_type_norm;
+                $is_suspended = isset($suspended_players_map[$pid]);
+                if ($is_valid && !$is_suspended) {
+                    $eligible_player_ids[$pid] = true;
+                }
+            }
 
             // 1. Clear existing lineup for this match & team
             $stmtDelete = $conn->prepare("DELETE FROM lineups WHERE match_id = ? AND team_id = ?");
@@ -148,6 +194,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 2. Insert new lineup - Babak 1
             if (isset($_POST['players_h1']) && is_array($_POST['players_h1'])) {
                 foreach ($_POST['players_h1'] as $player_id) {
+                    $player_id = (int)$player_id;
+                    if (!isset($eligible_player_ids[$player_id])) {
+                        continue;
+                    }
                     $is_starting = isset($_POST['starters_h1'][$player_id]) ? 1 : 0;
                     $pos = '';
                     foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
@@ -159,6 +209,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 3. Insert new lineup - Babak 2
             if (isset($_POST['players_h2']) && is_array($_POST['players_h2'])) {
                 foreach ($_POST['players_h2'] as $player_id) {
+                     $player_id = (int)$player_id;
+                     if (!isset($eligible_player_ids[$player_id])) {
+                        continue;
+                     }
                      $is_starting = isset($_POST['starters_h2'][$player_id]) ? 1 : 0;
                      $pos = '';
                      foreach($players as $p) { if($p['id'] == $player_id) { $pos = $p['position']; break; } }
@@ -229,6 +283,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
+        <?php if (!empty($suspended_players_map)): ?>
+            <div class="alert lineup-alert lineup-alert--warning">
+                <i class="fas fa-user-slash"></i>
+                <span><?php echo count($suspended_players_map); ?> pemain sedang suspend dan tidak bisa dipilih sampai masa suspend selesai.</span>
+            </div>
+        <?php endif; ?>
+
         <div class="lineup-filter-panel">
             <form method="GET" class="lineup-filter-form">
                 <input type="hidden" name="id" value="<?php echo (int)$challenge_id; ?>">
@@ -292,11 +353,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </thead>
                         <tbody>
                             <?php foreach ($players as $player):
-                                $is_selected = isset($current_lineup_h1[$player['id']]);
+                                $suspend_until = $suspended_players_map[(int)$player['id']] ?? '';
+                                $is_suspended = $suspend_until !== '';
+                                $is_selected = !$is_suspended && isset($current_lineup_h1[$player['id']]);
                                 $is_starting = $is_selected && $current_lineup_h1[$player['id']] == 1;
-                                $is_valid = ($player['sport_type'] == $challenge['sport_type']);
+                                $is_valid = (normalizeTextKey($player['sport_type'] ?? '') === normalizeTextKey($challenge['sport_type'] ?? ''));
                             ?>
-                                <tr class="<?php echo !$is_valid ? 'lineup-row-invalid' : ''; ?>">
+                                <tr class="<?php echo !$is_valid ? 'lineup-row-invalid' : ''; ?> <?php echo $is_suspended ? 'lineup-row-suspended' : ''; ?>">
                                     <td class="lineup-cell-center">
                                         <input
                                             type="checkbox"
@@ -306,6 +369,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             data-id="<?php echo (int)$player['id']; ?>"
                                             <?php echo $is_selected ? 'checked' : ''; ?>
                                             <?php echo !$is_valid ? 'disabled' : ''; ?>
+                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
                                         >
                                     </td>
                                     <td class="lineup-cell-center">
@@ -318,17 +382,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <?php echo $is_starting ? 'checked' : ''; ?>
                                             <?php echo !$is_selected ? 'disabled' : ''; ?>
                                             <?php echo !$is_valid ? 'disabled' : ''; ?>
+                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
                                         >
                                     </td>
                                     <td>
                                         <span class="badge badge-primary lineup-jersey"><?php echo htmlspecialchars($player['jersey_number'] ?? '-'); ?></span>
                                     </td>
                                     <td>
-                                        <span class="lineup-player-name"><?php echo htmlspecialchars($player['name'] ?? ''); ?></span>
+                                        <span class="lineup-player-name <?php echo $is_suspended ? 'lineup-player-name--suspended' : ''; ?>">
+                                            <?php echo htmlspecialchars($player['name'] ?? ''); ?>
+                                        </span>
                                     </td>
                                     <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
                                     <td>
-                                        <?php if ($is_valid): ?>
+                                        <?php if ($is_suspended): ?>
+                                            <span class="badge lineup-event-badge lineup-event-badge--suspended">
+                                                Suspend s/d <?php echo htmlspecialchars(date('d M Y', strtotime($suspend_until))); ?>
+                                            </span>
+                                        <?php elseif ($is_valid): ?>
                                             <span class="badge badge-success lineup-event-badge lineup-event-badge--ok">Sesuai</span>
                                         <?php else: ?>
                                             <span class="badge badge-danger lineup-event-badge lineup-event-badge--invalid">Beda Kategori</span>
@@ -360,11 +431,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </thead>
                         <tbody>
                             <?php foreach ($players as $player):
-                                $is_selected = isset($current_lineup_h2[$player['id']]);
+                                $suspend_until = $suspended_players_map[(int)$player['id']] ?? '';
+                                $is_suspended = $suspend_until !== '';
+                                $is_selected = !$is_suspended && isset($current_lineup_h2[$player['id']]);
                                 $is_starting = $is_selected && $current_lineup_h2[$player['id']] == 1;
-                                $is_valid = ($player['sport_type'] == $challenge['sport_type']);
+                                $is_valid = (normalizeTextKey($player['sport_type'] ?? '') === normalizeTextKey($challenge['sport_type'] ?? ''));
                             ?>
-                                <tr class="<?php echo !$is_valid ? 'lineup-row-invalid' : ''; ?>">
+                                <tr class="<?php echo !$is_valid ? 'lineup-row-invalid' : ''; ?> <?php echo $is_suspended ? 'lineup-row-suspended' : ''; ?>">
                                     <td class="lineup-cell-center">
                                         <input
                                             type="checkbox"
@@ -374,6 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             data-id="<?php echo (int)$player['id']; ?>"
                                             <?php echo $is_selected ? 'checked' : ''; ?>
                                             <?php echo !$is_valid ? 'disabled' : ''; ?>
+                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
                                         >
                                     </td>
                                     <td class="lineup-cell-center">
@@ -386,17 +460,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <?php echo $is_starting ? 'checked' : ''; ?>
                                             <?php echo !$is_selected ? 'disabled' : ''; ?>
                                             <?php echo !$is_valid ? 'disabled' : ''; ?>
+                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
                                         >
                                     </td>
                                     <td>
                                         <span class="badge badge-primary lineup-jersey"><?php echo htmlspecialchars($player['jersey_number'] ?? '-'); ?></span>
                                     </td>
                                     <td>
-                                        <span class="lineup-player-name"><?php echo htmlspecialchars($player['name'] ?? ''); ?></span>
+                                        <span class="lineup-player-name <?php echo $is_suspended ? 'lineup-player-name--suspended' : ''; ?>">
+                                            <?php echo htmlspecialchars($player['name'] ?? ''); ?>
+                                        </span>
                                     </td>
                                     <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
                                     <td>
-                                        <?php if ($is_valid): ?>
+                                        <?php if ($is_suspended): ?>
+                                            <span class="badge lineup-event-badge lineup-event-badge--suspended">
+                                                Suspend s/d <?php echo htmlspecialchars(date('d M Y', strtotime($suspend_until))); ?>
+                                            </span>
+                                        <?php elseif ($is_valid): ?>
                                             <span class="badge badge-success lineup-event-badge lineup-event-badge--ok">Sesuai</span>
                                         <?php else: ?>
                                             <span class="badge badge-danger lineup-event-badge lineup-event-badge--invalid">Beda Kategori</span>
@@ -801,6 +882,10 @@ document.addEventListener('DOMContentLoaded', function() {
     );
 }
 
+.lineup-row-suspended {
+    background: #fff7ed;
+}
+
 .lineup-cell-center {
     text-align: center;
 }
@@ -831,6 +916,12 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #0f203f;
 }
 
+.lineup-player-name--suspended {
+    color: #92400e;
+    text-decoration: line-through;
+    pointer-events: none;
+}
+
 .lineup-event-badge {
     display: inline-flex;
     align-items: center;
@@ -850,6 +941,11 @@ document.addEventListener('DOMContentLoaded', function() {
 .lineup-event-badge--invalid {
     color: #8f2626;
     background: #ffe9e9;
+}
+
+.lineup-event-badge--suspended {
+    color: #9a3412;
+    background: #ffedd5;
 }
 
 .lineup-actions {
