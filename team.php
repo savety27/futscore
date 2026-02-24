@@ -18,8 +18,35 @@ if ($teamId > 0) {
     $players = getPlayersByTeamId($teamId);
     $staff = getTeamStaffByTeamId($teamId);
     
-    // Get events this team participated in
+    // Get official event participation with links
     $conn = $db->getConnection();
+    $participationSql = "SELECT DISTINCT 
+                            e.id AS event_id, 
+                            e.name AS event_name, 
+                            e.category, 
+                            e.start_date, 
+                            e.end_date, 
+                            e.location,
+                            e.image
+                        FROM events e
+                        JOIN (
+                            SELECT event_id, team_id FROM event_team_values WHERE team_id = ?
+                            UNION
+                            SELECT event_id, challenger_id AS team_id FROM challenges WHERE challenger_id = ? AND event_id IS NOT NULL
+                            UNION
+                            SELECT event_id, opponent_id AS team_id FROM challenges WHERE opponent_id = ? AND event_id IS NOT NULL
+                        ) p ON e.id = p.event_id
+                        ORDER BY e.start_date DESC";
+    $participationStmt = $conn->prepare($participationSql);
+    $participationStmt->bind_param("iii", $teamId, $teamId, $teamId);
+    $participationStmt->execute();
+    $participationResult = $participationStmt->get_result();
+    $participations = [];
+    while ($pRow = $participationResult->fetch_assoc()) {
+        $participations[] = $pRow;
+    }
+
+    // Get events this team participated in (for categories/tabs)
     $eventSql = "SELECT ev.event_name AS event_key, ev.event_name
                  FROM (
                      SELECT te.event_name AS event_name
@@ -67,6 +94,121 @@ if ($teamId > 0) {
 
 .event-meta-label {
     color: #0f172a !important;
+}
+
+/* Participation Table Styles */
+.participation-section {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.participation-table-container {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.participation-row {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.participation-row:last-child {
+    border-bottom: none;
+}
+
+.participation-row:hover {
+    background-color: #f8fafc;
+    transform: translateX(4px);
+}
+
+.participation-event-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 16px;
+}
+
+.participation-event-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 4px;
+}
+
+.participation-event-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.participation-event-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+.participation-event-category {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.participation-meta {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+}
+
+.participation-meta-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+}
+
+.participation-meta-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.participation-meta-value {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.participation-arrow {
+    color: #cbd5e1;
+    margin-left: 16px;
+    transition: transform 0.2s ease;
+}
+
+.participation-row:hover .participation-arrow {
+    color: #2563eb;
+    transform: translateX(4px);
+}
+
+@media (max-width: 768px) {
+    .participation-meta {
+        display: none;
+    }
+    .participation-row {
+        padding: 12px 16px;
+    }
 }
 </style>
 
@@ -251,6 +393,57 @@ if ($teamId > 0) {
                         </div>
                     </div>
                 </div>
+
+                <?php if (!empty($participations)): ?>
+                <!-- EVENT PARTICIPATION SECTION -->
+                <div class="container section-container participation-section">
+                    <div class="section-header">
+                        <h2 class="section-title">RIWAYAT PARTISIPASI</h2>
+                    </div>
+                    
+                    <div class="participation-table-container">
+                        <?php foreach ($participations as $p): ?>
+                            <a href="events.php?id=<?php echo $p['event_id']; ?>" class="participation-row">
+                                <div class="participation-event-info">
+                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo !empty($p['image']) ? $p['image'] : 'default-event.png'; ?>" 
+                                         alt="<?php echo htmlspecialchars($p['event_name']); ?>" 
+                                         class="participation-event-logo"
+                                         onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
+                                    <div class="participation-event-details">
+                                        <span class="participation-event-name"><?php echo htmlspecialchars($p['event_name']); ?></span>
+                                        <span class="participation-event-category"><?php echo htmlspecialchars($p['category'] ?? 'Umum'); ?></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="participation-meta">
+                                    <div class="participation-meta-item">
+                                        <span class="participation-meta-label">PERIODE</span>
+                                        <span class="participation-meta-value">
+                                            <?php 
+                                            if (!empty($p['start_date'])) {
+                                                $start = strtotime($p['start_date']);
+                                                $end = !empty($p['end_date']) ? strtotime($p['end_date']) : null;
+                                                echo date('d M', $start) . ($end ? ' - ' . date('d M Y', $end) : date(' Y', $start));
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </span>
+                                    </div>
+                                    <div class="participation-meta-item">
+                                        <span class="participation-meta-label">LOKASI</span>
+                                        <span class="participation-meta-value"><?php echo htmlspecialchars($p['location'] ?? '-'); ?></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="participation-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
                 
                 <div class="container section-container team-roster-section">
                     <div class="section-header">
