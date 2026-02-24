@@ -205,7 +205,7 @@ if ($eventId > 0 && !empty($event)) {
                          INNER JOIN players p ON g.player_id = p.id
                          INNER JOIN teams t ON g.team_id = t.id
                          WHERE c.event_id = ? AND c.status IN ('accepted', 'completed')
-                         GROUP BY g.player_id, c.sport_type
+                         GROUP BY g.player_id, p.name, p.photo, t.name, t.logo, c.sport_type
                          ORDER BY total_goals DESC";
         $tsStmt = $conn->prepare($topScorerSql);
         $tsStmt->bind_param("i", $eventId);
@@ -229,7 +229,7 @@ if ($eventId > 0 && !empty($event)) {
                        INNER JOIN players p ON g.player_id = p.id
                        INNER JOIN teams t ON g.team_id = t.id
                        WHERE c.event_id = ? AND c.status IN ('accepted', 'completed')
-                       GROUP BY g.player_id
+                       GROUP BY g.player_id, p.name, p.photo, t.name, t.logo
                        ORDER BY total_goals DESC
                        LIMIT 10";
         $tsLigaStmt = $conn->prepare($topLigaSql);

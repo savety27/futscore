@@ -18,56 +18,77 @@ if ($teamId > 0) {
     $players = getPlayersByTeamId($teamId);
     $staff = getTeamStaffByTeamId($teamId);
     
-    // Get official event participation with links
+    // SMART MATCH: Get event participation (Official & Team History)
     $conn = $db->getConnection();
-    $participationSql = "SELECT DISTINCT 
-                            e.id AS event_id, 
-                            e.name AS event_name, 
-                            e.category, 
-                            e.start_date, 
-                            e.end_date, 
-                            e.location,
-                            e.image
-                        FROM events e
-                        JOIN (
-                            SELECT event_id, team_id FROM event_team_values WHERE team_id = ?
-                            UNION
-                            SELECT event_id, challenger_id AS team_id FROM challenges WHERE challenger_id = ? AND event_id IS NOT NULL
-                            UNION
-                            SELECT event_id, opponent_id AS team_id FROM challenges WHERE opponent_id = ? AND event_id IS NOT NULL
-                        ) p ON e.id = p.event_id
-                        ORDER BY e.start_date DESC";
-    $participationStmt = $conn->prepare($participationSql);
-    $participationStmt->bind_param("iii", $teamId, $teamId, $teamId);
-    $participationStmt->execute();
-    $participationResult = $participationStmt->get_result();
+    
+    // Optimized Query: Combines all sources and matches with official events in one go
+    // This structure avoids ONLY_FULL_GROUP_BY issues by resolving IDs in a subquery
+    $participationSql = "
+        SELECT 
+            matched.event_name,
+            e.id as event_id,
+            e.category,
+            e.start_date,
+            e.end_date,
+            e.location,
+            e.image,
+            CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END as is_official
+        FROM (
+            SELECT 
+                s.source_name as event_name,
+                COALESCE(MAX(s.source_id), (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') LIMIT 1)) as best_id
+            FROM (
+                SELECT e.name as source_name, e.id as source_id 
+                FROM events e 
+                JOIN event_team_values etv ON e.id = etv.event_id 
+                WHERE etv.team_id = ?
+                
+                UNION
+                
+                SELECT sport_type as source_name, event_id as source_id 
+                FROM challenges 
+                WHERE (challenger_id = ? OR opponent_id = ?) 
+                  AND sport_type IS NOT NULL AND sport_type <> ''
+                  
+                UNION
+                
+                SELECT event_name as source_name, NULL as source_id 
+                FROM team_events 
+                WHERE team_id = ?
+            ) s
+            GROUP BY s.source_name
+        ) matched
+        LEFT JOIN events e ON matched.best_id = e.id
+        ORDER BY is_official DESC, e.start_date DESC
+    ";
+    
+    $pStmt = $conn->prepare($participationSql);
+    $pStmt->bind_param("iiii", $teamId, $teamId, $teamId, $teamId);
+    $pStmt->execute();
+    $pResult = $pStmt->get_result();
+    
     $participations = [];
-    while ($pRow = $participationResult->fetch_assoc()) {
-        $participations[] = $pRow;
-    }
-
-    // Get events this team participated in (for categories/tabs)
-    $eventSql = "SELECT ev.event_name AS event_key, ev.event_name
-                 FROM (
-                     SELECT te.event_name AS event_name
-                     FROM team_events te
-                     WHERE te.team_id = ?
-
-                     UNION
-
-                     SELECT c.sport_type AS event_name
-                     FROM challenges c
-                     WHERE c.challenger_id = ? OR c.opponent_id = ?
-                 ) ev
-                 WHERE ev.event_name IS NOT NULL AND ev.event_name <> ''
-                 ORDER BY ev.event_name ASC";
-    $eventStmt = $conn->prepare($eventSql);
-    $eventStmt->bind_param("iii", $teamId, $teamId, $teamId);
-    $eventStmt->execute();
-    $eventsResult = $eventStmt->get_result();
-    $events = [];
-    while ($row = $eventsResult->fetch_assoc()) {
-        $events[] = $row;
+    $events = []; // For roster tabs
+    
+    while ($row = $pResult->fetch_assoc()) {
+        $isOfficial = (bool)$row['is_official'];
+        
+        $participations[] = [
+            'event_id' => $row['event_id'],
+            'event_name' => $row['event_name'],
+            'category' => $row['category'] ?? ($isOfficial ? 'Official Event' : 'Tournament / Cabor'),
+            'start_date' => $row['start_date'],
+            'end_date' => $row['end_date'],
+            'location' => $row['location'] ?? ($isOfficial ? 'Tournament Venue' : 'Team Record'),
+            'image' => $row['image'],
+            'is_official' => $isOfficial
+        ];
+        
+        // Populate events list for tabs (replaces the second query)
+        $events[] = [
+            'event_key' => $row['event_name'],
+            'event_name' => $row['event_name']
+        ];
     }
     
     $pageTitle = $team['name'];
@@ -124,7 +145,7 @@ if ($teamId > 0) {
     border-bottom: none;
 }
 
-.participation-row:hover {
+.participation-row.is-link:hover {
     background-color: #f8fafc;
     transform: translateX(4px);
 }
@@ -162,7 +183,20 @@ if ($teamId > 0) {
     font-size: 12px;
     color: #64748b;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
+.status-pill-small {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.status-official { background: #dcfce7; color: #166534; }
+.status-history { background: #f1f5f9; color: #64748b; }
 
 .participation-meta {
     display: flex;
@@ -197,7 +231,7 @@ if ($teamId > 0) {
     transition: transform 0.2s ease;
 }
 
-.participation-row:hover .participation-arrow {
+.participation-row.is-link:hover .participation-arrow {
     color: #2563eb;
     transform: translateX(4px);
 }
@@ -403,7 +437,12 @@ if ($teamId > 0) {
                     
                     <div class="participation-table-container">
                         <?php foreach ($participations as $p): ?>
-                            <a href="events.php?id=<?php echo $p['event_id']; ?>" class="participation-row">
+                            <?php 
+                                $isLink = !empty($p['event_id']);
+                                $rowTag = $isLink ? 'a' : 'div';
+                                $rowAttr = $isLink ? 'href="events.php?id=' . (int)$p['event_id'] . '"' : '';
+                            ?>
+                            <<?php echo $rowTag; ?> <?php echo $rowAttr; ?> class="participation-row <?php echo $isLink ? 'is-link' : ''; ?>">
                                 <div class="participation-event-info">
                                     <img src="<?php echo SITE_URL; ?>/images/events/<?php echo !empty($p['image']) ? $p['image'] : 'default-event.png'; ?>" 
                                          alt="<?php echo htmlspecialchars($p['event_name']); ?>" 
@@ -411,7 +450,14 @@ if ($teamId > 0) {
                                          onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
                                     <div class="participation-event-details">
                                         <span class="participation-event-name"><?php echo htmlspecialchars($p['event_name']); ?></span>
-                                        <span class="participation-event-category"><?php echo htmlspecialchars($p['category'] ?? 'Umum'); ?></span>
+                                        <div class="participation-event-category">
+                                            <span><?php echo htmlspecialchars($p['category']); ?></span>
+                                            <?php if($p['is_official']): ?>
+                                                <span class="status-pill-small status-official">Official</span>
+                                            <?php else: ?>
+                                                <span class="status-pill-small status-history">History</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -425,7 +471,7 @@ if ($teamId > 0) {
                                                 $end = !empty($p['end_date']) ? strtotime($p['end_date']) : null;
                                                 echo date('d M', $start) . ($end ? ' - ' . date('d M Y', $end) : date(' Y', $start));
                                             } else {
-                                                echo '-';
+                                                echo 'Records Found';
                                             }
                                             ?>
                                         </span>
@@ -437,9 +483,13 @@ if ($teamId > 0) {
                                 </div>
                                 
                                 <div class="participation-arrow">
-                                    <i class="fas fa-chevron-right"></i>
+                                    <?php if($isLink): ?>
+                                        <i class="fas fa-chevron-right"></i>
+                                    <?php else: ?>
+                                        <i class="fas fa-info-circle" style="opacity: 0.3;"></i>
+                                    <?php endif; ?>
                                 </div>
-                            </a>
+                            </<?php echo $rowTag; ?>>
                         <?php endforeach; ?>
                     </div>
                 </div>
