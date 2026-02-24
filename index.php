@@ -757,6 +757,7 @@ $pageTitle = "Home";
                             <img id="team1LogoLarge" src="" alt="" class="team-logo-large-p">
                         </div>
                         <h4 id="team1Name" class="p-team-name"></h4>
+                        <p id="team1Uniform" class="p-team-uniform">Baju: -</p>
                     </div>
                     
                     <div class="vs-score-center">
@@ -769,6 +770,7 @@ $pageTitle = "Home";
                             <img id="team2LogoLarge" src="" alt="" class="team-logo-large-p">
                         </div>
                         <h4 id="team2Name" class="p-team-name"></h4>
+                        <p id="team2Uniform" class="p-team-uniform">Baju: -</p>
                     </div>
                 </div>
                 

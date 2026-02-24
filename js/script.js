@@ -34,6 +34,16 @@ function openMatchModal(matchId) {
             document.getElementById('team2Name').textContent = matchDetail.team2;
             document.getElementById('team1NameLineup').textContent = matchDetail.team1;
             document.getElementById('team2NameLineup').textContent = matchDetail.team2;
+            const team1UniformEl = document.getElementById('team1Uniform');
+            const team2UniformEl = document.getElementById('team2Uniform');
+            if (team1UniformEl) {
+                const team1UniformText = (matchDetail.team1_uniform_choices || '').trim();
+                team1UniformEl.textContent = 'Baju: ' + (team1UniformText || 'Belum dipilih');
+            }
+            if (team2UniformEl) {
+                const team2UniformText = (matchDetail.team2_uniform_choices || '').trim();
+                team2UniformEl.textContent = 'Baju: ' + (team2UniformText || 'Belum dipilih');
+            }
 
             const team1Logo = document.getElementById('team1LogoLarge');
             const team2Logo = document.getElementById('team2LogoLarge');
@@ -226,6 +236,7 @@ function createPlayerLineupItem(player) {
     const playerNumber = player.number !== undefined && player.number !== null ? player.number : '?';
     const playerPhoto = player.photo || 'default-player.jpg';
     const playerId = player.id || '';
+    const isStarting = Number(player.is_starting) === 1;
 
     playerDiv.dataset.playerId = playerId;
     playerDiv.dataset.playerName = playerName.toLowerCase();
@@ -238,7 +249,10 @@ function createPlayerLineupItem(player) {
              onerror="this.src='${SITE_URL}/images/players/default-player.jpg'">
         <div class="player-info-lineup">
             <div class="player-name-lineup">${playerName}</div>
-            <div class="player-number-lineup">#${playerNumber}</div>
+            <div class="player-meta-lineup">
+                <div class="player-number-lineup">#${playerNumber}</div>
+                ${isStarting ? '<span class="lineup-main-badge"><i class="fas fa-star"></i> Pemain Utama</span>' : ''}
+            </div>
         </div>
     `;
 

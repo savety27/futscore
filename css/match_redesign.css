@@ -184,6 +184,14 @@
     text-overflow: ellipsis;
 }
 
+.match-team-uniform {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-500);
+    max-width: 180px;
+    line-height: 1.35;
+}
+
 .match-score-block {
     display: flex;
     flex-direction: column;
@@ -587,6 +595,11 @@
 
     .match-team-name {
         max-width: 120px;
+    }
+
+    .match-team-uniform {
+        max-width: 140px;
+        font-size: 11px;
     }
 }
 

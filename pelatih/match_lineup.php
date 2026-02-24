@@ -10,6 +10,11 @@ $filter_event = trim($_GET['event'] ?? '');
 $filter_position = trim($_GET['position'] ?? '');
 $filter_search = trim($_GET['q'] ?? '');
 $has_lineups_half_column = false;
+$has_uniform_choice_column = false;
+$uniform_choice_column = '';
+$uniform_options = [];
+$selected_uniform_choices = [];
+$my_team_uniform_raw = '';
 
 $position_options = [
     'GK' => 'Goalkeeper (GK)',
@@ -26,6 +31,33 @@ function normalizeTextKey($value): string
         return mb_strtolower($text, 'UTF-8');
     }
     return strtolower($text);
+}
+
+function parseUniformChoices($raw): array
+{
+    $value = trim((string)$raw);
+    if ($value === '') {
+        return [];
+    }
+
+    $parts = preg_split('/\s*[,\/;|\n\r]+\s*|\s*-\s*/u', $value);
+    if (!is_array($parts)) {
+        return [$value];
+    }
+
+    $choices = [];
+    foreach ($parts as $part) {
+        $part = trim((string)$part);
+        if ($part !== '') {
+            $choices[] = $part;
+        }
+    }
+
+    if (empty($choices)) {
+        $choices[] = $value;
+    }
+
+    return array_values(array_unique($choices));
 }
 
 // Verify challenge exists and pelatih owns one of the teams
@@ -81,6 +113,31 @@ if ($my_team_id == 0) {
 
     $stmtHalfColumn = $conn->query("SHOW COLUMNS FROM lineups LIKE 'half'");
     $has_lineups_half_column = $stmtHalfColumn && $stmtHalfColumn->fetch(PDO::FETCH_ASSOC) !== false;
+
+    $is_my_team_challenger = (int)($challenge['challenger_id'] ?? 0) === (int)$my_team_id;
+    $uniform_choice_column = $is_my_team_challenger ? 'challenger_uniform_choices' : 'opponent_uniform_choices';
+
+    $stmtUniformColumn = $conn->prepare("
+        SELECT COUNT(*)
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'challenges'
+          AND COLUMN_NAME = ?
+    ");
+    $stmtUniformColumn->execute([$uniform_choice_column]);
+    $has_uniform_choice_column = ((int)$stmtUniformColumn->fetchColumn() > 0);
+
+    $stmtTeamUniform = $conn->prepare("SELECT uniform_color FROM teams WHERE id = ?");
+    $stmtTeamUniform->execute([$my_team_id]);
+    $my_team_uniform_raw = trim((string)$stmtTeamUniform->fetchColumn());
+    $uniform_options = parseUniformChoices($my_team_uniform_raw);
+
+    if ($has_uniform_choice_column) {
+        $stmtSavedUniform = $conn->prepare("SELECT {$uniform_choice_column} AS uniform_choices FROM challenges WHERE id = ?");
+        $stmtSavedUniform->execute([$challenge_id]);
+        $saved_uniform_raw = trim((string)$stmtSavedUniform->fetchColumn());
+        $selected_uniform_choices = parseUniformChoices($saved_uniform_raw);
+    }
 
     // Determine current lineup (Babak 1 & 2)
     $current_lineup_h1 = [];
@@ -166,6 +223,23 @@ if ($my_team_id == 0) {
 
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $selected_uniform_choices = [];
+    if (isset($_POST['uniform_choices']) && is_array($_POST['uniform_choices'])) {
+        $valid_choice_map = [];
+        foreach ($uniform_options as $choice) {
+            $valid_choice_map[normalizeTextKey($choice)] = $choice;
+        }
+
+        foreach ($_POST['uniform_choices'] as $choice) {
+            $normalized = normalizeTextKey($choice);
+            if ($normalized !== '' && isset($valid_choice_map[$normalized])) {
+                $selected_uniform_choices[] = $valid_choice_map[$normalized];
+            }
+        }
+
+        $selected_uniform_choices = array_values(array_unique($selected_uniform_choices));
+    }
+
     if (!$has_lineups_half_column) {
         $error_message = "Pembaruan database belum diterapkan. Jalankan migrations/migration_add_half_column_to_lineups.sql terlebih dahulu.";
     } else {
@@ -219,6 +293,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                      $stmtInsert->execute([$challenge_id, $player_id, $my_team_id, $is_starting, $pos, 2]);
                 }
+            }
+
+            if ($has_uniform_choice_column) {
+                $uniform_choice_value = !empty($selected_uniform_choices) ? implode(', ', $selected_uniform_choices) : null;
+                $stmtUpdateUniform = $conn->prepare("UPDATE challenges SET {$uniform_choice_column} = ? WHERE id = ?");
+                $stmtUpdateUniform->execute([$uniform_choice_value, $challenge_id]);
             }
 
             $conn->commit();
@@ -329,6 +409,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <form method="POST" action="" class="lineup-form">
+            <div class="lineup-uniform-panel">
+                <div class="lineup-uniform-panel__head">
+                    <h4>Pilihan Baju Tim</h4>
+                    <p>Pilih warna kostum yang dipakai di pertandingan ini (boleh lebih dari satu).</p>
+                </div>
+                <?php if (!empty($uniform_options)): ?>
+                    <div class="lineup-uniform-options">
+                        <?php foreach ($uniform_options as $uniform_choice): ?>
+                            <?php $is_checked = in_array($uniform_choice, $selected_uniform_choices, true); ?>
+                            <label class="lineup-uniform-option">
+                                <input
+                                    type="checkbox"
+                                    name="uniform_choices[]"
+                                    value="<?php echo htmlspecialchars($uniform_choice); ?>"
+                                    class="form-check-input"
+                                    <?php echo $is_checked ? 'checked' : ''; ?>
+                                >
+                                <span><?php echo htmlspecialchars($uniform_choice); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if (!$has_uniform_choice_column): ?>
+                        <div class="lineup-uniform-hint">
+                            Pilihan kostum tampil, tapi belum tersimpan permanen. Jalankan migrasi: <code>migrations/migration_add_uniform_choice_columns_to_challenges.sql</code>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <div class="lineup-uniform-hint">
+                        Warna kostum belum diisi di data tim.
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="lineup-tabs" role="tablist" aria-label="Pilihan babak lineup">
                 <button type="button" class="lineup-tab-btn active" onclick="openTab(event, 'half1')">Babak 1</button>
                 <button type="button" class="lineup-tab-btn" onclick="openTab(event, 'half2')">Babak 2</button>
@@ -562,6 +675,55 @@ document.addEventListener('DOMContentLoaded', function() {
         radial-gradient(1200px 480px at 0% -20%, rgba(76, 201, 240, 0.13), rgba(76, 201, 240, 0)),
         radial-gradient(880px 420px at 100% -10%, rgba(255, 215, 0, 0.16), rgba(255, 215, 0, 0)),
         #ffffff;
+}
+
+.lineup-uniform-panel {
+    margin: 0 0 18px;
+    padding: 16px 18px;
+    border: 1px solid #d8e3f3;
+    border-radius: 14px;
+    background: #f5f9ff;
+}
+
+.lineup-uniform-panel__head h4 {
+    margin: 0;
+    font-size: 1.02rem;
+    color: #112f66;
+}
+
+.lineup-uniform-panel__head p {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: #566782;
+}
+
+.lineup-uniform-options {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.lineup-uniform-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid #c9d7ee;
+    background: #ffffff;
+    color: #1f2f47;
+    font-size: 0.9rem;
+}
+
+.lineup-uniform-option input[type="checkbox"] {
+    margin: 0;
+}
+
+.lineup-uniform-hint {
+    margin-top: 10px;
+    font-size: 0.84rem;
+    color: #4d5d75;
 }
 
 .lineup-hero {

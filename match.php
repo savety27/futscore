@@ -27,6 +27,8 @@ $challengeSql = "SELECT c.id,
                         c.challenge_date AS match_date,
                         c.challenger_score AS score1,
                         c.opponent_score AS score2,
+                        c.challenger_uniform_choices AS team1_uniform_choices,
+                        c.opponent_uniform_choices AS team2_uniform_choices,
                         COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
                         v.name AS location,
                         t1.id AS team1_id,
@@ -49,6 +51,8 @@ $legacySql = "SELECT m.id,
                       m.match_date,
                       m.score1,
                       m.score2,
+                      '' AS team1_uniform_choices,
+                      '' AS team2_uniform_choices,
                       m.status,
                       m.location,
                       t1.id AS team1_id,
@@ -153,6 +157,8 @@ $locationLabel = 'TBA';
 $eventName = '';
 $matchCode = '';
 $scoreAvailable = false;
+$team1UniformLabel = 'Belum dipilih';
+$team2UniformLabel = 'Belum dipilih';
 
 if (!$matchNotFound) {
     $statusValue = strtolower($match['status'] ?? '');
@@ -163,6 +169,8 @@ if (!$matchNotFound) {
     $eventName = $match['event_name'] ?? '';
     $matchCode = $match['match_code'] ?? '';
     $scoreAvailable = $match['score1'] !== null && $match['score2'] !== null;
+    $team1UniformLabel = trim((string)($match['team1_uniform_choices'] ?? '')) ?: 'Belum dipilih';
+    $team2UniformLabel = trim((string)($match['team2_uniform_choices'] ?? '')) ?: 'Belum dipilih';
 }
 
 ?>
@@ -333,6 +341,7 @@ if (!$matchNotFound) {
                                      onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                             </div>
                             <div class="match-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></div>
+                            <div class="match-team-uniform">Baju: <?php echo htmlspecialchars($team1UniformLabel); ?></div>
                         </div>
 
                         <div class="match-score-block">
@@ -352,6 +361,7 @@ if (!$matchNotFound) {
                                      onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                             </div>
                             <div class="match-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></div>
+                            <div class="match-team-uniform">Baju: <?php echo htmlspecialchars($team2UniformLabel); ?></div>
                         </div>
                     </div>
 

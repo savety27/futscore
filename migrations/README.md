@@ -23,6 +23,11 @@ Do not expose migration or schema-debug scripts in public web routes.
 - File: `migration_add_event_id_to_challenges.sql`
 - Apply this migration before deploying challenge pages that store/show selected event via `challenges.event_id`.
 
+## Required migration for lineup uniform choices
+
+- File: `migration_add_uniform_choice_columns_to_challenges.sql`
+- Apply this migration before deploying `pelatih/match_lineup.php` changes that save selected kit colors per team.
+
 Example command:
 
 ```bash
