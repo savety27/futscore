@@ -82,6 +82,32 @@ function resolveMatchOutcomePublic($team1, $team2, $score1, $score2)
     return ['winner' => $team2, 'loser' => $team1, 'status' => 'done'];
 }
 
+function resolveTeamLogoUrlPublic($logoFile)
+{
+    $logoFile = trim((string) $logoFile);
+    $logoFile = str_replace('\\', '/', $logoFile);
+    if ($logoFile === '') {
+        return SITE_URL . '/images/teams/default-team.png';
+    }
+    if (preg_match('#^https?://#i', $logoFile)) {
+        return $logoFile;
+    }
+    if (strpos($logoFile, 'uploads/') === 0) {
+        return SITE_URL . '/' . ltrim($logoFile, '/');
+    }
+    if (strpos($logoFile, '/') === 0) {
+        return SITE_URL . $logoFile;
+    }
+    if (strpos($logoFile, 'images/teams/') === 0) {
+        return SITE_URL . '/' . ltrim($logoFile, '/');
+    }
+    $logoName = ltrim($logoFile, '/');
+    if (preg_match('/^[A-Za-z]:\//', $logoName) || strpos($logoName, '/') !== false) {
+        $logoName = basename($logoName);
+    }
+    return SITE_URL . '/images/teams/' . $logoName;
+}
+
 function renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $teamId)
 {
     $teamId = (int) $teamId;
@@ -90,11 +116,7 @@ function renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $teamId)
     }
 
     $name = (string) ($teamMap[$teamId] ?? ('Team #' . $teamId));
-    $logoFile = trim((string) ($teamLogoMap[$teamId] ?? ''));
-    $logoPath = SITE_URL . '/images/teams/default-team.png';
-    if ($logoFile !== '') {
-        $logoPath = SITE_URL . '/images/teams/' . ltrim($logoFile, '/');
-    }
+    $logoPath = resolveTeamLogoUrlPublic($teamLogoMap[$teamId] ?? '');
 
     return '<span class="evb-team"><img class="evb-team-logo" src="' . htmlspecialchars($logoPath, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '" onerror="this.onerror=null;this.src=\'' . htmlspecialchars(SITE_URL . '/images/teams/default-team.png', ENT_QUOTES, 'UTF-8') . '\'"><span class="evb-team-name">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</span></span>';
 }
@@ -113,7 +135,7 @@ $hasEventValueTables = false;
 $hasEventBracketTable = false;
 $eventBracketViews = [];
 $eventTopScorersByCategory = [];
-$eventTopScorersLiga = [];
+$eventTopScorersLigaByCategory = [];
 
 if ($eventId > 0) {
     $sql = "SELECT * FROM events WHERE id = ?";
@@ -228,27 +250,33 @@ if ($eventId > 0 && !empty($event)) {
 
         // Fetch Liga Top Scorers
         $topLigaSql = "SELECT g.player_id, p.name AS player_name, p.photo AS player_photo,
-                              t.name AS team_name, t.logo AS team_logo,
+                              t.name AS team_name, t.logo AS team_logo, c.sport_type AS category_name,
                               COUNT(g.id) AS total_goals
                        FROM goals g
                        INNER JOIN challenges c ON g.match_id = c.id
                        INNER JOIN players p ON g.player_id = p.id
                        INNER JOIN teams t ON g.team_id = t.id
                        WHERE c.event_id = ? AND c.status IN ('accepted', 'completed')
-                       GROUP BY g.player_id, p.name, p.photo, t.name, t.logo
-                       ORDER BY total_goals DESC
-                       LIMIT 10";
+                       GROUP BY g.player_id, p.name, p.photo, t.name, t.logo, c.sport_type
+                       ORDER BY c.sport_type ASC, total_goals DESC";
         $tsLigaStmt = $conn->prepare($topLigaSql);
         $tsLigaStmt->bind_param("i", $eventId);
         $tsLigaStmt->execute();
         $tsLigaResult = $tsLigaStmt->get_result();
         while ($tsLigaRow = $tsLigaResult->fetch_assoc()) {
-            $eventTopScorersLiga[] = $tsLigaRow;
+            $category = trim((string)($tsLigaRow['category_name'] ?? ''));
+            if ($category === '') {
+                $category = 'Lainnya';
+            }
+            if (!isset($eventTopScorersLigaByCategory[$category])) {
+                $eventTopScorersLigaByCategory[$category] = [];
+            }
+            $eventTopScorersLigaByCategory[$category][] = $tsLigaRow;
         }
     }
 
     $hasEventBracketTable = hasTableMySQLi($conn, 'event_brackets');
-    if ($hasEventBracketTable && !empty($eventParticipantGroups)) {
+    if ($hasEventBracketTable) {
         $categoryTeamMapForBracket = [];
         $categoryLogoMapForBracket = [];
         $categoryOrderForBracket = [];
@@ -281,12 +309,59 @@ if ($eventId > 0 && !empty($event)) {
             $bracketByCategory[$categoryName] = $bracketRow;
         }
 
+        // Build fallback team metadata directly from bracket team IDs.
+        // This prevents "Team #ID" when participant groups are out-of-sync with saved bracket rows.
+        $fallbackTeamMetaById = [];
+        $allBracketTeamIds = [];
+        foreach ($bracketByCategory as $bracketRow) {
+            $allBracketTeamIds[] = (int) ($bracketRow['sf1_team1_id'] ?? 0);
+            $allBracketTeamIds[] = (int) ($bracketRow['sf1_team2_id'] ?? 0);
+            $allBracketTeamIds[] = (int) ($bracketRow['sf2_team1_id'] ?? 0);
+            $allBracketTeamIds[] = (int) ($bracketRow['sf2_team2_id'] ?? 0);
+        }
+        $allBracketTeamIds = array_values(array_unique(array_filter($allBracketTeamIds, static fn($v) => $v > 0)));
+        if (!empty($allBracketTeamIds)) {
+            $idList = implode(',', array_map('intval', $allBracketTeamIds));
+            $fallbackTeamResult = $conn->query("SELECT id, name, logo FROM teams WHERE id IN ($idList)");
+            if ($fallbackTeamResult) {
+                while ($teamRow = $fallbackTeamResult->fetch_assoc()) {
+                    $teamId = (int) ($teamRow['id'] ?? 0);
+                    if ($teamId <= 0) continue;
+                    $fallbackTeamMetaById[$teamId] = [
+                        'name' => (string) ($teamRow['name'] ?? ('Team #' . $teamId)),
+                        'logo' => (string) ($teamRow['logo'] ?? '')
+                    ];
+                }
+            }
+        }
+
+        foreach (array_keys($bracketByCategory) as $categoryName) {
+            if (!isset($categoryTeamMapForBracket[$categoryName])) {
+                $categoryTeamMapForBracket[$categoryName] = [];
+                $categoryLogoMapForBracket[$categoryName] = [];
+                $categoryOrderForBracket[] = $categoryName;
+            }
+        }
+
         foreach ($categoryOrderForBracket as $categoryName) {
             $row = $bracketByCategory[$categoryName] ?? null;
             $sf1Team1 = (int) ($row['sf1_team1_id'] ?? 0);
             $sf1Team2 = (int) ($row['sf1_team2_id'] ?? 0);
             $sf2Team1 = (int) ($row['sf2_team1_id'] ?? 0);
             $sf2Team2 = (int) ($row['sf2_team2_id'] ?? 0);
+            $categoryTeamMapResolved = $categoryTeamMapForBracket[$categoryName] ?? [];
+            $categoryLogoMapResolved = $categoryLogoMapForBracket[$categoryName] ?? [];
+
+            foreach ([$sf1Team1, $sf1Team2, $sf2Team1, $sf2Team2] as $teamId) {
+                if ($teamId <= 0 || isset($categoryTeamMapResolved[$teamId])) {
+                    continue;
+                }
+                if (isset($fallbackTeamMetaById[$teamId])) {
+                    $categoryTeamMapResolved[$teamId] = (string) ($fallbackTeamMetaById[$teamId]['name'] ?? ('Team #' . $teamId));
+                    $categoryLogoMapResolved[$teamId] = (string) ($fallbackTeamMetaById[$teamId]['logo'] ?? '');
+                }
+            }
+
             $sf1Score1 = isset($row['sf1_score1']) ? (int) $row['sf1_score1'] : null;
             $sf1Score2 = isset($row['sf1_score2']) ? (int) $row['sf1_score2'] : null;
             $sf2Score1 = isset($row['sf2_score1']) ? (int) $row['sf2_score1'] : null;
@@ -309,8 +384,8 @@ if ($eventId > 0 && !empty($event)) {
 
             $eventBracketViews[] = [
                 'category' => $categoryName,
-                'team_map' => $categoryTeamMapForBracket[$categoryName] ?? [],
-                'team_logo_map' => $categoryLogoMapForBracket[$categoryName] ?? [],
+                'team_map' => $categoryTeamMapResolved,
+                'team_logo_map' => $categoryLogoMapResolved,
                 'sf1_team1' => $sf1Team1,
                 'sf1_team2' => $sf1Team2,
                 'sf2_team1' => $sf2Team1,
@@ -1455,7 +1530,7 @@ if ($eventId > 0 && !empty($event)) {
                                                                 <td><?php echo $idx + 1; ?></td>
                                                                 <td>
                                                                     <div class="event-team-row">
-                                                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? 'default-team.png'); ?>"
+                                                                        <img src="<?php echo htmlspecialchars(resolveTeamLogoUrlPublic($team['logo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                                                             alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
                                                                             class="event-team-logo"
                                                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
@@ -1556,7 +1631,7 @@ if ($eventId > 0 && !empty($event)) {
                                                         <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                                                         <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
                                                         <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
-                                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($scorer['team_logo'] ?: 'default-team.png'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                            <img src="<?php echo htmlspecialchars(resolveTeamLogoUrlPublic($scorer['team_logo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
                                                             <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
                                                         </div>
                                                         <div class="top-scorer-goals">
@@ -1728,24 +1803,42 @@ if ($eventId > 0 && !empty($event)) {
                             <?php endif; ?>
                         </div>
 
-                        <?php if (!empty($eventTopScorersLiga)): ?>
+                        <?php if (!empty($eventTopScorersLigaByCategory)): ?>
                             <div class="event-desc" id="eventTopScorerLiga">
                                 <h3 style="margin:0 0 16px 0;">Top Scorer Liga</h3>
-                                <div class="top-scorer-grid">
-                                    <?php foreach ($eventTopScorersLiga as $scorer): ?>
-                                        <div class="top-scorer-card">
-                                            <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
-                                            <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
-                                            <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
-                                                <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($scorer['team_logo'] ?: 'default-team.png'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
-                                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
+                                <?php
+                                $ligaTopScorerCategories = [];
+                                foreach ($eventParticipantGroups as $group) {
+                                    $categoryName = trim((string)($group['category_name'] ?? ''));
+                                    if ($categoryName !== '' && isset($eventTopScorersLigaByCategory[$categoryName])) {
+                                        $ligaTopScorerCategories[] = $categoryName;
+                                    }
+                                }
+                                foreach (array_keys($eventTopScorersLigaByCategory) as $categoryName) {
+                                    if (!in_array($categoryName, $ligaTopScorerCategories, true)) {
+                                        $ligaTopScorerCategories[] = $categoryName;
+                                    }
+                                }
+                                ?>
+
+                                <?php foreach ($ligaTopScorerCategories as $categoryName): ?>
+                                    <h4 style="margin: 12px 0 10px 0; color:#0f172a;"><?php echo htmlspecialchars($categoryName); ?></h4>
+                                    <div class="top-scorer-grid" style="margin-bottom:14px;">
+                                        <?php foreach ($eventTopScorersLigaByCategory[$categoryName] as $scorer): ?>
+                                            <div class="top-scorer-card">
+                                                <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                                <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
+                                                <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
+                                                    <img src="<?php echo htmlspecialchars(resolveTeamLogoUrlPublic($scorer['team_logo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
+                                                </div>
+                                                <div class="top-scorer-goals">
+                                                    <i class="fas fa-futbol"></i> <?php echo (int) $scorer['total_goals']; ?> goal
+                                                </div>
                                             </div>
-                                            <div class="top-scorer-goals">
-                                                <i class="fas fa-futbol"></i> <?php echo (int) $scorer['total_goals']; ?> goal
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1949,6 +2042,28 @@ if ($eventId > 0 && !empty($event)) {
         });
     })();
 
+    function resolveTeamLogoUrlClient(logoFile) {
+        const value = String(logoFile || '').trim().replace(/\\/g, '/');
+        if (!value) {
+            return '<?php echo SITE_URL; ?>/images/teams/default-team.png';
+        }
+        if (/^https?:\/\//i.test(value)) {
+            return value;
+        }
+        if (value.startsWith('uploads/')) {
+            return '<?php echo SITE_URL; ?>/' + value.replace(/^\/+/, '');
+        }
+        if (value.startsWith('/')) {
+            return '<?php echo SITE_URL; ?>' + value;
+        }
+        if (value.startsWith('images/teams/')) {
+            return '<?php echo SITE_URL; ?>/' + value.replace(/^\/+/, '');
+        }
+        const cleaned = value.replace(/^\/+/, '');
+        const logoName = cleaned.includes('/') ? cleaned.split('/').pop() : cleaned;
+        return '<?php echo SITE_URL; ?>/images/teams/' + logoName;
+    }
+
     // TEAM INFO MODAL LOGIC
     function openTeamInfoModal(eventId, teamId, category) {
         const modal = document.getElementById('teamInfoModal');
@@ -1972,7 +2087,7 @@ if ($eventId > 0 && !empty($event)) {
 
                 let html = '<div class="team-ds-info-wrap">';
                 html += '<div class="team-ds-logo-wrap">';
-                html += '<img src="<?php echo SITE_URL; ?>/images/teams/' + data.team.logo + '" class="team-ds-logo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">';
+                html += '<img src="' + resolveTeamLogoUrlClient(data.team.logo) + '" class="team-ds-logo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">';
                 html += '<div class="team-ds-name">' + data.team.name + '</div>';
                 html += '</div>';
 

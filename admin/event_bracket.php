@@ -53,7 +53,7 @@ function loadEventCategories(PDO $conn, int $eventId): array
     $stmt = $conn->prepare("SELECT DISTINCT sport_type
                             FROM challenges
                             WHERE event_id = ?
-                              AND status = 'accepted'
+                              AND status IN ('accepted', 'completed')
                               AND sport_type IS NOT NULL
                               AND sport_type <> ''
                             ORDER BY sport_type ASC");
@@ -74,9 +74,9 @@ function loadTeamsByEventCategory(PDO $conn, int $eventId, string $category): ar
     $stmt = $conn->prepare("SELECT DISTINCT t.id, t.name, t.logo
                             FROM teams t
                             INNER JOIN (
-                                SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
+                                SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                                 UNION
-                                SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
+                                SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                             ) src ON src.team_id = t.id
                             ORDER BY t.name ASC");
     $stmt->execute([$eventId, $category, $eventId, $category]);
@@ -133,17 +133,45 @@ function teamNameById(array $teamMap, int $teamId): string
     return (string)($teamMap[$teamId] ?? ('Team #' . $teamId));
 }
 
+function resolveTeamLogoUrlAdmin($logoFile): string
+{
+    $logoFile = trim((string)$logoFile);
+    $logoFile = str_replace('\\', '/', $logoFile);
+    if ($logoFile === '') {
+        return '../images/teams/default-team.png';
+    }
+    if (preg_match('#^https?://#i', $logoFile)) {
+        return $logoFile;
+    }
+    if (strpos($logoFile, 'uploads/') === 0) {
+        return '../' . ltrim($logoFile, '/');
+    }
+    if (strpos($logoFile, '/uploads/') === 0) {
+        return '..' . $logoFile;
+    }
+    if (strpos($logoFile, 'images/teams/') === 0) {
+        return '../' . ltrim($logoFile, '/');
+    }
+    if (strpos($logoFile, '/images/teams/') === 0) {
+        return '..' . $logoFile;
+    }
+    if (strpos($logoFile, '/') === 0) {
+        return '..' . $logoFile;
+    }
+    $logoName = ltrim($logoFile, '/');
+    if (preg_match('/^[A-Za-z]:\//', $logoName) || strpos($logoName, '/') !== false) {
+        $logoName = basename($logoName);
+    }
+    return '../images/teams/' . $logoName;
+}
+
 function renderTeamLabelById(array $teamMap, array $teamLogoMap, int $teamId): string
 {
     if ($teamId <= 0) return '<span class="d-team"><span class="d-team-logo d-team-logo-placeholder"></span><span class="d-team-name">-</span></span>';
     $name = (string)($teamMap[$teamId] ?? ('Team #' . $teamId));
-    $logoFile = trim((string)($teamLogoMap[$teamId] ?? ''));
-    $logoPath = '../images/teams/default-team.png';
-    if ($logoFile !== '') {
-        $logoPath = '../images/teams/' . ltrim($logoFile, '/');
-    }
+    $logoPath = resolveTeamLogoUrlAdmin($teamLogoMap[$teamId] ?? '');
 
-    return '<span class="d-team"><img class="d-team-logo" src="' . htmlspecialchars($logoPath, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '"><span class="d-team-name">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</span></span>';
+    return '<span class="d-team"><img class="d-team-logo" src="' . htmlspecialchars($logoPath, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '" onerror="this.onerror=null;this.src=\'../images/teams/default-team.png\'"><span class="d-team-name">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '</span></span>';
 }
 
 ensureBracketSchema($conn);

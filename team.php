@@ -505,11 +505,6 @@ if ($teamId > 0) {
                         <h2 class="section-title">DAFTAR</h2>
                         <div class="section-tabs team-roster-tabs">
                             <button class="tab-button player-tab active" data-tab="players">Semua Pemain</button>
-                            <?php foreach ($events as $event): ?>
-                                <button class="tab-button player-tab" data-event="<?php echo htmlspecialchars($event['event_key'] ?? ''); ?>">
-                                    <?php echo htmlspecialchars($event['event_name'] ?? ''); ?>
-                                </button>
-                            <?php endforeach; ?>
                             <button class="tab-button player-tab" data-tab="staff">Pelatih / Staf</button>
                         </div>
                     </div>
@@ -616,12 +611,8 @@ if ($teamId > 0) {
                             
                             // Get tab type
                             const tabType = this.getAttribute('data-tab');
-                            const eventId = this.getAttribute('data-event');
-                            
-                            if (eventId) {
-                                // Event-specific players (you can implement this later)
-                                loadEventPlayers(eventId);
-                            } else if (tabType === 'staff') {
+
+                            if (tabType === 'staff') {
                                 currentTab = 'staff';
                                 loadStaff();
                             } else {
@@ -682,14 +673,13 @@ if ($teamId > 0) {
                     
                     let html = '';
                     playersData.forEach((player, index) => {
-                        const position = player.position || 'P';
-                        const isGoalkeeper = player.position === 'GK' || player.position === 'Goalkeeper';
+                        const nameInitial = getNameInitial(player.name);
                         
                         html += `
                             <div class="player-item ${index === 0 ? 'active' : ''}" 
                                  onclick="showPlayerDetail(${JSON.stringify(player).replace(/\"/g, '&quot;')}, this)">
-                                <div class="position-badge ${isGoalkeeper ? 'keeper' : ''}">
-                                    ${position.charAt(0).toUpperCase()}
+                                <div class="position-badge">
+                                    ${nameInitial}
                                 </div>
                                 <div class="player-item-info">
                                     <span class="player-number">${player.jersey_number || '-'}.</span>
@@ -726,15 +716,13 @@ if ($teamId > 0) {
                     
                     let html = '';
                     staffData.forEach((staff, index) => {
-                        const position = staff.position || 'staff';
-                        const icon = positionIcons[position] || positionIcons.default;
-                        const positionText = positionTranslations[position] || position;
+                        const nameInitial = getNameInitial(staff.name);
                         
                         html += `
                             <div class="player-item ${index === 0 ? 'active' : ''}" 
                                  onclick="showStaffDetail(${JSON.stringify(staff).replace(/\"/g, '&quot;')}, this)">
                                 <div class="position-badge staff">
-                                    <i class="fas ${icon}"></i>
+                                    ${nameInitial}
                                 </div>
                                 <div class="player-item-info">
                                     <span class="player-name">${escapeHtml(staff.name)}</span>
@@ -1015,55 +1003,12 @@ if ($teamId > 0) {
                     div.textContent = text;
                     return div.innerHTML;
                 }
-                
-                // Filter players by sport_type matching the event/category tab
-                function loadEventPlayers(eventId) {
-                    currentType = 'player';
-                    const playerList = document.getElementById('playerList');
 
-                    // Filter players whose sport_type matches the event tab label
-                    const filtered = playersData.filter(p => {
-                        const st = (p.sport_type || '').trim().toLowerCase();
-                        const ev = (eventId || '').trim().toLowerCase();
-                        // Fuzzy match: either the sport_type is in the event name, or vice versa
-                        return ev.includes(st) || st.includes(ev) || st === ev;
-                    });
-
-                    if (filtered.length === 0) {
-                        playerList.innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-users"></i>
-                                <h4>Tidak ada pemain</h4>
-                                <p>Tidak ada pemain terdaftar untuk kategori ini</p>
-                            </div>
-                        `;
-                        showEmptyDetailPanel();
-                        return;
-                    }
-
-                    let html = '';
-                    filtered.forEach((player, index) => {
-                        const position = player.position || 'P';
-                        const isGoalkeeper = player.position === 'GK' || player.position === 'Goalkeeper';
-
-                        html += `
-                            <div class="player-item ${index === 0 ? 'active' : ''}" 
-                                 onclick="showPlayerDetail(${JSON.stringify(player).replace(/\"/g, '&quot;')}, this)">
-                                <div class="position-badge ${isGoalkeeper ? 'keeper' : ''}">
-                                    ${position.charAt(0).toUpperCase()}
-                                </div>
-                                <div class="player-item-info">
-                                    <span class="player-number">${player.jersey_number || '-'}.</span>
-                                    <span class="player-name">${escapeHtml(player.name)}</span>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    playerList.innerHTML = html;
-
-                    // Show first filtered player's detail
-                    showPlayerDetail(filtered[0]);
+                function getNameInitial(name) {
+                    if (!name) return '?';
+                    const trimmed = String(name).trim();
+                    if (!trimmed) return '?';
+                    return trimmed.charAt(0).toUpperCase();
                 }
                 </script>
 
