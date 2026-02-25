@@ -319,6 +319,66 @@ function sortStandingsRowsPublic($conn, $eventId, $categoryName, &$rows)
     $rows = $sorted;
 }
 
+function applyTeamCardsFromPlayersPublic($conn, $eventId, $categoryName, &$rows)
+{
+    $eventId = (int)$eventId;
+    $categoryName = trim((string)$categoryName);
+    if ($eventId <= 0 || $categoryName === '' || empty($rows)) {
+        return;
+    }
+
+    $teamIds = [];
+    foreach ($rows as $r) {
+        $tid = (int)($r['team_id'] ?? 0);
+        if ($tid > 0) $teamIds[$tid] = true;
+    }
+    $teamIds = array_values(array_map('intval', array_keys($teamIds)));
+    if (empty($teamIds)) {
+        return;
+    }
+
+    $in = implode(',', array_fill(0, count($teamIds), '?'));
+    $sql = "SELECT team_id,
+                   COALESCE(SUM(yellow_cards),0) AS yellow_cards,
+                   COALESCE(SUM(red_cards),0) AS red_cards,
+                   COALESCE(SUM(green_cards),0) AS green_cards
+            FROM player_event_cards
+            WHERE event_id = ?
+              AND sport_type = ?
+              AND team_id IN ($in)
+            GROUP BY team_id";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return;
+    }
+    $types = 'is' . str_repeat('i', count($teamIds));
+    $params = array_merge([$eventId, $categoryName], $teamIds);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $sumMap = [];
+    while ($row = $result->fetch_assoc()) {
+        $tid = (int)($row['team_id'] ?? 0);
+        if ($tid <= 0) continue;
+        $sumMap[$tid] = [
+            'yellow' => (int)($row['yellow_cards'] ?? 0),
+            'red' => (int)($row['red_cards'] ?? 0),
+            'green' => (int)($row['green_cards'] ?? 0),
+        ];
+    }
+    $stmt->close();
+
+    foreach ($rows as &$r) {
+        $tid = (int)($r['team_id'] ?? 0);
+        $cards = $sumMap[$tid] ?? ['yellow' => 0, 'red' => 0, 'green' => 0];
+        $r['yellow_cards'] = $cards['yellow'];
+        $r['red_cards'] = $cards['red'];
+        $r['green_cards'] = $cards['green'];
+    }
+    unset($r);
+}
+
 function resolveMatchOutcomePublic($team1, $team2, $score1, $score2)
 {
     $team1 = (int) $team1;
@@ -891,8 +951,16 @@ if ($eventId > 0 && !empty($event)) {
         if (!empty($categoryOrder)) {
             foreach ($categoryOrder as $categoryName) {
                 $rowsByTeamId = [];
+                $allowedTeamMap = [];
+                foreach (($categoryTeamMap[$categoryName] ?? []) as $allowedTeamId => $_teamName) {
+                    $allowedTeamMap[(int)$allowedTeamId] = true;
+                }
                 foreach (($standingsFromDbByCategory[$categoryName] ?? []) as $row) {
-                    $rowsByTeamId[(int) ($row['team_id'] ?? 0)] = $row;
+                    $rowTeamId = (int) ($row['team_id'] ?? 0);
+                    if ($rowTeamId <= 0 || !isset($allowedTeamMap[$rowTeamId])) {
+                        continue;
+                    }
+                    $rowsByTeamId[$rowTeamId] = $row;
                 }
 
                 foreach (($categoryTeamMap[$categoryName] ?? []) as $teamId => $teamName) {
@@ -920,20 +988,26 @@ if ($eventId > 0 && !empty($event)) {
                 }
 
                 $rows = array_values($rowsByTeamId);
+                applyTeamCardsFromPlayersPublic($conn, (int)$eventId, (string)$categoryName, $rows);
                 sortStandingsRowsPublic($conn, (int)$eventId, (string)$categoryName, $rows);
 
                 $eventStandingsByCategory[$categoryName] = $rows;
             }
 
             foreach ($standingsFromDbByCategory as $categoryName => $rows) {
+                if (!isset($categoryTeamMap[$categoryName])) {
+                    continue;
+                }
                 if (isset($eventStandingsByCategory[$categoryName])) {
                     continue;
                 }
+                applyTeamCardsFromPlayersPublic($conn, (int)$eventId, (string)$categoryName, $rows);
                 sortStandingsRowsPublic($conn, (int)$eventId, (string)$categoryName, $rows);
                 $eventStandingsByCategory[$categoryName] = $rows;
             }
         } else {
             foreach ($standingsFromDbByCategory as $categoryName => $rows) {
+                applyTeamCardsFromPlayersPublic($conn, (int)$eventId, (string)$categoryName, $rows);
                 sortStandingsRowsPublic($conn, (int)$eventId, (string)$categoryName, $rows);
                 $eventStandingsByCategory[$categoryName] = $rows;
             }

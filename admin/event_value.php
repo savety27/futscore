@@ -111,9 +111,9 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
         $sql = "SELECT DISTINCT t.id, t.name
                 FROM teams t
                 INNER JOIN (
-                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
+                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                     UNION
-                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status = 'accepted'
+                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                     UNION
                     SELECT te.team_id
                     FROM team_events te
@@ -127,9 +127,9 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
         $sql = "SELECT DISTINCT t.id, t.name 
                 FROM teams t 
                 INNER JOIN (
-                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND status = 'accepted'
+                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND status IN ('accepted', 'completed')
                     UNION 
-                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND status = 'accepted'
+                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND status IN ('accepted', 'completed')
                     UNION 
                     SELECT te.team_id FROM team_events te INNER JOIN events e ON e.name = te.event_name WHERE e.id = ?
                 ) src ON src.team_id = t.id 
@@ -150,14 +150,14 @@ function loadEventCategoryTeamMap(PDO $conn, int $eventId): array
                                     SELECT c.sport_type AS category_name, c.challenger_id AS team_id
                                     FROM challenges c
                                     WHERE c.event_id = ?
-                                      AND c.status = 'accepted'
+                                      AND c.status IN ('accepted', 'completed')
                                       AND c.sport_type IS NOT NULL
                                       AND c.sport_type <> ''
                                     UNION ALL
                                     SELECT c.sport_type AS category_name, c.opponent_id AS team_id
                                     FROM challenges c
                                     WHERE c.event_id = ?
-                                      AND c.status = 'accepted'
+                                      AND c.status IN ('accepted', 'completed')
                                       AND c.sport_type IS NOT NULL
                                       AND c.sport_type <> ''
                                 ) src
@@ -182,6 +182,61 @@ function loadEventCategoryTeamMap(PDO $conn, int $eventId): array
     }
 
     return $result;
+}
+
+function syncTeamCardsFromPlayers(PDO $conn, int $eventId, string $categoryName = '', int $teamId = 0): void
+{
+    if ($eventId <= 0 || $categoryName === '') return;
+
+    $sumSql = "SELECT team_id,
+                      COALESCE(SUM(yellow_cards), 0) AS yellow_cards,
+                      COALESCE(SUM(red_cards), 0) AS red_cards,
+                      COALESCE(SUM(green_cards), 0) AS green_cards
+               FROM player_event_cards
+               WHERE event_id = ? AND sport_type = ?";
+    $sumParams = [$eventId, $categoryName];
+    if ($teamId > 0) {
+        $sumSql .= " AND team_id = ?";
+        $sumParams[] = $teamId;
+    }
+    $sumSql .= " GROUP BY team_id";
+    $sumStmt = $conn->prepare($sumSql);
+    $sumStmt->execute($sumParams);
+    $sumRows = $sumStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $sumMap = [];
+    foreach ($sumRows as $r) {
+        $tid = (int)($r['team_id'] ?? 0);
+        if ($tid <= 0) continue;
+        $sumMap[$tid] = [
+            'red' => (int)($r['red_cards'] ?? 0),
+            'yellow' => (int)($r['yellow_cards'] ?? 0),
+            'green' => (int)($r['green_cards'] ?? 0),
+        ];
+    }
+
+    $targetSql = "SELECT id, team_id
+                  FROM event_team_values
+                  WHERE event_id = ? AND sport_type = ?";
+    $targetParams = [$eventId, $categoryName];
+    if ($teamId > 0) {
+        $targetSql .= " AND team_id = ?";
+        $targetParams[] = $teamId;
+    }
+    $targetStmt = $conn->prepare($targetSql);
+    $targetStmt->execute($targetParams);
+    $targetRows = $targetStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $updStmt = $conn->prepare("UPDATE event_team_values
+                               SET red_cards = ?, yellow_cards = ?, green_cards = ?
+                               WHERE id = ?");
+    foreach ($targetRows as $row) {
+        $tid = (int)($row['team_id'] ?? 0);
+        $rid = (int)($row['id'] ?? 0);
+        if ($tid <= 0 || $rid <= 0) continue;
+        $cards = $sumMap[$tid] ?? ['red' => 0, 'yellow' => 0, 'green' => 0];
+        $updStmt->execute([$cards['red'], $cards['yellow'], $cards['green'], $rid]);
+    }
 }
 
 function calculateTeamPoints(int $m, int $mp, int $kp): int
@@ -403,6 +458,10 @@ foreach ($teams as $team) {
 
 $errors = [];
 $success = '';
+if (!empty($_SESSION['event_value_success'])) {
+    $success = (string)$_SESSION['event_value_success'];
+    unset($_SESSION['event_value_success']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
@@ -431,46 +490,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $k = max(0, (int)($_POST['k'] ?? 0));
         $gm = max(0, (int)($_POST['gm'] ?? 0));
         $gk = max(0, (int)($_POST['gk'] ?? 0));
-        $red = max(0, (int)($_POST['red_cards'] ?? 0));
-        $yellow = max(0, (int)($_POST['yellow_cards'] ?? 0));
-        $green = max(0, (int)($_POST['green_cards'] ?? 0));
-
         if ($eventId <= 0 || $teamId <= 0) {
-            $errors[] = 'Event dan tim wajib dipilih.';
+            $errors[] = 'Event dan team wajib dipilih.';
         } elseif (!isset($teamMap[$teamId])) {
-            $errors[] = 'Tim tidak terdaftar di event ini.';
+            $errors[] = 'Team tidak terdaftar di event ini.';
         }
 
         if (empty($errors)) {
             $conn->beginTransaction();
             try {
-                $existingStmt = $conn->prepare("SELECT mn, m, mp, s, kp, k, gm, gk, red_cards, yellow_cards, green_cards, match_history
-                                                FROM event_team_values
-                                                WHERE event_id = ? AND team_id = ? AND sport_type = ? LIMIT 1
-                                                FOR UPDATE");
-                $existingStmt->execute([$eventId, $teamId, $selectedCategory]);
-                $existing = $existingStmt->fetch(PDO::FETCH_ASSOC);
+                $existingCardStmt = $conn->prepare("SELECT red_cards, yellow_cards, green_cards
+                                                    FROM event_team_values
+                                                    WHERE event_id = ? AND team_id = ? AND sport_type = ?
+                                                    LIMIT 1
+                                                    FOR UPDATE");
+                $existingCardStmt->execute([$eventId, $teamId, $selectedCategory]);
+                $existingCard = $existingCardStmt->fetch(PDO::FETCH_ASSOC);
+                $teamRed = (int)($existingCard['red_cards'] ?? 0);
+                $teamYellow = (int)($existingCard['yellow_cards'] ?? 0);
+                $teamGreen = (int)($existingCard['green_cards'] ?? 0);
 
-                $totalM = (int)($existing['m'] ?? 0) + $m;
-                $totalMp = (int)($existing['mp'] ?? 0) + $mp;
-                $totalS = (int)($existing['s'] ?? 0) + $s;
-                $totalKp = (int)($existing['kp'] ?? 0) + $kp;
-                $totalK = (int)($existing['k'] ?? 0) + $k;
-                $totalGm = (int)($existing['gm'] ?? 0) + $gm;
-                $totalGk = (int)($existing['gk'] ?? 0) + $gk;
-                $totalRed = (int)($existing['red_cards'] ?? 0) + $red;
-                $totalYellow = (int)($existing['yellow_cards'] ?? 0) + $yellow;
-                $totalGreen = (int)($existing['green_cards'] ?? 0) + $green;
-
-                $mn = $totalM + $totalMp + $totalS + $totalKp + $totalK;
-                $sg = $totalGm - $totalGk;
-                $points = calculateTeamPoints($totalM, $totalMp, $totalKp);
-                $existingTokens = normalizeMatchTokens((string)($existing['match_history'] ?? ''));
+                $mn = $m + $mp + $s + $kp + $k;
+                $sg = $gm - $gk;
+                $points = calculateTeamPoints($m, $mp, $kp);
                 $newTokens = normalizeMatchTokens($matchHistoryInput);
                 if (empty($newTokens)) {
                     $newTokens = buildMatchTokensFromStats($m, $mp, $s, $kp, $k);
                 }
-                $matchHistory = implode(',', array_merge($existingTokens, $newTokens));
+                $matchHistory = implode(',', $newTokens);
 
                 $stmt = $conn->prepare("INSERT INTO event_team_values (event_id, team_id, sport_type, mn, m, mp, s, kp, k, gm, gk, sg, points, kls, red_cards, yellow_cards, green_cards, match_history) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
@@ -480,16 +527,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         red_cards = VALUES(red_cards), yellow_cards = VALUES(yellow_cards), green_cards = VALUES(green_cards), match_history = VALUES(match_history),
                                         updated_at = CURRENT_TIMESTAMP");
 
-                $stmt->execute([$eventId, $teamId, $selectedCategory, $mn, $totalM, $totalMp, $totalS, $totalKp, $totalK, $totalGm, $totalGk, $sg, $points, 0, $totalRed, $totalYellow, $totalGreen, $matchHistory]);
+                $stmt->execute([$eventId, $teamId, $selectedCategory, $mn, $m, $mp, $s, $kp, $k, $gm, $gk, $sg, $points, 0, $teamRed, $teamYellow, $teamGreen, $matchHistory]);
+                syncTeamCardsFromPlayers($conn, $eventId, $selectedCategory, $teamId);
                 recomputeEventKls($conn, $eventId, $selectedCategory);
                 $conn->commit();
             } catch (Throwable $e) {
                 if ($conn->inTransaction()) $conn->rollBack();
-                $errors[] = 'Gagal menyimpan nilai tim.';
+                $errors[] = 'Gagal menyimpan nilai team.';
             }
 
             if (empty($errors)) {
-            $success = 'Nilai tim tersimpan.';
+                $_SESSION['event_value_success'] = 'Nilai team tersimpan.';
+                $redirectUrl = 'event_value.php?event_id=' . (int)$eventId;
+                if ($selectedCategory !== '') {
+                    $redirectUrl .= '&sport_type=' . urlencode($selectedCategory);
+                }
+                header('Location: ' . $redirectUrl);
+                exit;
+            }
+        }
+    }
+
+    if ($action === 'update_team' && empty($errors)) {
+        $rowId = (int)($_POST['row_id'] ?? 0);
+        $teamId = (int)($_POST['team_id'] ?? 0);
+        $matchHistoryInput = trim((string)($_POST['match_history'] ?? ''));
+        $m = max(0, (int)($_POST['m'] ?? 0));
+        $mp = max(0, (int)($_POST['mp'] ?? 0));
+        $s = max(0, (int)($_POST['s'] ?? 0));
+        $kp = max(0, (int)($_POST['kp'] ?? 0));
+        $k = max(0, (int)($_POST['k'] ?? 0));
+        $gm = max(0, (int)($_POST['gm'] ?? 0));
+        $gk = max(0, (int)($_POST['gk'] ?? 0));
+        if ($rowId <= 0 || $eventId <= 0 || $teamId <= 0 || $selectedCategory === '') {
+            $errors[] = 'Data edit tidak valid.';
+        } elseif (!isset($teamMap[$teamId])) {
+            $errors[] = 'Team tidak terdaftar di event ini.';
+        }
+
+        if (empty($errors)) {
+            $rowStmt = $conn->prepare("SELECT id FROM event_team_values WHERE id = ? AND event_id = ? AND team_id = ? AND sport_type = ? LIMIT 1");
+            $rowStmt->execute([$rowId, $eventId, $teamId, $selectedCategory]);
+            if (!$rowStmt->fetch(PDO::FETCH_ASSOC)) {
+                $errors[] = 'Data klasemen tidak ditemukan.';
+            }
+        }
+
+        if (empty($errors)) {
+            $mn = $m + $mp + $s + $kp + $k;
+            $sg = $gm - $gk;
+            $points = calculateTeamPoints($m, $mp, $kp);
+            $tokens = normalizeMatchTokens($matchHistoryInput);
+            if (empty($tokens)) {
+                $tokens = buildMatchTokensFromStats($m, $mp, $s, $kp, $k);
+            }
+                $matchHistory = implode(',', $tokens);
+
+                try {
+                    $stmt = $conn->prepare("UPDATE event_team_values
+                                        SET mn = ?, m = ?, mp = ?, s = ?, kp = ?, k = ?, gm = ?, gk = ?, sg = ?, points = ?,
+                                            match_history = ?, updated_at = CURRENT_TIMESTAMP
+                                        WHERE id = ? AND event_id = ? AND team_id = ? AND sport_type = ?");
+                    $stmt->execute([
+                    $mn, $m, $mp, $s, $kp, $k, $gm, $gk, $sg, $points,
+                    $matchHistory, $rowId, $eventId, $teamId, $selectedCategory
+                    ]);
+                syncTeamCardsFromPlayers($conn, $eventId, $selectedCategory, $teamId);
+                recomputeEventKls($conn, $eventId, $selectedCategory);
+
+                $_SESSION['event_value_success'] = 'Nilai team berhasil diperbarui.';
+                $redirectUrl = 'event_value.php?event_id=' . (int)$eventId;
+                if ($selectedCategory !== '') {
+                    $redirectUrl .= '&sport_type=' . urlencode($selectedCategory);
+                }
+                header('Location: ' . $redirectUrl);
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = 'Gagal memperbarui nilai team.';
             }
         }
     }
@@ -502,9 +616,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $green = max(0, (int)($_POST['player_green_cards'] ?? 0));
 
         if ($eventId <= 0 || $teamId <= 0 || $playerId <= 0) {
-            $errors[] = 'Event, tim, dan pemain wajib.';
+            $errors[] = 'Event, team, dan pemain wajib.';
         } elseif (!isset($teamMap[$teamId])) {
-            $errors[] = 'Tim pemain tidak valid untuk event ini.';
+            $errors[] = 'Team pemain tidak valid untuk event ini.';
         }
 
         if (empty($errors)) {
@@ -548,7 +662,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     team_id = VALUES(team_id), sport_type = VALUES(sport_type), yellow_cards = VALUES(yellow_cards), red_cards = VALUES(red_cards), 
                                     green_cards = VALUES(green_cards), suspension_until = VALUES(suspension_until), updated_at = CURRENT_TIMESTAMP");
             $stmt->execute([$eventId, $playerId, $teamId, $selectedCategory, $totalYellow, $totalRed, $totalGreen, $suspend]);
-            $success = 'Kartu pemain tersimpan.';
+            syncTeamCardsFromPlayers($conn, $eventId, $selectedCategory, $teamId);
+            recomputeEventKls($conn, $eventId, $selectedCategory);
+            $_SESSION['event_value_success'] = 'Kartu pemain tersimpan.';
+            $redirectUrl = 'event_value.php?event_id=' . (int)$eventId;
+            if ($selectedCategory !== '') {
+                $redirectUrl .= '&sport_type=' . urlencode($selectedCategory);
+            }
+            header('Location: ' . $redirectUrl);
+            exit;
+        }
+    }
+
+    if ($action === 'update_player' && empty($errors)) {
+        $cardId = (int)($_POST['card_id'] ?? 0);
+        $teamId = (int)($_POST['player_team_id'] ?? 0);
+        $playerId = (int)($_POST['player_id'] ?? 0);
+        $totalYellow = max(0, (int)($_POST['player_yellow_cards'] ?? 0));
+        $totalRed = max(0, (int)($_POST['player_red_cards'] ?? 0));
+        $totalGreen = max(0, (int)($_POST['player_green_cards'] ?? 0));
+
+        if ($cardId <= 0 || $eventId <= 0 || $teamId <= 0 || $playerId <= 0 || $selectedCategory === '') {
+            $errors[] = 'Data edit kartu pemain tidak valid.';
+        } elseif (!isset($teamMap[$teamId])) {
+            $errors[] = 'Team pemain tidak valid untuk event ini.';
+        }
+
+        if (empty($errors)) {
+            $checkCard = $conn->prepare("SELECT id FROM player_event_cards WHERE id = ? AND event_id = ? AND player_id = ? AND sport_type = ? LIMIT 1");
+            $checkCard->execute([$cardId, $eventId, $playerId, $selectedCategory]);
+            if (!$checkCard->fetch(PDO::FETCH_ASSOC)) {
+                $errors[] = 'Data kartu pemain tidak ditemukan.';
+            }
+        }
+
+        if (empty($errors)) {
+            $checkPlayer = $conn->prepare("SELECT id FROM players WHERE id = ? AND team_id = ?");
+            $checkPlayer->execute([$playerId, $teamId]);
+            if (!$checkPlayer->fetch(PDO::FETCH_ASSOC)) {
+                $errors[] = 'Pemain tidak ditemukan pada team terpilih.';
+            }
+        }
+
+        if (empty($errors)) {
+            $today = date('Y-m-d');
+            $pairCount = intdiv($totalYellow, 2);
+            $suspend = $pairCount > 0 ? date('Y-m-d', strtotime($today . ' +' . (7 * $pairCount) . ' days')) : null;
+
+            $stmt = $conn->prepare("UPDATE player_event_cards
+                                    SET team_id = ?, yellow_cards = ?, red_cards = ?, green_cards = ?, suspension_until = ?, updated_at = CURRENT_TIMESTAMP
+                                    WHERE id = ? AND event_id = ? AND player_id = ? AND sport_type = ?");
+            $stmt->execute([$teamId, $totalYellow, $totalRed, $totalGreen, $suspend, $cardId, $eventId, $playerId, $selectedCategory]);
+            syncTeamCardsFromPlayers($conn, $eventId, $selectedCategory, $teamId);
+            recomputeEventKls($conn, $eventId, $selectedCategory);
+
+            $_SESSION['event_value_success'] = 'Kartu pemain berhasil diperbarui.';
+            $redirectUrl = 'event_value.php?event_id=' . (int)$eventId;
+            if ($selectedCategory !== '') {
+                $redirectUrl .= '&sport_type=' . urlencode($selectedCategory);
+            }
+            header('Location: ' . $redirectUrl);
+            exit;
         }
     }
 
@@ -568,6 +742,34 @@ if (!empty($teamIds)) {
         $players = $stmt_players->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $players = $conn->query("SELECT id, name, team_id FROM players WHERE team_id IN ($in) ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+$teamValueMap = [];
+if ($eventId > 0 && $selectedCategory !== '') {
+    $teamValueStmt = $conn->prepare("SELECT id, team_id, mn, m, mp, s, kp, k, gm, gk, red_cards, yellow_cards, green_cards, match_history
+                                     FROM event_team_values
+                                     WHERE event_id = ? AND sport_type = ?");
+    $teamValueStmt->execute([$eventId, $selectedCategory]);
+    $teamValueRows = $teamValueStmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($teamValueRows as $tv) {
+        $tid = (int)($tv['team_id'] ?? 0);
+        if ($tid <= 0) continue;
+        $teamValueMap[$tid] = [
+            'id' => (int)($tv['id'] ?? 0),
+            'mn' => (int)($tv['mn'] ?? 0),
+            'm' => (int)($tv['m'] ?? 0),
+            'mp' => (int)($tv['mp'] ?? 0),
+            's' => (int)($tv['s'] ?? 0),
+            'kp' => (int)($tv['kp'] ?? 0),
+            'k' => (int)($tv['k'] ?? 0),
+            'gm' => (int)($tv['gm'] ?? 0),
+            'gk' => (int)($tv['gk'] ?? 0),
+            'red_cards' => (int)($tv['red_cards'] ?? 0),
+            'yellow_cards' => (int)($tv['yellow_cards'] ?? 0),
+            'green_cards' => (int)($tv['green_cards'] ?? 0),
+            'match_history' => (string)($tv['match_history'] ?? ''),
+        ];
     }
 }
 
@@ -615,12 +817,19 @@ if ($eventId > 0) {
 
     if (!empty($categoryTeamMap)) {
         foreach ($categoryTeamMap as $categoryName => $teamIdsInCategory) {
+            syncTeamCardsFromPlayers($conn, $eventId, (string)$categoryName);
             recomputeEventKls($conn, $eventId, (string)$categoryName);
 
             $rows = $standingsBySport[$categoryName] ?? [];
             $rowsByTeamId = [];
+            $allowedTeamMap = [];
+            foreach ($teamIdsInCategory as $tid) {
+                $allowedTeamMap[(int)$tid] = true;
+            }
             foreach ($rows as $row) {
-                $rowsByTeamId[(int)$row['team_id']] = $row;
+                $rowTeamId = (int)($row['team_id'] ?? 0);
+                if ($rowTeamId <= 0 || !isset($allowedTeamMap[$rowTeamId])) continue;
+                $rowsByTeamId[$rowTeamId] = $row;
             }
 
             $teamsInCategory = loadEventTeams($conn, $eventId, (string)$categoryName);
@@ -899,6 +1108,9 @@ if ($eventId > 0) {
         .form-grid-2 {
             grid-template-columns: repeat(2, minmax(0, 1fr))
         }
+        .form-grid-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr))
+        }
         .form-group {
             margin-bottom: 10px
         }
@@ -1062,7 +1274,8 @@ if ($eventId > 0) {
                 align-items: flex-start
             }
             .form-grid,
-            .form-grid-2 {
+            .form-grid-2,
+            .form-grid-3 {
                 grid-template-columns: 1fr
             }
         }
@@ -1076,7 +1289,7 @@ if ($eventId > 0) {
             <div class="topbar">
                 <div class="greeting">
                     <h1>Event Value 🗓️</h1>
-                    <p>Kelola klasemen, poin, kartu tim dan disiplin pemain.</p>
+                    <p>Kelola klasemen, poin, kartu team dan disiplin pemain.</p>
                 </div>
                 <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
@@ -1138,10 +1351,10 @@ if ($eventId > 0) {
 
                 <div class="form-section">
                     <div class="section-title">
-                        <i class="fas fa-trophy"></i> Input Nilai Tim
+                        <i class="fas fa-trophy"></i> Input Nilai Team
                     </div>
                     <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
-                        <div class="form-note">Pilih Event dan Kategori dulu untuk mengisi nilai tim.</div>
+                        <div class="form-note">Pilih Event dan Kategori dulu untuk mengisi nilai team.</div>
                     <?php else: ?>
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
@@ -1151,9 +1364,9 @@ if ($eventId > 0) {
 
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">Tim</label>
-                                <select class="form-select" name="team_id" required>
-                                    <option value="">Pilih tim</option>
+                                <label class="form-label">Team</label>
+                                <select class="form-select" name="team_id" id="team_id_select" required>
+                                    <option value="">Pilih team</option>
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo (int)$team['id']; ?>">
                                             <?php echo htmlspecialchars($team['name']); ?>
@@ -1193,11 +1406,11 @@ if ($eventId > 0) {
                         <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label">GM</label>
-                                <input class="form-input" type="number" name="gm" min="0" value="0" required>
+                                <input class="form-input" type="number" id="team_gm" name="gm" min="0" value="0" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">GK</label>
-                                <input class="form-input" type="number" name="gk" min="0" value="0" required>
+                                <input class="form-input" type="number" id="team_gk" name="gk" min="0" value="0" required>
                             </div>
                         </div>
 
@@ -1224,21 +1437,6 @@ if ($eventId > 0) {
                             </div>
                         </div>
 
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">Kartu Merah</label>
-                                <input class="form-input" type="number" name="red_cards" min="0" value="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Kartu Kuning</label>
-                                <input class="form-input" type="number" name="yellow_cards" min="0" value="0" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Kartu Hijau</label>
-                                <input class="form-input" type="number" name="green_cards" min="0" value="0" required>
-                            </div>
-                        </div>
-
                         <div class="form-note">
                             Rumus poin: <strong>P = (M × 3) + (MP × 2) + (KP × 1)</strong>.
                         </div>
@@ -1246,7 +1444,7 @@ if ($eventId > 0) {
                             TM otomatis: <strong>M + MP + S + KP + K</strong>. Kode match: W (win), WP (win penalty), D (draw), LP (lose penalty), L (lose).
                         </div>
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Nilai Tim</button>
+                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Nilai Team</button>
                         </div>
                     </form>
                     <?php endif; ?>
@@ -1254,7 +1452,7 @@ if ($eventId > 0) {
 
                 <div class="form-section">
                     <div class="section-title">
-                        <i class="fas fa-id-card"></i> Input Kartu Pemain
+                        <i class="fas fa-id-card"></i> Input Kartu Player
                     </div>
                     <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
                         <div class="form-note">Pilih Event dan Kategori dulu untuk input kartu pemain.</div>
@@ -1265,11 +1463,11 @@ if ($eventId > 0) {
                         <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
                         <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
 
-                        <div class="form-grid">
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Tim</label>
+                                <label class="form-label">Team</label>
                                 <select class="form-select" id="player_team_id" name="player_team_id" required>
-                                    <option value="">Pilih tim</option>
+                                    <option value="">Pilih team</option>
                                     <?php foreach ($teams as $team): ?>
                                         <option value="<?php echo (int)$team['id']; ?>">
                                             <?php echo htmlspecialchars($team['name']); ?>
@@ -1288,6 +1486,8 @@ if ($eventId > 0) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+                        </div>
+                        <div class="form-grid form-grid-3">
                             <div class="form-group">
                                 <label class="form-label">Kartu Kuning (Tambahan)</label>
                                 <input class="form-input" type="number" name="player_yellow_cards" min="0" value="0" required>
@@ -1296,9 +1496,6 @@ if ($eventId > 0) {
                                 <label class="form-label">Kartu Merah (Tambahan)</label>
                                 <input class="form-input" type="number" name="player_red_cards" min="0" value="0" required>
                             </div>
-                        </div>
-
-                        <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label">Kartu Hijau (Tambahan)</label>
                                 <input class="form-input" type="number" name="player_green_cards" min="0" value="0" required>
@@ -1312,6 +1509,64 @@ if ($eventId > 0) {
                             <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Kartu Pemain</button>
                         </div>
                     </form>
+                    <?php endif; ?>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-pen-to-square"></i> Edit Nilai Team
+                    </div>
+                    <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
+                        <div class="form-note">Pilih Event dan Kategori dulu untuk edit nilai team.</div>
+                    <?php else: ?>
+                        <div id="team-edit-panel" style="display:none;">
+                            <form method="post">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                                <input type="hidden" name="action" value="update_team">
+                                <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                                <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
+                                <input type="hidden" name="row_id" id="edit_row_id" value="">
+                                <input type="hidden" name="team_id" id="edit_team_id" value="">
+
+                                <div class="form-note" id="edit_team_title" style="margin-bottom:10px; font-weight:700; color:var(--primary);"></div>
+                                <div class="form-grid">
+                                    <div class="form-group"><label class="form-label">TM (Otomatis)</label><input class="form-input" type="number" id="edit_mn" value="0" readonly></div>
+                                    <div class="form-group"><label class="form-label">M</label><input class="form-input" type="number" id="edit_m" name="m" min="0" value="0" required></div>
+                                    <div class="form-group"><label class="form-label">MP</label><input class="form-input" type="number" id="edit_mp" name="mp" min="0" value="0" required></div>
+                                    <div class="form-group"><label class="form-label">S</label><input class="form-input" type="number" id="edit_s" name="s" min="0" value="0" required></div>
+                                    <div class="form-group"><label class="form-label">KP</label><input class="form-input" type="number" id="edit_kp" name="kp" min="0" value="0" required></div>
+                                    <div class="form-group"><label class="form-label">K</label><input class="form-input" type="number" id="edit_k" name="k" min="0" value="0" required></div>
+                                </div>
+                                <div class="form-grid form-grid-2">
+                                    <div class="form-group"><label class="form-label">GM</label><input class="form-input" type="number" id="edit_gm" name="gm" min="0" value="0" required></div>
+                                    <div class="form-group"><label class="form-label">GK</label><input class="form-input" type="number" id="edit_gk" name="gk" min="0" value="0" required></div>
+                                </div>
+                                <div class="form-grid form-grid-2">
+                                    <div class="form-group"><label class="form-label">Poin (Otomatis)</label><input class="form-input" type="number" id="edit_points" value="0" readonly></div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Input Match (Klik Kotak)</label>
+                                    <input type="hidden" name="match_history" id="edit_match_history_input" value="">
+                                    <div class="match-builder">
+                                        <div class="match-builder-actions">
+                                            <button type="button" class="match-token-btn win edit-match-token-btn" data-token="W">+ W</button>
+                                            <button type="button" class="match-token-btn win edit-match-token-btn" data-token="WP">+ WP</button>
+                                            <button type="button" class="match-token-btn draw edit-match-token-btn" data-token="D">+ D</button>
+                                            <button type="button" class="match-token-btn lose edit-match-token-btn" data-token="LP">+ LP</button>
+                                            <button type="button" class="match-token-btn lose edit-match-token-btn" data-token="L">+ L</button>
+                                            <button type="button" class="match-token-btn neutral" id="edit_match_undo_btn">Undo</button>
+                                            <button type="button" class="match-token-btn neutral" id="edit_match_reset_btn">Reset</button>
+                                        </div>
+                                        <div class="match-seq match-builder-preview" id="edit_match_builder_preview"></div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Update Nilai Team</button>
+                                    <button class="btn btn-secondary" type="button" id="edit_cancel_btn"><i class="fas fa-xmark"></i> Batal</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div id="team-edit-empty" class="form-note">Klik tombol <strong>Edit</strong> pada tabel klasemen untuk memperbaiki data team.</div>
                     <?php endif; ?>
                 </div>
 
@@ -1340,7 +1595,7 @@ if ($eventId > 0) {
                                 <table class="data-table">
                                     <thead>
                                         <tr>
-                                            <th>Tim</th>
+                                            <th>Team</th>
                                             <th>TM</th>
                                             <th>M</th>
                                             <th>MP</th>
@@ -1353,6 +1608,7 @@ if ($eventId > 0) {
                                             <th>P</th>
                                             <th>KLS</th>
                                             <th>Match</th>
+                                            <th>Aksi</th>
                                             <th>🟥</th>
                                             <th>🟨</th>
                                             <th>🟩</th>
@@ -1374,6 +1630,28 @@ if ($eventId > 0) {
                                                 <td><strong><?php echo (int)$row['points']; ?></strong></td>
                                                 <td><?php echo (int)($row['display_kls'] ?? $row['kls'] ?? 0); ?></td>
                                                 <td><?php echo renderMatchHistoryBadges((string)($row['match_history'] ?? '')); ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['id'])): ?>
+                                                        <button type="button"
+                                                            class="btn btn-secondary ev-edit-btn"
+                                                            style="padding:6px 10px; font-size:12px;"
+                                                            data-row-id="<?php echo (int)$row['id']; ?>"
+                                                            data-team-id="<?php echo (int)$row['team_id']; ?>"
+                                                            data-team-name="<?php echo htmlspecialchars((string)$row['team_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-m="<?php echo (int)$row['m']; ?>"
+                                                            data-mp="<?php echo (int)$row['mp']; ?>"
+                                                            data-s="<?php echo (int)$row['s']; ?>"
+                                                            data-kp="<?php echo (int)$row['kp']; ?>"
+                                                            data-k="<?php echo (int)$row['k']; ?>"
+                                                            data-gm="<?php echo (int)$row['gm']; ?>"
+                                                            data-gk="<?php echo (int)$row['gk']; ?>"
+                                                            data-history="<?php echo htmlspecialchars((string)($row['match_history'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+                                                            Edit
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <span style="color:#94a3b8;">-</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td><span class="card-badge red"><?php echo (int)$row['red_cards']; ?></span></td>
                                                 <td><span class="card-badge yellow"><?php echo (int)$row['yellow_cards']; ?></span></td>
                                                 <td><span class="card-badge green"><?php echo (int)$row['green_cards']; ?></span></td>
@@ -1383,6 +1661,68 @@ if ($eventId > 0) {
                                 </table>
                             </div>
                         <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="fas fa-user-pen"></i> Edit Kartu Pemain
+                    </div>
+                    <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
+                        <div class="form-note">Pilih Event dan Kategori dulu untuk edit kartu pemain.</div>
+                    <?php else: ?>
+                        <div id="player-edit-panel" style="display:none;">
+                            <form method="post">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                                <input type="hidden" name="action" value="update_player">
+                                <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                                <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
+                                <input type="hidden" name="card_id" id="edit_card_id" value="">
+
+                                <div class="form-note" id="edit_player_title" style="margin-bottom:10px; font-weight:700; color:var(--primary);"></div>
+                                <div class="form-grid form-grid-2">
+                                    <div class="form-group">
+                                <label class="form-label">Team</label>
+                                        <select class="form-select" id="edit_player_team_id" name="player_team_id" required>
+                                    <option value="">Pilih team</option>
+                                            <?php foreach ($teams as $team): ?>
+                                                <option value="<?php echo (int)$team['id']; ?>"><?php echo htmlspecialchars($team['name']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Pemain</label>
+                                        <select class="form-select" id="edit_player_id" name="player_id" required>
+                                            <option value="">Pilih pemain</option>
+                                            <?php foreach ($players as $player): ?>
+                                                <option value="<?php echo (int)$player['id']; ?>" data-team="<?php echo (int)$player['team_id']; ?>">
+                                                    <?php echo htmlspecialchars($player['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-grid form-grid-3">
+                                    <div class="form-group">
+                                        <label class="form-label">Kartu Kuning (Total)</label>
+                                        <input class="form-input" type="number" id="edit_player_yellow_cards" name="player_yellow_cards" min="0" value="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Kartu Merah (Total)</label>
+                                        <input class="form-input" type="number" id="edit_player_red_cards" name="player_red_cards" min="0" value="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Kartu Hijau (Total)</label>
+                                        <input class="form-input" type="number" id="edit_player_green_cards" name="player_green_cards" min="0" value="0" required>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Update Kartu Pemain</button>
+                                    <button class="btn btn-secondary" type="button" id="edit_player_cancel_btn"><i class="fas fa-xmark"></i> Batal</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div id="player-edit-empty" class="form-note">Klik tombol <strong>Edit</strong> pada tabel suspend pemain untuk memperbaiki data kartu.</div>
                     <?php endif; ?>
                 </div>
 
@@ -1404,18 +1744,19 @@ if ($eventId > 0) {
                                     <thead>
                                         <tr>
                                             <th>Pemain</th>
-                                            <th>Tim</th>
+                                            <th>Team</th>
                                             <th>Kuning</th>
                                             <th>Merah</th>
                                             <th>Hijau</th>
                                             <th>Suspend Sampai</th>
                                             <th>Status</th>
+                                            <th>Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($rows)): ?>
                                             <tr>
-                                                <td colspan="7">Belum ada data.</td>
+                                                <td colspan="8">Belum ada data.</td>
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($rows as $row): ?>
@@ -1434,6 +1775,21 @@ if ($eventId > 0) {
                                                             <span class="badge-pill badge-ok">Boleh Main</span>
                                                         <?php endif; ?>
                                                     </td>
+                                                    <td>
+                                                        <button type="button"
+                                                            class="btn btn-secondary ev-player-edit-btn"
+                                                            style="padding:6px 10px; font-size:12px;"
+                                                            data-card-id="<?php echo (int)$row['id']; ?>"
+                                                            data-team-id="<?php echo (int)$row['team_id']; ?>"
+                                                            data-player-id="<?php echo (int)$row['player_id']; ?>"
+                                                            data-player-name="<?php echo htmlspecialchars((string)$row['player_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-team-name="<?php echo htmlspecialchars((string)$row['team_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                            data-yellow="<?php echo (int)$row['yellow_cards']; ?>"
+                                                            data-red="<?php echo (int)$row['red_cards']; ?>"
+                                                            data-green="<?php echo (int)$row['green_cards']; ?>">
+                                                            Edit
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -1448,6 +1804,7 @@ if ($eventId > 0) {
     </div>
 
     <script>
+        const teamValueMap = <?php echo json_encode($teamValueMap, JSON_UNESCAPED_UNICODE); ?>;
         const teamSelect = document.getElementById('player_team_id');
         const playerSelect = document.getElementById('player_id');
         if (teamSelect && playerSelect) {
@@ -1470,6 +1827,9 @@ if ($eventId > 0) {
         const teamS = document.getElementById('team_s');
         const teamKp = document.getElementById('team_kp');
         const teamK = document.getElementById('team_k');
+        const teamGm = document.getElementById('team_gm');
+        const teamGk = document.getElementById('team_gk');
+        const teamIdSelect = document.getElementById('team_id_select');
         const teamMn = document.getElementById('team_mn');
         const teamPointsPreview = document.getElementById('team_points_preview');
         const matchHistoryInput = document.getElementById('match_history_input');
@@ -1554,6 +1914,205 @@ if ($eventId > 0) {
             matchResetBtn.addEventListener('click', function() {
                 matchTokens = [];
                 renderMatchBuilder();
+            });
+        }
+
+        function setInputValue(el, val) {
+            if (!el) return;
+            el.value = String(Math.max(0, parseInt(val || 0, 10) || 0));
+        }
+
+        function applyTeamValueData(teamId) {
+            const tid = parseInt(teamId || '0', 10);
+            const data = (tid > 0 && teamValueMap && teamValueMap[tid]) ? teamValueMap[tid] : null;
+
+            setInputValue(teamM, data ? data.m : 0);
+            setInputValue(teamMp, data ? data.mp : 0);
+            setInputValue(teamS, data ? data.s : 0);
+            setInputValue(teamKp, data ? data.kp : 0);
+            setInputValue(teamK, data ? data.k : 0);
+            setInputValue(teamGm, data ? data.gm : 0);
+            setInputValue(teamGk, data ? data.gk : 0);
+            matchTokens = String(data && data.match_history ? data.match_history : '')
+                .split(',')
+                .map(function(v) { return v.trim().toUpperCase(); })
+                .filter(function(v) { return ['W', 'WP', 'D', 'LP', 'L'].indexOf(v) !== -1; });
+            renderMatchBuilder();
+            updateTeamCalculatedFields();
+        }
+
+        if (teamIdSelect) {
+            teamIdSelect.addEventListener('change', function() {
+                applyTeamValueData(teamIdSelect.value);
+            });
+            applyTeamValueData(teamIdSelect.value);
+        }
+
+        const editPanel = document.getElementById('team-edit-panel');
+        const editEmpty = document.getElementById('team-edit-empty');
+        const editCancelBtn = document.getElementById('edit_cancel_btn');
+        const editRowId = document.getElementById('edit_row_id');
+        const editTeamId = document.getElementById('edit_team_id');
+        const editTeamTitle = document.getElementById('edit_team_title');
+        const editM = document.getElementById('edit_m');
+        const editMp = document.getElementById('edit_mp');
+        const editS = document.getElementById('edit_s');
+        const editKp = document.getElementById('edit_kp');
+        const editK = document.getElementById('edit_k');
+        const editMn = document.getElementById('edit_mn');
+        const editPoints = document.getElementById('edit_points');
+        const editButtons = document.querySelectorAll('.ev-edit-btn');
+        const editMatchHistoryInput = document.getElementById('edit_match_history_input');
+        const editMatchBuilderPreview = document.getElementById('edit_match_builder_preview');
+        const editMatchTokenButtons = document.querySelectorAll('.edit-match-token-btn[data-token]');
+        const editMatchUndoBtn = document.getElementById('edit_match_undo_btn');
+        const editMatchResetBtn = document.getElementById('edit_match_reset_btn');
+        let editMatchTokens = [];
+
+        function updateEditCalculatedFields() {
+            const m = toNum(editM);
+            const mp = toNum(editMp);
+            const s = toNum(editS);
+            const kp = toNum(editKp);
+            const k = toNum(editK);
+            const mn = m + mp + s + kp + k;
+            const points = (m * 3) + (mp * 2) + kp;
+            if (editMn) editMn.value = mn;
+            if (editPoints) editPoints.value = points;
+        }
+
+        [editM, editMp, editS, editKp, editK].forEach(function(el) {
+            if (el) el.addEventListener('input', updateEditCalculatedFields);
+        });
+
+        function renderEditMatchBuilder() {
+            if (!editMatchBuilderPreview || !editMatchHistoryInput) return;
+            editMatchHistoryInput.value = editMatchTokens.join(',');
+            if (editMatchTokens.length === 0) {
+                editMatchBuilderPreview.innerHTML = '<span class="match-placeholder">Belum ada match. Klik tombol +W / +L / dst.</span>';
+                return;
+            }
+            editMatchBuilderPreview.innerHTML = '';
+            editMatchTokens.forEach(function(token) {
+                const pill = document.createElement('span');
+                pill.className = 'match-pill ' + tokenClass(token);
+                pill.textContent = token;
+                editMatchBuilderPreview.appendChild(pill);
+            });
+        }
+
+        editMatchTokenButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const token = (btn.getAttribute('data-token') || '').toUpperCase();
+                if (!token) return;
+                editMatchTokens.push(token);
+                renderEditMatchBuilder();
+            });
+        });
+
+        if (editMatchUndoBtn) {
+            editMatchUndoBtn.addEventListener('click', function() {
+                if (editMatchTokens.length === 0) return;
+                editMatchTokens.pop();
+                renderEditMatchBuilder();
+            });
+        }
+
+        if (editMatchResetBtn) {
+            editMatchResetBtn.addEventListener('click', function() {
+                editMatchTokens = [];
+                renderEditMatchBuilder();
+            });
+        }
+
+        editButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (!editPanel) return;
+                if (editRowId) editRowId.value = btn.dataset.rowId || '';
+                if (editTeamId) editTeamId.value = btn.dataset.teamId || '';
+                if (editTeamTitle) editTeamTitle.textContent = 'Edit: ' + (btn.dataset.teamName || '-');
+                if (editM) editM.value = btn.dataset.m || '0';
+                if (editMp) editMp.value = btn.dataset.mp || '0';
+                if (editS) editS.value = btn.dataset.s || '0';
+                if (editKp) editKp.value = btn.dataset.kp || '0';
+                if (editK) editK.value = btn.dataset.k || '0';
+                const editGm = document.getElementById('edit_gm');
+                const editGk = document.getElementById('edit_gk');
+                if (editGm) editGm.value = btn.dataset.gm || '0';
+                if (editGk) editGk.value = btn.dataset.gk || '0';
+                editMatchTokens = String(btn.dataset.history || '')
+                    .split(',')
+                    .map(function(v) { return v.trim().toUpperCase(); })
+                    .filter(function(v) { return ['W', 'WP', 'D', 'LP', 'L'].indexOf(v) !== -1; });
+                renderEditMatchBuilder();
+
+                updateEditCalculatedFields();
+                editPanel.style.display = 'block';
+                if (editEmpty) editEmpty.style.display = 'none';
+                editPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        if (editCancelBtn) {
+            editCancelBtn.addEventListener('click', function() {
+                if (editPanel) editPanel.style.display = 'none';
+                if (editEmpty) editEmpty.style.display = 'block';
+            });
+        }
+
+        const editPlayerPanel = document.getElementById('player-edit-panel');
+        const editPlayerEmpty = document.getElementById('player-edit-empty');
+        const editPlayerCancelBtn = document.getElementById('edit_player_cancel_btn');
+        const editPlayerTeamSelect = document.getElementById('edit_player_team_id');
+        const editPlayerSelect = document.getElementById('edit_player_id');
+        const editPlayerTitle = document.getElementById('edit_player_title');
+        const editCardIdInput = document.getElementById('edit_card_id');
+        const editPlayerButtons = document.querySelectorAll('.ev-player-edit-btn');
+        const editPlayerYellow = document.getElementById('edit_player_yellow_cards');
+        const editPlayerRed = document.getElementById('edit_player_red_cards');
+        const editPlayerGreen = document.getElementById('edit_player_green_cards');
+
+        if (editPlayerTeamSelect && editPlayerSelect) {
+            const allEditPlayerOptions = Array.from(editPlayerSelect.options).map(function(o) {
+                return o.cloneNode(true);
+            });
+            editPlayerTeamSelect.addEventListener('change', function() {
+                const selectedTeam = editPlayerTeamSelect.value;
+                editPlayerSelect.innerHTML = '';
+                allEditPlayerOptions.forEach(function(o, idx) {
+                    if (idx === 0 || !selectedTeam || o.dataset.team === selectedTeam) {
+                        editPlayerSelect.appendChild(o.cloneNode(true));
+                    }
+                });
+            });
+        }
+
+        editPlayerButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (!editPlayerPanel) return;
+                if (editCardIdInput) editCardIdInput.value = btn.dataset.cardId || '';
+                if (editPlayerTeamSelect) editPlayerTeamSelect.value = btn.dataset.teamId || '';
+                if (editPlayerTeamSelect) {
+                    editPlayerTeamSelect.dispatchEvent(new Event('change'));
+                }
+                if (editPlayerSelect) editPlayerSelect.value = btn.dataset.playerId || '';
+                if (editPlayerYellow) editPlayerYellow.value = btn.dataset.yellow || '0';
+                if (editPlayerRed) editPlayerRed.value = btn.dataset.red || '0';
+                if (editPlayerGreen) editPlayerGreen.value = btn.dataset.green || '0';
+                if (editPlayerTitle) {
+                    editPlayerTitle.textContent = 'Edit: ' + (btn.dataset.playerName || '-') + ' (' + (btn.dataset.teamName || '-') + ')';
+                }
+
+                editPlayerPanel.style.display = 'block';
+                if (editPlayerEmpty) editPlayerEmpty.style.display = 'none';
+                editPlayerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        if (editPlayerCancelBtn) {
+            editPlayerCancelBtn.addEventListener('click', function() {
+                if (editPlayerPanel) editPlayerPanel.style.display = 'none';
+                if (editPlayerEmpty) editPlayerEmpty.style.display = 'block';
             });
         }
     </script>
