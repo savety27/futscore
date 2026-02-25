@@ -894,6 +894,16 @@ body {
                         </span>
                     </div>
                 </div>
+
+                <div class="info-item">
+                    <span class="info-label">Wasit/Pengawas</span>
+                    <div class="info-value">
+                        <?php
+                        $match_official_name = trim((string) ($challenge_data['match_official'] ?? ''));
+                        echo htmlspecialchars($match_official_name !== '' ? $match_official_name : '-');
+                        ?>
+                    </div>
+                </div>
             </div>
             
             <!-- Time Information -->
