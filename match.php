@@ -29,6 +29,7 @@ $challengeSql = "SELECT c.id,
                         c.opponent_score AS score2,
                         c.challenger_uniform_choices AS team1_uniform_choices,
                         c.opponent_uniform_choices AS team2_uniform_choices,
+                        c.match_official AS match_official,
                         COALESCE(NULLIF(c.match_status, ''), c.status) AS status,
                         v.name AS location,
                         t1.id AS team1_id,
@@ -53,6 +54,7 @@ $legacySql = "SELECT m.id,
                       m.score2,
                       '' AS team1_uniform_choices,
                       '' AS team2_uniform_choices,
+                      '' AS match_official,
                       m.status,
                       m.location,
                       t1.id AS team1_id,
@@ -159,6 +161,7 @@ $matchCode = '';
 $scoreAvailable = false;
 $team1UniformLabel = 'Belum dipilih';
 $team2UniformLabel = 'Belum dipilih';
+$matchOfficialLabel = '-';
 
 if (!$matchNotFound) {
     $statusValue = strtolower($match['status'] ?? '');
@@ -171,6 +174,7 @@ if (!$matchNotFound) {
     $scoreAvailable = $match['score1'] !== null && $match['score2'] !== null;
     $team1UniformLabel = trim((string)($match['team1_uniform_choices'] ?? '')) ?: 'Belum dipilih';
     $team2UniformLabel = trim((string)($match['team2_uniform_choices'] ?? '')) ?: 'Belum dipilih';
+    $matchOfficialLabel = trim((string)($match['match_official'] ?? '')) ?: '-';
 }
 
 ?>
@@ -389,6 +393,13 @@ if (!$matchNotFound) {
                                         <?php echo htmlspecialchars($statusLabel ?? ''); ?>
                                     </span>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="match-meta-card">
+                            <div class="match-meta-icon"><i class="fas fa-user-tie"></i></div>
+                            <div>
+                                <div class="match-meta-label">Wasit/Pengawas</div>
+                                <div class="match-meta-value"><?php echo htmlspecialchars($matchOfficialLabel); ?></div>
                             </div>
                         </div>
                     </div>

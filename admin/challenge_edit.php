@@ -61,6 +61,8 @@ $event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOption
 $active_events = [];
 $active_event_ids = [];
 $challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
+$challenge_has_match_official = adminHasColumn($conn, 'challenges', 'match_official');
+$perangkat_official_names = [];
 
 // Get challenge ID
 $challenge_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -109,6 +111,9 @@ try {
         $challenge_data['event_id'] = (string)((int)$challenge_data['event_id']);
     } else {
         $challenge_data['event_id'] = '';
+    }
+    if (!isset($challenge_data['match_official'])) {
+        $challenge_data['match_official'] = '';
     }
 
     if (adminHasTable($conn, 'events')) {
@@ -162,6 +167,32 @@ try {
     $venues_stmt = $conn->prepare("SELECT id, name, location FROM venues WHERE is_active = 1 ORDER BY name ASC");
     $venues_stmt->execute();
     $venues = $venues_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (adminHasTable($conn, 'perangkat')) {
+        $official_sql = "SELECT name FROM perangkat";
+        if (adminHasColumn($conn, 'perangkat', 'is_active')) {
+            $official_sql .= " WHERE is_active = 1";
+        }
+        $official_sql .= " ORDER BY name ASC";
+        $official_stmt = $conn->query($official_sql);
+        if ($official_stmt) {
+            $seen_names = [];
+            foreach ($official_stmt->fetchAll(PDO::FETCH_ASSOC) as $official_row) {
+                $official_name = trim((string)($official_row['name'] ?? ''));
+                if ($official_name === '') {
+                    continue;
+                }
+                $name_key = function_exists('mb_strtolower')
+                    ? mb_strtolower($official_name, 'UTF-8')
+                    : strtolower($official_name);
+                if (isset($seen_names[$name_key])) {
+                    continue;
+                }
+                $seen_names[$name_key] = true;
+                $perangkat_official_names[] = $official_name;
+            }
+        }
+    }
     
 } catch (PDOException $e) {
     die("Error fetching challenge data: " . $e->getMessage());
@@ -206,6 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'challenge_date' => trim($_POST['challenge_date'] ?? ''),
         'challenge_time' => trim($_POST['challenge_time'] ?? '18:00'),
         'sport_type' => in_array(trim($_POST['sport_type'] ?? ''), $event_types, true) ? trim($_POST['sport_type'] ?? '') : '',
+        'match_official' => trim($_POST['match_official'] ?? ''),
         'notes' => trim($_POST['notes'] ?? ''),
         'status' => trim($_POST['status'] ?? 'open')
     ];
@@ -275,7 +307,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If no errors, update database
     if (empty($errors)) {
         try {
-            if ($challenge_has_event_id) {
+            if ($challenge_has_event_id && $challenge_has_match_official) {
+                $stmt = $conn->prepare("
+                    UPDATE challenges SET
+                        challenger_id = ?,
+                        opponent_id = ?,
+                        venue_id = ?,
+                        challenge_date = ?,
+                        expiry_date = ?,
+                        event_id = ?,
+                        sport_type = ?,
+                        match_official = ?,
+                        notes = ?,
+                        status = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
+                ");
+
+                $stmt->execute([
+                    $form_data['challenger_id'],
+                    $form_data['opponent_id'],
+                    $form_data['venue_id'],
+                    $challenge_datetime,
+                    $expiry_datetime,
+                    (int)$form_data['event_id'],
+                    $form_data['sport_type'],
+                    $form_data['match_official'],
+                    $form_data['notes'],
+                    $form_data['status'],
+                    $challenge_id
+                ]);
+            } elseif ($challenge_has_event_id) {
                 $stmt = $conn->prepare("
                     UPDATE challenges SET
                         challenger_id = ?,
@@ -299,6 +361,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $expiry_datetime,
                     (int)$form_data['event_id'],
                     $form_data['sport_type'],
+                    $form_data['notes'],
+                    $form_data['status'],
+                    $challenge_id
+                ]);
+            } elseif ($challenge_has_match_official) {
+                $stmt = $conn->prepare("
+                    UPDATE challenges SET
+                        challenger_id = ?,
+                        opponent_id = ?,
+                        venue_id = ?,
+                        challenge_date = ?,
+                        expiry_date = ?,
+                        sport_type = ?,
+                        match_official = ?,
+                        notes = ?,
+                        status = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
+                ");
+
+                $stmt->execute([
+                    $form_data['challenger_id'],
+                    $form_data['opponent_id'],
+                    $form_data['venue_id'],
+                    $challenge_datetime,
+                    $expiry_datetime,
+                    $form_data['sport_type'],
+                    $form_data['match_official'],
                     $form_data['notes'],
                     $form_data['status'],
                     $challenge_id
@@ -1197,12 +1287,35 @@ body {
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label" for="notes">
-                            Catatan Tambahan
-                        </label>
-                        <textarea id="notes" name="notes" class="form-textarea" 
-                                  placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes'] ?? ''); ?></textarea>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="match_official">
+                                Wasit/Pengawas
+                            </label>
+                            <input type="text"
+                                   id="match_official"
+                                   name="match_official"
+                                   class="form-input"
+                                   value="<?php echo htmlspecialchars($challenge_data['match_official'] ?? ''); ?>"
+                                   placeholder="Pilih/ketik nama wasit"
+                                   list="officials_list">
+                            <?php if (!empty($perangkat_official_names)): ?>
+                                <datalist id="officials_list">
+                                    <?php foreach ($perangkat_official_names as $official_name): ?>
+                                        <option value="<?php echo htmlspecialchars($official_name); ?>"></option>
+                                    <?php endforeach; ?>
+                                </datalist>
+                                <small style="color: #666;">Saran nama diambil dari data Perangkat aktif.</small>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="notes">
+                                Catatan Tambahan
+                            </label>
+                            <textarea id="notes" name="notes" class="form-textarea" 
+                                      placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes'] ?? ''); ?></textarea>
+                        </div>
                     </div>
                 </div>
 

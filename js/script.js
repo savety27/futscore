@@ -65,6 +65,11 @@ function openMatchModal(matchId) {
             // Set date and location
             document.getElementById('matchDateTime').textContent = matchDetail.date + ', ' + matchDetail.time;
             document.getElementById('matchLocation').textContent = matchDetail.location;
+            const matchOfficialEl = document.getElementById('matchOfficial');
+            if (matchOfficialEl) {
+                const officialName = (matchDetail.match_official || '').trim();
+                matchOfficialEl.textContent = officialName || '-';
+            }
 
             // Populate content
             populateGoals(matchDetail.goals);
@@ -316,6 +321,7 @@ function openScheduleMatchModal(matchId) {
                     <div class="schedule-date-venue">
                         <p><i class="fas fa-calendar-alt"></i> <strong>Tanggal & Waktu:</strong> ${scheduleData.date}, ${scheduleData.time}</p>
                         <p><i class="fas fa-map-marker-alt"></i> <strong>Lokasi:</strong> ${scheduleData.location}</p>
+                        <p><i class="fas fa-user-tie"></i> <strong>Wasit/Pengawas:</strong> ${scheduleData.match_official || '-'}</p>
                     </div>
                     
                     <div class="schedule-teams-large">

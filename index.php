@@ -783,6 +783,10 @@ $pageTitle = "Home";
                         <i class="fas fa-map-marker-alt"></i>
                         <span id="matchLocation"></span>
                     </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span id="matchOfficial">-</span>
+                    </div>
                 </div>
             </div>
             

@@ -78,6 +78,7 @@ foreach ($goals as $g) {
 
 $team1UniformChoices = trim((string)($challenge['challenger_uniform_choices'] ?? ''));
 $team2UniformChoices = trim((string)($challenge['opponent_uniform_choices'] ?? ''));
+$matchOfficial = trim((string)($challenge['match_official'] ?? ''));
 
 $response = [
     'success' => true,
@@ -95,6 +96,7 @@ $response = [
         'event' => $challenge['sport_type'], // Using sport_type as event name mapping
         'round' => $challenge['challenge_code'], // Using challenge_code as round info mapping
         'status' => $challenge['match_status'],
+        'match_official' => $matchOfficial !== '' ? $matchOfficial : '-',
         'team1_uniform_choices' => $team1UniformChoices,
         'team2_uniform_choices' => $team2UniformChoices,
         'goals' => $goals,

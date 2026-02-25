@@ -155,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'opponent_score' => intval($_POST['opponent_score'] ?? 0),
         'match_status' => trim($_POST['match_status'] ?? 'completed'),
         'match_duration' => trim($_POST['match_duration'] ?? '90'),
-        'match_official' => trim($_POST['match_official'] ?? ''),
         'match_notes' => trim($_POST['match_notes'] ?? ''),
         
         // Statistics
@@ -234,7 +233,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     status = ?,
                     match_status = ?, 
                     match_duration = ?, 
-                    match_official = ?, 
                     match_notes = ?,
                     result_entered_at = NOW(),
                     updated_at = NOW()
@@ -248,7 +246,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $new_status,
                 $form_data['match_status'],
                 $form_data['match_duration'],
-                $form_data['match_official'],
                 $form_data['match_notes'],
                 $challenge_id
             ]);
@@ -318,43 +315,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$perangkat_officials = [];
-if (adminHasTable($conn, 'perangkat')) {
-    try {
-        $official_sql = "SELECT id, name FROM perangkat";
-        if (adminHasColumn($conn, 'perangkat', 'is_active')) {
-            $official_sql .= " WHERE is_active = 1";
-        }
-        $official_sql .= " ORDER BY name ASC";
-        $stmt_officials = $conn->query($official_sql);
-        $perangkat_officials = $stmt_officials ? $stmt_officials->fetchAll(PDO::FETCH_ASSOC) : [];
-    } catch (PDOException $e) {
-        $perangkat_officials = [];
-    }
-}
-
-$selected_match_official = isset($form_data['match_official'])
-    ? trim((string) $form_data['match_official'])
-    : trim((string) ($challenge_data['match_official'] ?? ''));
-
-$perangkat_official_names = [];
-if (!empty($perangkat_officials)) {
-    $seen_official_names = [];
-    foreach ($perangkat_officials as $official_row) {
-        $official_name = trim((string) ($official_row['name'] ?? ''));
-        if ($official_name === '') {
-            continue;
-        }
-        $name_key = function_exists('mb_strtolower')
-            ? mb_strtolower($official_name, 'UTF-8')
-            : strtolower($official_name);
-        if (isset($seen_official_names[$name_key])) {
-            continue;
-        }
-        $seen_official_names[$name_key] = true;
-        $perangkat_official_names[] = $official_name;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -1263,34 +1223,6 @@ body {
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="match_official">
-                                Wasit/Pengawas Pertandingan
-                            </label>
-                            <?php if (!empty($perangkat_official_names)): ?>
-                                <div class="official-combobox" id="matchOfficialCombobox">
-                                    <input type="text" 
-                                           id="match_official" 
-                                           name="match_official" 
-                                           class="form-input" 
-                                           value="<?php echo htmlspecialchars($selected_match_official); ?>"
-                                           placeholder="-Pilih wasit dari dropdown atau daftar di bawah-"
-                                           autocomplete="off">
-                                    <div id="match_official_dropdown" class="official-dropdown" hidden></div>
-                                </div>
-                                <small class="form-help">Bisa search sambil pilih nama dari data Perangkat.</small>
-                            <?php else: ?>
-                                <input type="text" 
-                                       id="match_official" 
-                                       name="match_official" 
-                                       class="form-input" 
-                                       value="<?php echo htmlspecialchars($selected_match_official); ?>"
-                                       placeholder="Masukkan nama wasit..."
-                                       autocomplete="off">
-                                <small class="form-help">Data perangkat aktif belum tersedia, gunakan input manual.</small>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="form-group">
                             <label class="form-label" for="match_notes">
                                 Catatan Pertandingan
                             </label>
@@ -1347,98 +1279,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (cScore) cScore.addEventListener('input', updatePreview);
     if (oScore) oScore.addEventListener('input', updatePreview);
     updatePreview();
-
-    const officialInput = document.getElementById('match_official');
-    const officialDropdown = document.getElementById('match_official_dropdown');
-    const officialNames = <?php echo json_encode($perangkat_official_names, JSON_UNESCAPED_UNICODE); ?>;
-    let activeOfficialIndex = -1;
-
-    function renderOfficialDropdown(keyword) {
-        if (!officialDropdown) return;
-        const term = String(keyword || '').trim().toLowerCase();
-        const filteredNames = officialNames.filter((name) => String(name).toLowerCase().includes(term));
-
-        officialDropdown.innerHTML = '';
-        activeOfficialIndex = -1;
-
-        if (filteredNames.length === 0) {
-            const emptyEl = document.createElement('div');
-            emptyEl.className = 'official-dropdown-empty';
-            emptyEl.textContent = 'Nama tidak ditemukan';
-            officialDropdown.appendChild(emptyEl);
-            officialDropdown.hidden = false;
-            return;
-        }
-
-        filteredNames.forEach((name, idx) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'official-dropdown-item';
-            btn.textContent = name;
-            btn.dataset.index = String(idx);
-            btn.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                if (officialInput) {
-                    officialInput.value = name;
-                    officialInput.dispatchEvent(new Event('change'));
-                    officialInput.focus();
-                }
-                officialDropdown.hidden = true;
-            });
-            officialDropdown.appendChild(btn);
-        });
-
-        officialDropdown.hidden = false;
-    }
-
-    if (officialInput && officialDropdown && officialNames.length > 0) {
-        officialInput.addEventListener('focus', function() {
-            renderOfficialDropdown(officialInput.value);
-        });
-
-        officialInput.addEventListener('input', function() {
-            renderOfficialDropdown(officialInput.value);
-        });
-
-        officialInput.addEventListener('keydown', function(e) {
-            if (officialDropdown.hidden) return;
-            const items = Array.from(officialDropdown.querySelectorAll('.official-dropdown-item'));
-            if (items.length === 0) return;
-
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                activeOfficialIndex = Math.min(activeOfficialIndex + 1, items.length - 1);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                activeOfficialIndex = Math.max(activeOfficialIndex - 1, 0);
-            } else if (e.key === 'Enter') {
-                if (activeOfficialIndex >= 0 && activeOfficialIndex < items.length) {
-                    e.preventDefault();
-                    items[activeOfficialIndex].dispatchEvent(new MouseEvent('mousedown'));
-                }
-                return;
-            } else if (e.key === 'Escape') {
-                officialDropdown.hidden = true;
-                return;
-            } else {
-                return;
-            }
-
-            items.forEach((item, idx) => item.classList.toggle('active', idx === activeOfficialIndex));
-            if (activeOfficialIndex >= 0 && items[activeOfficialIndex]) {
-                items[activeOfficialIndex].scrollIntoView({ block: 'nearest' });
-            }
-        });
-
-        document.addEventListener('click', function(e) {
-            const target = e.target;
-            if (!(target instanceof Element)) return;
-            const clickedInside = target.closest('#matchOfficialCombobox');
-            if (!clickedInside) {
-                officialDropdown.hidden = true;
-            }
-        });
-    }
 
     // Goal Scorers Logic
     const team1Id = <?php echo json_encode($challenge_data['challenger_id'] ?? ''); ?>;

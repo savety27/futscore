@@ -30,6 +30,16 @@ $offset = ($page - 1) * $limit;
 
 // Database connection
 $conn = $db->getConnection();
+$has_challenge_event_id = false;
+$has_challenge_match_official = false;
+if ($check_event_id_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'")) {
+    $has_challenge_event_id = $check_event_id_col->num_rows > 0;
+    $check_event_id_col->close();
+}
+if ($check_official_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'match_official'")) {
+    $has_challenge_match_official = $check_official_col->num_rows > 0;
+    $check_official_col->close();
+}
 
 // Query for Total Records (for pagination)
 $count_query = "SELECT COUNT(*) as total FROM perangkat p WHERE p.is_active = 1";
@@ -51,10 +61,54 @@ if ($count_result) {
 }
 $total_pages = max(1, (int)ceil($total_records / $limit));
 
-// Query for Perangkat Data with license counts
+// Query for Perangkat Data with license/match/event counts
+$matchCountSelect = "0 AS match_count";
+$eventCountSelect = "0 AS event_count";
+$eventNamesSelect = "'' AS event_names";
+
+if ($has_challenge_match_official) {
+    $officialNameMatchSql = "(
+        LOWER(TRIM(c.match_official)) = LOWER(TRIM(p.name))
+        OR FIND_IN_SET(
+            LOWER(TRIM(p.name)),
+            REPLACE(REPLACE(LOWER(TRIM(c.match_official)), ', ', ','), ' ,', ',')
+        ) > 0
+    )";
+
+    $matchCountSelect = "(SELECT COUNT(DISTINCT c.id)
+        FROM challenges c
+        WHERE c.match_official IS NOT NULL
+          AND TRIM(c.match_official) <> ''
+          AND $officialNameMatchSql
+    ) AS match_count";
+
+    if ($has_challenge_event_id) {
+        $eventCountSelect = "(SELECT COUNT(DISTINCT e.id)
+            FROM challenges c
+            INNER JOIN events e ON c.event_id = e.id
+            WHERE c.match_official IS NOT NULL
+              AND TRIM(c.match_official) <> ''
+              AND $officialNameMatchSql
+              AND c.event_id IS NOT NULL
+        ) AS event_count";
+
+        $eventNamesSelect = "(SELECT GROUP_CONCAT(DISTINCT TRIM(e.name) ORDER BY TRIM(e.name) SEPARATOR ' || ')
+            FROM challenges c
+            INNER JOIN events e ON c.event_id = e.id
+            WHERE c.match_official IS NOT NULL
+              AND TRIM(c.match_official) <> ''
+              AND $officialNameMatchSql
+              AND c.event_id IS NOT NULL
+        ) AS event_names";
+    }
+}
+
 $query = "SELECT 
     p.*,
-    (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = p.id) as certificate_count
+    (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = p.id) as certificate_count,
+    $matchCountSelect,
+    $eventCountSelect,
+    $eventNamesSelect
     FROM perangkat p
     WHERE p.is_active = 1";
     
@@ -422,18 +476,148 @@ $pageTitle = "Perangkat Pertandingan";
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 10px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 12px;
+    gap: 6px;
+    padding: 2px 8px;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
 }
+.event-match-count.zero {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+.event-match-count.event {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+.event-match-count.event.zero {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
 
 .event-match-count i {
-    margin-right: 4px;
     font-size: 10px;
 }
+.history-btn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.history-btn:hover {
+    background: #bfdbfe;
+    transform: translateY(-1px);
+}
+
+.match-history-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10002;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.6);
+    padding: 20px;
+}
+.match-history-modal.open {
+    display: flex;
+}
+.match-history-content {
+    width: min(1080px, 100%);
+    max-height: calc(100vh - 40px);
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.3);
+}
+.match-history-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+.match-history-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+.match-history-meta {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+}
+.match-history-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #334155;
+    cursor: pointer;
+}
+.match-history-body {
+    padding: 14px 18px 18px;
+    overflow: auto;
+}
+.match-history-loading,
+.match-history-empty {
+    text-align: center;
+    color: #64748b;
+    padding: 30px 10px;
+}
+.match-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 920px;
+}
+.match-history-table th,
+.match-history-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #0f172a;
+    text-align: left;
+    vertical-align: top;
+}
+.match-history-table th {
+    background: #f8fafc;
+    font-size: 12px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+.history-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+.history-status-pill.completed { background: #dcfce7; color: #166534; }
+.history-status-pill.accepted { background: #dbeafe; color: #1d4ed8; }
+.history-status-pill.pending { background: #fef3c7; color: #92400e; }
+.history-status-pill.default { background: #e2e8f0; color: #475569; }
 
 /* Created At */
 .col-created {
@@ -960,6 +1144,9 @@ $pageTitle = "Perangkat Pertandingan";
                             <th>No. KTP</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th class="col-matches">Match</th>
+                            <th class="col-events">Event</th>
+                            <th class="col-center">Riwayat</th>
                             <th>Status</th>
                             <th>Dibuat</th>
                         </tr>
@@ -967,7 +1154,7 @@ $pageTitle = "Perangkat Pertandingan";
                     <tbody>
                         <?php if (empty($perangkatRows)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">
+                                <td colspan="11" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada perangkat ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1040,6 +1227,35 @@ $pageTitle = "Perangkat Pertandingan";
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
+                                </td>
+
+                                <td class="col-matches" data-label="Match">
+                                    <?php $matchCount = (int)($p['match_count'] ?? 0); ?>
+                                    <span class="event-match-count <?php echo $matchCount === 0 ? 'zero' : ''; ?>">
+                                        <i class="fas fa-futbol"></i><?php echo $matchCount; ?>
+                                    </span>
+                                </td>
+
+                                <td class="col-events" data-label="Event">
+                                    <?php
+                                    $eventCount = (int)($p['event_count'] ?? 0);
+                                    $eventNamesRaw = trim((string)($p['event_names'] ?? ''));
+                                    $eventTitle = $eventNamesRaw !== '' ? str_replace(' || ', ', ', $eventNamesRaw) : 'Belum ada event';
+                                    ?>
+                                    <span class="event-match-count event <?php echo $eventCount === 0 ? 'zero' : ''; ?>"
+                                          title="<?php echo htmlspecialchars($eventTitle, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <i class="fas fa-calendar-check"></i><?php echo $eventCount; ?>
+                                    </span>
+                                </td>
+
+                                <td class="col-center" data-label="Riwayat">
+                                    <button class="history-btn btn-perangkat-history"
+                                            type="button"
+                                            data-perangkat-id="<?php echo (int)$p['id']; ?>"
+                                            data-perangkat-name="<?php echo htmlspecialchars($p['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Lihat Riwayat Match/Event">
+                                        <i class="fas fa-chart-line"></i>
+                                    </button>
                                 </td>
 
                                 <td data-label="Status">
@@ -1127,6 +1343,21 @@ $pageTitle = "Perangkat Pertandingan";
     </div>
 </div>
 
+<div class="match-history-modal" id="matchHistoryModal">
+    <div class="match-history-content">
+        <div class="match-history-header">
+            <div>
+                <h3><i class="fas fa-chart-line"></i> <span id="historyPerangkatName">-</span></h3>
+                <div class="match-history-meta" id="historyPerangkatMeta">Memuat data...</div>
+            </div>
+            <button class="match-history-close" id="historyPerangkatCloseBtn" type="button">&times;</button>
+        </div>
+        <div class="match-history-body" id="historyPerangkatBody">
+            <div class="match-history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>
+        </div>
+    </div>
+</div>
+
 <script>
 const SITE_URL = '<?php echo SITE_URL; ?>';
 
@@ -1173,6 +1404,108 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
     window.addEventListener('resize', () => {
         if (window.innerWidth > 992) {
             setSidebarOpen(false);
+        }
+    });
+}
+
+const matchHistoryModal = document.getElementById('matchHistoryModal');
+const historyPerangkatBody = document.getElementById('historyPerangkatBody');
+const historyPerangkatName = document.getElementById('historyPerangkatName');
+const historyPerangkatMeta = document.getElementById('historyPerangkatMeta');
+const historyPerangkatCloseBtn = document.getElementById('historyPerangkatCloseBtn');
+
+const escapeHtmlText = (value) => {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+};
+
+function closeMatchHistoryModal() {
+    if (matchHistoryModal) {
+        matchHistoryModal.classList.remove('open');
+    }
+}
+
+document.querySelectorAll('.btn-perangkat-history').forEach((btn) => {
+    btn.addEventListener('click', function () {
+        const perangkatId = this.dataset.perangkatId;
+        const perangkatName = this.dataset.perangkatName || '-';
+
+        historyPerangkatName.textContent = perangkatName;
+        historyPerangkatMeta.textContent = 'Memuat ringkasan event dan match...';
+        historyPerangkatBody.innerHTML = '<div class="match-history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>';
+        matchHistoryModal.classList.add('open');
+
+        fetch(`get_perangkat_match_history.php?perangkat_id=${encodeURIComponent(perangkatId)}`)
+            .then((response) => response.json())
+            .then((data) => {
+                if (!data.success) {
+                    historyPerangkatBody.innerHTML = `<div class="match-history-empty"><i class="fas fa-exclamation-circle"></i><p>${escapeHtmlText(data.message || 'Terjadi kesalahan saat memuat data.')}</p></div>`;
+                    return;
+                }
+
+                const eventTotal = Number(data.event_total || 0);
+                const matchTotal = Number(data.total || 0);
+                historyPerangkatMeta.textContent = `Event: ${eventTotal} | Match: ${matchTotal}`;
+
+                if (!Array.isArray(data.matches) || data.matches.length === 0) {
+                    historyPerangkatBody.innerHTML = '<div class="match-history-empty"><i class="fas fa-futbol"></i><p>Belum ada match yang tercatat untuk perangkat ini.</p></div>';
+                    return;
+                }
+
+                let rows = '';
+                data.matches.forEach((m, idx) => {
+                    const safeStatus = String(m.status || 'default').toLowerCase();
+                    const statusClass = ['completed', 'accepted', 'pending'].includes(safeStatus) ? safeStatus : 'default';
+                    const scoreText = (m.challenger_score !== null && m.opponent_score !== null)
+                        ? `${m.challenger_score} - ${m.opponent_score}`
+                        : '-';
+
+                    rows += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${escapeHtmlText(m.event_name || '-')}</td>
+                            <td>${escapeHtmlText(m.sport_type || '-')}</td>
+                            <td>#${escapeHtmlText(String(m.challenge_id || ''))}<br><small style="color:#94a3b8">${escapeHtmlText(m.challenge_code || '-')}</small></td>
+                            <td>${escapeHtmlText(m.challenger_name || '-')} <span style="color:#94a3b8">vs</span> ${escapeHtmlText(m.opponent_name || '-')}</td>
+                            <td>${escapeHtmlText(m.challenge_date_fmt || '-')}</td>
+                            <td><span class="history-status-pill ${statusClass}">${escapeHtmlText(m.status || '-')}</span></td>
+                            <td>${escapeHtmlText(scoreText)}</td>
+                        </tr>
+                    `;
+                });
+
+                historyPerangkatBody.innerHTML = `
+                    <table class="match-history-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Event</th>
+                                <th>Kategori</th>
+                                <th>Match</th>
+                                <th>Pertandingan</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                                <th>Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            })
+            .catch(() => {
+                historyPerangkatBody.innerHTML = '<div class="match-history-empty"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat data riwayat. Periksa koneksi server.</p></div>';
+            });
+    });
+});
+
+if (historyPerangkatCloseBtn) {
+    historyPerangkatCloseBtn.addEventListener('click', closeMatchHistoryModal);
+}
+if (matchHistoryModal) {
+    matchHistoryModal.addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeMatchHistoryModal();
         }
     });
 }
@@ -1404,6 +1737,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCertificateModal();
         closeImageViewer();
+        closeMatchHistoryModal();
     }
 });
 
