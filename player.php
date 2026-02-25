@@ -21,6 +21,14 @@ require_once 'includes/header.php';
         font-size: 14px;
         line-height: 1.2;
     }
+    .player-table-new td.cell-name .player-link {
+        font-size: 14px;
+        line-height: 1.2;
+    }
+    .player-table-new th.col-name-head,
+    .player-table-new td.cell-name {
+        min-width: 100px;
+    }
     .player-table-new th:first-child,
     .player-table-new td:first-child {
         padding-left: 12px;
@@ -53,6 +61,9 @@ require_once 'includes/header.php';
     .player-table-new th.col-team-head,
     .player-table-new td.cell-team {
         min-width: 160px;
+    }
+    .player-table-new th.col-team-head {
+        padding-left: 60px;
     }
     .player-table-new th.col-jersey,
     .player-table-new td.col-jersey {
@@ -775,7 +786,7 @@ function maskNIK($nik) {
                         <tr>
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
-                            <th>Nama</th>
+                            <th class="col-name-head">Nama</th>
                             <th class="col-team-head">Team</th>
                             <th class="col-center col-jersey">No Punggung</th>
                             <th class="col-center">Tgl Lahir</th>
@@ -787,7 +798,7 @@ function maskNIK($nik) {
                             <th class="col-center">Match</th>
                             <th class="col-center">Event</th>
                             <th class="col-center">Aksi</th>
-                            <th>Dibuat Pada</th>
+                            <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1150,7 +1161,3 @@ const SITE_URL = '<?php echo SITE_URL; ?>';
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
-
-
-
-
