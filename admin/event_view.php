@@ -85,6 +85,7 @@ if (!empty($event)) {
             $categoryStmt = $conn->prepare("SELECT sport_type AS category_name, COUNT(*) AS total_matches
                                             FROM challenges
                                             WHERE event_id = ?
+                                              AND status IN ('accepted', 'completed')
                                               AND sport_type IS NOT NULL
                                               AND sport_type <> ''
                                             GROUP BY sport_type
@@ -104,11 +105,11 @@ if (!empty($event)) {
                                             INNER JOIN (
                                                 SELECT challenger_id AS team_id
                                                 FROM challenges
-                                                WHERE event_id = ? AND sport_type = ?
+                                                WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                                                 UNION
                                                 SELECT opponent_id AS team_id
                                                 FROM challenges
-                                                WHERE event_id = ? AND sport_type = ?
+                                                WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
                                             ) participant ON participant.team_id = t.id
                                             ORDER BY t.name ASC");
                 $teamStmt->execute([$event_id, $categoryName, $event_id, $categoryName]);
@@ -366,7 +367,7 @@ body {
 
         <div class="participant-section">
             <div class="participant-title"><i class="fas fa-users"></i> Peserta (<?php echo (int) $eventParticipantTotal; ?>)</div>
-            <div class="participant-note">Daftar tim yang terdaftar berdasarkan challenge pada event ini, dikelompokkan per kategori.</div>
+            <div class="participant-note">Daftar tim yang sudah accepted/completed pada challenge event ini, dikelompokkan per kategori.</div>
 
             <?php if (!$eventDataReady): ?>
                 <div style="color:#64748b;">Data peserta belum tersedia (kolom relasi event belum aktif).</div>

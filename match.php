@@ -16,11 +16,21 @@ if ($matchId <= 0) {
 
 $requestedSource = strtolower(trim((string) ($_GET['source'] ?? '')));
 $source = $requestedSource === 'match' ? 'match' : 'challenge';
+$requestedEventId = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;
 
 // Sekarang baru require header
 require_once 'includes/header.php'; 
 
 $conn = $db->getConnection();
+
+$challengeHasEventId = false;
+$eventIdColumnCheck = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+if ($eventIdColumnCheck && $eventIdColumnCheck->num_rows > 0) {
+    $challengeHasEventId = true;
+}
+if ($eventIdColumnCheck instanceof mysqli_result) {
+    $eventIdColumnCheck->free();
+}
 
 $challengeSql = "SELECT c.id,
                         c.challenge_code AS match_code,
@@ -38,12 +48,15 @@ $challengeSql = "SELECT c.id,
                         t2.id AS team2_id,
                         t2.name AS team2_name,
                         t2.logo AS team2_logo,
-                        c.sport_type AS event_name,
+                        " . ($challengeHasEventId ? "c.event_id AS event_id," : "0 AS event_id,") . "
+                        " . ($challengeHasEventId ? "COALESCE(NULLIF(e.name, ''), c.sport_type) AS event_name," : "c.sport_type AS event_name,") . "
+                        c.sport_type AS category_name,
                         '' AS event_description
                  FROM challenges c
                  LEFT JOIN teams t1 ON c.challenger_id = t1.id
                  LEFT JOIN teams t2 ON c.opponent_id = t2.id
                  LEFT JOIN venues v ON c.venue_id = v.id
+                 " . ($challengeHasEventId ? "LEFT JOIN events e ON c.event_id = e.id" : "") . "
                  WHERE c.id = ?
                  LIMIT 1";
 
@@ -63,7 +76,9 @@ $legacySql = "SELECT m.id,
                       t2.id AS team2_id,
                       t2.name AS team2_name,
                       t2.logo AS team2_logo,
+                      m.event_id AS event_id,
                       e.name AS event_name,
+                      '' AS category_name,
                       e.description AS event_description
                FROM matches m
                LEFT JOIN teams t1 ON m.team1_id = t1.id
@@ -112,6 +127,14 @@ if ($source === 'match') {
     }
 }
 
+if ($match && $requestedEventId > 0) {
+    $matchEventId = (int)($match['event_id'] ?? 0);
+    if ($matchEventId !== $requestedEventId) {
+        $match = null;
+        $resolvedSource = '';
+    }
+}
+
 $matchNotFound = false;
 $lineups = [
     'team1' => ['half1' => [], 'half2' => []], 
@@ -157,6 +180,7 @@ $statusClass = 'status-tba';
 $matchTime = 'TBD';
 $locationLabel = 'TBA';
 $eventName = '';
+$categoryName = '';
 $matchCode = '';
 $scoreAvailable = false;
 $team1UniformLabel = 'Belum dipilih';
@@ -170,6 +194,7 @@ if (!$matchNotFound) {
     $matchTime = !empty($match['match_date']) ? date('H:i', strtotime($match['match_date'])) : 'TBD';
     $locationLabel = $match['location'] ?? ($match['venue_name'] ?? 'TBA');
     $eventName = $match['event_name'] ?? '';
+    $categoryName = $match['category_name'] ?? '';
     $matchCode = $match['match_code'] ?? '';
     $scoreAvailable = $match['score1'] !== null && $match['score2'] !== null;
     $team1UniformLabel = trim((string)($match['team1_uniform_choices'] ?? '')) ?: 'Belum dipilih';
@@ -304,6 +329,9 @@ if (!$matchNotFound) {
                 <?php if (!empty($eventName)): ?>
                     <span class="meta-chip"><i class="fas fa-trophy"></i> <?php echo htmlspecialchars($eventName ?? ''); ?></span>
                 <?php endif; ?>
+                <?php if (!empty($categoryName)): ?>
+                    <span class="meta-chip"><i class="fas fa-layer-group"></i> <?php echo htmlspecialchars($categoryName ?? ''); ?></span>
+                <?php endif; ?>
                 <?php if (!empty($matchCode)): ?>
                     <span class="meta-chip"><i class="fas fa-hashtag"></i> <?php echo htmlspecialchars($matchCode ?? ''); ?></span>
                 <?php endif; ?>
@@ -328,6 +356,9 @@ if (!$matchNotFound) {
                     <div class="match-tags">
                         <?php if (!empty($eventName)): ?>
                             <span class="match-tag event-tag"><i class="fas fa-bolt"></i> <?php echo htmlspecialchars($eventName ?? ''); ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($categoryName)): ?>
+                            <span class="match-tag code-tag"><i class="fas fa-layer-group"></i> <?php echo htmlspecialchars($categoryName ?? ''); ?></span>
                         <?php endif; ?>
                         <?php if (!empty($matchCode)): ?>
                             <span class="match-tag code-tag"><i class="fas fa-hashtag"></i> <?php echo htmlspecialchars($matchCode ?? ''); ?></span>

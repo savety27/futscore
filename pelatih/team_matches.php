@@ -159,7 +159,7 @@ try {
                             </span>
                         </td>
                         <td style="text-align: center;">
-                            <a href="../match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view" target="_blank" title="Lihat Detail Pertandingan & Lineup">
+                            <a href="../match.php?id=<?php echo $match['id']; ?>&source=challenge<?php echo ((int)($match['event_id'] ?? 0) > 0) ? '&event_id=' . (int)$match['event_id'] : ''; ?>" class="btn-view" target="_blank" title="Lihat Detail Pertandingan & Lineup">
                                 <i class="fas fa-eye"></i> Detail
                             </a>
                         </td>

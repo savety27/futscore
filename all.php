@@ -208,7 +208,7 @@ $offset = ($page - 1) * $perPage;
                                 $matchNumber = $offset + $index + 1;
                                 $isScheduled = $status === 'schedule';
                             ?>
-                            <tr class="match-row" data-match-id="<?php echo $match['id']; ?>">
+                            <tr class="match-row" data-match-id="<?php echo $match['id']; ?>" data-event-id="<?php echo (int)($match['event_id'] ?? 0); ?>">
                                 <td class="match-number" data-label="No"><?php echo $matchNumber; ?></td>
                                 <td class="match-teams-cell" data-label="Pertandingan">
                                     <div class="match-teams-info">
@@ -261,11 +261,11 @@ $offset = ($page - 1) * $perPage;
                                 </td>
                                 <td class="match-actions-cell" data-label="Aksi">
                                     <?php if ($isScheduled): ?>
-                                    <a href="match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view">
+                                    <a href="match.php?id=<?php echo $match['id']; ?>&source=challenge<?php echo ((int)($match['event_id'] ?? 0) > 0) ? '&event_id=' . (int)$match['event_id'] : ''; ?>" class="btn-view">
                                         <i class="fas fa-eye"></i> Lihat
                                     </a>
                                     <?php else: ?>
-                                    <a href="match.php?id=<?php echo $match['id']; ?>&source=challenge" class="btn-view">
+                                    <a href="match.php?id=<?php echo $match['id']; ?>&source=challenge<?php echo ((int)($match['event_id'] ?? 0) > 0) ? '&event_id=' . (int)$match['event_id'] : ''; ?>" class="btn-view">
                                         <i class="fas fa-chart-bar"></i> Laporan
                                     </a>
                                     <?php endif; ?>
@@ -384,8 +384,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const matchId = this.dataset.matchId;
+            const eventId = parseInt(this.dataset.eventId || '0', 10);
             if (matchId) {
-                window.location.href = 'match.php?id=' + matchId + '&source=challenge';
+                let targetUrl = 'match.php?id=' + matchId + '&source=challenge';
+                if (eventId > 0) {
+                    targetUrl += '&event_id=' + eventId;
+                }
+                window.location.href = targetUrl;
             }
         });
     });

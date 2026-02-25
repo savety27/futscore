@@ -248,23 +248,138 @@ function recomputeEventKls(PDO $conn, int $eventId, string $categoryName = ''): 
     if ($eventId <= 0) return;
 
     if ($categoryName !== '') {
-        $rankStmt = $conn->prepare("SELECT id
+        $rankStmt = $conn->prepare("SELECT id, team_id, points, sg, gm, red_cards, yellow_cards, green_cards
                                     FROM event_team_values
                                     WHERE event_id = ? AND sport_type = ?
-                                    ORDER BY points DESC, sg DESC, gm DESC, id ASC");
+                                    ORDER BY points DESC, id ASC");
         $rankStmt->execute([$eventId, $categoryName]);
     } else {
-        $rankStmt = $conn->prepare("SELECT id
+        $rankStmt = $conn->prepare("SELECT id, team_id, points, sg, gm, red_cards, yellow_cards, green_cards
                                     FROM event_team_values
                                     WHERE event_id = ?
-                                    ORDER BY points DESC, sg DESC, gm DESC, id ASC");
+                                    ORDER BY points DESC, id ASC");
         $rankStmt->execute([$eventId]);
     }
     $rows = $rankStmt->fetchAll(PDO::FETCH_ASSOC);
+    if (empty($rows)) return;
+
+    $rowsByPoints = [];
+    foreach ($rows as $row) {
+        $pts = (int)($row['points'] ?? 0);
+        if (!isset($rowsByPoints[$pts])) $rowsByPoints[$pts] = [];
+        $rowsByPoints[$pts][] = $row;
+    }
+    krsort($rowsByPoints, SORT_NUMERIC);
+
+    $buildH2H = static function(array $groupRows) use ($conn, $eventId, $categoryName): array {
+        $teamIds = [];
+        foreach ($groupRows as $r) {
+            $tid = (int)($r['team_id'] ?? 0);
+            if ($tid > 0) $teamIds[$tid] = true;
+        }
+        $teamIds = array_values(array_map('intval', array_keys($teamIds)));
+        if (count($teamIds) < 2) return [];
+
+        $in = implode(',', array_fill(0, count($teamIds), '?'));
+        if ($categoryName !== '') {
+            $sql = "SELECT challenger_id, opponent_id, challenger_score, opponent_score
+                    FROM challenges
+                    WHERE event_id = ?
+                      AND sport_type = ?
+                      AND status IN ('accepted', 'completed')
+                      AND challenger_score IS NOT NULL
+                      AND opponent_score IS NOT NULL
+                      AND challenger_id IN ($in)
+                      AND opponent_id IN ($in)";
+            $params = array_merge([$eventId, $categoryName], $teamIds, $teamIds);
+        } else {
+            $sql = "SELECT challenger_id, opponent_id, challenger_score, opponent_score
+                    FROM challenges
+                    WHERE event_id = ?
+                      AND status IN ('accepted', 'completed')
+                      AND challenger_score IS NOT NULL
+                      AND opponent_score IS NOT NULL
+                      AND challenger_id IN ($in)
+                      AND opponent_id IN ($in)";
+            $params = array_merge([$eventId], $teamIds, $teamIds);
+        }
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $h2h = [];
+        foreach ($teamIds as $tid) {
+            $h2h[$tid] = ['points' => 0, 'sg' => 0, 'gm' => 0];
+        }
+        foreach ($matches as $m) {
+            $cId = (int)($m['challenger_id'] ?? 0);
+            $oId = (int)($m['opponent_id'] ?? 0);
+            if (!isset($h2h[$cId]) || !isset($h2h[$oId])) continue;
+
+            $cScore = (int)($m['challenger_score'] ?? 0);
+            $oScore = (int)($m['opponent_score'] ?? 0);
+
+            $h2h[$cId]['gm'] += $cScore;
+            $h2h[$oId]['gm'] += $oScore;
+            $h2h[$cId]['sg'] += ($cScore - $oScore);
+            $h2h[$oId]['sg'] += ($oScore - $cScore);
+
+            if ($cScore > $oScore) {
+                $h2h[$cId]['points'] += 3;
+            } elseif ($cScore < $oScore) {
+                $h2h[$oId]['points'] += 3;
+            } else {
+                $h2h[$cId]['points'] += 1;
+                $h2h[$oId]['points'] += 1;
+            }
+        }
+        return $h2h;
+    };
+
+    $sortedRows = [];
+    foreach ($rowsByPoints as $groupRows) {
+        $h2h = $buildH2H($groupRows);
+        usort($groupRows, static function(array $a, array $b) use ($h2h): int {
+            $aTeam = (int)($a['team_id'] ?? 0);
+            $bTeam = (int)($b['team_id'] ?? 0);
+            $aH = $h2h[$aTeam] ?? ['points' => 0, 'sg' => 0, 'gm' => 0];
+            $bH = $h2h[$bTeam] ?? ['points' => 0, 'sg' => 0, 'gm' => 0];
+
+            if ($aH['points'] !== $bH['points']) return $bH['points'] <=> $aH['points'];
+            if ($aH['sg'] !== $bH['sg']) return $bH['sg'] <=> $aH['sg'];
+            if ($aH['gm'] !== $bH['gm']) return $bH['gm'] <=> $aH['gm'];
+
+            $aSg = (int)($a['sg'] ?? 0);
+            $bSg = (int)($b['sg'] ?? 0);
+            if ($aSg !== $bSg) return $bSg <=> $aSg;
+
+            $aGm = (int)($a['gm'] ?? 0);
+            $bGm = (int)($b['gm'] ?? 0);
+            if ($aGm !== $bGm) return $bGm <=> $aGm;
+
+            $aRed = (int)($a['red_cards'] ?? 0);
+            $bRed = (int)($b['red_cards'] ?? 0);
+            if ($aRed !== $bRed) return $aRed <=> $bRed;
+
+            $aYellow = (int)($a['yellow_cards'] ?? 0);
+            $bYellow = (int)($b['yellow_cards'] ?? 0);
+            if ($aYellow !== $bYellow) return $aYellow <=> $bYellow;
+
+            $aGreen = (int)($a['green_cards'] ?? 0);
+            $bGreen = (int)($b['green_cards'] ?? 0);
+            if ($aGreen !== $bGreen) return $bGreen <=> $aGreen;
+
+            return $aTeam <=> $bTeam;
+        });
+        foreach ($groupRows as $row) $sortedRows[] = $row;
+    }
 
     $updateStmt = $conn->prepare("UPDATE event_team_values SET kls = ? WHERE id = ?");
-    foreach ($rows as $row) {
-        $updateStmt->execute([0, (int)$row['id']]);
+    $rank = 1;
+    foreach ($sortedRows as $row) {
+        $updateStmt->execute([$rank, (int)$row['id']]);
+        $rank++;
     }
 }
 
