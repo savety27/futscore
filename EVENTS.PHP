@@ -1734,10 +1734,16 @@ if ($eventId > 0 && !empty($event)) {
                                                                 <td><?php echo $idx + 1; ?></td>
                                                                 <td>
                                                                     <div class="event-team-row">
-                                                                        <img src="<?php echo htmlspecialchars(resolveTeamLogoUrlPublic($team['logo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                                                                            alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
-                                                                            class="event-team-logo"
-                                                                            onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                                        <?php $teamLogoResolved = resolveTeamLogoUrlPublic($team['logo'] ?? ''); ?>
+                                                                        <?php if (!empty($teamLogoResolved)): ?>
+                                                                            <img src="<?php echo htmlspecialchars($teamLogoResolved, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                                alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
+                                                                                class="event-team-logo"
+                                                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                                            <span class="event-team-logo-placeholder" style="display:none; width: 30px; height: 30px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.8rem;"></i></span>
+                                                                        <?php else: ?>
+                                                                            <span class="event-team-logo-placeholder" style="display:inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.8rem;"></i></span>
+                                                                        <?php endif; ?>
                                                                         <span><?php echo htmlspecialchars($team['name'] ?? '-'); ?></span>
                                                                     </div>
                                                                 </td>
@@ -1835,7 +1841,13 @@ if ($eventId > 0 && !empty($event)) {
                                                         <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                                                         <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
                                                         <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
-                                                            <img src="<?php echo htmlspecialchars(resolveTeamLogoUrlPublic($scorer['team_logo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                            <?php $scorerTeamLogoResolved = resolveTeamLogoUrlPublic($scorer['team_logo'] ?? ''); ?>
+                                                            <?php if (!empty($scorerTeamLogoResolved)): ?>
+                                                                <img src="<?php echo htmlspecialchars($scorerTeamLogoResolved, ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                                <span class="top-scorer-team-logo-placeholder" style="display:none; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center; margin-right: 5px;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.6rem;"></i></span>
+                                                            <?php else: ?>
+                                                                <span class="top-scorer-team-logo-placeholder" style="display:inline-flex; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center; margin-right: 5px;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.6rem;"></i></span>
+                                                            <?php endif; ?>
                                                             <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
                                                         </div>
                                                         <div class="top-scorer-goals">
@@ -2037,7 +2049,13 @@ if ($eventId > 0 && !empty($event)) {
                                                 <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                                                 <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
                                                 <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
-                                                    <img src="<?php echo htmlspecialchars(resolveTeamLogoUrlPublic($scorer['team_logo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                                    <?php $scorerTeamLogoResolved = resolveTeamLogoUrlPublic($scorer['team_logo'] ?? ''); ?>
+                                                            <?php if (!empty($scorerTeamLogoResolved)): ?>
+                                                                <img src="<?php echo htmlspecialchars($scorerTeamLogoResolved, ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="top-scorer-team-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                                                <span class="top-scorer-team-logo-placeholder" style="display:none; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center; margin-right: 5px;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.6rem;"></i></span>
+                                                            <?php else: ?>
+                                                                <span class="top-scorer-team-logo-placeholder" style="display:inline-flex; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center; margin-right: 5px;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.6rem;"></i></span>
+                                                            <?php endif; ?>
                                                     <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo htmlspecialchars($scorer['team_name']); ?></span>
                                                 </div>
                                                 <div class="top-scorer-goals">
