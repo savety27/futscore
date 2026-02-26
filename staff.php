@@ -88,6 +88,81 @@ $stmt->execute();
 $result = $stmt->get_result();
 $staffs = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
+$staff_match_counts = [];
+$staff_event_stats = [];
+if ($has_match_staff_assignments_table && !empty($staffs)) {
+    $staff_ids = array_map('intval', array_column($staffs, 'id'));
+    if (!empty($staff_ids)) {
+        $placeholders = implode(',', array_fill(0, count($staff_ids), '?'));
+
+        $sql_match_counts = "
+            SELECT msa.staff_id, COUNT(DISTINCT msa.match_id) AS total_match
+            FROM match_staff_assignments msa
+            INNER JOIN challenges c ON msa.match_id = c.id
+            WHERE msa.staff_id IN ($placeholders)
+            GROUP BY msa.staff_id
+        ";
+        $stmt_match_counts = $conn->prepare($sql_match_counts);
+        if ($stmt_match_counts) {
+            $types = str_repeat('i', count($staff_ids));
+            $stmt_match_counts->bind_param($types, ...$staff_ids);
+            $stmt_match_counts->execute();
+            $result_match_counts = $stmt_match_counts->get_result();
+            while ($row = $result_match_counts->fetch_assoc()) {
+                $staff_match_counts[(int)$row['staff_id']] = (int)$row['total_match'];
+            }
+            $stmt_match_counts->close();
+        }
+
+        if ($has_challenge_event_id) {
+            $sql_event_counts = "
+                SELECT
+                    msa.staff_id,
+                    TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,
+                    COUNT(DISTINCT msa.match_id) AS total_match_in_event
+                FROM match_staff_assignments msa
+                INNER JOIN challenges c ON msa.match_id = c.id
+                LEFT JOIN events e ON c.event_id = e.id
+                WHERE msa.staff_id IN ($placeholders)
+                GROUP BY msa.staff_id, event_name
+                HAVING event_name IS NOT NULL AND event_name <> ''
+            ";
+        } else {
+            $sql_event_counts = "
+                SELECT
+                    msa.staff_id,
+                    TRIM(c.sport_type) AS event_name,
+                    COUNT(DISTINCT msa.match_id) AS total_match_in_event
+                FROM match_staff_assignments msa
+                INNER JOIN challenges c ON msa.match_id = c.id
+                WHERE msa.staff_id IN ($placeholders)
+                GROUP BY msa.staff_id, c.sport_type
+                HAVING event_name IS NOT NULL AND event_name <> ''
+            ";
+        }
+
+        $stmt_event_counts = $conn->prepare($sql_event_counts);
+        if ($stmt_event_counts) {
+            $types = str_repeat('i', count($staff_ids));
+            $stmt_event_counts->bind_param($types, ...$staff_ids);
+            $stmt_event_counts->execute();
+            $result_event_counts = $stmt_event_counts->get_result();
+            while ($row = $result_event_counts->fetch_assoc()) {
+                $sid = (int)$row['staff_id'];
+                $event_name = trim((string)($row['event_name'] ?? ''));
+                if ($event_name === '') {
+                    continue;
+                }
+                if (!isset($staff_event_stats[$sid])) {
+                    $staff_event_stats[$sid] = [];
+                }
+                $staff_event_stats[$sid][$event_name] = (int)$row['total_match_in_event'];
+            }
+            $stmt_event_counts->close();
+        }
+    }
+}
+
 // Helper Functions
 function calculateStaffAge($birth_date) {
     if (empty($birth_date) || $birth_date == '0000-00-00') return '-';
@@ -443,74 +518,69 @@ $pageTitle = "Staff List";
 }
 
 /* Events & Matches Count */
-.col-events,
-.col-matches {
+.col-events, .col-matches {
     text-align: center;
-    width: 110px;
+    width: 70px;
 }
 
 .match-count-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 4px 10px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 12px;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
 }
 
-.event-match-count i {
+.match-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.event-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.event-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.staff-history-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.staff-history-btn:hover {
+    background: #bfdbfe;
+    transform: translateY(-1px);
+}
+
+.match-count-badge i,
+.event-count-badge i {
     margin-right: 4px;
     font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #bfdbfe;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
-}
-.event-popover-list {
-    list-style: none;
-    margin: 0;
-    padding: 6px 0;
-    max-height: calc(280px - 34px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-}
-.event-popover-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 6px 12px;
-}
-.event-popover-item + .event-popover-item {
-    border-top: 1px solid rgba(148, 163, 184, 0.2);
-}
-.event-popover-name {
-    color: #f8fafc;
-    min-width: 0;
-    flex: 1 1 auto;
-    word-break: break-word;
-}
-.event-popover-meta {
-    font-size: 11px;
-    color: #cbd5e1;
-    white-space: nowrap;
-}
-.event-popover::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: #1e293b;
-}
-.event-count-badge-wrap:hover .event-popover,
-.event-count-badge-wrap.pop-open .event-popover {
-    display: block;
 }
 
 /* Created At */
@@ -986,15 +1056,6 @@ $pageTitle = "Staff List";
     .search-container {
         max-width: 100%;
     }
-
-    .event-popover {
-        width: min(320px, calc(100vw - 24px));
-        max-height: 45vh;
-    }
-
-    .event-popover-list {
-        max-height: calc(45vh - 34px);
-    }
     
     .pagination-info {
         flex-direction: column;
@@ -1158,9 +1219,6 @@ $pageTitle = "Staff List";
                         <span class="summary-value"><?php echo number_format($total_records); ?></span>
                     </div>
                 </div>
-                <div style="margin-top: 12px; color: #64748b; font-size: 12px; line-height: 1.5;">
-                    Statistik Team Match/Team Event dihitung dari riwayat pertandingan team, bukan partisipasi individual staf.
-                </div>
             </div>
 
             <?php if (!$has_match_staff_assignments_table): ?>
@@ -1181,13 +1239,16 @@ $pageTitle = "Staff List";
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th class="col-events">Event</th>
+                            <th class="col-matches">Match</th>
+                            <th style="text-align:center; width:70px;">History</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($staffs)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">
+                                <td colspan="11" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada staf ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1299,6 +1360,36 @@ $pageTitle = "Staff List";
                                             <i class="fas fa-certificate"></i>
                                             <span><?php echo $s['certificate_count']; ?></span>
                                         </div>
+                                    <?php else: ?>
+                                        <span class="muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td class="col-events" data-label="Event">
+                                    <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>"
+                                          title="<?php echo htmlspecialchars(implode(', ', $event_full_info)); ?>">
+                                        <i class="fas fa-calendar-check"></i><?php echo $event_count; ?>
+                                    </span>
+                                </td>
+
+                                <td class="col-matches" data-label="Match">
+                                    <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
+                                        <i class="fas fa-futbol"></i><?php echo $match_count; ?>
+                                    </span>
+                                </td>
+
+                                <td style="text-align:center;" data-label="History">
+                                    <?php if ($has_match_staff_assignments_table): ?>
+                                        <button
+                                            type="button"
+                                            class="staff-history-btn btn-staff-history"
+                                            data-staff-id="<?php echo (int)$s['id']; ?>"
+                                            data-staff-name="<?php echo htmlspecialchars($s['name'] ?? '', ENT_QUOTES); ?>"
+                                            data-team-name="<?php echo htmlspecialchars($s['team_name'] ?? '-', ENT_QUOTES); ?>"
+                                            title="Lihat riwayat staff"
+                                        >
+                                            <i class="fas fa-list"></i>
+                                        </button>
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
@@ -1798,77 +1889,6 @@ if (staffHistoryModal) {
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
-<script>
-// Tap-to-expand popover for event count badges (mobile-friendly)
-(function () {
-    function syncAria(wrap, expanded) {
-        var trigger = wrap.querySelector('.event-popover-trigger');
-        if (trigger) {
-            trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        }
-    }
-
-    function closeWrap(wrap) {
-        if (!wrap) return;
-        wrap.classList.remove('pop-open');
-        syncAria(wrap, false);
-    }
-
-    function closeAll(exceptWrap) {
-        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
-            if (el !== exceptWrap) {
-                closeWrap(el);
-            }
-        });
-    }
-
-    function toggleWrap(wrap) {
-        if (!wrap) return;
-        var shouldOpen = !wrap.classList.contains('pop-open');
-        closeAll(wrap);
-        if (shouldOpen) {
-            wrap.classList.add('pop-open');
-            syncAria(wrap, true);
-        } else {
-            closeWrap(wrap);
-        }
-    }
-
-    document.querySelectorAll('.event-popover-trigger').forEach(function (trigger) {
-        trigger.setAttribute('aria-expanded', 'false');
-    });
-
-    document.addEventListener('click', function (e) {
-        var trigger = e.target.closest('.event-popover-trigger');
-        if (trigger) {
-            toggleWrap(trigger.closest('.event-count-badge-wrap'));
-            return;
-        }
-
-        if (!e.target.closest('.event-count-badge-wrap')) {
-            closeAll(null);
-        }
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            closeAll(null);
-            return;
-        }
-
-        if (e.key !== 'Enter' && e.key !== ' ') {
-            return;
-        }
-
-        var trigger = e.target.closest('.event-popover-trigger');
-        if (!trigger) {
-            return;
-        }
-        e.preventDefault();
-        toggleWrap(trigger.closest('.event-count-badge-wrap'));
-    });
-})();
-</script>
 
 </body>
 </html>
