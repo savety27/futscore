@@ -581,6 +581,51 @@ $pageTitle = "Staff List";
     border-color: #cbd5e1;
 }
 
+/* Popover for event count badge */
+.event-count-badge-wrap {
+    position: relative;
+    display: inline-block;
+}
+.event-count-badge {
+    cursor: pointer;
+    user-select: none;
+}
+.event-popover {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.6;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    pointer-events: none;
+    min-width: 160px;
+    max-width: 280px;
+    white-space: pre-line;
+    word-break: break-word;
+    text-align: left;
+}
+.event-popover::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+.event-count-badge-wrap:hover .event-popover,
+.event-count-badge-wrap.pop-open .event-popover {
+    display: block;
+}
+
 /* Created At */
 .col-created {
     color: #718096;
@@ -1094,6 +1139,9 @@ $pageTitle = "Staff List";
                         <span class="summary-value"><?php echo number_format($total_records); ?></span>
                     </div>
                 </div>
+                <div style="margin-top: 12px; color: #64748b; font-size: 12px; line-height: 1.5;">
+                    Statistik Team Match/Team Event dihitung dari riwayat pertandingan team, bukan partisipasi individual staf.
+                </div>
             </div>
 
             <div class="table-container-new">
@@ -1107,8 +1155,8 @@ $pageTitle = "Staff List";
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
-                            <th class="col-matches">Match</th>
-                            <th class="col-events">Event</th>
+                            <th class="col-matches">Team Match</th>
+                            <th class="col-events">Team Event</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
@@ -1226,7 +1274,7 @@ $pageTitle = "Staff List";
                                 </td>
 
                                 <!-- Kolom Match -->
-                                <td class="col-matches" data-label="Match">
+                                <td class="col-matches" data-label="Team Match">
                                     <?php $match_count = $staff_match_counts[(int) $s['id']] ?? 0; ?>
                                     <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
                                         <i class="fas fa-futbol"></i> <?php echo $match_count; ?>
@@ -1234,18 +1282,22 @@ $pageTitle = "Staff List";
                                 </td>
 
                                 <!-- Kolom Event -->
-                                <td class="col-events" data-label="Event">
+                                <td class="col-events" data-label="Team Event">
                                     <?php
                                     $event_stats = $staff_event_stats[(int) $s['id']] ?? [];
                                     $event_count = count($event_stats);
                                     $event_full_info = [];
                                     foreach ($event_stats as $entry) {
-                                        $event_full_info[] = $entry['name'] . ' (' . $entry['count'] . ' match)';
+                                        $event_full_info[] = $entry['name'] . ' (' . $entry['count'] . ' team match)';
                                     }
                                     ?>
-                                    <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>"
-                                          title="<?php echo htmlspecialchars(implode(', ', $event_full_info)); ?>">
-                                        <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
+                                    <span class="event-count-badge-wrap">
+                                        <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>">
+                                            <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
+                                        </span>
+                                        <?php if ($event_count > 0): ?>
+                                        <div class="event-popover"><?php echo htmlspecialchars(implode("\n", $event_full_info)); ?></div>
+                                        <?php endif; ?>
                                     </span>
                                 </td>
                                 
@@ -1648,6 +1700,23 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script>
+// Tap-to-expand popover for event count badges (mobile-friendly)
+(function () {
+    document.addEventListener('click', function (e) {
+        var wrap = e.target.closest('.event-count-badge-wrap');
+        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
+            if (el !== wrap) el.classList.remove('pop-open');
+        });
+        if (wrap) {
+            var badge = wrap.querySelector('.event-count-badge');
+            if (badge && e.target.closest('.event-count-badge')) {
+                wrap.classList.toggle('pop-open');
+            }
+        }
+    });
+})();
+</script>
 
 </body>
 </html>
