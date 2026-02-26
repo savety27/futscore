@@ -91,6 +91,16 @@ try {
 }
 ?>
 
+<div class="page-header">
+    <div class="page-title-wrap">
+        <h1 class="page-title"><i class="fas fa-user-tie"></i> Direktori Staf Team</h1>
+        <p class="page-subtitle">Kelola data staf, cek status aktif, dan lihat sertifikat tiap anggota tim.</p>
+    </div>
+    <div class="page-summary">
+        <span class="summary-pill"><i class="fas fa-users-cog"></i> <?php echo (int)$total_data; ?> Staf</span>
+    </div>
+</div>
+
 <!-- Modal untuk menampilkan sertifikat -->
 <div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
     <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; position: relative;">
@@ -118,7 +128,7 @@ try {
     <?php endif; ?>
     
     <div class="section-header">
-        <h2 class="section-title">Staf Team</h2>
+        <h2 class="section-title">Daftar Staf Team</h2>
         <a href="staff_form.php" class="btn-add">
             <i class="fas fa-plus"></i> Tambah Staf Baru
         </a>
@@ -321,6 +331,64 @@ document.addEventListener('DOMContentLoaded', function() {
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
 }
 
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.page-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.15;
+}
+
+.page-title i {
+    color: var(--secondary);
+}
+
+.page-subtitle {
+    margin: 0;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.summary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef5ff;
+    color: var(--primary);
+    border: 1px solid #dbeafe;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.section-header {
+    margin-bottom: 16px;
+}
+
 /* Styling untuk modal */
 .modal-content {
     animation: fadeIn 0.3s ease-out;
@@ -408,6 +476,17 @@ document.addEventListener('DOMContentLoaded', function() {
 .btn-add:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .page-title {
+        font-size: 23px;
+    }
 }
 
 /* Success and Error Messages */

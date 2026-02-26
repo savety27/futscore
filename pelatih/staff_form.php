@@ -297,6 +297,23 @@ if ($is_edit) {
             background: #5a6268;
         }
 
+        /* Match back-button style with player_form.php */
+        .btn-back-model {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #f8f9fa;
+            color: var(--dark);
+            border: 2px solid #e1e5eb;
+            box-shadow: none;
+        }
+
+        .btn-back-model:hover {
+            transform: none;
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+
         .btn-danger {
             background: var(--danger);
             color: white;
@@ -445,7 +462,7 @@ if ($is_edit) {
             <i class="fas <?php echo $is_edit ? 'fa-edit' : 'fa-plus-circle'; ?>"></i>
             <?php echo $is_edit ? 'Edit Staf Team' : 'Tambah Staf Team Baru'; ?>
         </h2>
-        <a href="team_staff.php" class="btn btn-secondary">
+        <a href="team_staff.php" class="btn btn-secondary btn-back-model">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
     </div>
@@ -687,7 +704,7 @@ if ($is_edit) {
         
         <!-- Form Actions -->
         <div class="form-actions">
-            <a href="team_staff.php" class="btn btn-secondary">
+            <a href="team_staff.php" class="btn btn-secondary btn-back-model">
                 <i class="fas fa-times"></i> Batal
             </a>
             <button type="submit" class="btn btn-primary">

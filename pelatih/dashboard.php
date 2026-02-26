@@ -54,7 +54,7 @@ if ($team_id) {
             LEFT JOIN venues v ON c.venue_id = v.id
             WHERE c.status = 'accepted' 
               AND (c.challenger_id = ? OR c.opponent_id = ?)
-              AND c.challenge_date >= NOW()
+              AND DATE(c.challenge_date) > CURDATE()
             ORDER BY c.challenge_date ASC
             LIMIT 1
         ");
@@ -95,7 +95,7 @@ if ($team_id) {
         background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
         color: var(--premium-text);
         font-family: var(--font-outfit);
-        padding: 40px !important;
+        padding: 30px !important;
     }
 
     .dashboard-container {
@@ -405,6 +405,10 @@ if ($team_id) {
     .d-5 { animation-delay: 0.5s; }
 
     @media (max-width: 992px) {
+        .main {
+            padding: 20px 15px !important;
+        }
+
         .premium-card:hover,
         .premium-card:focus-within {
             transform: translateY(-4px) scale(1.006);
@@ -608,3 +612,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
+

@@ -35,9 +35,14 @@ $offset = ($page - 1) * $limit;
 // Ambil semua tipe olahraga yang tersedia untuk filter
 $sport_types = [];
 try {
-    $sport_query = "SELECT DISTINCT sport_type FROM challenges WHERE sport_type IS NOT NULL AND sport_type != '' ORDER BY sport_type";
+    $sport_query = "SELECT DISTINCT sport_type 
+                    FROM challenges 
+                    WHERE sport_type IS NOT NULL 
+                      AND sport_type != '' 
+                      AND (challenger_id = ? OR opponent_id = ?)
+                    ORDER BY sport_type";
     $sport_stmt = $conn->prepare($sport_query);
-    $sport_stmt->execute();
+    $sport_stmt->execute([$my_team_id, $my_team_id]);
     $sport_types = $sport_stmt->fetchAll(PDO::FETCH_COLUMN);
 } catch (PDOException $e) {
     // Jika error, sport_types akan tetap array kosong
@@ -55,9 +60,11 @@ $base_query = "SELECT
     LEFT JOIN teams t1 ON c.challenger_id = t1.id
     LEFT JOIN teams t2 ON c.opponent_id = t2.id
     LEFT JOIN venues v ON c.venue_id = v.id
-    WHERE 1=1";
+    WHERE (c.challenger_id = ? OR c.opponent_id = ?)";
 
-$count_query = "SELECT COUNT(*) as total FROM challenges c WHERE 1=1";
+$count_query = "SELECT COUNT(*) as total 
+                FROM challenges c 
+                WHERE (c.challenger_id = ? OR c.opponent_id = ?)";
 
 // Tambahkan kondisi untuk search
 if (!empty($search)) {
@@ -89,77 +96,35 @@ $total_pages = 1;
 $challenges = [];
 
 try {
-    // Hitung total data dengan filter
-    if (!empty($search) && !empty($sport_filter)) {
-        // Keduanya: search dan filter olahraga
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([
-            $search_term, $search_term, $search_term, 
+    $filter_params = [$my_team_id, $my_team_id];
+    if (!empty($search)) {
+        $filter_params = array_merge($filter_params, [
             $search_term, $search_term, $search_term,
-            $sport_filter
-        ]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } elseif (!empty($search)) {
-        // Hanya search
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([
-            $search_term, $search_term, $search_term, 
             $search_term, $search_term, $search_term
         ]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } elseif (!empty($sport_filter)) {
-        // Hanya filter olahraga
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$sport_filter]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } else {
-        // Tidak ada filter
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
     }
+    if (!empty($sport_filter)) {
+        $filter_params[] = $sport_filter;
+    }
+
+    // Hitung total data dengan filter
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($filter_params);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_data = $result['total'];
     
     $total_pages = ceil($total_data / $limit);
     
     // Query data dengan pagination
     $query = $base_query . " LIMIT ? OFFSET ?";
     $stmt = $conn->prepare($query);
-    
-    if (!empty($search) && !empty($sport_filter)) {
-        // Keduanya: search dan filter olahraga
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $search_term);
-        $stmt->bindValue(6, $search_term);
-        $stmt->bindValue(7, $sport_filter);
-        $stmt->bindValue(8, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(9, $offset, PDO::PARAM_INT);
-    } elseif (!empty($search)) {
-        // Hanya search
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $search_term);
-        $stmt->bindValue(6, $search_term);
-        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
-    } elseif (!empty($sport_filter)) {
-        // Hanya filter olahraga
-        $stmt->bindValue(1, $sport_filter);
-        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
-    } else {
-        // Tidak ada filter
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+
+    $bind_index = 1;
+    foreach ($filter_params as $param) {
+        $stmt->bindValue($bind_index++, $param);
     }
+    $stmt->bindValue($bind_index++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($bind_index, $offset, PDO::PARAM_INT);
     
     $stmt->execute();
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -233,6 +198,64 @@ try {
 <style>
 .main {
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.page-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.15;
+}
+
+.page-title i {
+    color: var(--secondary);
+}
+
+.page-subtitle {
+    margin: 0;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.summary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef5ff;
+    color: var(--primary);
+    border: 1px solid #dbeafe;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.section-header {
+    margin-bottom: 16px;
 }
 
 .filter-container {
@@ -490,6 +513,15 @@ try {
 }
 
 @media (max-width: 768px) {
+    .page-header {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .page-title {
+        font-size: 23px;
+    }
+
     .data-table tbody tr:hover,
     .data-table tbody tr:focus-within {
         transform: translateY(-1px);
@@ -507,9 +539,19 @@ try {
 }
 </style>
 
+<div class="page-header">
+    <div class="page-title-wrap">
+        <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Jadwal Pertandingan</h1>
+        <p class="page-subtitle">Pantau jadwal, hasil, status challenge, dan atur lineup untuk pertandingan aktif tim Anda.</p>
+    </div>
+    <div class="page-summary">
+        <span class="summary-pill"><i class="fas fa-futbol"></i> <?php echo (int)$total_data; ?> Pertandingan</span>
+    </div>
+</div>
+
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Jadwal Pertandingan</h2>
+        <h2 class="section-title">Daftar Jadwal Pertandingan</h2>
         <!-- Read Only: No Add Button -->
     </div>
 

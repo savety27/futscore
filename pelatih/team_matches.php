@@ -28,12 +28,26 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
+// Soft-compat check: some deployments may not have challenges.event_id yet.
+$can_join_event_name = false;
+try {
+    $has_event_id = $conn->query("SHOW COLUMNS FROM `challenges` LIKE 'event_id'")->fetch(PDO::FETCH_ASSOC);
+    $has_events_table = $conn->query("SHOW TABLES LIKE 'events'")->fetch(PDO::FETCH_ASSOC);
+    $can_join_event_name = !empty($has_event_id) && !empty($has_events_table);
+} catch (Throwable $e) {
+    $can_join_event_name = false;
+}
+
 // Query Matches (from challenges table)
+$event_select = $can_join_event_name ? "e.name as event_name," : "NULL as event_name,";
+$event_join = $can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "";
 $base_query = "SELECT c.*, 
+    {$event_select}
     t1.name as team1_name, t1.logo as team1_logo, 
     t2.name as team2_name, t2.logo as team2_logo,
     v.name as venue_name
     FROM challenges c
+    {$event_join}
     LEFT JOIN teams t1 ON c.challenger_id = t1.id
     LEFT JOIN teams t2 ON c.opponent_id = t2.id
     LEFT JOIN venues v ON c.venue_id = v.id
@@ -87,7 +101,7 @@ try {
                 <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Riwayat Pertandingan</span></h2>
             </div>
         </div>
-        <a href="team.php" class="btn-secondary">
+        <a href="team.php" class="btn-secondary btn-back-refined">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
         </a>
     </div>
@@ -104,6 +118,7 @@ try {
                     <tr>
                         <th>Tanggal</th>
                         <th>Event</th>
+                        <th>Kategori</th>
                         <th>Lawan</th>
                         <th style="text-align: center;">Hasil</th>
                         <th style="text-align: center;">Status</th>
@@ -134,6 +149,9 @@ try {
                         <td class="date-cell">
                              <div><?php echo date('d M Y', strtotime($match['challenge_date'])); ?></div>
                              <small style="color: var(--gray);"><?php echo date('H:i', strtotime($match['challenge_date'])); ?></small>
+                        </td>
+                        <td>
+                            <?php echo htmlspecialchars($match['event_name'] ?? '-'); ?>
                         </td>
                         <td>
                             <?php echo htmlspecialchars($match['sport_type'] ?? '-'); ?>
@@ -199,6 +217,22 @@ try {
 .empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
 .btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
 .btn-secondary:hover { background: #d5d5d5; color: #000; }
+.btn-back-refined {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(10, 36, 99, 0.08);
+}
+.btn-back-refined:hover {
+    background: #f2f6fc;
+    color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.12);
+}
 
 .data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; }
 .data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }

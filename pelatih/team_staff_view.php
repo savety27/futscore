@@ -127,7 +127,7 @@ try {
                 <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Staf</span></h2>
             </div>
         </div>
-        <a href="team.php" class="btn-secondary">
+        <a href="team.php" class="btn-secondary btn-back-refined">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
         </a>
     </div>
@@ -280,6 +280,22 @@ document.addEventListener('DOMContentLoaded', function() {
 .empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
 .btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
 .btn-secondary:hover { background: #d5d5d5; color: #000; }
+.btn-back-refined {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(10, 36, 99, 0.08);
+}
+.btn-back-refined:hover {
+    background: #f2f6fc;
+    color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.12);
+}
 .data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; }
 .data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }
 .data-table th { padding: 15px 12px; text-align: left; font-weight: 600; color: white; border: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
