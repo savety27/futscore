@@ -77,6 +77,109 @@ $stmt->execute();
 $result = $stmt->get_result();
 $staffs = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
+$has_challenge_event_id = false;
+$check_event_id_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+if ($check_event_id_col && $check_event_id_col->num_rows > 0) {
+    $has_challenge_event_id = true;
+}
+
+// Preload jumlah match & event berdasarkan team_id staff yang tampil di halaman ini.
+$staff_match_counts = [];
+$staff_event_stats = [];
+if (!empty($staffs)) {
+    $staff_team_map = [];
+    $team_ids = [];
+
+    foreach ($staffs as $staff_row) {
+        $staff_id = (int) ($staff_row['id'] ?? 0);
+        if ($staff_id <= 0) {
+            continue;
+        }
+
+        $team_id = (int) ($staff_row['team_id'] ?? 0);
+        $staff_team_map[$staff_id] = $team_id;
+        $staff_match_counts[$staff_id] = 0;
+        $staff_event_stats[$staff_id] = [];
+
+        if ($team_id > 0) {
+            $team_ids[$team_id] = $team_id;
+        }
+    }
+
+    if (!empty($team_ids)) {
+        $team_ids = array_values($team_ids);
+        $placeholders = implode(',', array_fill(0, count($team_ids), '?'));
+        $types = str_repeat('i', count($team_ids));
+
+        $team_match_counts = [];
+        $sql_match_counts = "
+            SELECT l.team_id, COUNT(DISTINCT l.match_id) AS total_match
+            FROM lineups l
+            INNER JOIN challenges c ON l.match_id = c.id
+            WHERE l.team_id IN ($placeholders)
+            GROUP BY l.team_id
+        ";
+        $stmt_match_counts = $conn->prepare($sql_match_counts);
+        if ($stmt_match_counts) {
+            $stmt_match_counts->bind_param($types, ...$team_ids);
+            $stmt_match_counts->execute();
+            $result_match_counts = $stmt_match_counts->get_result();
+            while ($row = $result_match_counts->fetch_assoc()) {
+                $team_match_counts[(int) $row['team_id']] = (int) $row['total_match'];
+            }
+            $stmt_match_counts->close();
+        }
+
+        $team_event_stats = [];
+        if ($has_challenge_event_id) {
+            $sql_event_counts = "
+                SELECT
+                    l.team_id,
+                    e.id AS event_id,
+                    TRIM(e.name) AS event_name,
+                    COUNT(DISTINCT l.match_id) AS total_match_in_event
+                FROM lineups l
+                INNER JOIN challenges c ON l.match_id = c.id
+                INNER JOIN events e ON c.event_id = e.id
+                WHERE l.team_id IN ($placeholders)
+                  AND e.name IS NOT NULL
+                  AND TRIM(e.name) <> ''
+                GROUP BY l.team_id, e.id
+            ";
+            $stmt_event_counts = $conn->prepare($sql_event_counts);
+            if ($stmt_event_counts) {
+                $stmt_event_counts->bind_param($types, ...$team_ids);
+                $stmt_event_counts->execute();
+                $result_event_counts = $stmt_event_counts->get_result();
+                while ($row = $result_event_counts->fetch_assoc()) {
+                    $team_id = (int) $row['team_id'];
+                    $event_id = (int) $row['event_id'];
+                    $event_name = trim((string) ($row['event_name'] ?? ''));
+                    if ($event_name === '') {
+                        continue;
+                    }
+                    if (!isset($team_event_stats[$team_id])) {
+                        $team_event_stats[$team_id] = [];
+                    }
+                    $team_event_stats[$team_id][$event_id] = [
+                        'name'  => $event_name,
+                        'count' => (int) $row['total_match_in_event'],
+                    ];
+                }
+                $stmt_event_counts->close();
+            }
+        }
+
+        foreach ($staff_team_map as $staff_id => $team_id) {
+            if ($team_id <= 0) {
+                continue;
+            }
+            $staff_match_counts[$staff_id] = $team_match_counts[$team_id] ?? 0;
+            $staff_event_stats[$staff_id] = $team_event_stats[$team_id] ?? [];
+        }
+    }
+}
+
 // Helper Functions
 function calculateStaffAge($birth_date) {
     if (empty($birth_date) || $birth_date == '0000-00-00') return '-';
@@ -432,26 +535,133 @@ $pageTitle = "Staff List";
 }
 
 /* Events & Matches Count */
-.col-events, .col-matches {
+.col-events,
+.col-matches {
     text-align: center;
-    width: 70px;
+    width: 110px;
 }
 
-.event-match-count {
+.match-count-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
     padding: 4px 10px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 12px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    white-space: nowrap;
 }
 
-.event-match-count i {
-    margin-right: 4px;
+.match-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.event-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+    white-space: nowrap;
+}
+
+.event-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+/* Popover for event count badge */
+.event-count-badge-wrap {
+    position: relative;
+    display: inline-block;
+}
+.event-count-badge.event-popover-trigger {
+    cursor: pointer;
+    user-select: none;
+}
+.event-popover {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.6;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    pointer-events: auto;
+    width: clamp(220px, 32vw, 340px);
+    max-height: 280px;
+    overflow: hidden;
+    white-space: normal;
+    text-align: left;
+}
+.event-popover-header {
+    padding: 8px 12px;
     font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #bfdbfe;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+.event-popover-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    max-height: calc(280px - 34px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.event-popover-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 6px 12px;
+}
+.event-popover-item + .event-popover-item {
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+.event-popover-name {
+    color: #f8fafc;
+    min-width: 0;
+    flex: 1 1 auto;
+    word-break: break-word;
+}
+.event-popover-meta {
+    font-size: 11px;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+.event-popover::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+.event-count-badge-wrap:hover .event-popover,
+.event-count-badge-wrap.pop-open .event-popover {
+    display: block;
 }
 
 /* Created At */
@@ -819,6 +1029,15 @@ $pageTitle = "Staff List";
     .search-container {
         max-width: 100%;
     }
+
+    .event-popover {
+        width: min(320px, calc(100vw - 24px));
+        max-height: 45vh;
+    }
+
+    .event-popover-list {
+        max-height: calc(45vh - 34px);
+    }
     
     .pagination-info {
         flex-direction: column;
@@ -967,6 +1186,9 @@ $pageTitle = "Staff List";
                         <span class="summary-value"><?php echo number_format($total_records); ?></span>
                     </div>
                 </div>
+                <div style="margin-top: 12px; color: #64748b; font-size: 12px; line-height: 1.5;">
+                    Statistik Team Match/Team Event dihitung dari riwayat pertandingan team, bukan partisipasi individual staf.
+                </div>
             </div>
 
             <div class="table-container-new">
@@ -980,13 +1202,15 @@ $pageTitle = "Staff List";
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th class="col-matches">Team Match</th>
+                            <th class="col-events">Team Event</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($staffs)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">
+                                <td colspan="10" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada staf ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1094,6 +1318,63 @@ $pageTitle = "Staff List";
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
+                                </td>
+
+                                <!-- Kolom Match -->
+                                <td class="col-matches" data-label="Team Match">
+                                    <?php $match_count = $staff_match_counts[(int) $s['id']] ?? 0; ?>
+                                    <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
+                                        <i class="fas fa-futbol"></i> <?php echo $match_count; ?>
+                                    </span>
+                                </td>
+
+                                <!-- Kolom Event -->
+                                <td class="col-events" data-label="Team Event">
+                                    <?php
+                                    $event_stats = $staff_event_stats[(int) $s['id']] ?? [];
+                                    $event_rows = array_values($event_stats);
+                                    usort($event_rows, static function ($a, $b) {
+                                        $nameA = trim((string) ($a['name'] ?? ''));
+                                        $nameB = trim((string) ($b['name'] ?? ''));
+                                        $alphaCompare = strcasecmp($nameA, $nameB);
+                                        if ($alphaCompare !== 0) {
+                                            return $alphaCompare;
+                                        }
+                                        return strcmp($nameA, $nameB);
+                                    });
+                                    $event_count = count($event_rows);
+                                    $event_popover_id = 'staff-event-popover-' . (int) ($s['id'] ?? 0);
+                                    ?>
+                                    <span class="event-count-badge-wrap">
+                                        <span
+                                            class="event-count-badge <?php echo $event_count === 0 ? 'zero' : 'event-popover-trigger'; ?>"
+                                            <?php if ($event_count > 0): ?>
+                                            role="button"
+                                            tabindex="0"
+                                            aria-haspopup="true"
+                                            aria-expanded="false"
+                                            aria-controls="<?php echo htmlspecialchars($event_popover_id); ?>"
+                                            <?php endif; ?>>
+                                            <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
+                                        </span>
+                                        <?php if ($event_count > 0): ?>
+                                        <div class="event-popover" id="<?php echo htmlspecialchars($event_popover_id); ?>" role="tooltip">
+                                            <div class="event-popover-header">Total <?php echo $event_count; ?> event</div>
+                                            <ul class="event-popover-list">
+                                                <?php foreach ($event_rows as $entry): ?>
+                                                <?php
+                                                $team_match_count = (int) ($entry['count'] ?? 0);
+                                                $team_match_label = $team_match_count === 1 ? 'team match' : 'team matches';
+                                                ?>
+                                                <li class="event-popover-item">
+                                                    <span class="event-popover-name"><?php echo htmlspecialchars((string) ($entry['name'] ?? '-')); ?></span>
+                                                    <span class="event-popover-meta"><?php echo $team_match_count . ' ' . $team_match_label; ?></span>
+                                                </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                        <?php endif; ?>
+                                    </span>
                                 </td>
                                 
                                 <!-- Kolom Created At -->
@@ -1495,6 +1776,77 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script>
+// Tap-to-expand popover for event count badges (mobile-friendly)
+(function () {
+    function syncAria(wrap, expanded) {
+        var trigger = wrap.querySelector('.event-popover-trigger');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+    }
+
+    function closeWrap(wrap) {
+        if (!wrap) return;
+        wrap.classList.remove('pop-open');
+        syncAria(wrap, false);
+    }
+
+    function closeAll(exceptWrap) {
+        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
+            if (el !== exceptWrap) {
+                closeWrap(el);
+            }
+        });
+    }
+
+    function toggleWrap(wrap) {
+        if (!wrap) return;
+        var shouldOpen = !wrap.classList.contains('pop-open');
+        closeAll(wrap);
+        if (shouldOpen) {
+            wrap.classList.add('pop-open');
+            syncAria(wrap, true);
+        } else {
+            closeWrap(wrap);
+        }
+    }
+
+    document.querySelectorAll('.event-popover-trigger').forEach(function (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('.event-popover-trigger');
+        if (trigger) {
+            toggleWrap(trigger.closest('.event-count-badge-wrap'));
+            return;
+        }
+
+        if (!e.target.closest('.event-count-badge-wrap')) {
+            closeAll(null);
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAll(null);
+            return;
+        }
+
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+
+        var trigger = e.target.closest('.event-popover-trigger');
+        if (!trigger) {
+            return;
+        }
+        e.preventDefault();
+        toggleWrap(trigger.closest('.event-count-badge-wrap'));
+    });
+})();
+</script>
 
 </body>
 </html>

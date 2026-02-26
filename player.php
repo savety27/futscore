@@ -121,6 +121,50 @@ require_once 'includes/header.php';
         color: #475569;
         border-color: #cbd5e1;
     }
+    /* Popover for event count badge */
+    .event-count-badge-wrap {
+        position: relative;
+        display: inline-block;
+    }
+    .event-count-badge {
+        cursor: pointer;
+        user-select: none;
+    }
+    .event-popover {
+        display: none;
+        position: absolute;
+        z-index: 9999;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e293b;
+        color: #f1f5f9;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.6;
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+        pointer-events: none;
+        min-width: 160px;
+        max-width: 280px;
+        white-space: pre-line;
+        word-break: break-word;
+        text-align: left;
+    }
+    .event-popover::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #1e293b;
+    }
+    .event-count-badge-wrap:hover .event-popover,
+    .event-count-badge-wrap.pop-open .event-popover {
+        display: block;
+    }
     .history-btn {
         width: 32px;
         height: 32px;
@@ -883,9 +927,13 @@ function maskNIK($nik) {
                                         $event_full_info[] = $event_name . ' (' . $event_match_total . ' match)';
                                     }
                                     ?>
-                                    <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>"
-                                        title="<?php echo htmlspecialchars(implode(', ', $event_full_info)); ?>">
-                                        <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
+                                    <span class="event-count-badge-wrap">
+                                        <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>">
+                                            <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
+                                        </span>
+                                        <?php if ($event_count > 0): ?>
+                                        <div class="event-popover"><?php echo htmlspecialchars(implode("\n", $event_full_info)); ?></div>
+                                        <?php endif; ?>
                                     </span>
                                 </td>
                                 <td class="col-center" data-label="Aksi">
@@ -1159,5 +1207,22 @@ document.addEventListener('keydown', (e) => {
 const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script>
+// Tap-to-expand popover for event count badges (mobile-friendly)
+(function () {
+    document.addEventListener('click', function (e) {
+        var wrap = e.target.closest('.event-count-badge-wrap');
+        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
+            if (el !== wrap) el.classList.remove('pop-open');
+        });
+        if (wrap) {
+            var badge = wrap.querySelector('.event-count-badge');
+            if (badge && e.target.closest('.event-count-badge')) {
+                wrap.classList.toggle('pop-open');
+            }
+        }
+    });
+})();
+</script>
 </body>
 </html>

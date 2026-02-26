@@ -64,7 +64,7 @@ $total_pages = max(1, (int)ceil($total_records / $limit));
 // Query for Perangkat Data with license/match/event counts
 $matchCountSelect = "0 AS match_count";
 $eventCountSelect = "0 AS event_count";
-$eventNamesSelect = "'' AS event_names";
+$eventNamesSelect = "'[]' AS event_names";
 
 if ($has_challenge_match_official) {
     $officialNameMatchSql = "(
@@ -92,13 +92,21 @@ if ($has_challenge_match_official) {
               AND c.event_id IS NOT NULL
         ) AS event_count";
 
-        $eventNamesSelect = "(SELECT GROUP_CONCAT(DISTINCT TRIM(e.name) ORDER BY TRIM(e.name) SEPARATOR ' || ')
+        $eventNamesSelect = "(SELECT COALESCE(
+            CONCAT(
+                '[',
+                GROUP_CONCAT(DISTINCT JSON_QUOTE(TRIM(e.name)) ORDER BY TRIM(e.name) SEPARATOR ','),
+                ']'
+            ),
+            '[]'
+        )
             FROM challenges c
             INNER JOIN events e ON c.event_id = e.id
             WHERE c.match_official IS NOT NULL
               AND TRIM(c.match_official) <> ''
               AND $officialNameMatchSql
               AND c.event_id IS NOT NULL
+              AND TRIM(e.name) <> ''
         ) AS event_names";
     }
 }
@@ -503,6 +511,79 @@ $pageTitle = "Perangkat Pertandingan";
 
 .event-match-count i {
     font-size: 10px;
+}
+
+/* Popover for event count badge */
+.event-count-badge-wrap {
+    position: relative;
+    display: inline-block;
+}
+.event-match-count.event.event-popover-trigger {
+    cursor: pointer;
+    user-select: none;
+}
+.event-popover {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.6;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    pointer-events: auto;
+    width: clamp(220px, 32vw, 340px);
+    max-height: 280px;
+    overflow: hidden;
+    white-space: normal;
+    text-align: left;
+}
+.event-popover-header {
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #bfdbfe;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+.event-popover-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    max-height: calc(280px - 34px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.event-popover-item {
+    display: block;
+    padding: 6px 12px;
+}
+.event-popover-item + .event-popover-item {
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+.event-popover-name {
+    color: #f8fafc;
+    word-break: break-word;
+}
+.event-popover::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+.event-count-badge-wrap:hover .event-popover,
+.event-count-badge-wrap.pop-open .event-popover {
+    display: block;
 }
 .history-btn {
     width: 30px;
@@ -984,6 +1065,15 @@ $pageTitle = "Perangkat Pertandingan";
     .search-container {
         max-width: 100%;
     }
+
+    .event-popover {
+        width: min(320px, calc(100vw - 24px));
+        max-height: 45vh;
+    }
+
+    .event-popover-list {
+        max-height: calc(45vh - 34px);
+    }
     
     .pagination-info {
         flex-direction: column;
@@ -1239,12 +1329,33 @@ $pageTitle = "Perangkat Pertandingan";
                                 <td class="col-events" data-label="Event">
                                     <?php
                                     $eventCount = (int)($p['event_count'] ?? 0);
-                                    $eventNamesRaw = trim((string)($p['event_names'] ?? ''));
-                                    $eventTitle = $eventNamesRaw !== '' ? str_replace(' || ', ', ', $eventNamesRaw) : 'Belum ada event';
+                                    $eventNamesList = parsePerangkatEventNamesPayload($p['event_names'] ?? '');
+                                    $event_popover_id = 'perangkat-event-popover-' . (int)($p['id'] ?? 0);
                                     ?>
-                                    <span class="event-match-count event <?php echo $eventCount === 0 ? 'zero' : ''; ?>"
-                                          title="<?php echo htmlspecialchars($eventTitle, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <i class="fas fa-calendar-check"></i><?php echo $eventCount; ?>
+                                    <span class="event-count-badge-wrap">
+                                        <span
+                                            class="event-match-count event <?php echo $eventCount === 0 ? 'zero' : 'event-popover-trigger'; ?>"
+                                            <?php if ($eventCount > 0): ?>
+                                            role="button"
+                                            tabindex="0"
+                                            aria-haspopup="true"
+                                            aria-expanded="false"
+                                            aria-controls="<?php echo htmlspecialchars($event_popover_id); ?>"
+                                            <?php endif; ?>>
+                                            <i class="fas fa-calendar-check"></i><?php echo $eventCount; ?>
+                                        </span>
+                                        <?php if ($eventCount > 0): ?>
+                                        <div class="event-popover" id="<?php echo htmlspecialchars($event_popover_id); ?>" role="tooltip">
+                                            <div class="event-popover-header">Total <?php echo $eventCount; ?> event</div>
+                                            <ul class="event-popover-list">
+                                                <?php foreach ($eventNamesList as $eventNameItem): ?>
+                                                <li class="event-popover-item">
+                                                    <span class="event-popover-name"><?php echo htmlspecialchars($eventNameItem); ?></span>
+                                                </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                        <?php endif; ?>
                                     </span>
                                 </td>
 
@@ -1786,6 +1897,77 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script>
+// Tap-to-expand popover for event count badges (mobile-friendly)
+(function () {
+    function syncAria(wrap, expanded) {
+        var trigger = wrap.querySelector('.event-popover-trigger');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+    }
+
+    function closeWrap(wrap) {
+        if (!wrap) return;
+        wrap.classList.remove('pop-open');
+        syncAria(wrap, false);
+    }
+
+    function closeAll(exceptWrap) {
+        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
+            if (el !== exceptWrap) {
+                closeWrap(el);
+            }
+        });
+    }
+
+    function toggleWrap(wrap) {
+        if (!wrap) return;
+        var shouldOpen = !wrap.classList.contains('pop-open');
+        closeAll(wrap);
+        if (shouldOpen) {
+            wrap.classList.add('pop-open');
+            syncAria(wrap, true);
+        } else {
+            closeWrap(wrap);
+        }
+    }
+
+    document.querySelectorAll('.event-popover-trigger').forEach(function (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('.event-popover-trigger');
+        if (trigger) {
+            toggleWrap(trigger.closest('.event-count-badge-wrap'));
+            return;
+        }
+
+        if (!e.target.closest('.event-count-badge-wrap')) {
+            closeAll(null);
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAll(null);
+            return;
+        }
+
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+
+        var trigger = e.target.closest('.event-popover-trigger');
+        if (!trigger) {
+            return;
+        }
+        e.preventDefault();
+        toggleWrap(trigger.closest('.event-count-badge-wrap'));
+    });
+})();
+</script>
 
 </body>
 </html>

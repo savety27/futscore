@@ -403,6 +403,12 @@
     text-align: center;
 }
 
+.col-matches,
+.col-events {
+    width: 110px;
+    text-align: center;
+}
+
 .col-created {
     width: 120px;
     font-size: 12px;
@@ -1117,6 +1123,8 @@
             "photo position"
             "photo age"
             "photo certificate"
+            "photo match"
+            "photo event"
             "photo created";
         column-gap: 14px;
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -1186,6 +1194,14 @@
 
     .staff-table-new td.col-certificate {
         grid-area: certificate;
+    }
+
+    .staff-table-new td.col-matches {
+        grid-area: match;
+    }
+
+    .staff-table-new td.col-events {
+        grid-area: event;
     }
 
     .staff-table-new td.col-created {

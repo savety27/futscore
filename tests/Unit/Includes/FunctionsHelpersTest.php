@@ -146,6 +146,53 @@ final class FunctionsHelpersTest extends TestCase
         $this->assertSame('Format tanggal tidak valid', validateDate('2024-02-30'));
     }
 
+    public function testParsePerangkatEventNamesPayloadKeepsPipeCharactersInsideJsonItem(): void
+    {
+        $payload = '["Finals || Season 2","Event B"]';
+
+        $this->assertSame(
+            ['Finals || Season 2', 'Event B'],
+            parsePerangkatEventNamesPayload($payload)
+        );
+    }
+
+    public function testParsePerangkatEventNamesPayloadParsesJsonWithQuotesAndCommas(): void
+    {
+        $payload = '["Event \\"A\\", Stage 1","Playoff, Group B"]';
+
+        $this->assertSame(
+            ['Event "A", Stage 1', 'Playoff, Group B'],
+            parsePerangkatEventNamesPayload($payload)
+        );
+    }
+
+    public function testParsePerangkatEventNamesPayloadFallsBackToLegacyDelimiter(): void
+    {
+        $payload = 'Event A || Event B || Event C';
+
+        $this->assertSame(
+            ['Event A', 'Event B', 'Event C'],
+            parsePerangkatEventNamesPayload($payload)
+        );
+    }
+
+    public function testParsePerangkatEventNamesPayloadReturnsEmptyForEmptyPayload(): void
+    {
+        $this->assertSame([], parsePerangkatEventNamesPayload(''));
+        $this->assertSame([], parsePerangkatEventNamesPayload('   '));
+        $this->assertSame([], parsePerangkatEventNamesPayload('[]'));
+    }
+
+    public function testParsePerangkatEventNamesPayloadNormalizesWhitespaceAndDuplicates(): void
+    {
+        $payload = '["  Event A  ","","Event A","   ","Event B","Event B"]';
+
+        $this->assertSame(
+            ['Event A', 'Event B'],
+            parsePerangkatEventNamesPayload($payload)
+        );
+    }
+
     public function testServerBasedHelpersReadCurrentRequestState(): void
     {
         $_SERVER['HTTPS'] = 'on';
