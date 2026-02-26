@@ -77,6 +77,104 @@ $stmt->execute();
 $result = $stmt->get_result();
 $staffs = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
+$has_challenge_event_id = false;
+$check_event_id_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+if ($check_event_id_col && $check_event_id_col->num_rows > 0) {
+    $has_challenge_event_id = true;
+}
+
+// Preload jumlah match & event berdasarkan team_id staff yang tampil di halaman ini.
+$staff_match_counts = [];
+$staff_event_stats = [];
+if (!empty($staffs)) {
+    $staff_team_map = [];
+    $team_ids = [];
+
+    foreach ($staffs as $staff_row) {
+        $staff_id = (int) ($staff_row['id'] ?? 0);
+        if ($staff_id <= 0) {
+            continue;
+        }
+
+        $team_id = (int) ($staff_row['team_id'] ?? 0);
+        $staff_team_map[$staff_id] = $team_id;
+        $staff_match_counts[$staff_id] = 0;
+        $staff_event_stats[$staff_id] = [];
+
+        if ($team_id > 0) {
+            $team_ids[$team_id] = $team_id;
+        }
+    }
+
+    if (!empty($team_ids)) {
+        $team_ids = array_values($team_ids);
+        $placeholders = implode(',', array_fill(0, count($team_ids), '?'));
+        $types = str_repeat('i', count($team_ids));
+
+        $team_match_counts = [];
+        $sql_match_counts = "
+            SELECT l.team_id, COUNT(DISTINCT l.match_id) AS total_match
+            FROM lineups l
+            INNER JOIN challenges c ON l.match_id = c.id
+            WHERE l.team_id IN ($placeholders)
+            GROUP BY l.team_id
+        ";
+        $stmt_match_counts = $conn->prepare($sql_match_counts);
+        if ($stmt_match_counts) {
+            $stmt_match_counts->bind_param($types, ...$team_ids);
+            $stmt_match_counts->execute();
+            $result_match_counts = $stmt_match_counts->get_result();
+            while ($row = $result_match_counts->fetch_assoc()) {
+                $team_match_counts[(int) $row['team_id']] = (int) $row['total_match'];
+            }
+            $stmt_match_counts->close();
+        }
+
+        $team_event_stats = [];
+        if ($has_challenge_event_id) {
+            $sql_event_counts = "
+                SELECT
+                    l.team_id,
+                    TRIM(e.name) AS event_name,
+                    COUNT(DISTINCT l.match_id) AS total_match_in_event
+                FROM lineups l
+                INNER JOIN challenges c ON l.match_id = c.id
+                INNER JOIN events e ON c.event_id = e.id
+                WHERE l.team_id IN ($placeholders)
+                  AND e.name IS NOT NULL
+                  AND TRIM(e.name) <> ''
+                GROUP BY l.team_id, e.name
+            ";
+            $stmt_event_counts = $conn->prepare($sql_event_counts);
+            if ($stmt_event_counts) {
+                $stmt_event_counts->bind_param($types, ...$team_ids);
+                $stmt_event_counts->execute();
+                $result_event_counts = $stmt_event_counts->get_result();
+                while ($row = $result_event_counts->fetch_assoc()) {
+                    $team_id = (int) $row['team_id'];
+                    $event_name = trim((string) ($row['event_name'] ?? ''));
+                    if ($event_name === '') {
+                        continue;
+                    }
+                    if (!isset($team_event_stats[$team_id])) {
+                        $team_event_stats[$team_id] = [];
+                    }
+                    $team_event_stats[$team_id][$event_name] = (int) $row['total_match_in_event'];
+                }
+                $stmt_event_counts->close();
+            }
+        }
+
+        foreach ($staff_team_map as $staff_id => $team_id) {
+            if ($team_id <= 0) {
+                continue;
+            }
+            $staff_match_counts[$staff_id] = $team_match_counts[$team_id] ?? 0;
+            $staff_event_stats[$staff_id] = $team_event_stats[$team_id] ?? [];
+        }
+    }
+}
+
 // Helper Functions
 function calculateStaffAge($birth_date) {
     if (empty($birth_date) || $birth_date == '0000-00-00') return '-';
@@ -432,26 +530,50 @@ $pageTitle = "Staff List";
 }
 
 /* Events & Matches Count */
-.col-events, .col-matches {
+.col-events,
+.col-matches {
     text-align: center;
-    width: 70px;
+    width: 110px;
 }
 
-.event-match-count {
+.match-count-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
     padding: 4px 10px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 12px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    white-space: nowrap;
 }
 
-.event-match-count i {
-    margin-right: 4px;
-    font-size: 10px;
+.match-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.event-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+    white-space: nowrap;
+}
+
+.event-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
 }
 
 /* Created At */
@@ -980,13 +1102,15 @@ $pageTitle = "Staff List";
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th class="col-matches">Match</th>
+                            <th class="col-events">Event</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($staffs)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">
+                                <td colspan="10" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada staf ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1094,6 +1218,30 @@ $pageTitle = "Staff List";
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
+                                </td>
+
+                                <!-- Kolom Match -->
+                                <td class="col-matches" data-label="Match">
+                                    <?php $match_count = $staff_match_counts[(int) $s['id']] ?? 0; ?>
+                                    <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
+                                        <i class="fas fa-futbol"></i> <?php echo $match_count; ?>
+                                    </span>
+                                </td>
+
+                                <!-- Kolom Event -->
+                                <td class="col-events" data-label="Event">
+                                    <?php
+                                    $event_stats = $staff_event_stats[(int) $s['id']] ?? [];
+                                    $event_count = count($event_stats);
+                                    $event_full_info = [];
+                                    foreach ($event_stats as $event_name => $event_match_total) {
+                                        $event_full_info[] = $event_name . ' (' . $event_match_total . ' match)';
+                                    }
+                                    ?>
+                                    <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>"
+                                          title="<?php echo htmlspecialchars(implode(', ', $event_full_info)); ?>">
+                                        <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
+                                    </span>
                                 </td>
                                 
                                 <!-- Kolom Created At -->
