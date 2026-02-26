@@ -135,6 +135,7 @@ if (!empty($staffs)) {
             $sql_event_counts = "
                 SELECT
                     l.team_id,
+                    e.id AS event_id,
                     TRIM(e.name) AS event_name,
                     COUNT(DISTINCT l.match_id) AS total_match_in_event
                 FROM lineups l
@@ -143,7 +144,7 @@ if (!empty($staffs)) {
                 WHERE l.team_id IN ($placeholders)
                   AND e.name IS NOT NULL
                   AND TRIM(e.name) <> ''
-                GROUP BY l.team_id, e.name
+                GROUP BY l.team_id, e.id
             ";
             $stmt_event_counts = $conn->prepare($sql_event_counts);
             if ($stmt_event_counts) {
@@ -152,6 +153,7 @@ if (!empty($staffs)) {
                 $result_event_counts = $stmt_event_counts->get_result();
                 while ($row = $result_event_counts->fetch_assoc()) {
                     $team_id = (int) $row['team_id'];
+                    $event_id = (int) $row['event_id'];
                     $event_name = trim((string) ($row['event_name'] ?? ''));
                     if ($event_name === '') {
                         continue;
@@ -159,7 +161,10 @@ if (!empty($staffs)) {
                     if (!isset($team_event_stats[$team_id])) {
                         $team_event_stats[$team_id] = [];
                     }
-                    $team_event_stats[$team_id][$event_name] = (int) $row['total_match_in_event'];
+                    $team_event_stats[$team_id][$event_id] = [
+                        'name'  => $event_name,
+                        'count' => (int) $row['total_match_in_event'],
+                    ];
                 }
                 $stmt_event_counts->close();
             }
@@ -1234,8 +1239,8 @@ $pageTitle = "Staff List";
                                     $event_stats = $staff_event_stats[(int) $s['id']] ?? [];
                                     $event_count = count($event_stats);
                                     $event_full_info = [];
-                                    foreach ($event_stats as $event_name => $event_match_total) {
-                                        $event_full_info[] = $event_name . ' (' . $event_match_total . ' match)';
+                                    foreach ($event_stats as $entry) {
+                                        $event_full_info[] = $entry['name'] . ' (' . $entry['count'] . ' match)';
                                     }
                                     ?>
                                     <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>"
