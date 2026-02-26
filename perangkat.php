@@ -504,6 +504,51 @@ $pageTitle = "Perangkat Pertandingan";
 .event-match-count i {
     font-size: 10px;
 }
+
+/* Popover for event count badge */
+.event-count-badge-wrap {
+    position: relative;
+    display: inline-block;
+}
+.event-match-count.event {
+    cursor: pointer;
+    user-select: none;
+}
+.event-popover {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.6;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    pointer-events: none;
+    min-width: 160px;
+    max-width: 280px;
+    white-space: pre-line;
+    word-break: break-word;
+    text-align: left;
+}
+.event-popover::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+.event-count-badge-wrap:hover .event-popover,
+.event-count-badge-wrap.pop-open .event-popover {
+    display: block;
+}
 .history-btn {
     width: 30px;
     height: 30px;
@@ -1240,11 +1285,24 @@ $pageTitle = "Perangkat Pertandingan";
                                     <?php
                                     $eventCount = (int)($p['event_count'] ?? 0);
                                     $eventNamesRaw = trim((string)($p['event_names'] ?? ''));
-                                    $eventTitle = $eventNamesRaw !== '' ? str_replace(' || ', ', ', $eventNamesRaw) : 'Belum ada event';
+                                    $eventNamesList = [];
+                                    if ($eventNamesRaw !== '') {
+                                        foreach (explode(' || ', $eventNamesRaw) as $eventNameItem) {
+                                            $eventNameItem = trim((string)$eventNameItem);
+                                            if ($eventNameItem !== '') {
+                                                $eventNamesList[] = $eventNameItem;
+                                            }
+                                        }
+                                    }
+                                    $eventPopoverText = !empty($eventNamesList) ? implode("\n", $eventNamesList) : 'Belum ada event';
                                     ?>
-                                    <span class="event-match-count event <?php echo $eventCount === 0 ? 'zero' : ''; ?>"
-                                          title="<?php echo htmlspecialchars($eventTitle, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <i class="fas fa-calendar-check"></i><?php echo $eventCount; ?>
+                                    <span class="event-count-badge-wrap">
+                                        <span class="event-match-count event <?php echo $eventCount === 0 ? 'zero' : ''; ?>">
+                                            <i class="fas fa-calendar-check"></i><?php echo $eventCount; ?>
+                                        </span>
+                                        <?php if ($eventCount > 0): ?>
+                                        <div class="event-popover"><?php echo htmlspecialchars($eventPopoverText); ?></div>
+                                        <?php endif; ?>
                                     </span>
                                 </td>
 
@@ -1786,6 +1844,23 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script>
+// Tap-to-expand popover for event count badges (mobile-friendly)
+(function () {
+    document.addEventListener('click', function (e) {
+        var wrap = e.target.closest('.event-count-badge-wrap');
+        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
+            if (el !== wrap) el.classList.remove('pop-open');
+        });
+        if (wrap) {
+            var badge = wrap.querySelector('.event-match-count.event');
+            if (badge && e.target.closest('.event-match-count.event')) {
+                wrap.classList.toggle('pop-open');
+            }
+        }
+    });
+})();
+</script>
 
 </body>
 </html>
