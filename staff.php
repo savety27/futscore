@@ -1334,11 +1334,13 @@ $pageTitle = "Staff List";
                                     $event_stats = $staff_event_stats[(int) $s['id']] ?? [];
                                     $event_rows = array_values($event_stats);
                                     usort($event_rows, static function ($a, $b) {
-                                        $count_compare = ((int) ($b['count'] ?? 0)) <=> ((int) ($a['count'] ?? 0));
-                                        if ($count_compare !== 0) {
-                                            return $count_compare;
+                                        $nameA = trim((string) ($a['name'] ?? ''));
+                                        $nameB = trim((string) ($b['name'] ?? ''));
+                                        $alphaCompare = strcasecmp($nameA, $nameB);
+                                        if ($alphaCompare !== 0) {
+                                            return $alphaCompare;
                                         }
-                                        return strcasecmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+                                        return strcmp($nameA, $nameB);
                                     });
                                     $event_count = count($event_rows);
                                     $event_popover_id = 'staff-event-popover-' . (int) ($s['id'] ?? 0);
