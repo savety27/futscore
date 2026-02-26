@@ -64,7 +64,7 @@ $total_pages = max(1, (int)ceil($total_records / $limit));
 // Query for Perangkat Data with license/match/event counts
 $matchCountSelect = "0 AS match_count";
 $eventCountSelect = "0 AS event_count";
-$eventNamesSelect = "'' AS event_names";
+$eventNamesSelect = "'[]' AS event_names";
 
 if ($has_challenge_match_official) {
     $officialNameMatchSql = "(
@@ -92,13 +92,21 @@ if ($has_challenge_match_official) {
               AND c.event_id IS NOT NULL
         ) AS event_count";
 
-        $eventNamesSelect = "(SELECT GROUP_CONCAT(DISTINCT TRIM(e.name) ORDER BY TRIM(e.name) SEPARATOR ' || ')
+        $eventNamesSelect = "(SELECT COALESCE(
+            CONCAT(
+                '[',
+                GROUP_CONCAT(DISTINCT JSON_QUOTE(TRIM(e.name)) ORDER BY TRIM(e.name) SEPARATOR ','),
+                ']'
+            ),
+            '[]'
+        )
             FROM challenges c
             INNER JOIN events e ON c.event_id = e.id
             WHERE c.match_official IS NOT NULL
               AND TRIM(c.match_official) <> ''
               AND $officialNameMatchSql
               AND c.event_id IS NOT NULL
+              AND TRIM(e.name) <> ''
         ) AS event_names";
     }
 }
@@ -1321,17 +1329,7 @@ $pageTitle = "Perangkat Pertandingan";
                                 <td class="col-events" data-label="Event">
                                     <?php
                                     $eventCount = (int)($p['event_count'] ?? 0);
-                                    $eventNamesRaw = trim((string)($p['event_names'] ?? ''));
-                                    $eventNamesList = [];
-                                    if ($eventNamesRaw !== '') {
-                                        foreach (explode(' || ', $eventNamesRaw) as $eventNameItem) {
-                                            $eventNameItem = trim((string)$eventNameItem);
-                                            if ($eventNameItem !== '') {
-                                                $eventNamesList[] = $eventNameItem;
-                                            }
-                                        }
-                                    }
-                                    $eventNamesList = array_values(array_unique($eventNamesList));
+                                    $eventNamesList = parsePerangkatEventNamesPayload($p['event_names'] ?? '');
                                     $event_popover_id = 'perangkat-event-popover-' . (int)($p['id'] ?? 0);
                                     ?>
                                     <span class="event-count-badge-wrap">

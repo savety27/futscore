@@ -258,6 +258,45 @@ function searchNews($keyword, $limit = 10) {
     return $news;
 }
 
+/**
+ * Parse aggregated event names payload from perangkat query.
+ * Prefer JSON array payload and fallback to legacy " || " format.
+ */
+function parsePerangkatEventNamesPayload($rawPayload) {
+    $payload = trim((string) $rawPayload);
+    if ($payload === '') {
+        return [];
+    }
+
+    $normalizeItems = static function (array $items): array {
+        $normalized = [];
+        $seen = [];
+
+        foreach ($items as $item) {
+            if (!is_scalar($item) && $item !== null) {
+                continue;
+            }
+
+            $value = trim((string) $item);
+            if ($value === '' || isset($seen[$value])) {
+                continue;
+            }
+
+            $seen[$value] = true;
+            $normalized[] = $value;
+        }
+
+        return $normalized;
+    };
+
+    $decoded = json_decode($payload, true);
+    if (is_array($decoded)) {
+        return $normalizeItems($decoded);
+    }
+
+    return $normalizeItems(explode(' || ', $payload));
+}
+
 // ========== FUNGSI MATCH ==========
 
 /**
