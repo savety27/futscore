@@ -24,10 +24,16 @@ if (!$challenge) {
 $goalsRaw = getMatchGoals($challengeId);
 $goals = [];
 foreach ($goalsRaw as $g) {
+    $goalHalf = (int)($g['goal_half'] ?? ($g['half'] ?? 0));
+    if ($goalHalf !== 1 && $goalHalf !== 2) {
+        $goalHalf = ((int)($g['minute'] ?? 0) > 45) ? 2 : 1;
+    }
     $goals[] = [
         'player' => $g['player_name'],
         'number' => $g['jersey_number'],
+        'minute' => (int)($g['minute'] ?? 0),
         'time' => $g['minute'] . '"',
+        'half' => $goalHalf,
         'team' => ($g['team_id'] == $challenge['challenger_id']) ? 'team1' : 'team2',
         'team_name' => $g['team_name'],
         'team_logo' => $g['team_logo']
@@ -66,8 +72,7 @@ $timeline = [
 ];
 
 foreach ($goals as $g) {
-    $minute = (int)str_replace('"', '', $g['time']);
-    $half = ($minute <= 30) ? 'Babak 1' : 'Babak 2'; // Simple logic for futsal halves
+    $half = ((int)($g['half'] ?? 1) === 2) ? 'Babak 2' : 'Babak 1';
     $timeline[$half][] = [
         'time' => $g['time'],
         'player' => $g['player'],

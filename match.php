@@ -385,6 +385,19 @@ if (!$matchNotFound) {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+.goals-half-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #0f172a;
+    margin: 12px 0 8px;
+    padding-left: 10px;
+}
+
+.goals-half-title:first-of-type {
+    margin-top: 0;
+}
 </style>
 
 <div class="dashboard-wrapper">
@@ -582,8 +595,19 @@ if (!$matchNotFound) {
                         <?php if (empty($goals)): ?>
                             <div class="no-data">Belum ada gol tercipta</div>
                         <?php else: ?>
+                            <?php $currentGoalHalf = null; ?>
                             <?php foreach ($goals as $goal): ?>
-                                <?php $isTeam1 = ($goal['team_id'] == $match['team1_id']); ?>
+                                <?php
+                                    $goalHalf = (int)($goal['goal_half'] ?? ($goal['half'] ?? 0));
+                                    if ($goalHalf !== 1 && $goalHalf !== 2) {
+                                        $goalHalf = ((int)($goal['minute'] ?? 0) > 45) ? 2 : 1;
+                                    }
+                                    $isTeam1 = ($goal['team_id'] == $match['team1_id']);
+                                ?>
+                                <?php if ($goalHalf !== $currentGoalHalf): ?>
+                                    <div class="goals-half-title"><?php echo $goalHalf === 2 ? 'Babak 2' : 'Babak 1'; ?></div>
+                                    <?php $currentGoalHalf = $goalHalf; ?>
+                                <?php endif; ?>
                                 <div class="goal-row">
                                     <div class="goal-side team-1-side <?php echo $isTeam1 ? 'active' : ''; ?>">
                                         <?php if ($isTeam1): ?>

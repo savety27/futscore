@@ -50,6 +50,7 @@ if (!function_exists('adminHasTable')) {
 $challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
 $events_table_exists = adminHasTable($conn, 'events');
 $can_join_event_name = $challenge_has_event_id && $events_table_exists;
+$goals_has_half_column = adminHasColumn($conn, 'goals', 'half');
 
 
 // Get admin info
@@ -139,7 +140,10 @@ try {
 
     // Get existing goals
     $existing_goals = [];
-    $stmtG = $conn->prepare("SELECT * FROM goals WHERE match_id = ? ORDER BY minute ASC");
+    $goalHalfExpr = $goals_has_half_column
+        ? "COALESCE(NULLIF(half, 0), CASE WHEN minute > 45 THEN 2 ELSE 1 END)"
+        : "CASE WHEN minute > 45 THEN 2 ELSE 1 END";
+    $stmtG = $conn->prepare("SELECT *, {$goalHalfExpr} AS goal_half FROM goals WHERE match_id = ? ORDER BY goal_half ASC, minute ASC");
     $stmtG->execute([$challenge_id]);
     $existing_goals = $stmtG->fetchAll(PDO::FETCH_ASSOC);
 
@@ -189,9 +193,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $teamId = (int)($_POST['goal_team_id'][$index] ?? 0);
             $minute = (int)($_POST['goal_minute'][$index] ?? 0);
+            $goalHalf = (int)($_POST['goal_half'][$index] ?? 0);
 
             if ($minute <= 0 || $teamId <= 0) {
                 $errors['goal_players'] = "Data pencetak gol belum lengkap.";
+                break;
+            }
+            if ($goalHalf !== 1 && $goalHalf !== 2) {
+                $errors['goal_players'] = "Babak gol hanya boleh Babak 1 atau Babak 2.";
                 break;
             }
 
@@ -291,14 +300,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmtDelGoals->execute([$challenge_id]);
 
             if (isset($_POST['goal_player_id']) && is_array($_POST['goal_player_id'])) {
-                $stmtInsGoal = $conn->prepare("INSERT INTO goals (match_id, player_id, team_id, minute) VALUES (?, ?, ?, ?)");
+                if ($goals_has_half_column) {
+                    $stmtInsGoal = $conn->prepare("INSERT INTO goals (match_id, player_id, team_id, minute, half) VALUES (?, ?, ?, ?, ?)");
+                } else {
+                    $stmtInsGoal = $conn->prepare("INSERT INTO goals (match_id, player_id, team_id, minute) VALUES (?, ?, ?, ?)");
+                }
                 foreach ($_POST['goal_player_id'] as $index => $player_id) {
                     if (empty($player_id)) continue;
                     
                     $minute = intval($_POST['goal_minute'][$index] ?? 0);
                     $team_id = intval($_POST['goal_team_id'][$index] ?? 0);
+                    $goal_half = intval($_POST['goal_half'][$index] ?? 0);
+                    if ($goal_half !== 2) {
+                        $goal_half = 1;
+                    }
                     
-                    $stmtInsGoal->execute([$challenge_id, $player_id, $team_id, $minute]);
+                    if ($goals_has_half_column) {
+                        $stmtInsGoal->execute([$challenge_id, $player_id, $team_id, $minute, $goal_half]);
+                    } else {
+                        $stmtInsGoal->execute([$challenge_id, $player_id, $team_id, $minute]);
+                    }
                 }
             }
 
@@ -967,7 +988,7 @@ body {
 /* Goal Entry Styles */
 .goal-entry-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 2fr 50px;
+    grid-template-columns: 1.3fr 2fr 1fr 1fr 50px;
     gap: 15px;
     align-items: center;
     background: #f8f9fa;
@@ -1022,6 +1043,12 @@ body {
 .btn-remove-goal:hover {
     background: var(--danger);
     color: white;
+}
+
+@media (max-width: 768px) {
+    .goal-entry-row {
+        grid-template-columns: 1fr;
+    }
 }
 @keyframes slideDown {
     from {
@@ -1301,6 +1328,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = document.createElement('div');
         row.className = 'goal-entry-row';
         
+        // Half Select (pilih babak dulu)
+        const halfCol = document.createElement('div');
+        const halfSelect = document.createElement('select');
+        halfSelect.name = 'goal_half[]';
+        halfSelect.className = 'form-select';
+        halfSelect.required = true;
+        halfSelect.innerHTML = `
+            <option value="">-- Pilih Babak --</option>
+            <option value="1">Babak 1</option>
+            <option value="2">Babak 2</option>
+        `;
+        if (goalData && (goalData.goal_half || goalData.half)) {
+            halfSelect.value = String(goalData.goal_half || goalData.half);
+        } else {
+            halfSelect.value = '';
+        }
+        halfCol.appendChild(halfSelect);
+
         // Team Select
         const teamCol = document.createElement('div');
         const teamSelect = document.createElement('select');
@@ -1389,6 +1434,7 @@ document.addEventListener('DOMContentLoaded', function() {
         row.appendChild(teamCol);
         row.appendChild(playerCol);
         row.appendChild(minCol);
+        row.appendChild(halfCol);
         row.appendChild(delCol);
 
         goalContainer.appendChild(row);

@@ -795,14 +795,25 @@ function getCompletedChallenges($limit = 10) {
 function getMatchGoals($matchId) {
     global $db;
     $conn = $db->getConnection();
+
+    $goalsHasHalfColumn = false;
+    $columnCheck = $conn->query("SHOW COLUMNS FROM goals LIKE 'half'");
+    if ($columnCheck instanceof mysqli_result) {
+        $goalsHasHalfColumn = $columnCheck->num_rows > 0;
+        $columnCheck->free();
+    }
+
+    $goalHalfExpr = $goalsHasHalfColumn
+        ? "COALESCE(NULLIF(g.half, 0), CASE WHEN g.minute > 45 THEN 2 ELSE 1 END)"
+        : "CASE WHEN g.minute > 45 THEN 2 ELSE 1 END";
     
-    $sql = "SELECT g.*, p.name as player_name, p.jersey_number,
+    $sql = "SELECT g.*, {$goalHalfExpr} AS goal_half, p.name as player_name, p.jersey_number,
                    t.name as team_name, t.logo as team_logo
             FROM goals g
             LEFT JOIN players p ON g.player_id = p.id
             LEFT JOIN teams t ON g.team_id = t.id
             WHERE g.match_id = ?
-            ORDER BY g.minute";
+            ORDER BY goal_half ASC, g.minute ASC";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $matchId);
