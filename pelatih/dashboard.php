@@ -435,7 +435,7 @@ if ($team_id) {
 <div class="dashboard-container">
     <!-- Header Section -->
     <div class="dashboard-hero reveal">
-        <span class="hero-label">Dashboard Taktis</span>
+        <span class="hero-label"> </span>
         <h1 class="hero-title">Pusat Manajemen Team</h1>
         <p class="hero-description">Pantau performa skuad, jadwal pertandingan mendatang, dan staf manajemen. Pembaruan waktu nyata untuk musim aktif saat ini.</p>
     </div>
