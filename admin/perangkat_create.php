@@ -747,8 +747,43 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 gap: 12px;
             }
 
+            .user-actions {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
             .verify-input-wrapper {
                 flex-direction: column;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width:480px) {
+            .logout-btn {
+                background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+                border: none;
+                padding: 10px 20px;
+                font-size: 14px;
+                gap: 10px;
+                box-shadow: 0 5px 15px rgba(211, 47, 47, .2);
+            }
+
+            .btn {
+                font-size: 14px;
             }
         }
     </style>
@@ -764,7 +799,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                     <p>Tambah data perangkat baru</p>
                 </div>
                 <div class="user-actions">
-                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i>Keluar</a>
                 </div>
             </div>
 

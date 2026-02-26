@@ -538,7 +538,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -940,7 +940,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -953,7 +953,7 @@ body {
             </div>
             <a href="challenge.php" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i>
-                Kembali ke Daftar Challenge
+                Kembali
             </a>
         </div>
 

@@ -495,12 +495,18 @@ $full_address = !empty($address_parts) ? implode(', ', $address_parts) : '-';
                 gap: 12px;
             }
 
+            .user-actions {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+
             .action-buttons {
                 width: 100%;
                 flex-direction: column;
             }
 
-            .btn {
+            .action-buttons .btn {
                 width: 100%;
                 justify-content: center;
             }
@@ -508,6 +514,21 @@ $full_address = !empty($address_parts) ? implode(', ', $address_parts) : '-';
             .stats-grid,
             .info-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width:480px) {
+            .logout-btn {
+                background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+                border: none;
+                padding: 10px 20px;
+                font-size: 14px;
+                gap: 10px;
+                box-shadow: 0 5px 15px rgba(211, 47, 47, .2);
+            }
+
+            .action-buttons .btn {
+                font-size: 14px;
             }
         }
     </style>
@@ -523,7 +544,7 @@ $full_address = !empty($address_parts) ? implode(', ', $address_parts) : '-';
                     <p>Informasi lengkap perangkat: <?php echo htmlspecialchars((string) $perangkat['name']); ?></p>
                 </div>
                 <div class="user-actions">
-                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i>Keluar</a>
                 </div>
             </div>
 

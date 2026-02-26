@@ -291,7 +291,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -529,12 +529,12 @@ body {
 
     .user-actions {
         width: 100%;
+        display: flex;
+        justify-content: flex-end;
     }
 
     .logout-btn {
-        width: 100%;
-        justify-content: center;
-        padding: 10px 18px;
+        padding: 10px 20px;
         font-size: 14px;
     }
 
@@ -557,7 +557,11 @@ body {
         font-size: 24px;
     }
 
-    .page-header > .btn {
+    .page-header .action-buttons {
+        width: 100%;
+    }
+
+    .page-header .action-buttons .btn {
         width: 100%;
         justify-content: center;
     }
@@ -697,7 +701,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -708,10 +712,12 @@ body {
                 <i class="fas fa-plus-circle"></i>
                 <span>Tambah Venue Baru</span>
             </div>
-            <a href="venue.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Kembali ke Daftar Venue
-            </a>
+            <div class="action-buttons">
+                <a href="venue.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <!-- ERROR MESSAGES -->

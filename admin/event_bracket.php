@@ -589,18 +589,34 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="css/sidebar.css">
 <style>
-:root { --primary:#0f2744; --accent:#3b82f6; --gray:#64748b; --ok:#16a34a; --warn:#dc2626; --card:#ffffff; }
+:root { --primary:#0f2744; --accent:#3b82f6; --gray:#64748b; --ok:#16a34a; --warn:#dc2626; --danger:#ef4444; --card:#ffffff; --card-shadow:0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -2px rgba(0,0,0,.03); }
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-gradient(180deg,#eaf6ff 0%,#f4fbff 100%); color:#1e293b; }
 .main { margin-left:280px; width:calc(100% - 280px); padding:28px; }
-.topbar,.panel { background:#fff; border-radius:16px; box-shadow:0 10px 24px rgba(15,39,68,.08); }
-.topbar { padding:18px 22px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; }
-.topbar h1 { font-size:26px; color:var(--primary); }
-.topbar p { color:var(--gray); font-size:13px; margin-top:4px; }
-.btn { border:none; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+.topbar,.page-header,.panel { background:#fff; border-radius:18px; box-shadow:var(--card-shadow); }
+.topbar { padding:18px 22px; margin-bottom:22px; display:flex; justify-content:space-between; align-items:center; }
+.greeting h1 { color:var(--primary); font-size:26px; }
+.greeting p { color:var(--gray); font-size:14px; }
+.user-actions { display:flex; align-items:center; gap:10px; }
+.logout-btn {
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  background:linear-gradient(135deg, var(--danger), #b91c1c);
+  color:#fff;
+  text-decoration:none;
+  padding:12px 28px;
+  border-radius:12px;
+  font-weight:600;
+}
+.page-header { margin-bottom:22px; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; gap:14px; }
+.page-title { display:flex; align-items:center; gap:10px; color:var(--primary); font-size:25px; }
+.action-buttons { display:flex; gap:10px; flex-wrap:wrap; }
+.btn { border:none; border-radius:10px; padding:11px 18px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
 .btn-primary { background:linear-gradient(135deg,var(--primary),var(--accent)); color:#fff; }
-.btn-secondary { background:#475569; color:#fff; }
+.btn-secondary { background:#6b7280; color:#fff; }
 .btn-danger { background:#b91c1c; color:#fff; }
+.btn-sm { padding:8px 12px; font-size:13px; }
 .panel { padding:18px; margin-bottom:16px; }
 .panel-title { font-size:18px; color:var(--primary); margin-bottom:12px; font-weight:800; }
 .grid { display:grid; gap:12px; }
@@ -851,8 +867,24 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
   .d-line, .d-rank { display:none; }
 }
 @media (max-width: 900px) {
-  .main { margin-left:0; width:100%; padding:14px; }
+  .main { margin-left:0; width:100%; padding:16px; }
   .grid-2,.grid-4,.bracket-grid,.rank-list { grid-template-columns:1fr; }
+  .topbar { flex-direction:column; align-items:flex-start; gap:12px; }
+  .user-actions { width:100%; display:flex; justify-content:flex-end; }
+  .page-header { flex-direction:column; align-items:flex-start; }
+  .page-header .action-buttons { width:100%; flex-direction:column; }
+  .page-header .action-buttons .btn { width:100%; justify-content:center; }
+}
+@media (max-width: 480px) {
+  .btn { font-size:14px; }
+  .logout-btn {
+    background:linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+    border:none;
+    padding:10px 20px;
+    font-size:14px;
+    gap:10px;
+    box-shadow:0 5px 15px rgba(211, 47, 47, 0.2);
+  }
 }
 </style>
 </head>
@@ -861,11 +893,20 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
     <?php include __DIR__ . '/includes/sidebar.php'; ?>
     <div class="main">
         <div class="topbar">
-            <div>
+            <div class="greeting">
                 <h1>Event Bracket 🗓️</h1>
                 <p>Mode 4 tim: Semifinal, Final, dan perebutan juara 3.</p>
             </div>
-            <a href="event.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
+            <div class="user-actions">
+                <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <div class="page-title"><i class="fas fa-diagram-project"></i> <span>Kelola Bracket Event</span></div>
+            <div class="action-buttons">
+                <a href="event.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
+            </div>
         </div>
 
         <?php if ($success !== ''): ?>
@@ -944,7 +985,7 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                         ?>
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin:8px 0 10px;">
                             <div class="match-title" style="margin:0;"><?php echo htmlspecialchars($vCategory); ?></div>
-                            <a class="btn btn-secondary" style="padding:8px 12px;" href="event_bracket.php?event_id=<?php echo (int)$eventId; ?>&sport_type=<?php echo urlencode($vCategory); ?>">
+                            <a class="btn btn-secondary btn-sm" href="event_bracket.php?event_id=<?php echo (int)$eventId; ?>&sport_type=<?php echo urlencode($vCategory); ?>">
                                 Kelola
                             </a>
                         </div>

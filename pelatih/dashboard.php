@@ -206,7 +206,7 @@ if ($team_id) {
     }
 
     .card-icon-box {
-        width: 54px;
+        width: 54px;    
         height: 54px;
         border-radius: 16px;
         display: flex;

@@ -524,7 +524,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -1053,7 +1053,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -1064,10 +1064,12 @@ body {
                 <i class="fas fa-futbol"></i>
                 <span>Input Hasil Challenge</span>
             </div>
-            <a href="challenge_view.php?id=<?php echo $challenge_id; ?>" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Kembali ke Detail
-            </a>
+            <div class="action-buttons">
+                <a href="challenge_view.php?id=<?php echo $challenge_id; ?>" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <!-- ERROR MESSAGES -->

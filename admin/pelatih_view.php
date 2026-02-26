@@ -173,9 +173,10 @@ body {
     font-size: 32px;
 }
 
-.action-buttons {
+.page-header .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -204,7 +205,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -527,13 +528,14 @@ body {
         align-items: flex-start;
     }
 
-    .action-buttons {
+    .page-header .action-buttons {
         width: 100%;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 10px;
     }
 
-    .btn {
-        flex: 1;
+    .page-header .action-buttons .btn {
+        width: 100%;
         justify-content: center;
     }
 
@@ -689,7 +691,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -701,13 +703,13 @@ body {
                 <span>Detail Pelatih</span>
             </div>
             <div class="action-buttons">
-                <a href="pelatih_edit.php?id=<?php echo $pelatih_id; ?>" class="btn btn-primary">
-                    <i class="fas fa-edit"></i>
-                    Edit Pelatih
-                </a>
                 <a href="pelatih.php" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     Kembali
+                </a>
+                <a href="pelatih_edit.php?id=<?php echo $pelatih_id; ?>" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Pelatih
                 </a>
             </div>
         </div>

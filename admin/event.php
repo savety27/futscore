@@ -184,7 +184,7 @@ body {
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px 25px; animation: slideDown 0.5s ease-out; }
 .greeting h1 { font-size: 28px; color: var(--primary); margin-bottom: 5px; }
 .greeting p { color: var(--gray); font-size: 14px; }
-.logout-btn { background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%); color: white; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; }
+.logout-btn { background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%); color: white; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 25px; gap: 15px; flex-wrap: wrap; }
 .page-title { font-size: 28px; color: var(--primary); display: flex; align-items: center; gap: 15px; }
 .page-title i { color: var(--secondary); }
@@ -368,9 +368,13 @@ body {
 @media (max-width: 900px) {
     .main { margin-left: 0; width: 100%; padding: 16px; }
     .topbar, .page-header { padding: 16px; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .user-actions { width: 100%; display: flex; justify-content: flex-end; }
     .greeting h1 { font-size: 22px; }
     .page-title { font-size: 22px; }
     .event-filter-form { grid-template-columns: 1fr; }
+    .page-header .action-buttons { width: 100%; flex-direction: column; }
+    .page-header .btn { width: 100%; justify-content: center; }
     .action-cell { min-width: 166px; }
     .action-buttons-inline { gap: 5px; }
     .action-btn { width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
@@ -379,6 +383,17 @@ body {
         width: 100%;
         justify-content: center;
     }
+}
+@media (max-width: 480px) {
+    .logout-btn {
+        background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    }
+    .btn { font-size: 14px; }
 }
 </style>
 </head>
@@ -394,7 +409,9 @@ body {
                 <h1>Event Management 🗓️</h1>
                 <p>Kelola data event dengan konsep tampilan seragam</p>
             </div>
-            <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <div class="user-actions">
+                <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+            </div>
         </div>
 
         <div class="page-header">

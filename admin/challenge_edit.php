@@ -642,7 +642,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -886,6 +886,12 @@ body {
     border: 1px solid var(--gray);
 }
 
+.status-completed {
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+    border: 1px solid #1d4ed8;
+}
+
 
 /* =========================================
    MOBILE RESPONSIVE DESIGN
@@ -1057,7 +1063,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -1071,10 +1077,12 @@ body {
                     <?php echo htmlspecialchars($challenge_data['status'] ?? ''); ?>
                 </span>
             </div>
-            <a href="challenge.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Kembali
-            </a>
+            <div class="action-buttons">
+                <a href="challenge.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <!-- ERROR MESSAGES -->

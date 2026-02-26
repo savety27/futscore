@@ -160,56 +160,15 @@ body {
     color: var(--dark);
 }
 .wrapper { display: flex; min-height: 100vh; }
-.logo-container { position: relative; display: inline-block; }
-.logo:hover { transform: none; box-shadow: none; }
-.logo img {
-    width: 100%;
-    height: auto;
-    max-width: 200px;
-    filter: brightness(1.1) drop-shadow(0 0 15px rgba(255, 255, 255, 0.1));
-    transition: transform var(--transition), filter var(--transition);
-}
-.logo img:hover { transform: scale(1.05); }
-.academy-info { text-align: center; }
-.academy-email { font-size: 14px; opacity: 0.9; color: rgba(255,255,255,0.8); }
-.menu { padding: 25px 15px; }
-.menu-item { margin-bottom: 8px; border-radius: 12px; overflow: hidden; }
-.menu-link {
-    display: flex;
-    align-items: center;
-    color: rgba(255,255,255,0.75);
-    text-decoration: none;
-    padding: 14px 20px;
-    border-radius: 12px;
-    transition: var(--transition);
-    margin: 4px 0;
-}
-.menu-link:hover { background: rgba(255,255,255,0.1); color: #fff; transform: translateX(5px); }
-.menu-link.active {
-    color: var(--secondary);
-    background: linear-gradient(90deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.02) 100%);
-    border-right: 4px solid var(--secondary);
-    border-radius: 12px 0 0 12px;
-    font-weight: 700;
-}
-.menu-icon { font-size: 18px; margin-right: 15px; width: 24px; text-align: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-.menu-text { flex: 1; font-size: 15px; letter-spacing: 0.3px; }
-.menu-arrow { font-size: 12px; opacity: 0.6; transition: var(--transition); }
-.menu-arrow.rotate { transform: rotate(90deg); opacity: 1; }
-.submenu { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; background: rgba(0,0,0,0.2); border-radius: 0 0 12px 12px; }
-.submenu.open { max-height: 300px; }
-.submenu-item { padding: 5px 15px 5px 70px; }
-.submenu-link { display: block; color: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: var(--transition); position: relative; }
-.submenu-link.active, .submenu-link:hover { color: var(--secondary); background: rgba(245,158,11,0.1); padding-left: 20px; }
-.submenu-link::before { content: "\2022"; position: absolute; left: 0; color: var(--secondary); font-size: 18px; }
 .main { margin-left: 280px; flex: 1; padding: 28px; }
 .topbar, .page-header, .detail-container, .detail-description { background: #fff; border-radius: 18px; box-shadow: var(--card-shadow); }
 .topbar { padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; animation: slideDown 0.5s ease-out; }
 .greeting h1 { color: var(--primary); font-size: 26px; }
 .greeting p { color: var(--gray); font-size: 14px; }
-.logout-btn { display: inline-flex; gap: 8px; align-items: center; background: linear-gradient(135deg, var(--danger), #b91c1c); color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 10px; font-weight: 600; }
+.logout-btn { display: inline-flex; gap: 10px; align-items: center; background: linear-gradient(135deg, var(--danger), #b91c1c); color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: 600; }
 .page-header { margin-bottom: 22px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
 .page-title { display: flex; align-items: center; gap: 10px; color: var(--primary); font-size: 25px; }
+.action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn { border: none; border-radius: 10px; padding: 11px 18px; font-weight: 600; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
 .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
 .btn-secondary { background: #6b7280; color: #fff; }
@@ -264,9 +223,24 @@ body {
 }
 @media (max-width: 900px) {
     .main { margin-left: 0; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .user-actions { width: 100%; display: flex; justify-content: flex-end; }
     .detail-container { grid-template-columns: 1fr; }
     .detail-grid { grid-template-columns: 1fr; }
     .page-header { flex-direction: column; align-items: flex-start; }
+    .page-header .action-buttons { width: 100%; flex-direction: column; }
+    .page-header .action-buttons .btn { width: 100%; justify-content: center; }
+}
+@media (max-width: 480px) {
+    .logout-btn {
+        background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    }
+    .btn { font-size: 14px; }
 }
 </style>
 </head>
@@ -280,12 +254,14 @@ body {
                 <h1>Event Details 🗓️</h1>
                 <p>Informasi lengkap event</p>
             </div>
-            <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <div class="user-actions">
+                <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+            </div>
         </div>
 
         <div class="page-header">
             <div class="page-title"><i class="fas fa-calendar-check"></i> <span>Lihat Data Event</span></div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="action-buttons">
                 <a href="event.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
                 <?php if (!empty($event['id'])): ?>
                 <a href="event_edit.php?id=<?php echo (int) $event['id']; ?>" class="btn btn-primary"><i class="fas fa-pen"></i> Edit Event</a>

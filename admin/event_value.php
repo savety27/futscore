@@ -1017,13 +1017,13 @@ if ($eventId > 0) {
         }
         .logout-btn {
             display: inline-flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
             background: linear-gradient(135deg, var(--danger), #b91c1c);
             color: #fff;
             text-decoration: none;
-            padding: 10px 18px;
-            border-radius: 10px;
+            padding: 12px 28px;
+            border-radius: 12px;
             font-weight: 600
         }
         .page-header {
@@ -1261,23 +1261,52 @@ if ($eventId > 0) {
             color: #b91c1c
         }
         @media(max-width: 900px) {
-            .sidebar {
-                display: none
-            }
             .main {
                 margin-left: 0;
                 width: 100%;
                 padding: 16px
             }
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px
+            }
+            .user-actions {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end
+            }
             .page-header {
                 flex-direction: column;
                 align-items: flex-start
+            }
+            .page-header .btn {
+                width: 100%;
+                justify-content: center
             }
             .form-grid,
             .form-grid-2,
             .form-grid-3 {
                 grid-template-columns: 1fr
             }
+            .form-actions {
+                flex-direction: column
+            }
+            .form-actions .btn {
+                width: 100%;
+                justify-content: center
+            }
+        }
+        @media(max-width: 480px) {
+            .logout-btn {
+                background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+                border: none;
+                padding: 10px 20px;
+                font-size: 14px;
+                gap: 10px;
+                box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2)
+            }
+            .btn { font-size: 14px }
         }
     </style>
 </head>
@@ -1291,7 +1320,9 @@ if ($eventId > 0) {
                     <h1>Event Value 🗓️</h1>
                     <p>Kelola klasemen, poin, kartu team dan disiplin pemain.</p>
                 </div>
-                <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <div class="user-actions">
+                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+                </div>
             </div>
 
             <div class="page-header">
