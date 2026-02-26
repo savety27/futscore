@@ -141,6 +141,55 @@ $lineups = [
     'team2' => ['half1' => [], 'half2' => []]
 ];
 $goals = [];
+$hasMatchStaffAssignmentsTable = false;
+$staffLineups = [
+    'team1' => [],
+    'team2' => []
+];
+
+function formatStaffRoleLabel($role): string
+{
+    $key = strtolower(trim((string)$role));
+    $labels = [
+        'manager' => 'Manager',
+        'headcoach' => 'Head Coach',
+        'coach' => 'Coach',
+        'assistant_coach' => 'Asst. Coach',
+        'goalkeeper_coach' => 'GK Coach',
+        'fitness_coach' => 'Fitness Coach',
+        'analyst' => 'Analyst',
+        'medic' => 'Medic',
+        'official' => 'Official',
+        'scout' => 'Scout'
+    ];
+    if (isset($labels[$key])) {
+        return $labels[$key];
+    }
+    return $key !== '' ? ucwords(str_replace('_', ' ', $key)) : '-';
+}
+
+function resolveMatchStaffPhoto($filename): array
+{
+    if (empty($filename)) {
+        return ['url' => null, 'found' => false];
+    }
+
+    $basename = basename((string)$filename);
+    $candidates = [
+        'uploads/staff/' . $basename,
+        'images/staff/' . $basename,
+        'assets/staff/' . $basename,
+        ltrim((string)$filename, '/\\')
+    ];
+
+    foreach ($candidates as $path) {
+        if (is_file($path)) {
+            return ['url' => SITE_URL . '/' . str_replace('\\', '/', $path), 'found' => true];
+        }
+    }
+
+    return ['url' => null, 'found' => false];
+}
 
 if (!$match) {
     $matchNotFound = true;
@@ -171,6 +220,94 @@ if (!$match) {
 
         // Get goals for this challenge match.
         $goals = getMatchGoals($matchId);
+
+        $staffTableCheck = $conn->query("SHOW TABLES LIKE 'match_staff_assignments'");
+        $hasMatchStaffAssignmentsTable = $staffTableCheck && $staffTableCheck->num_rows > 0;
+        if ($staffTableCheck instanceof mysqli_result) {
+            $staffTableCheck->free();
+        }
+
+        if ($hasMatchStaffAssignmentsTable) {
+            $sqlStaffLineups = "SELECT msa.team_id,
+                                       msa.role AS assignment_role,
+                                       ts.position AS staff_position,
+                                       ts.photo AS staff_photo,
+                                       ts.name AS staff_name
+                                FROM match_staff_assignments msa
+                                LEFT JOIN team_staff ts ON msa.staff_id = ts.id
+                                WHERE msa.match_id = ?
+                                ORDER BY
+                                    CASE
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'manager')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'manager')
+                                        ) THEN 1
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'headcoach')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'headcoach')
+                                        ) THEN 2
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'coach')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'coach')
+                                        ) THEN 3
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'assistant_coach')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'assistant_coach')
+                                        ) THEN 4
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'goalkeeper_coach')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'goalkeeper_coach')
+                                        ) THEN 5
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'fitness_coach')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'fitness_coach')
+                                        ) THEN 6
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'analyst')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'analyst')
+                                        ) THEN 7
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'medic')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'medic')
+                                        ) THEN 8
+                                        WHEN (
+                                            (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'official')
+                                            OR ((msa.role IS NULL OR msa.role = '') AND ts.position = 'official')
+                                        ) THEN 9
+                                        ELSE 99
+                                    END,
+                                    ts.name ASC";
+            $stmtStaffLineups = $conn->prepare($sqlStaffLineups);
+            if ($stmtStaffLineups) {
+                $stmtStaffLineups->bind_param('i', $matchId);
+                $stmtStaffLineups->execute();
+                $resultStaffLineups = $stmtStaffLineups->get_result();
+                while ($staffRow = $resultStaffLineups->fetch_assoc()) {
+                    $teamKey = null;
+                    if ((int)$staffRow['team_id'] === (int)$match['team1_id']) {
+                        $teamKey = 'team1';
+                    } elseif ((int)$staffRow['team_id'] === (int)$match['team2_id']) {
+                        $teamKey = 'team2';
+                    }
+
+                    if ($teamKey === null) {
+                        continue;
+                    }
+
+                    $effectiveRole = trim((string)($staffRow['assignment_role'] ?? ''));
+                    if ($effectiveRole === '') {
+                        $effectiveRole = trim((string)($staffRow['staff_position'] ?? ''));
+                    }
+
+                    $staffLineups[$teamKey][] = [
+                        'name' => trim((string)($staffRow['staff_name'] ?? '')),
+                        'role' => $effectiveRole,
+                        'photo' => trim((string)($staffRow['staff_photo'] ?? ''))
+                    ];
+                }
+                $stmtStaffLineups->close();
+            }
+        }
     }
 }
 
@@ -480,9 +617,6 @@ if (!$matchNotFound) {
                 <section class="section-container lineup-section">
                     <div class="section-header">
                         <h2 class="section-title">SUSUNAN PEMAIN TEAM</h2>
-                        <div class="lineup-legend">
-                            <span class="legend-pill"><i class="fas fa-star"></i> Pemain Utama</span>
-                        </div>
                     </div>
 
                     <!-- TABS FOR HALF SELECTION -->
@@ -668,6 +802,111 @@ if (!$matchNotFound) {
                         </div>
                     </div>
                 </section>
+
+                <?php if ($resolvedSource === 'challenge' && $hasMatchStaffAssignmentsTable): ?>
+                <section class="section-container lineup-section">
+                    <div class="section-header">
+                        <h2 class="section-title">LINEUP STAFF TEAM</h2>
+                    </div>
+                    <div class="lineups-grid">
+                        <div class="lineup-card">
+                            <div class="lineup-card-header">
+                                <div class="lineup-team">
+                                    <div class="lineup-team-logo">
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>"
+                                             alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                    </div>
+                                    <div class="lineup-team-info">
+                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
+                                        <span class="lineup-count"><?php echo count($staffLineups['team1']); ?> staff</span>
+                                    </div>
+                                </div>
+                                <span class="team-side-badge">Home</span>
+                            </div>
+
+                            <?php if (empty($staffLineups['team1'])): ?>
+                                <div class="empty-state">Belum ada staff ditetapkan untuk tim ini.</div>
+                            <?php else: ?>
+                                <div class="lineup-list">
+                                    <?php foreach ($staffLineups['team1'] as $staff): ?>
+                                        <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
+                                        <div class="lineup-player">
+                                            <?php if ($staffPhoto['found']): ?>
+                                                <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
+                                                     class="lineup-avatar"
+                                                     alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
+                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="lineup-info">
+                                                <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
+                                                <div class="lineup-meta">
+                                                    <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="lineup-card">
+                            <div class="lineup-card-header">
+                                <div class="lineup-team">
+                                    <div class="lineup-team-logo">
+                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>"
+                                             alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                    </div>
+                                    <div class="lineup-team-info">
+                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
+                                        <span class="lineup-count"><?php echo count($staffLineups['team2']); ?> staff</span>
+                                    </div>
+                                </div>
+                                <span class="team-side-badge away">Away</span>
+                            </div>
+
+                            <?php if (empty($staffLineups['team2'])): ?>
+                                <div class="empty-state">Belum ada staff ditetapkan untuk tim ini.</div>
+                            <?php else: ?>
+                                <div class="lineup-list">
+                                    <?php foreach ($staffLineups['team2'] as $staff): ?>
+                                        <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
+                                        <div class="lineup-player">
+                                            <?php if ($staffPhoto['found']): ?>
+                                                <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
+                                                     class="lineup-avatar"
+                                                     alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
+                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                    <i class="fas fa-user-tie"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                            <div class="lineup-info">
+                                                <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
+                                                <div class="lineup-meta">
+                                                    <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </section>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
 
