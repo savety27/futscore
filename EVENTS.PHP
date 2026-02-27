@@ -1954,18 +1954,27 @@ if ($eventId > 0 && !empty($event)) {
                     + '<th style="text-align:left;">Date</th>'
                     + '<th style="text-align:left;">Opponent</th>'
                     + '<th>Info</th>'
+                    + '<th>Jersey</th>'
+                    + '<th>Play Time</th>'
                     + '<th>Score</th>'
                     + '<th>Result</th>'
                     + '<th>Goal</th>'
                     + '</tr></thead><tbody>';
 
                 if (!data.matches.length) {
-                    html += '<tr><td colspan="7" style="padding:24px;text-align:center;color:#64748b;">Belum ada match yang dimainkan di event ini</td></tr>';
+                    html += '<tr><td colspan="9" style="padding:24px;text-align:center;color:#64748b;">Belum ada match yang dimainkan di event ini</td></tr>';
                 } else {
                     data.matches.forEach((m, idx) => {
                         const logoUrl = resolveTeamLogoUrlClient(m.opp_team_logo);
                         const scoreStr = (m.my_score !== null && m.their_score !== null)
                             ? m.my_score + ' - ' + m.their_score : '-';
+                        const categoryLabel = (m.category && m.category !== '') ? m.category : (data.category || '-');
+                        const jerseyLabel = (data.jersey_number && data.jersey_number !== '') ? ('#' + data.jersey_number) : '-';
+                        const playTimeLabel = (typeof m.play_time === 'number') ? m.play_time : (parseInt(m.play_time || '0', 10) || 0);
+                        let infoLabel = categoryLabel;
+                        if (m.match_info && m.match_info !== '-') {
+                            infoLabel += ' | ' + m.match_info;
+                        }
 
                         let resultHtml = '-';
                         if (m.result === 'W') resultHtml = '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">W</span>';
@@ -1988,7 +1997,9 @@ if ($eventId > 0 && !empty($event)) {
                             +   '<img src="' + logoUrl + '" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #dbe6f3;" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">'
                             +   '<span style="font-size:12px;font-weight:600;">' + m.opp_team_name + '</span>'
                             + '</div></td>'
-                            + '<td style="font-size:11px;color:#475569;">' + (m.match_info && m.match_info !== '-' ? m.match_info : '-') + '</td>'
+                            + '<td style="font-size:11px;color:#475569;">' + infoLabel + '</td>'
+                            + '<td style="font-weight:700;">' + jerseyLabel + '</td>'
+                            + '<td style="font-weight:700;">' + playTimeLabel + ' menit</td>'
                             + '<td style="font-weight:700;">' + scoreStr + '</td>'
                             + '<td>' + resultHtml + '</td>'
                             + '<td>' + m.goals + '</td>'

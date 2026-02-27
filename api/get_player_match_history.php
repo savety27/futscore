@@ -19,6 +19,22 @@ if ($eventId <= 0 || $playerId <= 0 || $teamId <= 0) {
     exit;
 }
 
+function parseMatchDurationMinutes($raw): int
+{
+    if ($raw === null) {
+        return 90;
+    }
+    $text = trim((string)$raw);
+    if ($text === '') {
+        return 90;
+    }
+    if (preg_match('/\d+/', $text, $m)) {
+        $minutes = (int)$m[0];
+        return $minutes > 0 ? $minutes : 90;
+    }
+    return 90;
+}
+
 try {
     // Get player info
     $stmtPlayer = $conn->prepare("SELECT name, photo, jersey_number FROM players WHERE id = ? LIMIT 1");
@@ -43,15 +59,27 @@ try {
     //   If event_id filter returns 0 rows, fall back to sport_type-only filter
     //   so the feature still works even if event_id on challenges is not set.
 
+    $hasLineupHalfCol = false;
+    $halfColStmt = $conn->query("SHOW COLUMNS FROM lineups LIKE 'half'");
+    if ($halfColStmt && $halfColStmt->fetch(PDO::FETCH_ASSOC)) {
+        $hasLineupHalfCol = true;
+    }
+    $halfCountExpr = $hasLineupHalfCol
+        ? "COUNT(DISTINCT CASE WHEN l.half IN (1,2) THEN l.half END)"
+        : "0";
+
     $baseSql = "
         SELECT
             c.id                AS match_id,
             c.challenge_date,
             c.notes             AS match_info,
+            c.sport_type        AS category_name,
+            c.match_duration    AS match_duration,
             c.challenger_id,
             c.opponent_id,
             c.challenger_score,
             c.opponent_score,
+            {$halfCountExpr}    AS half_count,
             CASE WHEN c.challenger_id = ? THEN c.opponent_id        ELSE c.challenger_id    END AS opp_team_id,
             CASE WHEN c.challenger_id = ? THEN c.challenger_score   ELSE c.opponent_score   END AS my_score,
             CASE WHEN c.challenger_id = ? THEN c.opponent_score     ELSE c.challenger_score END AS their_score,
@@ -102,13 +130,23 @@ try {
     }
 
     // Get aggregate player cards for this event
+    // Include legacy blank-category data when specific sport_type is requested.
     $cardParams = [$eventId, $playerId];
-    $cardWhere  = "WHERE event_id = ? AND player_id = ?";
     if ($sportType !== '') {
-        $cardWhere   .= " AND sport_type = ?";
+        $stmtCards = $conn->prepare("SELECT COALESCE(SUM(yellow_cards), 0) AS yellow_cards,
+                                            COALESCE(SUM(red_cards), 0) AS red_cards,
+                                            COALESCE(SUM(green_cards), 0) AS green_cards
+                                     FROM player_event_cards
+                                     WHERE event_id = ? AND player_id = ?
+                                       AND (sport_type = ? OR sport_type = '' OR sport_type IS NULL)");
         $cardParams[] = $sportType;
+    } else {
+        $stmtCards = $conn->prepare("SELECT COALESCE(SUM(yellow_cards), 0) AS yellow_cards,
+                                            COALESCE(SUM(red_cards), 0) AS red_cards,
+                                            COALESCE(SUM(green_cards), 0) AS green_cards
+                                     FROM player_event_cards
+                                     WHERE event_id = ? AND player_id = ?");
     }
-    $stmtCards = $conn->prepare("SELECT yellow_cards, red_cards, green_cards FROM player_event_cards $cardWhere LIMIT 1");
     $stmtCards->execute($cardParams);
     $cardsRow = $stmtCards->fetch(PDO::FETCH_ASSOC);
 
@@ -124,10 +162,27 @@ try {
         }
 
         $matchId   = (int)$row['match_id'];
+        $matchDuration = parseMatchDurationMinutes($row['match_duration'] ?? null);
+        $playTime = $matchDuration;
+        if ($hasLineupHalfCol) {
+            $halfCount = (int)($row['half_count'] ?? 0);
+            if ($halfCount === 1) {
+                $playTime = (int)round($matchDuration / 2);
+            } elseif ($halfCount >= 2) {
+                $playTime = $matchDuration;
+            }
+        }
+        $matchCategory = trim((string)($row['category_name'] ?? ''));
+        if ($matchCategory === '') {
+            $matchCategory = $sportType !== '' ? $sportType : '-';
+        }
+
         $matches[] = [
             'match_id'      => $matchId,
             'date'          => $row['challenge_date'],
             'match_info'    => trim((string)($row['match_info'] ?? '')),
+            'category'      => $matchCategory,
+            'play_time'     => $playTime,
             'opp_team_name' => (string)($row['opp_team_name'] ?? '-'),
             'opp_team_logo' => (string)($row['opp_team_logo'] ?? ''),
             'my_score'      => $myScore !== null ? (int)$myScore : null,
