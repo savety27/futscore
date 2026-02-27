@@ -142,10 +142,13 @@ $lineups = [
 ];
 $goals = [];
 $hasMatchStaffAssignmentsTable = false;
+$hasMatchStaffHalfColumn = false;
 $staffLineups = [
-    'team1' => [],
-    'team2' => []
+    'team1' => ['half1' => [], 'half2' => []],
+    'team2' => ['half1' => [], 'half2' => []]
 ];
+$hasPlayerEventCardsTable = false;
+$matchSuspendRows = [];
 
 function formatStaffRoleLabel($role): string
 {
@@ -228,7 +231,15 @@ if (!$match) {
         }
 
         if ($hasMatchStaffAssignmentsTable) {
+            $staffHalfCheck = $conn->query("SHOW COLUMNS FROM match_staff_assignments LIKE 'half'");
+            $hasMatchStaffHalfColumn = $staffHalfCheck && $staffHalfCheck->num_rows > 0;
+            if ($staffHalfCheck instanceof mysqli_result) {
+                $staffHalfCheck->free();
+            }
+
+            $halfSelectSql = $hasMatchStaffHalfColumn ? "COALESCE(msa.half, 1) AS half," : "1 AS half,";
             $sqlStaffLineups = "SELECT msa.team_id,
+                                       {$halfSelectSql}
                                        msa.role AS assignment_role,
                                        ts.position AS staff_position,
                                        ts.photo AS staff_photo,
@@ -237,6 +248,7 @@ if (!$match) {
                                 LEFT JOIN team_staff ts ON msa.staff_id = ts.id
                                 WHERE msa.match_id = ?
                                 ORDER BY
+                                    COALESCE(msa.half, 1) ASC,
                                     CASE
                                         WHEN (
                                             (msa.role IS NOT NULL AND msa.role <> '' AND msa.role = 'manager')
@@ -293,19 +305,70 @@ if (!$match) {
                     if ($teamKey === null) {
                         continue;
                     }
+                    $halfKey = ((int)($staffRow['half'] ?? 1) === 2) ? 'half2' : 'half1';
 
                     $effectiveRole = trim((string)($staffRow['assignment_role'] ?? ''));
                     if ($effectiveRole === '') {
                         $effectiveRole = trim((string)($staffRow['staff_position'] ?? ''));
                     }
 
-                    $staffLineups[$teamKey][] = [
+                    $staffLineups[$teamKey][$halfKey][] = [
                         'name' => trim((string)($staffRow['staff_name'] ?? '')),
                         'role' => $effectiveRole,
                         'photo' => trim((string)($staffRow['staff_photo'] ?? ''))
                     ];
                 }
                 $stmtStaffLineups->close();
+            }
+        }
+
+        $cardsTableCheck = $conn->query("SHOW TABLES LIKE 'player_event_cards'");
+        $hasPlayerEventCardsTable = $cardsTableCheck && $cardsTableCheck->num_rows > 0;
+        if ($cardsTableCheck instanceof mysqli_result) {
+            $cardsTableCheck->free();
+        }
+
+        if ($hasPlayerEventCardsTable) {
+            $team1Id = (int)($match['team1_id'] ?? 0);
+            $team2Id = (int)($match['team2_id'] ?? 0);
+            $matchEventId = (int)($match['event_id'] ?? 0);
+            $matchCategory = trim((string)($match['category_name'] ?? ''));
+
+            if ($team1Id > 0 && $team2Id > 0) {
+                $cardSql = "SELECT pec.*, p.name AS player_name, t.name AS team_name
+                            FROM player_event_cards pec
+                            INNER JOIN players p ON p.id = pec.player_id
+                            INNER JOIN teams t ON t.id = pec.team_id
+                            WHERE pec.team_id IN (?, ?)
+                              AND (pec.yellow_cards > 0 OR pec.red_cards > 0 OR pec.green_cards > 0)";
+
+                $types = "ii";
+                $params = [$team1Id, $team2Id];
+
+                if ($matchEventId > 0) {
+                    $cardSql .= " AND pec.event_id = ?";
+                    $types .= "i";
+                    $params[] = $matchEventId;
+                }
+
+                if ($matchCategory !== '') {
+                    $cardSql .= " AND (pec.sport_type = ? OR pec.sport_type = '' OR pec.sport_type IS NULL)";
+                    $types .= "s";
+                    $params[] = $matchCategory;
+                }
+
+                $cardSql .= " ORDER BY t.name ASC, p.name ASC";
+
+                $stmtMatchCards = $conn->prepare($cardSql);
+                if ($stmtMatchCards) {
+                    $stmtMatchCards->bind_param($types, ...$params);
+                    $stmtMatchCards->execute();
+                    $resultMatchCards = $stmtMatchCards->get_result();
+                    while ($row = $resultMatchCards->fetch_assoc()) {
+                        $matchSuspendRows[] = $row;
+                    }
+                    $stmtMatchCards->close();
+                }
             }
         }
     }
@@ -381,6 +444,15 @@ if (!$matchNotFound) {
     display: block;
 }
 
+.staff-content-half {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.staff-content-half.active {
+    display: block;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
@@ -398,6 +470,66 @@ if (!$matchNotFound) {
 .goals-half-title:first-of-type {
     margin-top: 0;
 }
+
+.card-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.card-badge.yellow { background: #fef3c7; color: #92400e; }
+.card-badge.red { background: #fee2e2; color: #991b1b; }
+.card-badge.green { background: #dcfce7; color: #166534; }
+
+.suspend-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.suspend-pill.active { background: #fee2e2; color: #991b1b; }
+.suspend-pill.done { background: #dcfce7; color: #166534; }
+
+.match-suspend-wrap {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.match-suspend-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+}
+
+.match-suspend-table th,
+.match-suspend-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.match-suspend-table th {
+    background: #0f2744;
+    font-weight: 700;
+    text-align: left;
+    color: #ffffff;
+}
+
+.match-suspend-table tbody tr:hover {
+    background: #f8fbff;
+}
+
 </style>
 
 <div class="dashboard-wrapper">
@@ -645,12 +777,12 @@ if (!$matchNotFound) {
 
                     <!-- TABS FOR HALF SELECTION -->
                     <div class="lineup-tabs">
-                        <button class="lineup-tab-btn active" onclick="switchLineupTab(1)">BABAK 1</button>
-                        <button class="lineup-tab-btn" onclick="switchLineupTab(2)">BABAK 2</button>
+                        <button class="lineup-tab-btn player-tab-btn active" onclick="switchLineupTab(1)">BABAK 1</button>
+                        <button class="lineup-tab-btn player-tab-btn" onclick="switchLineupTab(2)">BABAK 2</button>
                     </div>
 
                     <!-- CONTENT WRAPPER FOR HALVES -->
-                    <div id="lineup-half-1" class="lineup-content-half active">
+                    <div id="lineup-half-1" class="lineup-content-half player-content-half active">
                         <div class="lineups-grid">
                             <!-- Team 1 Half 1 -->
                             <div class="lineup-card">
@@ -738,7 +870,7 @@ if (!$matchNotFound) {
                         </div>
                     </div>
 
-                    <div id="lineup-half-2" class="lineup-content-half">
+                    <div id="lineup-half-2" class="lineup-content-half player-content-half">
                          <div class="lineups-grid">
                             <!-- Team 1 Half 2 -->
                             <div class="lineup-card">
@@ -832,103 +964,256 @@ if (!$matchNotFound) {
                     <div class="section-header">
                         <h2 class="section-title">LINEUP STAFF TEAM</h2>
                     </div>
-                    <div class="lineups-grid">
-                        <div class="lineup-card">
-                            <div class="lineup-card-header">
-                                <div class="lineup-team">
-                                    <div class="lineup-team-logo">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>"
-                                             alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
-                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
-                                    </div>
-                                    <div class="lineup-team-info">
-                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
-                                        <span class="lineup-count"><?php echo count($staffLineups['team1']); ?> staff</span>
-                                    </div>
-                                </div>
-                                <span class="team-side-badge">Home</span>
-                            </div>
+                    <div class="lineup-tabs">
+                        <button class="lineup-tab-btn staff-tab-btn active" onclick="switchStaffTab(1)">BABAK 1</button>
+                        <button class="lineup-tab-btn staff-tab-btn" onclick="switchStaffTab(2)">BABAK 2</button>
+                    </div>
 
-                            <?php if (empty($staffLineups['team1'])): ?>
-                                <div class="empty-state">Belum ada staff ditetapkan untuk tim ini.</div>
-                            <?php else: ?>
-                                <div class="lineup-list">
-                                    <?php foreach ($staffLineups['team1'] as $staff): ?>
-                                        <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
-                                        <div class="lineup-player">
-                                            <?php if ($staffPhoto['found']): ?>
-                                                <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
-                                                     class="lineup-avatar"
-                                                     alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
-                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
-                                                    <i class="fas fa-user-tie"></i>
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
-                                                    <i class="fas fa-user-tie"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                            <div class="lineup-info">
-                                                <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
-                                                <div class="lineup-meta">
-                                                    <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                    <div id="staff-half-1" class="staff-content-half active">
+                        <div class="lineups-grid">
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>"
+                                                 alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        </div>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($staffLineups['team1']['half1']); ?> staff</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge">Home</span>
+                                </div>
+                                <?php if (empty($staffLineups['team1']['half1'])): ?>
+                                    <div class="empty-state">Belum ada staff ditetapkan untuk babak 1.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($staffLineups['team1']['half1'] as $staff): ?>
+                                            <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
+                                            <div class="lineup-player">
+                                                <?php if ($staffPhoto['found']): ?>
+                                                    <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
+                                                         class="lineup-avatar"
+                                                         alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
+                                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                    <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="lineup-card">
-                            <div class="lineup-card-header">
-                                <div class="lineup-team">
-                                    <div class="lineup-team-logo">
-                                        <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>"
-                                             alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
-                                             onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        <?php endforeach; ?>
                                     </div>
-                                    <div class="lineup-team-info">
-                                        <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
-                                        <span class="lineup-count"><?php echo count($staffLineups['team2']); ?> staff</span>
-                                    </div>
-                                </div>
-                                <span class="team-side-badge away">Away</span>
+                                <?php endif; ?>
                             </div>
 
-                            <?php if (empty($staffLineups['team2'])): ?>
-                                <div class="empty-state">Belum ada staff ditetapkan untuk tim ini.</div>
-                            <?php else: ?>
-                                <div class="lineup-list">
-                                    <?php foreach ($staffLineups['team2'] as $staff): ?>
-                                        <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
-                                        <div class="lineup-player">
-                                            <?php if ($staffPhoto['found']): ?>
-                                                <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
-                                                     class="lineup-avatar"
-                                                     alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
-                                                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
-                                                    <i class="fas fa-user-tie"></i>
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
-                                                    <i class="fas fa-user-tie"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                            <div class="lineup-info">
-                                                <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
-                                                <div class="lineup-meta">
-                                                    <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>"
+                                                 alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        </div>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($staffLineups['team2']['half1']); ?> staff</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge away">Away</span>
+                                </div>
+                                <?php if (empty($staffLineups['team2']['half1'])): ?>
+                                    <div class="empty-state">Belum ada staff ditetapkan untuk babak 1.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($staffLineups['team2']['half1'] as $staff): ?>
+                                            <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
+                                            <div class="lineup-player">
+                                                <?php if ($staffPhoto['found']): ?>
+                                                    <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
+                                                         class="lineup-avatar"
+                                                         alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
+                                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                    <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
+
+                    <div id="staff-half-2" class="staff-content-half">
+                        <div class="lineups-grid">
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team1_logo']; ?>"
+                                                 alt="<?php echo htmlspecialchars($match['team1_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        </div>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team1_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($staffLineups['team1']['half2']); ?> staff</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge">Home</span>
+                                </div>
+                                <?php if (empty($staffLineups['team1']['half2'])): ?>
+                                    <div class="empty-state">Belum ada staff ditetapkan untuk babak 2.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($staffLineups['team1']['half2'] as $staff): ?>
+                                            <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
+                                            <div class="lineup-player">
+                                                <?php if ($staffPhoto['found']): ?>
+                                                    <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
+                                                         class="lineup-avatar"
+                                                         alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
+                                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                    <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="lineup-card">
+                                <div class="lineup-card-header">
+                                    <div class="lineup-team">
+                                        <div class="lineup-team-logo">
+                                            <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo $match['team2_logo']; ?>"
+                                                 alt="<?php echo htmlspecialchars($match['team2_name'] ?? ''); ?>"
+                                                 onerror="this.onerror=null; this.src='<?php echo SITE_URL; ?>/images/teams/default-team.png'">
+                                        </div>
+                                        <div class="lineup-team-info">
+                                            <h3 class="lineup-team-name"><?php echo htmlspecialchars($match['team2_name'] ?? ''); ?></h3>
+                                            <span class="lineup-count"><?php echo count($staffLineups['team2']['half2']); ?> staff</span>
+                                        </div>
+                                    </div>
+                                    <span class="team-side-badge away">Away</span>
+                                </div>
+                                <?php if (empty($staffLineups['team2']['half2'])): ?>
+                                    <div class="empty-state">Belum ada staff ditetapkan untuk babak 2.</div>
+                                <?php else: ?>
+                                    <div class="lineup-list">
+                                        <?php foreach ($staffLineups['team2']['half2'] as $staff): ?>
+                                            <?php $staffPhoto = resolveMatchStaffPhoto($staff['photo'] ?? ''); ?>
+                                            <div class="lineup-player">
+                                                <?php if ($staffPhoto['found']): ?>
+                                                    <img src="<?php echo htmlspecialchars($staffPhoto['url']); ?>"
+                                                         class="lineup-avatar"
+                                                         alt="<?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : 'Staff'); ?>"
+                                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                    <div class="lineup-avatar" style="display:none;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="lineup-avatar" style="display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#475569;">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="lineup-info">
+                                                    <div class="lineup-name"><?php echo htmlspecialchars($staff['name'] !== '' ? $staff['name'] : '-'); ?></div>
+                                                    <div class="lineup-meta">
+                                                        <span class="lineup-position"><?php echo htmlspecialchars(formatStaffRoleLabel($staff['role'])); ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <?php endif; ?>
+
+                <?php if ($resolvedSource === 'challenge'): ?>
+                <section class="section-container lineup-section">
+                    <div class="section-header">
+                        <h2 class="section-title">STATUS SUSPEND PEMAIN MATCH INI</h2>
+                    </div>
+                    <?php if (!$hasPlayerEventCardsTable): ?>
+                        <div class="empty-state">Tabel data kartu pemain belum tersedia.</div>
+                    <?php elseif (empty($matchSuspendRows)): ?>
+                        <div class="empty-state">Tidak ada data kartu pemain untuk pertandingan ini.</div>
+                    <?php else: ?>
+                        <div class="match-suspend-wrap">
+                            <table class="match-suspend-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pemain</th>
+                                        <th>Team</th>
+                                        <th>Kuning</th>
+                                        <th>Merah</th>
+                                        <th>Hijau</th>
+                                        <th>Suspend Sampai</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($matchSuspendRows as $card): ?>
+                                        <?php
+                                        $suspendUntil = !empty($card['suspension_until']) ? $card['suspension_until'] : null;
+                                        $isSuspended = $suspendUntil && $suspendUntil >= date('Y-m-d');
+                                        ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($card['player_name'] ?? '-'); ?></td>
+                                            <td><?php echo htmlspecialchars($card['team_name'] ?? '-'); ?></td>
+                                            <td><span class="card-badge yellow"><?php echo (int)($card['yellow_cards'] ?? 0); ?></span></td>
+                                            <td><span class="card-badge red"><?php echo (int)($card['red_cards'] ?? 0); ?></span></td>
+                                            <td><span class="card-badge green"><?php echo (int)($card['green_cards'] ?? 0); ?></span></td>
+                                            <td><?php echo $suspendUntil ? htmlspecialchars(date('d M Y', strtotime($suspendUntil))) : '-'; ?></td>
+                                            <td>
+                                                <span class="suspend-pill <?php echo $isSuspended ? 'active' : 'done'; ?>">
+                                                    <?php echo $isSuspended ? 'Tidak Boleh Main' : 'Boleh Main'; ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
                 </section>
                 <?php endif; ?>
             <?php endif; ?>
@@ -996,12 +1281,21 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 // Lineup Tab Switching
 function switchLineupTab(half) {
     // Hide all contents
-    document.querySelectorAll('.lineup-content-half').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.player-content-half').forEach(el => el.classList.remove('active'));
     // Show selected
     document.getElementById('lineup-half-' + half).classList.add('active');
     
     // Update buttons
-    const btns = document.querySelectorAll('.lineup-tab-btn');
+    const btns = document.querySelectorAll('.player-tab-btn');
+    btns.forEach(btn => btn.classList.remove('active'));
+    btns[half-1].classList.add('active');
+}
+
+function switchStaffTab(half) {
+    document.querySelectorAll('.staff-content-half').forEach(el => el.classList.remove('active'));
+    document.getElementById('staff-half-' + half).classList.add('active');
+
+    const btns = document.querySelectorAll('.staff-tab-btn');
     btns.forEach(btn => btn.classList.remove('active'));
     btns[half-1].classList.add('active');
 }
