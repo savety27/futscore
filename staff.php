@@ -1844,6 +1844,7 @@ document.querySelectorAll('.btn-staff-history').forEach((btn) => {
                     <td><span class="staff-history-pill">${escapeHtml(m.event_name || '-')}</span></td>
                     <td>${escapeHtml(m.sport_type || '-')}</td>
                     <td>#${escapeHtml(String(m.challenge_id || ''))}<br><small style="color:#94a3b8">${escapeHtml(m.challenge_code || '-')}</small></td>
+                    <td>${escapeHtml(m.half_label || '-')}</td>
                     <td>${escapeHtml(m.challenge_date_fmt || '-')}</td>
                     <td>${escapeHtml(m.challenger_name || '-')} vs ${escapeHtml(m.opponent_name || '-')}</td>
                     <td>${escapeHtml(m.role || '-')}</td>
@@ -1860,6 +1861,7 @@ document.querySelectorAll('.btn-staff-history').forEach((btn) => {
                                 <th>Event</th>
                                 <th>Kategori</th>
                                 <th>Match</th>
+                                <th>Babak</th>
                                 <th>Tanggal</th>
                                 <th>Pertandingan</th>
                                 <th>Peran</th>

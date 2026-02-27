@@ -37,6 +37,11 @@ try {
         $has_match_status_column = $result->num_rows > 0;
         $result->close();
     }
+    $has_staff_half_column = false;
+    if ($result = $conn->query("SHOW COLUMNS FROM match_staff_assignments LIKE 'half'")) {
+        $has_staff_half_column = $result->num_rows > 0;
+        $result->close();
+    }
 
     $event_name_select = $has_event_id_column
         ? "TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,"
@@ -45,6 +50,12 @@ try {
     $status_select = $has_match_status_column
         ? "COALESCE(NULLIF(c.match_status, ''), c.status) AS status,"
         : "c.status AS status,";
+    $half_select = $has_staff_half_column
+        ? "COALESCE(msa.half, 1) AS half,"
+        : "1 AS half,";
+    $order_suffix = $has_staff_half_column
+        ? "ORDER BY c.challenge_date DESC, COALESCE(msa.half, 1) ASC, msa.id DESC"
+        : "ORDER BY c.challenge_date DESC, msa.id DESC";
 
     $sql = "
         SELECT
@@ -56,6 +67,7 @@ try {
             c.sport_type,
             c.challenge_date,
             $status_select
+            $half_select
             c.challenger_id,
             c.opponent_id,
             t1.name AS challenger_name,
@@ -68,7 +80,7 @@ try {
         INNER JOIN teams t2 ON c.opponent_id = t2.id
         INNER JOIN team_staff ts ON msa.staff_id = ts.id
         WHERE msa.staff_id = ?
-        ORDER BY c.challenge_date DESC, msa.id DESC
+        $order_suffix
     ";
 
     $stmt = $conn->prepare($sql);
@@ -93,21 +105,27 @@ try {
         }
 
         $event_name = trim((string) ($row['event_name'] ?? ''));
-        if ($event_name !== '') {
+        $challenge_id = (int)($row['challenge_id'] ?? 0);
+        if ($event_name !== '' && $challenge_id > 0) {
             if (!isset($event_counter[$event_name])) {
-                $event_counter[$event_name] = 0;
+                $event_counter[$event_name] = [];
             }
-            $event_counter[$event_name]++;
+            $event_counter[$event_name][$challenge_id] = true;
         }
 
+        $half = (int)($row['half'] ?? 1);
+        $half_label = $half === 2 ? 'Babak 2' : 'Babak 1';
+
         $matches[] = [
-            'challenge_id' => (int) $row['challenge_id'],
+            'challenge_id' => $challenge_id,
             'challenge_code' => $row['challenge_code'] ?? '',
             'event_name' => $event_name,
             'sport_type' => $row['sport_type'] ?? '',
             'challenge_date' => $row['challenge_date'] ?? '',
             'challenge_date_fmt' => $challenge_date_fmt,
             'status' => $row['status'] ?? '',
+            'half' => $half,
+            'half_label' => $half_label,
             'challenger_id' => (int) $row['challenger_id'],
             'opponent_id' => (int) $row['opponent_id'],
             'challenger_name' => $row['challenger_name'] ?? '',
@@ -120,10 +138,10 @@ try {
     $conn->close();
 
     $event_summary = [];
-    foreach ($event_counter as $event_name => $match_count) {
+    foreach ($event_counter as $event_name => $match_map) {
         $event_summary[] = [
             'name' => $event_name,
-            'match_count' => (int) $match_count,
+            'match_count' => count($match_map),
         ];
     }
     usort($event_summary, function ($a, $b) {
