@@ -195,7 +195,8 @@
 
     .team-ds-table-wrap {
         overflow-x: auto;
-        background: #0f172a;
+        background: #ffffff;
+        border: 1px solid #dbe6f3;
         border-radius: 12px;
         margin-top: 10px;
     }
@@ -204,24 +205,30 @@
         width: 100%;
         border-collapse: collapse;
         min-width: 760px;
-        color: #fff;
+        color: #334155;
     }
 
     .team-ds-table th {
         padding: 12px 10px;
         font-size: 13px;
         font-weight: 700;
-        border-bottom: 2px solid #1e293b;
+        border-bottom: 1px solid #cbd5e1;
+        background: #0f2744;
+        color: #ffffff;
         text-align: center;
     }
 
     .team-ds-table td {
         padding: 10px;
         font-size: 13px;
-        border-bottom: 1px solid #1e293b;
+        border-bottom: 1px solid #e2e8f0;
         text-align: center;
         background: #fff;
         color: #334155;
+    }
+
+    .team-ds-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
     .team-ds-table td.ts-player-col {
