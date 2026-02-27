@@ -17,6 +17,9 @@ $selected_uniform_choices = [];
 $my_team_uniform_raw = '';
 $has_match_staff_assignments_table = false;
 $has_match_staff_half_column = false;
+$has_challenge_event_id_column = false;
+$has_events_table = false;
+$can_join_event_name = false;
 $team_staffs = [];
 $current_staff_ids = [];
 $current_staff_ids_h1 = [];
@@ -93,6 +96,12 @@ if ($my_team_id == 0) {
         die("Error: Anda tidak terdaftar dalam team manapun.");
     }
 
+    $stmtEventIdCol = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+    $has_challenge_event_id_column = $stmtEventIdCol && $stmtEventIdCol->fetch(PDO::FETCH_ASSOC) !== false;
+    $stmtEventsTable = $conn->query("SHOW TABLES LIKE 'events'");
+    $has_events_table = $stmtEventsTable && $stmtEventsTable->fetch(PDO::FETCH_NUM) !== false;
+    $can_join_event_name = $has_challenge_event_id_column && $has_events_table;
+
     $stmtStaffTable = $conn->query("SHOW TABLES LIKE 'match_staff_assignments'");
     $has_match_staff_assignments_table = $stmtStaffTable && $stmtStaffTable->fetch(PDO::FETCH_NUM) !== false;
     if ($has_match_staff_assignments_table) {
@@ -101,15 +110,20 @@ if ($my_team_id == 0) {
     }
 
     // Get challenge details
-    $stmt = $conn->prepare("
-        SELECT c.*, 
-        t1.name as challenger_name, t1.id as challenger_id,
-        t2.name as opponent_name, t2.id as opponent_id
+    $challengeSelect = "
+        SELECT c.*,
+               " . ($can_join_event_name
+                    ? "TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,"
+                    : "TRIM(c.sport_type) AS event_name,") . "
+               t1.name as challenger_name, t1.id as challenger_id,
+               t2.name as opponent_name, t2.id as opponent_id
         FROM challenges c
+        " . ($can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "") . "
         LEFT JOIN teams t1 ON c.challenger_id = t1.id
         LEFT JOIN teams t2 ON c.opponent_id = t2.id
         WHERE c.id = ? AND (c.challenger_id = ? OR c.opponent_id = ?)
-    ");
+    ";
+    $stmt = $conn->prepare($challengeSelect);
     $stmt->execute([$challenge_id, $my_team_id, $my_team_id]);
     $challenge = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -483,7 +497,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="lineup-hero__meta">
                     <span class="lineup-pill">
                         <i class="fas fa-trophy"></i>
-                        <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
+                        <?php echo htmlspecialchars($challenge['event_name'] ?? ($challenge['sport_type'] ?? '-')); ?>
+                    </span>
+                    <span class="lineup-pill">
+                        <i class="fas fa-layer-group"></i>
+                        Kategori: <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
                     </span>
                     <span class="lineup-pill">
                         <i class="fas fa-hashtag"></i>
@@ -1053,6 +1071,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .lineup-staff-tab-btn:hover {
     color: #132d60;
+    transform: translateY(-1px);
 }
 
 .lineup-staff-tab-btn.active {
@@ -1067,6 +1086,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .lineup-staff-tab-content.active {
     display: block;
+    animation: lineupFadeIn 0.28s ease;
 }
 
 .lineup-staff-option {
@@ -1078,6 +1098,13 @@ document.addEventListener('DOMContentLoaded', function() {
     border: 1px solid #d6e1f3;
     background: #ffffff;
     color: #1f2f47;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.lineup-staff-option:hover {
+    transform: translateY(-1px);
+    border-color: #bdd0ed;
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.12);
 }
 
 .lineup-staff-option input[type="checkbox"] {
@@ -1579,8 +1606,13 @@ document.addEventListener('DOMContentLoaded', function() {
         animation: none;
     }
 
+    .lineup-staff-tab-content.active {
+        animation: none;
+    }
+
     .lineup-back-btn,
     .lineup-tab-btn,
+    .lineup-staff-tab-btn,
     .lineup-filter-form .form-control {
         transition: none;
     }

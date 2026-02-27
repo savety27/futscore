@@ -31,6 +31,25 @@ $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
+$has_challenge_event_id = false;
+$has_events_table = false;
+$can_join_event_name = false;
+
+try {
+    $check_event_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+    $has_challenge_event_id = $check_event_col && $check_event_col->rowCount() > 0;
+} catch (PDOException $e) {
+    $has_challenge_event_id = false;
+}
+
+try {
+    $check_events_tbl = $conn->query("SHOW TABLES LIKE 'events'");
+    $has_events_table = $check_events_tbl && $check_events_tbl->rowCount() > 0;
+} catch (PDOException $e) {
+    $has_events_table = false;
+}
+
+$can_join_event_name = $has_challenge_event_id && $has_events_table;
 
 // Ambil semua tipe olahraga yang tersedia untuk filter
 $sport_types = [];
@@ -51,12 +70,16 @@ try {
 // Base query untuk challenges dengan join ke teams untuk nama team
 $base_query = "SELECT 
     c.*,
+    " . ($can_join_event_name
+        ? "TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,"
+        : "TRIM(c.sport_type) AS event_name,") . "
     t1.name as challenger_name,
     t1.logo as challenger_logo,
     t2.name as opponent_name,
     t2.logo as opponent_logo,
     v.name as venue_name
     FROM challenges c
+    " . ($can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "") . "
     LEFT JOIN teams t1 ON c.challenger_id = t1.id
     LEFT JOIN teams t2 ON c.opponent_id = t2.id
     LEFT JOIN venues v ON c.venue_id = v.id
@@ -72,13 +95,14 @@ if (!empty($search)) {
     $base_query .= " AND (c.challenge_code LIKE ? 
                 OR t1.name LIKE ? 
                 OR t2.name LIKE ? 
-                OR c.sport_type LIKE ?
+                OR c.sport_type LIKE ? " . ($can_join_event_name ? "OR e.name LIKE ? " : "") . "
                 OR c.status LIKE ?
                 OR c.match_status LIKE ?)";
     $count_query .= " AND (c.challenge_code LIKE ? 
                 OR EXISTS (SELECT 1 FROM teams t WHERE t.id = c.challenger_id AND t.name LIKE ?)
                 OR EXISTS (SELECT 1 FROM teams t WHERE t.id = c.opponent_id AND t.name LIKE ?)
                 OR c.sport_type LIKE ?
+                " . ($can_join_event_name ? "OR EXISTS (SELECT 1 FROM events e2 WHERE e2.id = c.event_id AND e2.name LIKE ?) " : "") . "
                 OR c.status LIKE ?
                 OR c.match_status LIKE ?)";
 }
@@ -98,10 +122,13 @@ $challenges = [];
 try {
     $filter_params = [$my_team_id, $my_team_id];
     if (!empty($search)) {
-        $filter_params = array_merge($filter_params, [
-            $search_term, $search_term, $search_term,
-            $search_term, $search_term, $search_term
-        ]);
+        $search_params = [$search_term, $search_term, $search_term, $search_term];
+        if ($can_join_event_name) {
+            $search_params[] = $search_term;
+        }
+        $search_params[] = $search_term;
+        $search_params[] = $search_term;
+        $filter_params = array_merge($filter_params, $search_params);
     }
     if (!empty($sport_filter)) {
         $filter_params[] = $sport_filter;
@@ -611,15 +638,15 @@ try {
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Kode Pertandingan</th>
-                        <th>Tanggal</th>
-                        <th>Team</th>
-                        <th>Event</th>
-                        <th>Lokasi</th>
-                        <th>Skor</th>
-                        <th>Status</th>
-                        <th>Status Pertandingan</th>
-                        <th>Aksi</th>
+                        <th style="text-align:center;">Kode Pertandingan</th>
+                        <th style="text-align:center;">Tanggal</th>
+                        <th style="text-align:center;">Team</th>
+                        <th style="text-align:center;">Event</th>
+                        <th style="text-align:center;">Lokasi</th>
+                        <th style="text-align:center;">Skor</th>
+                        <th style="text-align:center;">Status</th>
+                        <th style="text-align:center;">Status Pertandingan</th>
+                        <th style="text-align:center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -656,9 +683,14 @@ try {
                             </div>
                         </td>
                         <td>
-                            <span class="event-badge" title="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>" style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 600;">
-                                <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
-                            </span>
+                            <div style="display:flex; flex-direction:column; gap:4px; align-items:center; text-align:center;">
+                                <span class="event-badge" title="<?php echo htmlspecialchars($challenge['event_name'] ?? ''); ?>" style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                    <?php echo htmlspecialchars($challenge['event_name'] ?? ($challenge['sport_type'] ?? '-')); ?>
+                                </span>
+                                <span style="font-size:11px; color: var(--gray);">
+                                    Kategori: <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
+                                </span>
+                            </div>
                         </td>
                         <td>
                             <?php if (!empty($challenge['venue_name'])): ?>
@@ -730,11 +762,13 @@ try {
                                 <span style="color: var(--gray); font-style: italic;">-</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td style="text-align:center;">
                             <?php if ($challenge['status'] === 'accepted' && ($my_team_id == $challenge['challenger_id'] || $my_team_id == $challenge['opponent_id'])): ?>
-                            <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-block;">
-                                <i class="fas fa-users-cog"></i> Atur Lineup
+                            <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="fas fa-users-cog"></i> Lineup
                             </a>
+                            <?php else: ?>
+                            <span style="color: var(--gray);">-</span>
                             <?php endif; ?>
                         </td>
                     </tr>
