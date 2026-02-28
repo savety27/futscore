@@ -23,13 +23,15 @@ if ($pelatih_id <= 0) {
 }
 
 
-// Fetch pelatih data dengan JOIN ke tabel teams
+// Fetch pelatih data dengan JOIN ke tabel teams dan events
 try {
     $stmt = $conn->prepare("
         SELECT au.*, t.name as team_name, t.logo as team_logo, t.alias as team_alias, 
-               t.sport_type, t.uniform_color, t.coach as team_coach, t.basecamp as team_basecamp
+               t.sport_type, t.uniform_color, t.coach as team_coach, t.basecamp as team_basecamp,
+               e.name as event_name
         FROM admin_users au 
         LEFT JOIN teams t ON au.team_id = t.id 
+        LEFT JOIN events e ON au.event_id = e.id
         WHERE au.id = ?
     ");
     $stmt->execute([$pelatih_id]);
@@ -277,7 +279,7 @@ body {
     color: white;
 }
 
-.role-editor, .role-pelatih {
+.role-operator, .role-editor, .role-pelatih {
     background: linear-gradient(135deg, var(--warning), #FFD166);
     color: var(--dark);
 }
@@ -726,6 +728,10 @@ body {
                     <?php 
                     if ($pelatih_data['role'] === 'superadmin') {
                         echo 'Super Admin';
+                    } elseif ($pelatih_data['role'] === 'admin') {
+                        echo 'Admin';
+                    } elseif ($pelatih_data['role'] === 'operator' || $pelatih_data['role'] === 'editor') {
+                        echo 'Operator';
                     } else {
                         echo 'Pelatih';
                     }
@@ -882,11 +888,22 @@ body {
                             <?php 
                             if ($pelatih_data['role'] === 'superadmin') {
                                 echo 'Super Admin';
+                            } elseif ($pelatih_data['role'] === 'admin') {
+                                echo 'Admin';
+                            } elseif ($pelatih_data['role'] === 'operator' || $pelatih_data['role'] === 'editor') {
+                                echo 'Operator';
                             } else {
                                 echo 'Pelatih';
                             }
                             ?>
                         </span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Event Operator</span>
+                    <div class="info-value">
+                        <?php echo !empty($pelatih_data['event_name']) ? htmlspecialchars($pelatih_data['event_name']) : '-'; ?>
                     </div>
                 </div>
                 

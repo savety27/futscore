@@ -33,8 +33,9 @@ CREATE TABLE `admin_users` (
   `email` varchar(100) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `full_name` varchar(100) DEFAULT NULL,
-  `role` enum('superadmin','admin','editor','pelatih') DEFAULT 'admin',
+  `role` enum('superadmin','admin','operator','pelatih') DEFAULT 'admin',
   `team_id` int(11) DEFAULT NULL,
+  `event_id` int(11) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `last_login` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -45,13 +46,13 @@ CREATE TABLE `admin_users` (
 -- Dumping data untuk tabel `admin_users`
 --
 
-INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `team_id`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'admin@futscore.com', '$2y$10$dzjlNxiMyOK83KloXa.W/eaAoCda5d.WuiMDfR0VCb6yMoivKIkkq', 'Administrator Utama', 'superadmin', NULL, 1, '2026-02-12 22:21:13', '2026-01-27 11:49:53', '2026-02-12 15:21:13'),
-(2, 'Pelatih Batam Sport', 'pelatihbatamsport@gmail.com', '$2y$10$RaxOfM.KzQh1gH9hupF34Oj8YFvpwbYFDWdrozVZW1JkhpGnHvlI2', 'Pelatih Batam Sport', 'pelatih', 46, 1, '2026-02-13 06:39:06', '2026-01-29 12:39:47', '2026-02-12 23:39:06'),
-(3, 'Pelatih Oxygen', 'pelatihoxygen@gmail.com', '$2y$10$b8tdLz201ryM1kx.NYxdi.ddOdbyo.4mFqU38loCrbQS0h5Yr9wcO', 'Pelatih Oxygen', 'pelatih', 32, 1, '2026-02-06 21:34:32', '2026-01-31 05:02:08', '2026-02-06 14:34:32'),
-(5, 'Pelatih Fafage', 'pelatihfafage@gmail.com', '$2y$10$vMf10uEs8gdHRatAxipuouApFClBfx4eZEcvJX.zjGOrdHEWvqjzC', 'Pelatih Fafage', 'pelatih', 19, 1, '2026-02-06 21:35:38', '2026-02-06 14:18:09', '2026-02-06 14:35:38'),
-(6, 'Pelatih Kings', 'pelatihkings@gmail.com', '$2y$10$vWCpVOEgTgx3CUwS0jGDyecB7p7DoEx3GLwI7I083.XhnLh4nMp/.', 'Pelatih Kings', 'pelatih', 25, 1, '2026-02-06 21:34:57', '2026-02-06 14:19:01', '2026-02-06 14:34:57'),
-(7, 'Pelatih Tiger', 'pelatihtiger@gmail.com', '$2y$10$gEm8jpi7/zGWWcmPVA7EfOzkqQnyWw7nHUCuluYuONwXauzjedWTi', 'Pelatih Tiger', 'pelatih', 37, 1, '2026-02-09 14:18:11', '2026-02-06 14:19:37', '2026-02-09 07:18:11');
+INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `team_id`, `event_id`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
+(1, 'Admin', 'admin@futscore.com', '$2y$10$dzjlNxiMyOK83KloXa.W/eaAoCda5d.WuiMDfR0VCb6yMoivKIkkq', 'Administrator Utama', 'superadmin', NULL, NULL, 1, '2026-02-12 22:21:13', '2026-01-27 11:49:53', '2026-02-12 15:21:13'),
+(2, 'Pelatih Batam Sport', 'pelatihbatamsport@gmail.com', '$2y$10$RaxOfM.KzQh1gH9hupF34Oj8YFvpwbYFDWdrozVZW1JkhpGnHvlI2', 'Pelatih Batam Sport', 'pelatih', 46, NULL, 1, '2026-02-13 06:39:06', '2026-01-29 12:39:47', '2026-02-12 23:39:06'),
+(3, 'Pelatih Oxygen', 'pelatihoxygen@gmail.com', '$2y$10$b8tdLz201ryM1kx.NYxdi.ddOdbyo.4mFqU38loCrbQS0h5Yr9wcO', 'Pelatih Oxygen', 'pelatih', 32, NULL, 1, '2026-02-06 21:34:32', '2026-01-31 05:02:08', '2026-02-06 14:34:32'),
+(5, 'Pelatih Fafage', 'pelatihfafage@gmail.com', '$2y$10$vMf10uEs8gdHRatAxipuouApFClBfx4eZEcvJX.zjGOrdHEWvqjzC', 'Pelatih Fafage', 'pelatih', 19, NULL, 1, '2026-02-06 21:35:38', '2026-02-06 14:18:09', '2026-02-06 14:35:38'),
+(6, 'Pelatih Kings', 'pelatihkings@gmail.com', '$2y$10$vWCpVOEgTgx3CUwS0jGDyecB7p7DoEx3GLwI7I083.XhnLh4nMp/.', 'Pelatih Kings', 'pelatih', 25, NULL, 1, '2026-02-06 21:34:57', '2026-02-06 14:19:01', '2026-02-06 14:34:57'),
+(7, 'Pelatih Tiger', 'pelatihtiger@gmail.com', '$2y$10$gEm8jpi7/zGWWcmPVA7EfOzkqQnyWw7nHUCuluYuONwXauzjedWTi', 'Pelatih Tiger', 'pelatih', 37, NULL, 1, '2026-02-09 14:18:11', '2026-02-06 14:19:37', '2026-02-09 07:18:11');
 
 -- --------------------------------------------------------
 
@@ -608,7 +609,8 @@ ALTER TABLE `admin_users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `username` (`username`),
   ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `fk_admin_team` (`team_id`);
+  ADD KEY `fk_admin_team` (`team_id`),
+  ADD KEY `fk_admin_event` (`event_id`);
 
 --
 -- Indeks untuk tabel `berita`
@@ -828,7 +830,8 @@ ALTER TABLE `venues`
 -- Ketidakleluasaan untuk tabel `admin_users`
 --
 ALTER TABLE `admin_users`
-  ADD CONSTRAINT `fk_admin_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `fk_admin_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_admin_event` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE SET NULL;
 
 --
 -- Ketidakleluasaan untuk tabel `challenges`

@@ -30,22 +30,24 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
-// Query untuk mengambil data pelatih dengan JOIN ke tabel teams
-$base_query = "SELECT au.*, t.name as team_name, t.alias as team_alias 
+// Query untuk mengambil data pelatih dengan JOIN ke tabel teams dan events
+$base_query = "SELECT au.*, t.name as team_name, t.alias as team_alias, e.name as event_name
                FROM admin_users au 
                LEFT JOIN teams t ON au.team_id = t.id 
+               LEFT JOIN events e ON au.event_id = e.id
                WHERE 1=1";
                
 $count_query = "SELECT COUNT(*) as total 
                 FROM admin_users au 
                 LEFT JOIN teams t ON au.team_id = t.id 
+                LEFT JOIN events e ON au.event_id = e.id
                 WHERE 1=1";
 
 // Handle search condition
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $base_query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR t.alias LIKE ?)";
-    $count_query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR t.alias LIKE ?)";
+    $base_query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR t.alias LIKE ? OR e.name LIKE ?)";
+    $count_query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR t.alias LIKE ? OR e.name LIKE ?)";
 }
 
 if ($filter_active !== '') {
@@ -63,7 +65,7 @@ $pelatih = [];
 try {
     $query_params = [];
     if (!empty($search)) {
-        $query_params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
+        $query_params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
     }
     if ($filter_active !== '') {
         $query_params[] = (int) $filter_active;
@@ -511,7 +513,7 @@ body {
     color: white;
 }
 
-.role-editor, .role-pelatih {
+.role-operator, .role-editor, .role-pelatih {
     background: linear-gradient(135deg, var(--warning), #FFD166);
     color: var(--dark);
 }
@@ -998,7 +1000,7 @@ body {
                             type="text"
                             name="search"
                             class="pelatih-search-input"
-                            placeholder="Cari pelatih (username, email, nama, role, tim)..."
+                            placeholder="Cari pelatih (username, email, nama, role, tim, event)..."
                             value="<?php echo htmlspecialchars($search); ?>"
                         >
                     </div>
@@ -1046,6 +1048,7 @@ body {
                         <th>Nama Lengkap</th>
                         <th>Role</th>
                         <th>Tim</th>
+                        <th>Event</th>
                         <th>Status</th>
                         <th>Login Terakhir</th>
                         <th>Tanggal Dibuat</th>
@@ -1071,6 +1074,10 @@ body {
                             <td class="role-cell">
                                 <?php if ($p['role'] === 'superadmin'): ?>
                                     <span class="role-badge role-superadmin">Super Admin</span>
+                                <?php elseif ($p['role'] === 'admin'): ?>
+                                    <span class="role-badge role-admin">Admin</span>
+                                <?php elseif ($p['role'] === 'operator' || $p['role'] === 'editor'): ?>
+                                    <span class="role-badge role-operator">Operator</span>
                                 <?php else: ?>
                                     <span class="role-badge role-pelatih">Pelatih</span>
                                 <?php endif; ?>
@@ -1080,6 +1087,16 @@ body {
                                     <span class="team-badge" title="<?php echo htmlspecialchars($p['team_alias'] ?? ''); ?>">
                                         <i class="fas fa-users"></i>
                                         <?php echo htmlspecialchars($p['team_name'] ?? ''); ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="no-team">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="team-cell">
+                                <?php if (!empty($p['event_name'])): ?>
+                                    <span class="team-badge">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <?php echo htmlspecialchars($p['event_name'] ?? ''); ?>
                                     </span>
                                 <?php else: ?>
                                     <span class="no-team">-</span>
@@ -1123,7 +1140,7 @@ body {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="11" style="text-align: center; padding: 40px;">
+                            <td colspan="12" style="text-align: center; padding: 40px;">
                                 <div class="empty-state" style="box-shadow: none; padding: 0;">
                                     <div class="empty-icon">
                                         <i class="fas fa-user-slash"></i>

@@ -18,7 +18,7 @@ SET @sql_add_half_column := IF(
 PREPARE stmt FROM @sql_add_half_column;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-
+    
 -- Ensure only valid half values.
 UPDATE match_staff_assignments
 SET half = 1

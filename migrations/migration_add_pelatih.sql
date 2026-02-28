@@ -12,4 +12,4 @@ ADD CONSTRAINT `fk_admin_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`)
 
 -- 3. Update the role enum to include 'pelatih'
 ALTER TABLE `admin_users`
-MODIFY COLUMN `role` enum('superadmin','admin','editor','pelatih') DEFAULT 'admin';
+MODIFY COLUMN `role` enum('superadmin','admin','operator','pelatih') DEFAULT 'admin';
