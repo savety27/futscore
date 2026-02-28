@@ -2,21 +2,59 @@
 session_start();
 
 // Load database config
-$config_path = __DIR__ . '/config/database.php';
+$config_path = __DIR__ . '/../admin/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
 }
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
+    header("Location: ../login.php");
     exit;
+}
+
+if (!function_exists('adminHasColumn')) {
+    function adminHasColumn(PDO $conn, $tableName, $columnName) {
+        try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+            if ($safeTable === '') {
+                return false;
+            }
+            $quotedColumn = $conn->quote((string) $columnName);
+            $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
 }
 
 // Get admin info
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
+$operator_id = (int)($_SESSION['admin_id'] ?? 0);
+$current_page = 'berita';
+$operator_event_name = 'Event Operator';
+$operator_event_image = '';
+
+if ($operator_id > 0) {
+    try {
+        $stmtOperator = $conn->prepare("
+            SELECT e.name AS event_name, e.image AS event_image
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
+        $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+    } catch (PDOException $e) {
+        // keep defaults
+    }
+}
 
 
 // Initialize variables
@@ -25,7 +63,7 @@ $form_data = [
     'judul' => '',
     'slug' => '',
     'konten' => '',
-    'penulis' => '',
+    'penulis' => $admin_name,
     'status' => 'draft',
     'tag' => ''
 ];
@@ -53,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'judul' => trim($_POST['judul'] ?? ''),
         'slug' => trim($_POST['slug'] ?? ''),
         'konten' => trim($_POST['konten'] ?? ''),
-        'penulis' => trim($_POST['penulis'] ?? ''),
+        'penulis' => $admin_name,
         'status' => $_POST['status'] ?? 'draft',
         'tag' => trim($_POST['tag'] ?? '')
     ];
@@ -90,10 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if (empty($form_data['konten'])) {
         $errors['konten'] = "Konten berita harus diisi";
-    }
-    
-    if (empty($form_data['penulis'])) {
-        $errors['penulis'] = "Penulis harus diisi";
     }
     
     // Handle file upload
@@ -137,20 +171,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If no errors, insert to database
     if (empty($errors)) {
         try {
-            $stmt = $conn->prepare("
-                INSERT INTO berita (judul, slug, konten, gambar, penulis, status, tag, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
-            
-            $stmt->execute([
-                $form_data['judul'],
-                $form_data['slug'],
-                $form_data['konten'],
-                $gambar_path,
-                $form_data['penulis'],
-                $form_data['status'],
-                $form_data['tag']
-            ]);
+            $berita_has_created_by = adminHasColumn($conn, 'berita', 'created_by');
+            if ($berita_has_created_by && $operator_id > 0) {
+                $stmt = $conn->prepare("
+                    INSERT INTO berita (judul, slug, konten, gambar, penulis, status, tag, created_by, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                $stmt->execute([
+                    $form_data['judul'],
+                    $form_data['slug'],
+                    $form_data['konten'],
+                    $gambar_path,
+                    $form_data['penulis'],
+                    $form_data['status'],
+                    $form_data['tag'],
+                    $operator_id
+                ]);
+            } else {
+                $stmt = $conn->prepare("
+                    INSERT INTO berita (judul, slug, konten, gambar, penulis, status, tag, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                $stmt->execute([
+                    $form_data['judul'],
+                    $form_data['slug'],
+                    $form_data['konten'],
+                    $gambar_path,
+                    $form_data['penulis'],
+                    $form_data['status'],
+                    $form_data['tag']
+                ]);
+            }
             
             $_SESSION['success_message'] = "Berita berhasil ditambahkan!";
             header("Location: berita.php");
@@ -169,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buat Berita Baru</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <!-- Summernote CSS -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
@@ -825,7 +876,7 @@ body {
             </div>
             
             <div class="user-actions">
-                <a href="logout.php" class="logout-btn">
+                <a href="../admin/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -907,6 +958,7 @@ body {
                                    class="form-input <?php echo isset($errors['penulis']) ? 'is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($form_data['penulis'] ?? ''); ?>"
                                    placeholder="Nama penulis berita"
+                                   readonly
                                    required>
                             <?php if (isset($errors['penulis'])): ?>
                                 <span class="error"><?php echo $errors['penulis']; ?></span>
@@ -1048,7 +1100,6 @@ body {
             </form>
         </div>
     </div>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
@@ -1162,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', function() {
         slugManuallyEdited = false;
         
         // Reset penulis
-        document.getElementById('penulis').value = '';
+        document.getElementById('penulis').value = <?php echo json_encode((string)$admin_name); ?>;
         document.getElementById('penulis').classList.remove('is-invalid');
         
         // Reset tag
@@ -1291,7 +1342,6 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         const judul = document.getElementById('judul').value.trim();
         const konten = getEditorPlainText();
-        const penulis = document.getElementById('penulis').value.trim();
 
         // Clear previous error highlights
         document.querySelectorAll('.is-invalid').forEach(el => {
@@ -1313,11 +1363,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!konten) {
             markError('konten', 'Konten berita harus diisi');
-            hasError = true;
-        }
-
-        if (!penulis) {
-            markError('penulis', 'Penulis harus diisi');
             hasError = true;
         }
 
@@ -1357,6 +1402,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

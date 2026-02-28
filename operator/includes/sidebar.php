@@ -35,7 +35,7 @@ $has_event_logo = ($operator_event_image !== '' && file_exists(__DIR__ . '/../..
         </div>
 
         <div class="menu-item">
-            <a href="../admin/berita.php" class="menu-link <?php echo $current_page === 'berita' ? 'active' : ''; ?>">
+            <a href="berita.php" class="menu-link <?php echo $current_page === 'berita' ? 'active' : ''; ?>">
                 <span class="menu-icon"><i class="fas fa-newspaper"></i></span>
                 <span class="menu-text">Berita</span>
             </a>

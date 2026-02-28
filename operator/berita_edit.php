@@ -2,33 +2,99 @@
 session_start();
 
 // Load database config
-$config_path = __DIR__ . '/config/database.php';
+$config_path = __DIR__ . '/../admin/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
 }
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
+    header("Location: ../login.php");
     exit;
 }
 
+if (!function_exists('adminHasColumn')) {
+    function adminHasColumn(PDO $conn, $tableName, $columnName) {
+        try {
+            $safeTable = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $tableName);
+            if ($safeTable === '') {
+                return false;
+            }
+            $quotedColumn = $conn->quote((string) $columnName);
+            $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+// Get berita ID
+$berita_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($berita_id <= 0) {
+    header("Location: berita.php");
+    exit;
+}
+
+
 // Get admin info
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_username = trim((string)($_SESSION['admin_username'] ?? ''));
 $admin_email = $_SESSION['admin_email'] ?? '';
+$operator_id = (int)($_SESSION['admin_id'] ?? 0);
+$current_page = 'berita';
+$operator_event_name = 'Event Operator';
+$operator_event_image = '';
+
+if ($operator_id > 0) {
+    try {
+        $stmtOperator = $conn->prepare("
+            SELECT e.name AS event_name, e.image AS event_image
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
+        $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+    } catch (PDOException $e) {
+        // keep defaults
+    }
+}
 
 
 // Initialize variables
 $errors = [];
-$form_data = [
-    'judul' => '',
-    'slug' => '',
-    'konten' => '',
-    'penulis' => '',
-    'status' => 'draft',
-    'tag' => ''
-];
+$berita_data = null;
+$berita_has_created_by = adminHasColumn($conn, 'berita', 'created_by');
+$ownership_where_sql = '';
+$ownership_params = [];
+if ($berita_has_created_by && $operator_id > 0) {
+    $ownership_where_sql = " AND created_by = ?";
+    $ownership_params[] = $operator_id;
+} else {
+    $ownership_where_sql = " AND (penulis = ? OR penulis = ?)";
+    $ownership_params[] = $admin_name;
+    $ownership_params[] = $admin_username;
+}
+
+// Fetch berita data
+try {
+    $stmt = $conn->prepare("SELECT * FROM berita WHERE id = ?" . $ownership_where_sql);
+    $stmt->execute(array_merge([$berita_id], $ownership_params));
+    $berita_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$berita_data) {
+        header("Location: berita.php");
+        exit;
+    }
+} catch (PDOException $e) {
+    die("Error fetching berita data: " . $e->getMessage());
+}
 
 // Fungsi untuk generate slug
 function generateSlug($text) {
@@ -53,9 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'judul' => trim($_POST['judul'] ?? ''),
         'slug' => trim($_POST['slug'] ?? ''),
         'konten' => trim($_POST['konten'] ?? ''),
-        'penulis' => trim($_POST['penulis'] ?? ''),
+        'penulis' => $admin_name,
         'status' => $_POST['status'] ?? 'draft',
-        'tag' => trim($_POST['tag'] ?? '')
+        'tag' => trim($_POST['tag'] ?? ''),
+        'delete_gambar' => isset($_POST['delete_gambar']) ? 1 : 0
     ];
     
     // Validation
@@ -74,11 +141,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $form_data['slug'] = generateSlug($form_data['slug']);
     }
     
-    // Check if slug already exists
+    // Check if slug already exists (excluding current berita)
     if (empty($errors)) {
         try {
-            $stmt = $conn->prepare("SELECT id FROM berita WHERE slug = ?");
-            $stmt->execute([$form_data['slug']]);
+            $stmt = $conn->prepare("SELECT id FROM berita WHERE slug = ? AND id != ?");
+            $stmt->execute([$form_data['slug'], $berita_id]);
             if ($stmt->rowCount() > 0) {
                 // Add timestamp to make it unique
                 $form_data['slug'] .= '-' . time();
@@ -92,12 +159,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['konten'] = "Konten berita harus diisi";
     }
     
-    if (empty($form_data['penulis'])) {
-        $errors['penulis'] = "Penulis harus diisi";
+    // Handle file upload and deletion
+    $gambar_path = $berita_data['gambar'];
+    
+    // If delete gambar is checked
+    if ($form_data['delete_gambar'] && $gambar_path) {
+        if (file_exists('../images/berita/' . $gambar_path)) {
+            @unlink('../images/berita/' . $gambar_path);
+        }
+        $gambar_path = null;
     }
     
-    // Handle file upload
-    $gambar_path = null;
+    // If new gambar is uploaded
     if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == UPLOAD_ERR_OK) {
         $file = $_FILES['gambar'];
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -127,6 +200,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $target_path = $upload_dir . $filename;
             
             if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                // Delete old gambar if exists
+                if ($gambar_path && file_exists('../images/berita/' . $gambar_path)) {
+                    @unlink('../images/berita/' . $gambar_path);
+                }
                 $gambar_path = $filename;
             } else {
                 $errors['gambar'] = "Gagal mengupload gambar";
@@ -134,31 +211,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    // If no errors, insert to database
+    // If no errors, update database
     if (empty($errors)) {
         try {
             $stmt = $conn->prepare("
-                INSERT INTO berita (judul, slug, konten, gambar, penulis, status, tag, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                UPDATE berita SET 
+                    judul = ?, 
+                    slug = ?, 
+                    konten = ?, 
+                    gambar = ?, 
+                    penulis = ?, 
+                    status = ?, 
+                    tag = ?, 
+                    updated_at = NOW()
+                WHERE id = ?" . $ownership_where_sql . "
             ");
             
-            $stmt->execute([
+            $stmt->execute(array_merge([
                 $form_data['judul'],
                 $form_data['slug'],
                 $form_data['konten'],
                 $gambar_path,
                 $form_data['penulis'],
                 $form_data['status'],
-                $form_data['tag']
-            ]);
+                $form_data['tag'],
+                $berita_id
+            ], $ownership_params));
             
-            $_SESSION['success_message'] = "Berita berhasil ditambahkan!";
+            $_SESSION['success_message'] = "Berita berhasil diperbarui!";
             header("Location: berita.php");
             exit;
             
         } catch (PDOException $e) {
-            $errors['database'] = "Gagal menyimpan data: " . $e->getMessage();
+            $errors['database'] = "Gagal memperbarui data: " . $e->getMessage();
         }
+    } else {
+        // Update berita_data with new form data for display
+        $berita_data = array_merge($berita_data, $form_data);
     }
 }
 ?>
@@ -167,9 +256,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buat Berita Baru</title>
+<title>Edit Berita</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <!-- Summernote CSS -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
@@ -275,14 +364,10 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
+    background: white;
     padding: 25px;
     border-radius: 20px;
-    box-shadow: var(--premium-shadow);
-    flex-wrap: wrap;
-    gap: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: var(--card-shadow);
 }
 
 .page-title {
@@ -445,6 +530,38 @@ body {
     border-color: var(--primary);
     background: white;
     box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+}
+
+/* Current Image */
+.current-image {
+    margin-bottom: 20px;
+}
+
+.current-image img {
+    max-width: 300px;
+    max-height: 200px;
+    border-radius: 10px;
+    border: 2px solid #e0e0e0;
+    margin-bottom: 10px;
+}
+
+.current-image-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.checkbox-group input {
+    width: auto;
+    margin-right: 10px;
 }
 
 /* File Upload */
@@ -684,6 +801,36 @@ body {
     font-size: 14px;
 }
 
+/* Statistics Box */
+.stats-box {
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.stats-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.stats-item:last-child {
+    margin-bottom: 0;
+}
+
+.stats-label {
+    color: var(--gray);
+}
+
+.stats-value {
+    color: var(--dark);
+    font-weight: 600;
+}
+
 /* =========================================
    MOBILE RESPONSIVE DESIGN
    ========================================= */
@@ -738,6 +885,11 @@ body {
         gap: 20px;
         align-items: flex-start;
     }
+    
+    .page-title {
+        width: 100%;
+        justify-content: flex-start;
+    }
 
     .btn {
         width: 100%;
@@ -756,6 +908,11 @@ body {
     
     .status-options {
         flex-direction: column;
+    }
+    
+    .current-image-info {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
@@ -820,12 +977,12 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Buat Berita Baru 📰</h1>
-                <p>Buat berita atau artikel baru untuk dipublikasikan</p>
+                <h1>Edit Berita 📰</h1>
+                <p>Edit berita: <?php echo htmlspecialchars($berita_data['judul'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
-                <a href="logout.php" class="logout-btn">
+                <a href="../admin/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -835,8 +992,8 @@ body {
         <!-- PAGE HEADER -->
         <div class="page-header">
             <div class="page-title">
-                <i class="fas fa-plus-circle"></i>
-                <span>Buat Berita Baru</span>
+                <i class="fas fa-edit"></i>
+                <span>Edit Berita</span>
             </div>
             <a href="berita.php" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i>
@@ -852,13 +1009,30 @@ body {
         </div>
         <?php endif; ?>
 
-        <!-- CREATE BERITA FORM -->
+        <!-- EDIT BERITA FORM -->
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="beritaForm">
+                <input type="hidden" name="id" value="<?php echo $berita_id; ?>">
+                
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-heading"></i>
                         Informasi Dasar Berita
+                    </div>
+                    
+                    <div class="stats-box">
+                        <div class="stats-item">
+                            <span class="stats-label">Dibuat:</span>
+                            <span class="stats-value"><?php echo date('d F Y H:i', strtotime($berita_data['created_at'])); ?></span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="stats-label">Diupdate:</span>
+                            <span class="stats-value"><?php echo date('d F Y H:i', strtotime($berita_data['updated_at'])); ?></span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="stats-label">Views:</span>
+                            <span class="stats-value"><?php echo $berita_data['views']; ?> kali</span>
+                        </div>
                     </div>
                     
                     <div class="form-grid">
@@ -870,12 +1044,12 @@ body {
                                    id="judul" 
                                    name="judul" 
                                    class="form-input <?php echo isset($errors['judul']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['judul'] ?? ''); ?>"
+                                   value="<?php echo htmlspecialchars($berita_data['judul'] ?? ''); ?>"
                                    placeholder="Masukkan judul berita yang menarik"
                                    maxlength="200"
                                    required>
                             <div class="char-count">
-                                <span id="judulCount">0</span>/200 karakter
+                                <span id="judulCount"><?php echo strlen($berita_data['judul']); ?></span>/200 karakter
                             </div>
                             <?php if (isset($errors['judul'])): ?>
                                 <span class="error"><?php echo $errors['judul']; ?></span>
@@ -890,7 +1064,7 @@ body {
                                    id="slug" 
                                    name="slug" 
                                    class="form-input" 
-                                   value="<?php echo htmlspecialchars($form_data['slug'] ?? ''); ?>"
+                                   value="<?php echo htmlspecialchars($berita_data['slug'] ?? ''); ?>"
                                    placeholder="judul-berita-seo-friendly">
                             <small style="color: #666; display: block; margin-top: 5px;">
                                 Akan digenerate otomatis dari judul jika kosong
@@ -905,8 +1079,9 @@ body {
                                    id="penulis" 
                                    name="penulis" 
                                    class="form-input <?php echo isset($errors['penulis']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['penulis'] ?? ''); ?>"
+                                   value="<?php echo htmlspecialchars($berita_data['penulis'] ?? ''); ?>"
                                    placeholder="Nama penulis berita"
+                                   readonly
                                    required>
                             <?php if (isset($errors['penulis'])): ?>
                                 <span class="error"><?php echo $errors['penulis']; ?></span>
@@ -922,7 +1097,7 @@ body {
                                        id="tag" 
                                        name="tag" 
                                        class="form-input tag-input" 
-                                       value="<?php echo htmlspecialchars($form_data['tag'] ?? ''); ?>"
+                                       value="<?php echo htmlspecialchars($berita_data['tag'] ?? ''); ?>"
                                        placeholder="olahraga, futsal, prestasi">
                                 <span class="tag-help">
                                     <i class="fas fa-question-circle"></i>
@@ -941,6 +1116,25 @@ body {
                         Gambar Berita
                     </div>
                     
+                    <?php if (!empty($berita_data['gambar'])): ?>
+                    <div class="current-image">
+                        <p class="form-label">Gambar Saat Ini:</p>
+                        <img src="../images/berita/<?php echo htmlspecialchars($berita_data['gambar']); ?>" 
+                             alt="Current Image" 
+                             style="max-width: 300px; max-height: 200px; border-radius: 10px; border: 2px solid #e0e0e0;">
+                        <div class="current-image-info">
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" name="delete_gambar" value="1">
+                                Hapus gambar saat ini
+                            </label>
+                            <a href="../images/berita/<?php echo htmlspecialchars($berita_data['gambar']); ?>" 
+                               target="_blank" class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-external-link-alt"></i> Lihat Full
+                            </a>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
                     <div class="form-group">
                         <div class="file-upload-container" id="gambarUpload">
                             <input type="file" 
@@ -949,7 +1143,7 @@ body {
                                    class="file-upload-input"
                                    accept="image/jpeg,image/png,image/gif,image/webp">
                             <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                            <div class="file-upload-text">Klik atau drag & drop gambar berita di sini</div>
+                            <div class="file-upload-text">Klik atau drag & drop gambar berita baru di sini</div>
                             <div class="file-upload-subtext">Format: JPEG, PNG, GIF, WebP | Maks: 5MB</div>
                             <div class="file-preview" id="gambarPreview" style="display: none;">
                                 <img id="gambarPreviewImg" src="" alt="Preview" style="max-width: 300px; max-height: 200px;">
@@ -977,9 +1171,9 @@ body {
                                   class="form-textarea <?php echo isset($errors['konten']) ? 'is-invalid' : ''; ?>"
                                   placeholder="Tulis konten berita di sini..."
                                   rows="10"
-                                  required><?php echo htmlspecialchars($form_data['konten'] ?? ''); ?></textarea>
+                                  required><?php echo htmlspecialchars($berita_data['konten'] ?? ''); ?></textarea>
                         <div class="char-count">
-                            <span id="kontenCount">0</span> karakter
+                            <span id="kontenCount"><?php echo strlen($berita_data['konten']); ?></span> karakter
                         </div>
                         <?php if (isset($errors['konten'])): ?>
                             <span class="error"><?php echo $errors['konten']; ?></span>
@@ -996,7 +1190,7 @@ body {
                     <div class="form-group">
                         <div class="status-options">
                             <div class="status-option">
-                                <input type="radio" id="status_draft" name="status" value="draft" <?php echo $form_data['status'] == 'draft' ? 'checked' : ''; ?>>
+                                <input type="radio" id="status_draft" name="status" value="draft" <?php echo $berita_data['status'] == 'draft' ? 'checked' : ''; ?>>
                                 <label for="status_draft">
                                     <i class="fas fa-save"></i><br>
                                     Draft
@@ -1004,7 +1198,7 @@ body {
                             </div>
                             
                             <div class="status-option">
-                                <input type="radio" id="status_published" name="status" value="published" <?php echo $form_data['status'] == 'published' ? 'checked' : ''; ?>>
+                                <input type="radio" id="status_published" name="status" value="published" <?php echo $berita_data['status'] == 'published' ? 'checked' : ''; ?>>
                                 <label for="status_published">
                                     <i class="fas fa-globe"></i><br>
                                     Published
@@ -1012,7 +1206,7 @@ body {
                             </div>
                             
                             <div class="status-option">
-                                <input type="radio" id="status_archived" name="status" value="archived" <?php echo $form_data['status'] == 'archived' ? 'checked' : ''; ?>>
+                                <input type="radio" id="status_archived" name="status" value="archived" <?php echo $berita_data['status'] == 'archived' ? 'checked' : ''; ?>>
                                 <label for="status_archived">
                                     <i class="fas fa-archive"></i><br>
                                     Archived
@@ -1028,27 +1222,25 @@ body {
                         <i class="fas fa-eye"></i> Preview
                     </div>
                     <div class="preview-content">
-                        <strong>Judul:</strong> <span id="previewJudul"><?php echo htmlspecialchars($form_data['judul'] ?? ''); ?></span><br>
-                        <strong>Slug:</strong> <span id="previewSlug"><?php echo htmlspecialchars($form_data['slug'] ?? ''); ?></span><br>
-                        <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($form_data['status'] ?? ''); ?></span>
+                        <strong>Judul:</strong> <span id="previewJudul"><?php echo htmlspecialchars($berita_data['judul'] ?? ''); ?></span><br>
+                        <strong>Slug:</strong> <span id="previewSlug"><?php echo htmlspecialchars($berita_data['slug'] ?? ''); ?></span><br>
+                        <strong>Status:</strong> <span id="previewStatus"><?php echo ucfirst($berita_data['status'] ?? ''); ?></span>
                     </div>
                 </div>
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="customResetBtn">
-                        <i class="fas fa-redo"></i>
-                        Reset Form
-                    </button>
+                    <a href="berita.php" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Batal
+                    </a>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
-                        Simpan Berita
+                        Update Berita
                     </button>
                 </div>
             </form>
         </div>
-    </div>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
@@ -1057,21 +1249,9 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-id-ID.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const gambarUpload = document.getElementById('gambarUpload');
-    const gambarInput = document.getElementById('gambar');
-    const gambarPreview = document.getElementById('gambarPreview');
-    const gambarPreviewImg = document.getElementById('gambarPreviewImg');
-    const gambarFileInfo = document.getElementById('gambarFileInfo');
-    const fileUploadIcon = gambarUpload ? gambarUpload.querySelector('.file-upload-icon') : null;
-    const fileUploadText = gambarUpload ? gambarUpload.querySelector('.file-upload-text') : null;
-    const fileUploadSubtext = gambarUpload ? gambarUpload.querySelector('.file-upload-subtext') : null;
-    let slugManuallyEdited = false;
-
-    function openFileDialog() {
-        if (gambarInput) {
-            gambarInput.click();
-        }
-    }
+    const judulInput = document.getElementById('judul');
+    const slugInput = document.getElementById('slug');
+    let slugManuallyEdited = slugInput.value.trim() !== '';
 
     function getEditorPlainText() {
         if (!window.jQuery) return '';
@@ -1100,143 +1280,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Untuk container, gunakan event delegation yang lebih spesifik
-    if (gambarUpload && gambarInput) {
-    gambarUpload.addEventListener('click', function(e) {
-        // Hanya trigger jika yang diklik adalah container itu sendiri (area kosong)
-        // atau jika target adalah container (bukan child elements yang sudah ada handler-nya)
-        if (e.target === this || 
-            (e.target.classList && e.target.classList.contains('file-upload-container')) ||
-            (!e.target.closest('.file-preview') && 
-             e.target !== fileUploadIcon && 
-             e.target !== fileUploadText && 
-             e.target !== fileUploadSubtext)) {
-            openFileDialog();
-        }
-    });
-
-    // Mencegah input file sendiri dari triggering event berulang
-    gambarInput.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    // Drag and Drop
-    gambarUpload.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.classList.add('drag-over');
-    });
-
-    gambarUpload.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.classList.remove('drag-over');
-    });
-
-    gambarUpload.addEventListener('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.classList.remove('drag-over');
-        
-        if (e.dataTransfer.files.length) {
-            gambarInput.files = e.dataTransfer.files;
-            handleFileSelect(e.dataTransfer.files[0]);
-        }
-    });
-
-    gambarInput.addEventListener('change', function() {
-        if (this.files.length) {
-            handleFileSelect(this.files[0]);
-        }
-    });
+    function updateCharCount(elementId, text) {
+        const count = String(text ?? '').length;
+        document.getElementById(elementId).textContent = count;
     }
 
-    // Custom reset function untuk handle semua elemen form
-    function resetForm() {
-        // Reset judul
-        document.getElementById('judul').value = '';
-        document.getElementById('judul').classList.remove('is-invalid');
-        
-        // Reset slug
-        document.getElementById('slug').value = '';
-        slugManuallyEdited = false;
-        
-        // Reset penulis
-        document.getElementById('penulis').value = '';
-        document.getElementById('penulis').classList.remove('is-invalid');
-        
-        // Reset tag
-        document.getElementById('tag').value = '';
-        
-        // Reset Summernote content
-        $('#konten').summernote('code', '');
-        document.getElementById('konten').classList.remove('is-invalid');
-        
-        // Reset status radio buttons
-        document.getElementById('status_draft').checked = true;
-        
-        // Reset file upload
-        document.getElementById('gambar').value = '';
-        document.getElementById('gambarPreview').style.display = 'none';
-        document.getElementById('gambarPreviewImg').src = '';
-        document.getElementById('gambarFileInfo').textContent = '';
-        
-        // Reset karakter count
-        updateCharCount('judulCount', '');
-        updateCharCount('kontenCount', '');
-        
-        // Reset preview
-        updatePreview('judul', '');
-        updatePreview('slug', '');
-        updatePreview('status', 'Draft');
-        
-        // Remove error messages
-        document.querySelectorAll('.error').forEach(error => error.remove());
-        
-        // Reset drag-over class
-        gambarUpload.classList.remove('drag-over');
-        
-        
-    }
-
-    // Event listener untuk tombol reset
-    document.getElementById('customResetBtn').addEventListener('click', resetForm);
-
-    function handleFileSelect(file) {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        const maxSize = 5 * 1024 * 1024; // 5MB
-
-        if (!allowedTypes.includes(file.type)) {
-            toastr.error('Format file harus berupa gambar (JPEG, PNG, GIF, atau WebP)');
-            return;
+    function generateSlug() {
+        const judul = judulInput.value.trim();
+        if (judul && !slugManuallyEdited) {
+            const slug = judul
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            slugInput.value = slug;
+            updatePreview('slug', slug);
         }
-
-        if (file.size > maxSize) {
-            toastr.error('Ukuran file maksimal 5MB');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            gambarPreviewImg.src = e.target.result;
-            gambarFileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
-            gambarPreview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
     }
 
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    function updatePreview(element, value) {
+        document.getElementById(`preview${element.charAt(0).toUpperCase() + element.slice(1)}`).textContent = value;
     }
-
-    // Character Count
-    const judulInput = document.getElementById('judul');
-    const judulCount = document.getElementById('judulCount');
-    const kontenCount = document.getElementById('kontenCount');
 
     judulInput.addEventListener('input', function() {
         updateCharCount('judulCount', this.value);
@@ -1244,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updatePreview('judul', this.value);
     });
 
-    document.getElementById('slug').addEventListener('input', function() {
+    slugInput.addEventListener('input', function() {
         slugManuallyEdited = this.value.trim() !== '';
         updatePreview('slug', this.value);
     });
@@ -1260,29 +1324,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    function updateCharCount(elementId, text) {
-        const count = String(text ?? '').length;
-        document.getElementById(elementId).textContent = count;
-    }
-
-    function generateSlug() {
-        const judul = judulInput.value.trim();
-        if (judul && !slugManuallyEdited) {
-            const slug = judul
-                .toLowerCase()
-                .replace(/[^\w\s-]/g, '')
-                .replace(/[\s_-]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-            document.getElementById('slug').value = slug;
-            updatePreview('slug', slug);
-        }
-    }
-
-    function updatePreview(element, value) {
-        document.getElementById(`preview${element.charAt(0).toUpperCase() + element.slice(1)}`).textContent = value;
-    }
-
-    // Initial character count
     updateCharCount('judulCount', judulInput.value);
     updateCharCount('kontenCount', getEditorPlainText());
 
@@ -1291,7 +1332,6 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         const judul = document.getElementById('judul').value.trim();
         const konten = getEditorPlainText();
-        const penulis = document.getElementById('penulis').value.trim();
 
         // Clear previous error highlights
         document.querySelectorAll('.is-invalid').forEach(el => {
@@ -1313,11 +1353,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!konten) {
             markError('konten', 'Konten berita harus diisi');
-            hasError = true;
-        }
-
-        if (!penulis) {
-            markError('penulis', 'Penulis harus diisi');
             hasError = true;
         }
 
@@ -1355,8 +1390,10 @@ document.addEventListener('DOMContentLoaded', function() {
     adjustLayout();
     window.addEventListener('resize', adjustLayout);
 
+    // Auto-focus on first field
+    if (judulInput) {
+        judulInput.focus();
+    }
 });
 </script>
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -987,6 +987,26 @@ body {
 </head>
 <body>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Challenge</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus challenge <strong>"<span id="deleteChallengeCode"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" type="button" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
+
 
 <div class="wrapper">
     <?php include __DIR__ . '/includes/sidebar.php'; ?>
@@ -1361,7 +1381,7 @@ function deleteChallenge(challengeId) {
     };
 
     clearDeleteError();
-    fetch(`../admin/challenge_delete.php?id=${challengeId}`, {
+    fetch(`challenge_delete.php?id=${challengeId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
