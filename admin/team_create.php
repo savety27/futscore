@@ -801,6 +801,15 @@ body {
     .file-upload-icon {
         font-size: 36px;
     }
+
+    .logout-btn {
+        background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    }
 }
 
 @keyframes slideDown {
@@ -833,7 +842,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>

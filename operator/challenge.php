@@ -2,15 +2,15 @@
 session_start();
 
 // Load database config
-$config_path = __DIR__ . '/config/database.php';
+$config_path = __DIR__ . '/../admin/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
 }
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
+    header("Location: ../login.php");
     exit;
 }
 
@@ -53,13 +53,39 @@ $can_join_event_name = $challenge_has_event_id && $events_table_exists;
 
 
 // Get admin info
-$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Operator';
 $admin_email = $_SESSION['admin_email'] ?? '';
+$current_page = 'challenge';
+
+$operator_id = (int)($_SESSION['admin_id'] ?? 0);
+$operator_event_id = (int)($_SESSION['event_id'] ?? 0);
+$operator_event_name = 'Event Operator';
+$operator_event_image = '';
+
+if ($operator_id > 0) {
+    try {
+        $stmtOperator = $conn->prepare("
+            SELECT au.event_id, e.name AS event_name, e.image AS event_image
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
+        $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
+        $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
+    } catch (PDOException $e) {
+        // keep defaults
+    }
+}
 
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$selected_event_id = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;
+$selected_event_id = $operator_event_id;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -67,8 +93,8 @@ $event_filter_options = [];
 
 if ($events_table_exists) {
     try {
-        $events_stmt = $conn->prepare("SELECT id, name FROM events WHERE name IS NOT NULL AND name <> '' ORDER BY created_at DESC, name ASC");
-        $events_stmt->execute();
+        $events_stmt = $conn->prepare("SELECT id, name FROM events WHERE id = ? AND name IS NOT NULL AND name <> '' LIMIT 1");
+        $events_stmt->execute([$operator_event_id]);
         $event_filter_options = $events_stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
         $event_filter_options = [];
@@ -118,11 +144,17 @@ if (!empty($search)) {
     }
 }
 
-if ($can_join_event_name && $selected_event_id > 0) {
-    $base_query .= " AND c.event_id = ?";
-    $count_query .= " AND c.event_id = ?";
-    $base_params[] = $selected_event_id;
-    $count_params[] = $selected_event_id;
+if ($can_join_event_name) {
+    if ($selected_event_id > 0) {
+        $base_query .= " AND c.event_id = ?";
+        $count_query .= " AND c.event_id = ?";
+        $base_params[] = $selected_event_id;
+        $count_params[] = $selected_event_id;
+    } else {
+        // Operator tanpa event assignment tidak boleh melihat data challenge lintas event.
+        $base_query .= " AND 1=0";
+        $count_query .= " AND 1=0";
+    }
 }
 
 $base_query .= " ORDER BY c.challenge_date DESC, c.created_at DESC";
@@ -163,7 +195,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Challenge Management</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 :root {
@@ -969,7 +1001,7 @@ body {
             </div>
             
             <div class="user-actions">
-                <a href="logout.php" class="logout-btn">
+                <a href="../admin/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -991,14 +1023,15 @@ body {
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-                <select name="event_id" id="eventFilter" class="event-filter-select">
-                    <option value="">Semua Events</option>
+                <select name="event_id" id="eventFilter" class="event-filter-select" disabled>
+                    <option value=""><?php echo $selected_event_id > 0 ? 'Event Operator' : 'Event belum diatur'; ?></option>
                     <?php foreach ($event_filter_options as $event_option): ?>
                         <option value="<?php echo (int)($event_option['id'] ?? 0); ?>" <?php echo $selected_event_id === (int)($event_option['id'] ?? 0) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($event_option['name'] ?? ''); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
+                <input type="hidden" name="event_id" value="<?php echo (int)$selected_event_id; ?>">
             </form>
             
             <div class="action-buttons">
@@ -1006,7 +1039,7 @@ body {
                     <i class="fas fa-plus"></i>
                     Tambah Challenge
                 </a>
-                <button class="btn btn-success" onclick="exportChallenges()">
+                <button type="button" class="btn btn-success" onclick="exportChallenges()">
                     <i class="fas fa-download"></i>
                     Export Excel
                 </button>
@@ -1328,7 +1361,7 @@ function deleteChallenge(challengeId) {
     };
 
     clearDeleteError();
-    fetch(`challenge_delete.php?id=${challengeId}`, {
+    fetch(`../admin/challenge_delete.php?id=${challengeId}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -1358,6 +1391,4 @@ function exportChallenges() {
     window.location.href = 'challenge_export.php' + (window.location.search ? window.location.search + '&export=excel' : '?export=excel');
 }
 </script>
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

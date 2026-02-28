@@ -313,21 +313,31 @@
 
 .status-scheduled {
     background: rgba(59, 130, 246, 0.15);
-    color: var(--blue-primary);
+    color: #1d4ed8;
     border-color: rgba(59, 130, 246, 0.35);
 }
 
 .status-ongoing {
     background: rgba(245, 158, 11, 0.15);
-    color: var(--gold);
+    color: #b45309;
     border-color: rgba(245, 158, 11, 0.35);
+}
+
+.status-coming-soon,
+.status-open,
+.status-accepted {
+    background: rgba(14, 165, 233, 0.15);
+    color: #0369a1;
+    border-color: rgba(14, 165, 233, 0.35);
 }
 
 .status-postponed,
 .status-cancelled,
-.status-abandoned {
+.status-abandoned,
+.status-rejected,
+.status-expired {
     background: rgba(239, 68, 68, 0.15);
-    color: var(--red);
+    color: #b91c1c;
     border-color: rgba(239, 68, 68, 0.35);
 }
 
@@ -335,6 +345,48 @@
     background: rgba(148, 163, 184, 0.2);
     color: var(--gray-600);
     border-color: var(--gray-200);
+}
+
+/* Ensure all status chips in the dark header are always readable */
+.header-meta .status-scheduled,
+.header-meta .status-ongoing,
+.header-meta .status-coming-soon,
+.header-meta .status-open,
+.header-meta .status-accepted,
+.header-meta .status-postponed,
+.header-meta .status-cancelled,
+.header-meta .status-abandoned,
+.header-meta .status-rejected,
+.header-meta .status-expired,
+.header-meta .status-tba {
+    color: #fff;
+    border-color: transparent;
+}
+
+.header-meta .status-scheduled { background: #2563eb; }
+.header-meta .status-ongoing { background: #d97706; }
+.header-meta .status-coming-soon,
+.header-meta .status-open,
+.header-meta .status-accepted { background: #0284c7; }
+.header-meta .status-postponed,
+.header-meta .status-cancelled,
+.header-meta .status-abandoned,
+.header-meta .status-rejected,
+.header-meta .status-expired { background: #dc2626; }
+.header-meta .status-tba { background: #475569; }
+
+.header-meta .status-scheduled i,
+.header-meta .status-ongoing i,
+.header-meta .status-coming-soon i,
+.header-meta .status-open i,
+.header-meta .status-accepted i,
+.header-meta .status-postponed i,
+.header-meta .status-cancelled i,
+.header-meta .status-abandoned i,
+.header-meta .status-rejected i,
+.header-meta .status-expired i,
+.header-meta .status-tba i {
+    color: #fff;
 }
 
 .lineup-legend {

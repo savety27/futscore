@@ -21,15 +21,16 @@ if (!in_array($filter_active, ['', '1', '0'], true)) {
     $filter_active = '';
 }
 
-// Query untuk mengambil semua data pelatih dengan JOIN ke tabel teams
-$query = "SELECT au.*, t.name as team_name 
+// Query untuk mengambil semua data pelatih dengan JOIN ke tabel teams dan events
+$query = "SELECT au.*, t.name as team_name, e.name as event_name
           FROM admin_users au 
           LEFT JOIN teams t ON au.team_id = t.id 
+          LEFT JOIN events e ON au.event_id = e.id
           WHERE 1=1";
 
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ?)";
+    $query .= " AND (au.username LIKE ? OR au.email LIKE ? OR au.full_name LIKE ? OR au.role LIKE ? OR t.name LIKE ? OR e.name LIKE ?)";
 }
 
 if ($filter_active !== '') {
@@ -42,7 +43,7 @@ try {
     $stmt = $conn->prepare($query);
     $params = [];
     if (!empty($search)) {
-        $params = [$search_term, $search_term, $search_term, $search_term, $search_term];
+        $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
     }
     if ($filter_active !== '') {
         $params[] = (int) $filter_active;
@@ -83,7 +84,7 @@ echo 'td { border: 0.5pt solid #000000; padding: 5px; }';
 echo 'th { border: 0.5pt solid #000000; padding: 8px; background-color: #f2f2f2; font-weight: bold; }';
 echo '.superadmin { background-color: #FFE5B4; }';
 echo '.admin { background-color: #E6F3FF; }';
-echo '.editor { background-color: #F0F0F0; }';
+echo '.operator { background-color: #F0F0F0; }';
 echo '.status-active { color: #006400; font-weight: bold; }';
 echo '.status-inactive { color: #8B0000; font-weight: bold; }';
 echo '</style>';
@@ -102,6 +103,7 @@ echo '<th>Email</th>';
 echo '<th>Nama Lengkap</th>';
 echo '<th>Role</th>';
 echo '<th>Tim</th>';
+echo '<th>Event</th>';
 echo '<th>Status</th>';
 echo '<th>Login Terakhir</th>';
 echo '<th>Tanggal Dibuat</th>';
@@ -119,7 +121,7 @@ foreach ($pelatih as $p) {
     } elseif ($p['role'] === 'admin') {
         $role_class = 'admin';
     } else {
-        $role_class = 'editor';
+        $role_class = 'operator';
     }
     
     // Tentukan class berdasarkan status
@@ -135,13 +137,14 @@ foreach ($pelatih as $p) {
         echo 'Super Admin';
     } elseif ($p['role'] === 'admin') {
         echo 'Admin';
-    } elseif ($p['role'] === 'editor') {
-        echo 'Editor';
+    } elseif ($p['role'] === 'operator' || $p['role'] === 'editor') {
+        echo 'Operator';
     } else {
         echo htmlspecialchars($p['role'] ?? '');
     }
     echo '</td>';
     echo '<td>' . (!empty($p['team_name']) ? htmlspecialchars($p['team_name']) : '-') . '</td>';
+    echo '<td>' . (!empty($p['event_name']) ? htmlspecialchars($p['event_name']) : '-') . '</td>';
     echo '<td class="' . $status_class . '">' . ($p['is_active'] ? 'Aktif' : 'Non-Aktif') . '</td>';
     echo '<td>' . (!empty($p['last_login']) ? date('d/m/Y H:i', strtotime($p['last_login'])) : '-') . '</td>';
     echo '<td>' . date('d/m/Y H:i', strtotime($p['created_at'])) . '</td>';
@@ -162,11 +165,13 @@ echo '<td>' . count($pelatih) . ' pelatih/admin</td>';
 echo '</tr>';
 
 // Hitung per role
-$role_counts = ['superadmin' => 0, 'admin' => 0, 'editor' => 0, 'other' => 0];
+$role_counts = ['superadmin' => 0, 'admin' => 0, 'operator' => 0, 'other' => 0];
 $status_counts = ['active' => 0, 'inactive' => 0];
 
 foreach ($pelatih as $p) {
-    if (isset($role_counts[$p['role']])) {
+    if (($p['role'] ?? '') === 'editor') {
+        $role_counts['operator']++;
+    } elseif (isset($role_counts[$p['role']])) {
         $role_counts[$p['role']]++;
     } else {
         $role_counts['other']++;
@@ -186,6 +191,10 @@ echo '</tr>';
 echo '<tr>';
 echo '<td><strong>Admin:</strong></td>';
 echo '<td>' . $role_counts['admin'] . '</td>';
+echo '</tr>';
+echo '<tr>';
+echo '<td><strong>Operator:</strong></td>';
+echo '<td>' . $role_counts['operator'] . '</td>';
 echo '</tr>';
 echo '<tr>';
 echo '<td><strong>Status Aktif:</strong></td>';

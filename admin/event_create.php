@@ -219,7 +219,7 @@ body {
 .greeting p { color: var(--gray); font-size: 14px; }
 .logout-btn {
     display: inline-flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
     background: linear-gradient(135deg, var(--danger), #b91c1c);
     color: #fff;
@@ -239,6 +239,7 @@ body {
 }
 .page-title { display: flex; align-items: center; gap: 15px; color: var(--primary); font-size: 28px; }
 .page-title i { color: var(--secondary); }
+.action-buttons { display: flex; gap: 10px; }
 .btn { border: none; border-radius: 10px; padding: 11px 18px; font-weight: 600; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
 .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
 .btn-secondary { background: #6b7280; color: #fff; }
@@ -339,10 +340,27 @@ body {
 @media (max-width: 900px) {
     .main { margin-left: 0; width: 100%; padding: 16px; }
     .topbar, .page-header { padding: 16px; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .user-actions { width: 100%; display: flex; justify-content: flex-end; }
     .greeting h1 { font-size: 22px; }
     .page-title { font-size: 22px; }
     .form-grid { grid-template-columns: 1fr; }
     .page-header { flex-direction: column; align-items: flex-start; }
+    .page-header .action-buttons { width: 100%; flex-direction: column; }
+    .page-header .action-buttons .btn { width: 100%; justify-content: center; }
+    .form-actions { flex-direction: column; }
+    .form-actions .btn { width: 100%; justify-content: center; }
+}
+@media (max-width: 480px) {
+    .logout-btn {
+        background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    }
+    .btn { font-size: 14px; }
 }
 </style>
 </head>
@@ -356,12 +374,14 @@ body {
                 <h1>Tambah Event Baru 🗓️</h1>
                 <p>Buat data event baru</p>
             </div>
-            <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <div class="user-actions">
+                <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+            </div>
         </div>
 
         <div class="page-header">
             <div class="page-title"><i class="fas fa-trophy"></i> <span>Buat Event Baru</span></div>
-            <div>
+            <div class="action-buttons">
                 <a href="event.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
             </div>
         </div>

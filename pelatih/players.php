@@ -107,6 +107,64 @@ $build_page_url = function(int $page) use ($base_query_params): string {
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
 }
 
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.page-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.15;
+}
+
+.page-title i {
+    color: var(--secondary);
+}
+
+.page-subtitle {
+    margin: 0;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.summary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef5ff;
+    color: var(--primary);
+    border: 1px solid #dbeafe;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.section-header {
+    margin-bottom: 16px;
+}
+
 .filter-container {
     margin-bottom: 20px;
 }
@@ -207,6 +265,15 @@ $build_page_url = function(int $page) use ($base_query_params): string {
 }
 
 @media (max-width: 768px) {
+    .page-header {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .page-title {
+        font-size: 23px;
+    }
+
     .players-filter-form {
         grid-template-columns: 1fr;
     }
@@ -223,9 +290,19 @@ $build_page_url = function(int $page) use ($base_query_params): string {
 }
 </style>
 
+<div class="page-header">
+    <div class="page-title-wrap">
+        <h1 class="page-title"><i class="fas fa-users"></i> Direktori Pemain</h1>
+        <p class="page-subtitle">Kelola roster, filter kategori, dan pantau profil pemain aktif tim Anda.</p>
+    </div>
+    <div class="page-summary">
+        <span class="summary-pill"><i class="fas fa-id-badge"></i> <?php echo (int)$total_players; ?> Pemain</span>
+    </div>
+</div>
+
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Daftar Player</h2>
+        <h2 class="section-title">Daftar Pemain</h2>
         <a href="player_form.php" class="btn-primary">
             <i class="fas fa-plus"></i> Tambah Pemain
         </a>

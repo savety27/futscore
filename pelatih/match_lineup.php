@@ -15,6 +15,15 @@ $uniform_choice_column = '';
 $uniform_options = [];
 $selected_uniform_choices = [];
 $my_team_uniform_raw = '';
+$has_match_staff_assignments_table = false;
+$has_match_staff_half_column = false;
+$has_challenge_event_id_column = false;
+$has_events_table = false;
+$can_join_event_name = false;
+$team_staffs = [];
+$current_staff_ids = [];
+$current_staff_ids_h1 = [];
+$current_staff_ids_h2 = [];
 
 $position_options = [
     'GK' => 'Goalkeeper (GK)',
@@ -87,16 +96,34 @@ if ($my_team_id == 0) {
         die("Error: Anda tidak terdaftar dalam team manapun.");
     }
 
+    $stmtEventIdCol = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+    $has_challenge_event_id_column = $stmtEventIdCol && $stmtEventIdCol->fetch(PDO::FETCH_ASSOC) !== false;
+    $stmtEventsTable = $conn->query("SHOW TABLES LIKE 'events'");
+    $has_events_table = $stmtEventsTable && $stmtEventsTable->fetch(PDO::FETCH_NUM) !== false;
+    $can_join_event_name = $has_challenge_event_id_column && $has_events_table;
+
+    $stmtStaffTable = $conn->query("SHOW TABLES LIKE 'match_staff_assignments'");
+    $has_match_staff_assignments_table = $stmtStaffTable && $stmtStaffTable->fetch(PDO::FETCH_NUM) !== false;
+    if ($has_match_staff_assignments_table) {
+        $stmtStaffHalfColumn = $conn->query("SHOW COLUMNS FROM match_staff_assignments LIKE 'half'");
+        $has_match_staff_half_column = $stmtStaffHalfColumn && $stmtStaffHalfColumn->fetch(PDO::FETCH_ASSOC) !== false;
+    }
+
     // Get challenge details
-    $stmt = $conn->prepare("
-        SELECT c.*, 
-        t1.name as challenger_name, t1.id as challenger_id,
-        t2.name as opponent_name, t2.id as opponent_id
+    $challengeSelect = "
+        SELECT c.*,
+               " . ($can_join_event_name
+                    ? "TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,"
+                    : "TRIM(c.sport_type) AS event_name,") . "
+               t1.name as challenger_name, t1.id as challenger_id,
+               t2.name as opponent_name, t2.id as opponent_id
         FROM challenges c
+        " . ($can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "") . "
         LEFT JOIN teams t1 ON c.challenger_id = t1.id
         LEFT JOIN teams t2 ON c.opponent_id = t2.id
         WHERE c.id = ? AND (c.challenger_id = ? OR c.opponent_id = ?)
-    ");
+    ";
+    $stmt = $conn->prepare($challengeSelect);
     $stmt->execute([$challenge_id, $my_team_id, $my_team_id]);
     $challenge = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -104,6 +131,65 @@ if ($my_team_id == 0) {
         echo "<div class='card'><div class='alert alert-danger'>Pertandingan tidak ditemukan atau Anda tidak memiliki akses.</div><a href='schedule.php' class='btn-secondary'>Kembali</a></div>";
         require_once 'includes/footer.php';
         exit;
+    }
+
+    $stmtTeamStaff = $conn->prepare("
+        SELECT id, name, position
+        FROM team_staff
+        WHERE team_id = ?
+          AND is_active = 1
+        ORDER BY
+            CASE
+                WHEN position = 'manager' THEN 1
+                WHEN position = 'headcoach' THEN 2
+                WHEN position = 'coach' THEN 3
+                WHEN position = 'assistant_coach' THEN 4
+                WHEN position = 'goalkeeper_coach' THEN 5
+                WHEN position = 'fitness_coach' THEN 6
+                WHEN position = 'analyst' THEN 7
+                WHEN position = 'medic' THEN 8
+                WHEN position = 'official' THEN 9
+                ELSE 99
+            END,
+            name ASC
+    ");
+    $stmtTeamStaff->execute([$my_team_id]);
+    $team_staffs = $stmtTeamStaff->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($has_match_staff_assignments_table) {
+        if ($has_match_staff_half_column) {
+            $stmtAssignedStaff = $conn->prepare("
+                SELECT staff_id, half
+                FROM match_staff_assignments
+                WHERE match_id = ? AND team_id = ?
+            ");
+            $stmtAssignedStaff->execute([$challenge_id, $my_team_id]);
+            foreach ($stmtAssignedStaff->fetchAll(PDO::FETCH_ASSOC) as $assignedRow) {
+                $sid = (int)($assignedRow['staff_id'] ?? 0);
+                $half = (int)($assignedRow['half'] ?? 1);
+                if ($sid <= 0) {
+                    continue;
+                }
+                if ($half === 2) {
+                    $current_staff_ids_h2[$sid] = true;
+                } else {
+                    $current_staff_ids_h1[$sid] = true;
+                }
+            }
+        } else {
+            $stmtAssignedStaff = $conn->prepare("
+                SELECT staff_id
+                FROM match_staff_assignments
+                WHERE match_id = ? AND team_id = ?
+            ");
+            $stmtAssignedStaff->execute([$challenge_id, $my_team_id]);
+            foreach ($stmtAssignedStaff->fetchAll(PDO::FETCH_ASSOC) as $assignedRow) {
+                $sid = (int)($assignedRow['staff_id'] ?? 0);
+                if ($sid > 0) {
+                    $current_staff_ids[$sid] = true;
+                }
+            }
+        }
     }
 
     // Initial Filter: If user hasn't selected an event filter, force it to match the challenge event
@@ -240,6 +326,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $selected_uniform_choices = array_values(array_unique($selected_uniform_choices));
     }
 
+    $submitted_staff_ids = [];
+    $submitted_staff_ids_h1 = [];
+    $submitted_staff_ids_h2 = [];
+    if ($has_match_staff_half_column) {
+        if (isset($_POST['assigned_staff_h1']) && is_array($_POST['assigned_staff_h1'])) {
+            foreach ($_POST['assigned_staff_h1'] as $sid) {
+                $sid = (int)$sid;
+                if ($sid > 0) {
+                    $submitted_staff_ids_h1[$sid] = true;
+                }
+            }
+        }
+        if (isset($_POST['assigned_staff_h2']) && is_array($_POST['assigned_staff_h2'])) {
+            foreach ($_POST['assigned_staff_h2'] as $sid) {
+                $sid = (int)$sid;
+                if ($sid > 0) {
+                    $submitted_staff_ids_h2[$sid] = true;
+                }
+            }
+        }
+    } else {
+        if (isset($_POST['assigned_staff']) && is_array($_POST['assigned_staff'])) {
+            foreach ($_POST['assigned_staff'] as $sid) {
+                $sid = (int)$sid;
+                if ($sid > 0) {
+                    $submitted_staff_ids[$sid] = true;
+                }
+            }
+        }
+    }
+
     if (!$has_lineups_half_column) {
         $error_message = "Pembaruan database belum diterapkan. Jalankan migrations/migration_add_half_column_to_lineups.sql terlebih dahulu.";
     } else {
@@ -301,6 +418,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtUpdateUniform->execute([$uniform_choice_value, $challenge_id]);
             }
 
+            if ($has_match_staff_assignments_table) {
+                $valid_staff_ids = [];
+                foreach ($team_staffs as $staff_row) {
+                    $sid = (int)($staff_row['id'] ?? 0);
+                    if ($sid > 0) {
+                        $valid_staff_ids[$sid] = [
+                            'position' => trim((string)($staff_row['position'] ?? ''))
+                        ];
+                    }
+                }
+
+                $stmtDeleteStaff = $conn->prepare("DELETE FROM match_staff_assignments WHERE match_id = ? AND team_id = ?");
+                $stmtDeleteStaff->execute([$challenge_id, $my_team_id]);
+
+                if ($has_match_staff_half_column) {
+                    $stmtInsertStaff = $conn->prepare("
+                        INSERT INTO match_staff_assignments (match_id, staff_id, team_id, half, role, created_by)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    foreach (array_keys($submitted_staff_ids_h1) as $sid) {
+                        if (!isset($valid_staff_ids[$sid])) {
+                            continue;
+                        }
+                        $role = $valid_staff_ids[$sid]['position'] ?: null;
+                        $created_by = $pelatih_id > 0 ? $pelatih_id : null;
+                        $stmtInsertStaff->execute([$challenge_id, $sid, $my_team_id, 1, $role, $created_by]);
+                    }
+                    foreach (array_keys($submitted_staff_ids_h2) as $sid) {
+                        if (!isset($valid_staff_ids[$sid])) {
+                            continue;
+                        }
+                        $role = $valid_staff_ids[$sid]['position'] ?: null;
+                        $created_by = $pelatih_id > 0 ? $pelatih_id : null;
+                        $stmtInsertStaff->execute([$challenge_id, $sid, $my_team_id, 2, $role, $created_by]);
+                    }
+                } else {
+                    $stmtInsertStaff = $conn->prepare("
+                        INSERT INTO match_staff_assignments (match_id, staff_id, team_id, role, created_by)
+                        VALUES (?, ?, ?, ?, ?)
+                    ");
+                    foreach (array_keys($submitted_staff_ids) as $sid) {
+                        if (!isset($valid_staff_ids[$sid])) {
+                            continue;
+                        }
+                        $role = $valid_staff_ids[$sid]['position'] ?: null;
+                        $created_by = $pelatih_id > 0 ? $pelatih_id : null;
+                        $stmtInsertStaff->execute([$challenge_id, $sid, $my_team_id, $role, $created_by]);
+                    }
+                }
+            }
+
             $conn->commit();
             $_SESSION['success_message'] = "Lineup berhasil disimpan!";
 
@@ -329,7 +497,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="lineup-hero__meta">
                     <span class="lineup-pill">
                         <i class="fas fa-trophy"></i>
-                        <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
+                        <?php echo htmlspecialchars($challenge['event_name'] ?? ($challenge['sport_type'] ?? '-')); ?>
+                    </span>
+                    <span class="lineup-pill">
+                        <i class="fas fa-layer-group"></i>
+                        Kategori: <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
                     </span>
                     <span class="lineup-pill">
                         <i class="fas fa-hashtag"></i>
@@ -367,6 +539,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="alert lineup-alert lineup-alert--warning">
                 <i class="fas fa-user-slash"></i>
                 <span><?php echo count($suspended_players_map); ?> pemain sedang suspend dan tidak bisa dipilih sampai masa suspend selesai.</span>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!$has_match_staff_assignments_table): ?>
+            <div class="alert lineup-alert lineup-alert--warning">
+                <i class="fas fa-user-clock"></i>
+                <span>Fitur assignment staff belum aktif. Jalankan migrasi: <code>migrations/migration_create_match_staff_assignments.sql</code></span>
+            </div>
+        <?php elseif (!$has_match_staff_half_column): ?>
+            <div class="alert lineup-alert lineup-alert--warning">
+                <i class="fas fa-user-clock"></i>
+                <span>Assignment staff masih mode lama (tanpa babak). Jalankan migrasi: <code>migrations/migration_add_half_to_match_staff_assignments.sql</code></span>
             </div>
         <?php endif; ?>
 
@@ -438,6 +622,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php else: ?>
                     <div class="lineup-uniform-hint">
                         Warna kostum belum diisi di data tim.
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="lineup-staff-panel">
+                <div class="lineup-staff-panel__head">
+                    <h4>Staff Bertugas di Match Ini</h4>
+                    <p>Pilih staff resmi tim yang hadir/bertugas. Data ini akan dipakai untuk histori staff pada halaman publik.</p>
+                </div>
+                <?php if (empty($team_staffs)): ?>
+                    <div class="lineup-staff-hint">
+                        Belum ada staff aktif pada tim ini.
+                    </div>
+                <?php elseif (!$has_match_staff_assignments_table): ?>
+                    <div class="lineup-staff-hint">
+                        Simpan assignment staff dinonaktifkan sampai migrasi dijalankan.
+                    </div>
+                <?php elseif ($has_match_staff_half_column): ?>
+                    <div class="lineup-staff-tabs" role="tablist" aria-label="Pilihan babak staff">
+                        <button type="button" class="lineup-staff-tab-btn active" onclick="openStaffTab(event, 'staff-half1')">Staff Babak 1</button>
+                        <button type="button" class="lineup-staff-tab-btn" onclick="openStaffTab(event, 'staff-half2')">Staff Babak 2</button>
+                    </div>
+
+                    <div id="staff-half1" class="lineup-staff-tab-content active">
+                        <div class="lineup-staff-grid">
+                            <?php foreach ($team_staffs as $staff_row): ?>
+                                <?php
+                                    $sid = (int)($staff_row['id'] ?? 0);
+                                    $sname = trim((string)($staff_row['name'] ?? ''));
+                                    $srole = trim((string)($staff_row['position'] ?? ''));
+                                    $is_assigned = isset($current_staff_ids_h1[$sid]);
+                                ?>
+                                <label class="lineup-staff-option">
+                                    <input
+                                        type="checkbox"
+                                        name="assigned_staff_h1[]"
+                                        value="<?php echo $sid; ?>"
+                                        class="form-check-input"
+                                        <?php echo $is_assigned ? 'checked' : ''; ?>
+                                    >
+                                    <span class="lineup-staff-option__name"><?php echo htmlspecialchars($sname); ?></span>
+                                    <small class="lineup-staff-option__role"><?php echo htmlspecialchars($srole !== '' ? $srole : '-'); ?></small>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <div id="staff-half2" class="lineup-staff-tab-content">
+                        <div class="lineup-staff-grid">
+                            <?php foreach ($team_staffs as $staff_row): ?>
+                                <?php
+                                    $sid = (int)($staff_row['id'] ?? 0);
+                                    $sname = trim((string)($staff_row['name'] ?? ''));
+                                    $srole = trim((string)($staff_row['position'] ?? ''));
+                                    $is_assigned = isset($current_staff_ids_h2[$sid]);
+                                ?>
+                                <label class="lineup-staff-option">
+                                    <input
+                                        type="checkbox"
+                                        name="assigned_staff_h2[]"
+                                        value="<?php echo $sid; ?>"
+                                        class="form-check-input"
+                                        <?php echo $is_assigned ? 'checked' : ''; ?>
+                                    >
+                                    <span class="lineup-staff-option__name"><?php echo htmlspecialchars($sname); ?></span>
+                                    <small class="lineup-staff-option__role"><?php echo htmlspecialchars($srole !== '' ? $srole : '-'); ?></small>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="lineup-staff-grid">
+                        <?php foreach ($team_staffs as $staff_row): ?>
+                            <?php
+                                $sid = (int)($staff_row['id'] ?? 0);
+                                $sname = trim((string)($staff_row['name'] ?? ''));
+                                $srole = trim((string)($staff_row['position'] ?? ''));
+                                $is_assigned = isset($current_staff_ids[$sid]);
+                            ?>
+                            <label class="lineup-staff-option">
+                                <input
+                                    type="checkbox"
+                                    name="assigned_staff[]"
+                                    value="<?php echo $sid; ?>"
+                                    class="form-check-input"
+                                    <?php echo $is_assigned ? 'checked' : ''; ?>
+                                >
+                                <span class="lineup-staff-option__name"><?php echo htmlspecialchars($sname); ?></span>
+                                <small class="lineup-staff-option__role"><?php echo htmlspecialchars($srole !== '' ? $srole : '-'); ?></small>
+                            </label>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -630,6 +905,23 @@ function openTab(evt, tabName) {
     evt.currentTarget.classList.add('active');
 }
 
+function openStaffTab(evt, tabName) {
+    var tabContent = document.getElementsByClassName('lineup-staff-tab-content');
+    var tabButtons = document.getElementsByClassName('lineup-staff-tab-btn');
+    var i;
+
+    for (i = 0; i < tabContent.length; i++) {
+        tabContent[i].classList.remove('active');
+    }
+
+    for (i = 0; i < tabButtons.length; i++) {
+        tabButtons[i].classList.remove('active');
+    }
+
+    document.getElementById(tabName).classList.add('active');
+    evt.currentTarget.classList.add('active');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     ['h1', 'h2'].forEach(function(half) {
         var playerChecks = document.querySelectorAll('.player-select-' + half);
@@ -721,6 +1013,116 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .lineup-uniform-hint {
+    margin-top: 10px;
+    font-size: 0.84rem;
+    color: #4d5d75;
+}
+
+.lineup-staff-panel {
+    margin: 0 0 18px;
+    padding: 16px 18px;
+    border: 1px solid #d8e3f3;
+    border-radius: 14px;
+    background: #f9fbff;
+}
+
+.lineup-staff-panel__head h4 {
+    margin: 0;
+    font-size: 1.02rem;
+    color: #112f66;
+}
+
+.lineup-staff-panel__head p {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: #566782;
+}
+
+.lineup-staff-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+.lineup-staff-tabs {
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 12px 0;
+    padding: 6px;
+    border-radius: 12px;
+    background: #edf2fb;
+    border: 1px solid #d7e0ef;
+    width: min(380px, 100%);
+}
+
+.lineup-staff-tab-btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #45556d;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.lineup-staff-tab-btn:hover {
+    color: #132d60;
+    transform: translateY(-1px);
+}
+
+.lineup-staff-tab-btn.active {
+    color: #0a2463;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(14, 44, 98, 0.12);
+}
+
+.lineup-staff-tab-content {
+    display: none;
+}
+
+.lineup-staff-tab-content.active {
+    display: block;
+    animation: lineupFadeIn 0.28s ease;
+}
+
+.lineup-staff-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #d6e1f3;
+    background: #ffffff;
+    color: #1f2f47;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.lineup-staff-option:hover {
+    transform: translateY(-1px);
+    border-color: #bdd0ed;
+    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.12);
+}
+
+.lineup-staff-option input[type="checkbox"] {
+    align-self: flex-start;
+    margin: 0 0 6px;
+}
+
+.lineup-staff-option__name {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.lineup-staff-option__role {
+    color: #5d6f8d;
+    text-transform: capitalize;
+}
+
+.lineup-staff-hint {
     margin-top: 10px;
     font-size: 0.84rem;
     color: #4d5d75;
@@ -1204,8 +1606,13 @@ document.addEventListener('DOMContentLoaded', function() {
         animation: none;
     }
 
+    .lineup-staff-tab-content.active {
+        animation: none;
+    }
+
     .lineup-back-btn,
     .lineup-tab-btn,
+    .lineup-staff-tab-btn,
     .lineup-filter-form .form-control {
         transition: none;
     }

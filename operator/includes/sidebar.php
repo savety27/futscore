@@ -21,7 +21,14 @@ $has_event_logo = ($operator_event_image !== '' && file_exists(__DIR__ . '/../..
 
     <div class="menu">
         <div class="menu-item">
-            <a href="../admin/challenge.php" class="menu-link <?php echo $current_page === 'challenge' ? 'active' : ''; ?>">
+            <a href="dashboard.php" class="menu-link <?php echo $current_page === 'dashboard' ? 'active' : ''; ?>">
+                <span class="menu-icon"><i class="fas fa-home"></i></span>
+                <span class="menu-text">Dashboard</span>
+            </a>
+        </div>
+
+        <div class="menu-item">
+            <a href="challenge.php" class="menu-link <?php echo $current_page === 'challenge' ? 'active' : ''; ?>">
                 <span class="menu-icon"><i class="fas fa-futbol"></i></span>
                 <span class="menu-text">Challenge</span>
             </a>

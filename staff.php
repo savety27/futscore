@@ -30,6 +30,17 @@ $offset = ($page - 1) * $limit;
 
 // Database connection
 $conn = $db->getConnection();
+$has_challenge_event_id = false;
+$check_event_id_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+if ($check_event_id_col && $check_event_id_col->num_rows > 0) {
+    $has_challenge_event_id = true;
+}
+
+$has_match_staff_assignments_table = false;
+$check_staff_assignment_table = $conn->query("SHOW TABLES LIKE 'match_staff_assignments'");
+if ($check_staff_assignment_table && $check_staff_assignment_table->num_rows > 0) {
+    $has_match_staff_assignments_table = true;
+}
 
 // Query for Total Records (for pagination)
 $count_query = "SELECT COUNT(*) as total FROM team_staff ts WHERE ts.is_active = 1";
@@ -76,6 +87,81 @@ if (!empty($search)) {
 $stmt->execute();
 $result = $stmt->get_result();
 $staffs = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+$staff_match_counts = [];
+$staff_event_stats = [];
+if ($has_match_staff_assignments_table && !empty($staffs)) {
+    $staff_ids = array_map('intval', array_column($staffs, 'id'));
+    if (!empty($staff_ids)) {
+        $placeholders = implode(',', array_fill(0, count($staff_ids), '?'));
+
+        $sql_match_counts = "
+            SELECT msa.staff_id, COUNT(DISTINCT msa.match_id) AS total_match
+            FROM match_staff_assignments msa
+            INNER JOIN challenges c ON msa.match_id = c.id
+            WHERE msa.staff_id IN ($placeholders)
+            GROUP BY msa.staff_id
+        ";
+        $stmt_match_counts = $conn->prepare($sql_match_counts);
+        if ($stmt_match_counts) {
+            $types = str_repeat('i', count($staff_ids));
+            $stmt_match_counts->bind_param($types, ...$staff_ids);
+            $stmt_match_counts->execute();
+            $result_match_counts = $stmt_match_counts->get_result();
+            while ($row = $result_match_counts->fetch_assoc()) {
+                $staff_match_counts[(int)$row['staff_id']] = (int)$row['total_match'];
+            }
+            $stmt_match_counts->close();
+        }
+
+        if ($has_challenge_event_id) {
+            $sql_event_counts = "
+                SELECT
+                    msa.staff_id,
+                    TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,
+                    COUNT(DISTINCT msa.match_id) AS total_match_in_event
+                FROM match_staff_assignments msa
+                INNER JOIN challenges c ON msa.match_id = c.id
+                LEFT JOIN events e ON c.event_id = e.id
+                WHERE msa.staff_id IN ($placeholders)
+                GROUP BY msa.staff_id, event_name
+                HAVING event_name IS NOT NULL AND event_name <> ''
+            ";
+        } else {
+            $sql_event_counts = "
+                SELECT
+                    msa.staff_id,
+                    TRIM(c.sport_type) AS event_name,
+                    COUNT(DISTINCT msa.match_id) AS total_match_in_event
+                FROM match_staff_assignments msa
+                INNER JOIN challenges c ON msa.match_id = c.id
+                WHERE msa.staff_id IN ($placeholders)
+                GROUP BY msa.staff_id, c.sport_type
+                HAVING event_name IS NOT NULL AND event_name <> ''
+            ";
+        }
+
+        $stmt_event_counts = $conn->prepare($sql_event_counts);
+        if ($stmt_event_counts) {
+            $types = str_repeat('i', count($staff_ids));
+            $stmt_event_counts->bind_param($types, ...$staff_ids);
+            $stmt_event_counts->execute();
+            $result_event_counts = $stmt_event_counts->get_result();
+            while ($row = $result_event_counts->fetch_assoc()) {
+                $sid = (int)$row['staff_id'];
+                $event_name = trim((string)($row['event_name'] ?? ''));
+                if ($event_name === '') {
+                    continue;
+                }
+                if (!isset($staff_event_stats[$sid])) {
+                    $staff_event_stats[$sid] = [];
+                }
+                $staff_event_stats[$sid][$event_name] = (int)$row['total_match_in_event'];
+            }
+            $stmt_event_counts->close();
+        }
+    }
+}
 
 // Helper Functions
 function calculateStaffAge($birth_date) {
@@ -437,19 +523,62 @@ $pageTitle = "Staff List";
     width: 70px;
 }
 
-.event-match-count {
+.match-count-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 4px 10px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 12px;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
 }
 
-.event-match-count i {
+.match-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.event-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.event-count-badge.zero {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.staff-history-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.staff-history-btn:hover {
+    background: #bfdbfe;
+    transform: translateY(-1px);
+}
+
+.match-count-badge i,
+.event-count-badge i {
     margin-right: 4px;
     font-size: 10px;
 }
@@ -609,6 +738,114 @@ $pageTitle = "Staff List";
 
 .modal-body {
     padding: 20px;
+}
+
+.staff-history-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 10002;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.staff-history-modal.open {
+    display: flex;
+}
+
+.staff-history-modal-content {
+    width: min(1100px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.staff-history-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.staff-history-modal-title {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+.staff-history-modal-meta {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.staff-history-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #334155;
+    cursor: pointer;
+}
+
+.staff-history-modal-body {
+    padding: 16px 20px 20px;
+    overflow: auto;
+}
+
+.staff-history-loading,
+.staff-history-empty {
+    padding: 24px 12px;
+    text-align: center;
+    color: #64748b;
+}
+
+.staff-history-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.staff-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px;
+}
+
+.staff-history-table th,
+.staff-history-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    font-size: 13px;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.staff-history-table th {
+    background: #f8fafc;
+    font-size: 12px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.staff-history-pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    border: 1px solid #93c5fd;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 /* Certificates Grid */
@@ -851,6 +1088,21 @@ $pageTitle = "Staff List";
     </div>
 </div>
 
+<div class="staff-history-modal" id="staffHistoryModal">
+    <div class="staff-history-modal-content">
+        <div class="staff-history-modal-header">
+            <div>
+                <h3 class="staff-history-modal-title"><i class="fas fa-clock-rotate-left"></i> <span id="staffHistoryName">-</span></h3>
+                <div class="staff-history-modal-meta" id="staffHistoryMeta">-</div>
+            </div>
+            <button type="button" class="staff-history-close" id="staffHistoryClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="staff-history-modal-body" id="staffHistoryBody">
+            <div class="staff-history-loading"><i class="fas fa-spinner"></i> Memuat riwayat...</div>
+        </div>
+    </div>
+</div>
+
 <!-- Image Viewer -->
 <div class="image-viewer" id="imageViewer">
     <button class="close-btn" onclick="closeImageViewer()">&times;</button>
@@ -969,6 +1221,13 @@ $pageTitle = "Staff List";
                 </div>
             </div>
 
+            <?php if (!$has_match_staff_assignments_table): ?>
+                <div style="margin-bottom:16px; padding:12px 14px; border-radius:10px; background:#fff7ed; border:1px solid #fdba74; color:#9a3412; font-size:13px;">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    Histori event/match staff belum aktif. Jalankan migrasi: <code>migrations/migration_create_match_staff_assignments.sql</code>
+                </div>
+            <?php endif; ?>
+
             <div class="table-container-new">
                 <table class="staff-table-new">
                     <thead>
@@ -980,13 +1239,16 @@ $pageTitle = "Staff List";
                             <th class="col-position">Jabatan</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th class="col-events">Event</th>
+                            <th class="col-matches">Match</th>
+                            <th style="text-align:center; width:70px;">History</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($staffs)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">
+                                <td colspan="11" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada staf ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1007,6 +1269,13 @@ $pageTitle = "Staff List";
                                 
                                 // Get team logo info
                                 $team_logo = getFileUrl($s['team_logo'], 'teams', 'fa-users');
+                                $match_count = $staff_match_counts[(int)$s['id']] ?? 0;
+                                $event_stats = $staff_event_stats[(int)$s['id']] ?? [];
+                                $event_count = count($event_stats);
+                                $event_full_info = [];
+                                foreach ($event_stats as $event_name => $event_match_total) {
+                                    $event_full_info[] = $event_name . ' (' . $event_match_total . ' match)';
+                                }
                             ?>
                             <tr>
                                 <!-- Kolom No -->
@@ -1091,6 +1360,36 @@ $pageTitle = "Staff List";
                                             <i class="fas fa-certificate"></i>
                                             <span><?php echo $s['certificate_count']; ?></span>
                                         </div>
+                                    <?php else: ?>
+                                        <span class="muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td class="col-events" data-label="Event">
+                                    <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>"
+                                          title="<?php echo htmlspecialchars(implode(', ', $event_full_info)); ?>">
+                                        <i class="fas fa-calendar-check"></i><?php echo $event_count; ?>
+                                    </span>
+                                </td>
+
+                                <td class="col-matches" data-label="Match">
+                                    <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
+                                        <i class="fas fa-futbol"></i><?php echo $match_count; ?>
+                                    </span>
+                                </td>
+
+                                <td style="text-align:center;" data-label="History">
+                                    <?php if ($has_match_staff_assignments_table): ?>
+                                        <button
+                                            type="button"
+                                            class="staff-history-btn btn-staff-history"
+                                            data-staff-id="<?php echo (int)$s['id']; ?>"
+                                            data-staff-name="<?php echo htmlspecialchars($s['name'] ?? '', ENT_QUOTES); ?>"
+                                            data-team-name="<?php echo htmlspecialchars($s['team_name'] ?? '-', ENT_QUOTES); ?>"
+                                            title="Lihat riwayat staff"
+                                        >
+                                            <i class="fas fa-list"></i>
+                                        </button>
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
@@ -1447,6 +1746,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCertificateModal();
         closeImageViewer();
+        closeStaffHistoryModal();
     }
 });
 
@@ -1492,6 +1792,102 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+const staffHistoryModal = document.getElementById('staffHistoryModal');
+const staffHistoryBody = document.getElementById('staffHistoryBody');
+const staffHistoryName = document.getElementById('staffHistoryName');
+const staffHistoryMeta = document.getElementById('staffHistoryMeta');
+const staffHistoryClose = document.getElementById('staffHistoryClose');
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function closeStaffHistoryModal() {
+    if (staffHistoryModal) {
+        staffHistoryModal.classList.remove('open');
+    }
+}
+
+document.querySelectorAll('.btn-staff-history').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+        const staffId = btn.dataset.staffId || '';
+        const staffName = btn.dataset.staffName || '-';
+        const teamName = btn.dataset.teamName || '-';
+
+        staffHistoryName.textContent = staffName;
+        staffHistoryMeta.textContent = 'Tim: ' + teamName;
+        staffHistoryBody.innerHTML = '<div class="staff-history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>';
+        staffHistoryModal.classList.add('open');
+
+        try {
+            const response = await fetch(`get_staff_match_history.php?staff_id=${encodeURIComponent(staffId)}`);
+            const data = await response.json();
+            if (!data.success) {
+                staffHistoryBody.innerHTML = `<div class="staff-history-empty"><i class="fas fa-exclamation-circle"></i><p>${escapeHtml(data.message || 'Terjadi kesalahan.')}</p></div>`;
+                return;
+            }
+
+            if (!Array.isArray(data.matches) || data.matches.length === 0) {
+                staffHistoryBody.innerHTML = '<div class="staff-history-empty"><i class="fas fa-calendar-times"></i><p>Belum ada riwayat match untuk staff ini.</p></div>';
+                return;
+            }
+
+            const rows = data.matches.map((m, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><span class="staff-history-pill">${escapeHtml(m.event_name || '-')}</span></td>
+                    <td>${escapeHtml(m.sport_type || '-')}</td>
+                    <td>#${escapeHtml(String(m.challenge_id || ''))}<br><small style="color:#94a3b8">${escapeHtml(m.challenge_code || '-')}</small></td>
+                    <td>${escapeHtml(m.half_label || '-')}</td>
+                    <td>${escapeHtml(m.challenge_date_fmt || '-')}</td>
+                    <td>${escapeHtml(m.challenger_name || '-')} vs ${escapeHtml(m.opponent_name || '-')}</td>
+                    <td>${escapeHtml(m.role || '-')}</td>
+                    <td>${escapeHtml(m.status || '-')}</td>
+                </tr>
+            `).join('');
+
+            staffHistoryBody.innerHTML = `
+                <div class="staff-history-table-wrap">
+                    <table class="staff-history-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Event</th>
+                                <th>Kategori</th>
+                                <th>Match</th>
+                                <th>Babak</th>
+                                <th>Tanggal</th>
+                                <th>Pertandingan</th>
+                                <th>Peran</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        } catch (error) {
+            staffHistoryBody.innerHTML = '<div class="staff-history-empty"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat data. Periksa koneksi server.</p></div>';
+        }
+    });
+});
+
+if (staffHistoryClose) {
+    staffHistoryClose.addEventListener('click', closeStaffHistoryModal);
+}
+if (staffHistoryModal) {
+    staffHistoryModal.addEventListener('click', (e) => {
+        if (e.target === staffHistoryModal) {
+            closeStaffHistoryModal();
+        }
+    });
+}
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>

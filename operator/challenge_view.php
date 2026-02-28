@@ -2,15 +2,15 @@
 session_start();
 
 // Load database config
-$config_path = __DIR__ . '/config/database.php';
+$config_path = __DIR__ . '/../admin/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
 }
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
+    header("Location: ../login.php");
     exit;
 }
 
@@ -53,8 +53,34 @@ $can_join_event_name = $challenge_has_event_id && $events_table_exists;
 
 
 // Get admin info
-$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Operator';
 $admin_email = $_SESSION['admin_email'] ?? '';
+$current_page = 'challenge';
+
+$operator_id = (int)($_SESSION['admin_id'] ?? 0);
+$operator_event_id = (int)($_SESSION['event_id'] ?? 0);
+$operator_event_name = 'Event Operator';
+$operator_event_image = '';
+
+if ($operator_id > 0) {
+    try {
+        $stmtOperator = $conn->prepare("
+            SELECT au.event_id, e.name AS event_name, e.image AS event_image
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
+        $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
+        $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
+    } catch (PDOException $e) {
+        // keep defaults
+    }
+}
 
 
 // Get challenge ID
@@ -69,6 +95,17 @@ if ($challenge_id <= 0) {
 try {
     $event_select = $can_join_event_name ? "e.name as event_name," : "NULL as event_name,";
     $event_join = $can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "";
+    $operator_scope_where = '';
+    $query_params = [$challenge_id];
+
+    if ($can_join_event_name) {
+        if ($operator_event_id > 0) {
+            $operator_scope_where = " AND c.event_id = ?";
+            $query_params[] = $operator_event_id;
+        } else {
+            $operator_scope_where = " AND 1=0";
+        }
+    }
 
     $stmt = $conn->prepare("
         SELECT c.*,
@@ -82,8 +119,9 @@ try {
         LEFT JOIN teams t2 ON c.opponent_id = t2.id
         LEFT JOIN venues l ON c.venue_id = l.id
         WHERE c.id = ?
+        {$operator_scope_where}
     ");
-    $stmt->execute([$challenge_id]);
+    $stmt->execute($query_params);
     $challenge_data = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$challenge_data) {
@@ -102,7 +140,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>View Challenge</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <style>
 :root {
     --primary: #0f2744;
@@ -755,7 +793,7 @@ body {
             </div>
             
             <div class="user-actions">
-                <a href="logout.php" class="logout-btn">
+                <a href="../admin/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -770,13 +808,13 @@ body {
             </div>
             <div class="action-buttons">
                 <?php if ($challenge_data['status'] == 'open'): ?>
-                <a href="challenge_edit.php?id=<?php echo $challenge_id; ?>" class="btn btn-primary">
+                <a href="../admin/challenge_edit.php?id=<?php echo $challenge_id; ?>" class="btn btn-primary">
                     <i class="fas fa-edit"></i>
                     Edit Challenge
                 </a>
                 <?php endif; ?>
                 <?php if ($challenge_data['status'] == 'accepted' && empty($challenge_data['challenger_score'])): ?>
-                <a href="challenge_result.php?id=<?php echo $challenge_id; ?>" class="btn btn-success">
+                <a href="../admin/challenge_result.php?id=<?php echo $challenge_id; ?>" class="btn btn-success">
                     <i class="fas fa-futbol"></i>
                     Input Hasil
                 </a>
@@ -1065,6 +1103,4 @@ body {
     </div>
 </div>
 
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -2,20 +2,20 @@
 session_start();
 
 // Load database config
-$config_path = __DIR__ . '/config/database.php';
+$config_path = __DIR__ . '/../admin/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
 }
 
-$event_helper_path = __DIR__ . '/includes/event_helpers.php';
+$event_helper_path = __DIR__ . '/../admin/includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
     require_once $event_helper_path;
 }
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
+    header("Location: ../login.php");
     exit;
 }
 
@@ -33,7 +33,7 @@ if (!function_exists('adminHasColumn')) {
             }
             $quotedColumn = $conn->quote((string) $columnName);
             $stmt = $conn->query("SHOW COLUMNS FROM `{$safeTable}` LIKE {$quotedColumn}");
-            return $stmt->fetchColumn() !== false;
+            return $stmt && $stmt->fetchColumn() !== false;
         } catch (PDOException $e) {
             return false;
         }
@@ -45,7 +45,7 @@ if (!function_exists('adminHasTable')) {
         try {
             $quotedTable = $conn->quote((string) $tableName);
             $stmt = $conn->query("SHOW TABLES LIKE {$quotedTable}");
-            return $stmt->fetchColumn() !== false;
+            return $stmt && $stmt->fetchColumn() !== false;
         } catch (PDOException $e) {
             return false;
         }
@@ -54,33 +54,111 @@ if (!function_exists('adminHasTable')) {
 
 
 // Get admin info
-$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Operator';
 $admin_email = $_SESSION['admin_email'] ?? '';
+$current_page = 'challenge';
+
+$operator_id = (int)($_SESSION['admin_id'] ?? 0);
+$operator_event_id = (int)($_SESSION['event_id'] ?? 0);
+$operator_event_name = 'Event Operator';
+$operator_event_image = '';
+$operator_event_locked = false;
+
+if ($operator_id > 0) {
+    try {
+        $stmtOperator = $conn->prepare("
+            SELECT au.event_id, e.name AS event_name, e.image AS event_image
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
+        $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
+        $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $operator_event_locked = ($operator_event_id > 0);
+        $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
+    } catch (PDOException $e) {
+        // keep defaults
+    }
+}
 
 $event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 $active_events = [];
 $active_event_ids = [];
 $challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
 $challenge_has_match_official = adminHasColumn($conn, 'challenges', 'match_official');
+$perangkat_official_names = [];
+
+// Get challenge ID
+$challenge_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($challenge_id <= 0) {
+    header("Location: challenge.php");
+    exit;
+}
 
 // Initialize variables
 $errors = [];
-$default_expiry_hours = 24;
-$form_data = [
-    'event_id' => '',
-    'challenger_id' => '',
-    'opponent_id' => '',
-    'venue_id' => '',
-    'challenge_date' => '',
-    'challenge_time' => '18:00',
-    'sport_type' => '',
-    'match_official' => '',
-    'notes' => ''
-];
-$perangkat_official_names = [];
+$challenge_data = null;
 
-// Fetch teams for dropdown
+// Fetch challenge data
 try {
+    $operator_scope_where = '';
+    $query_params = [$challenge_id];
+    if ($challenge_has_event_id) {
+        if ($operator_event_id > 0) {
+            $operator_scope_where = " AND c.event_id = ?";
+            $query_params[] = $operator_event_id;
+        } else {
+            $operator_scope_where = " AND 1=0";
+        }
+    }
+
+    $stmt = $conn->prepare("
+        SELECT c.*, 
+        t1.name as challenger_name, t1.sport_type as challenger_sport,
+        t2.name as opponent_name,
+        l.name as venue_name, l.location as venue_location
+        FROM challenges c
+        LEFT JOIN teams t1 ON c.challenger_id = t1.id
+        LEFT JOIN teams t2 ON c.opponent_id = t2.id
+        LEFT JOIN venues l ON c.venue_id = l.id
+        WHERE c.id = ?
+        {$operator_scope_where}
+    ");
+    $stmt->execute($query_params);
+    $challenge_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$challenge_data) {
+        header("Location: challenge.php");
+        exit;
+    }
+    
+    // PERUBAHAN: Challenge bisa diedit walaupun sudah ada skor
+    // Tidak ada validasi untuk cek apakah sudah ada skor
+    
+    // Split date and time
+    $challenge_datetime = new DateTime($challenge_data['challenge_date']);
+    $challenge_data['challenge_date_only'] = $challenge_datetime->format('Y-m-d');
+    $challenge_data['challenge_time_only'] = $challenge_datetime->format('H:i');
+
+    if (!isset($challenge_data['event_id'])) {
+        $challenge_data['event_id'] = '';
+    } elseif ((int)$challenge_data['event_id'] > 0) {
+        $challenge_data['event_id'] = (string)((int)$challenge_data['event_id']);
+    } else {
+        $challenge_data['event_id'] = '';
+    }
+    if (!isset($challenge_data['match_official'])) {
+        $challenge_data['match_official'] = '';
+    }
+    if ($operator_event_locked) {
+        $challenge_data['event_id'] = (string)$operator_event_id;
+    }
+
     if (adminHasTable($conn, 'events')) {
         $event_sql = "SELECT id, name FROM events WHERE 1=1 AND name IS NOT NULL AND name <> ''";
         if (adminHasColumn($conn, 'events', 'is_active')) {
@@ -88,6 +166,11 @@ try {
         }
         if (adminHasColumn($conn, 'events', 'registration_status')) {
             $event_sql .= " AND registration_status = 'open'";
+        }
+        if ($operator_event_id > 0) {
+            $event_sql .= " AND id = " . (int)$operator_event_id;
+        } else {
+            $event_sql .= " AND 1=0";
         }
         $event_sql .= " ORDER BY created_at DESC, name ASC";
 
@@ -102,7 +185,8 @@ try {
             }
         }
     }
-
+    
+    // Fetch teams for dropdown
     $teams_stmt = $conn->prepare("SELECT id, name, sport_type FROM teams WHERE is_active = 1 ORDER BY name ASC");
     $teams_stmt->execute();
     $teams = $teams_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -138,7 +222,6 @@ try {
             $official_sql .= " WHERE is_active = 1";
         }
         $official_sql .= " ORDER BY name ASC";
-
         $official_stmt = $conn->query($official_sql);
         if ($official_stmt) {
             $seen_names = [];
@@ -158,13 +241,40 @@ try {
             }
         }
     }
+    
 } catch (PDOException $e) {
-    die("Error fetching data: " . $e->getMessage());
+    die("Error fetching challenge data: " . $e->getMessage());
+}
+
+$default_expiry_seconds = 24 * 60 * 60;
+$preserved_expiry_seconds = $default_expiry_seconds;
+
+if (!empty($challenge_data['challenge_date']) && !empty($challenge_data['expiry_date'])) {
+    try {
+        $existing_challenge_datetime = new DateTime($challenge_data['challenge_date']);
+        $existing_expiry_datetime = new DateTime($challenge_data['expiry_date']);
+        $existing_offset_seconds = $existing_challenge_datetime->getTimestamp() - $existing_expiry_datetime->getTimestamp();
+
+        if ($existing_offset_seconds > 0) {
+            $preserved_expiry_seconds = $existing_offset_seconds;
+        }
+    } catch (Exception $e) {
+        $preserved_expiry_seconds = $default_expiry_seconds;
+    }
+}
+
+$preserved_hours = floor($preserved_expiry_seconds / 3600);
+$preserved_minutes = floor(($preserved_expiry_seconds % 3600) / 60);
+
+if ($preserved_minutes > 0) {
+    $preserved_expiry_label = $preserved_hours . ' jam ' . $preserved_minutes . ' menit';
+} else {
+    $preserved_expiry_label = $preserved_hours . ' jam';
 }
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $posted_event_id = (int) trim($_POST['event_id'] ?? '0');
+    $posted_event_id = $operator_event_id > 0 ? $operator_event_id : (int) trim($_POST['event_id'] ?? '0');
 
     // Get and sanitize form data
     $form_data = [
@@ -176,7 +286,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'challenge_time' => trim($_POST['challenge_time'] ?? '18:00'),
         'sport_type' => in_array(trim($_POST['sport_type'] ?? ''), $event_types, true) ? trim($_POST['sport_type'] ?? '') : '',
         'match_official' => trim($_POST['match_official'] ?? ''),
-        'notes' => trim($_POST['notes'] ?? '')
+        'notes' => trim($_POST['notes'] ?? ''),
+        'status' => trim($_POST['status'] ?? 'open')
     ];
     
     // Validation
@@ -188,8 +299,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['opponent_id'] = "Opponent harus dipilih";
     }
 
-    if (empty($form_data['event_id'])) {
-        $errors['event_id'] = "Event aktif harus dipilih";
+    if ($operator_event_id <= 0 || empty($form_data['event_id'])) {
+        $errors['event_id'] = "Akun operator belum terhubung ke event aktif";
     } elseif (!isset($active_event_ids[(int)$form_data['event_id']])) {
         $errors['event_id'] = "Event yang dipilih tidak valid atau tidak aktif";
     }
@@ -217,38 +328,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($errors['sport_type']) && !empty($form_data['challenger_id'])) {
         $challenger_events = $team_events_map[(int)$form_data['challenger_id']] ?? [];
         if (!in_array($form_data['sport_type'], $challenger_events, true)) {
-            $errors['challenger_id'] = "Challenger tidak terdaftar pada event yang dipilih";
+            $errors['challenger_id'] = "Challenger tidak terdaftar pada kategori yang dipilih";
         }
     }
 
     if (empty($errors['sport_type']) && !empty($form_data['opponent_id'])) {
         $opponent_events = $team_events_map[(int)$form_data['opponent_id']] ?? [];
         if (!in_array($form_data['sport_type'], $opponent_events, true)) {
-            $errors['opponent_id'] = "Opponent tidak terdaftar pada event yang dipilih";
+            $errors['opponent_id'] = "Opponent tidak terdaftar pada kategori yang dipilih";
         }
     }
     
-    // Generate challenge code
-    $challenge_code = 'CH' . date('Ymd') . strtoupper(substr(uniqid(), -6));
-    
-    // Calculate expiry date automatically
+    // Calculate expiry date using preserved offset
     $challenge_datetime = $form_data['challenge_date'] . ' ' . $form_data['challenge_time'] . ':00';
-    $expiry_datetime = date('Y-m-d H:i:s', strtotime($challenge_datetime . ' -' . $default_expiry_hours . ' hours'));
+    $challenge_timestamp = strtotime($challenge_datetime);
+    $expiry_datetime = null;
+
+    if ($challenge_timestamp === false) {
+        if (!isset($errors['challenge_date']) && !isset($errors['challenge_time'])) {
+            $errors['challenge_date'] = "Tanggal atau waktu challenge tidak valid";
+        }
+    } else {
+        $expiry_datetime = date('Y-m-d H:i:s', $challenge_timestamp - $preserved_expiry_seconds);
+    }
     
-    // If no errors, insert to database
+    // If no errors, update database
     if (empty($errors)) {
         try {
             if ($challenge_has_event_id && $challenge_has_match_official) {
                 $stmt = $conn->prepare("
-                    INSERT INTO challenges (
-                        challenge_code, challenger_id, opponent_id, venue_id,
-                        challenge_date, expiry_date, event_id, sport_type, match_official, notes,
-                        status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
+                    UPDATE challenges SET
+                        challenger_id = ?,
+                        opponent_id = ?,
+                        venue_id = ?,
+                        challenge_date = ?,
+                        expiry_date = ?,
+                        event_id = ?,
+                        sport_type = ?,
+                        match_official = ?,
+                        notes = ?,
+                        status = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
                 ");
 
                 $stmt->execute([
-                    $challenge_code,
                     $form_data['challenger_id'],
                     $form_data['opponent_id'],
                     $form_data['venue_id'],
@@ -257,19 +381,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     (int)$form_data['event_id'],
                     $form_data['sport_type'],
                     $form_data['match_official'],
-                    $form_data['notes']
+                    $form_data['notes'],
+                    $form_data['status'],
+                    $challenge_id
                 ]);
             } elseif ($challenge_has_event_id) {
                 $stmt = $conn->prepare("
-                    INSERT INTO challenges (
-                        challenge_code, challenger_id, opponent_id, venue_id,
-                        challenge_date, expiry_date, event_id, sport_type, notes,
-                        status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
+                    UPDATE challenges SET
+                        challenger_id = ?,
+                        opponent_id = ?,
+                        venue_id = ?,
+                        challenge_date = ?,
+                        expiry_date = ?,
+                        event_id = ?,
+                        sport_type = ?,
+                        notes = ?,
+                        status = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
                 ");
 
                 $stmt->execute([
-                    $challenge_code,
                     $form_data['challenger_id'],
                     $form_data['opponent_id'],
                     $form_data['venue_id'],
@@ -277,19 +409,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $expiry_datetime,
                     (int)$form_data['event_id'],
                     $form_data['sport_type'],
-                    $form_data['notes']
+                    $form_data['notes'],
+                    $form_data['status'],
+                    $challenge_id
                 ]);
             } elseif ($challenge_has_match_official) {
                 $stmt = $conn->prepare("
-                    INSERT INTO challenges (
-                        challenge_code, challenger_id, opponent_id, venue_id,
-                        challenge_date, expiry_date, sport_type, match_official, notes,
-                        status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
+                    UPDATE challenges SET
+                        challenger_id = ?,
+                        opponent_id = ?,
+                        venue_id = ?,
+                        challenge_date = ?,
+                        expiry_date = ?,
+                        sport_type = ?,
+                        match_official = ?,
+                        notes = ?,
+                        status = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
                 ");
 
                 $stmt->execute([
-                    $challenge_code,
                     $form_data['challenger_id'],
                     $form_data['opponent_id'],
                     $form_data['venue_id'],
@@ -297,36 +437,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $expiry_datetime,
                     $form_data['sport_type'],
                     $form_data['match_official'],
-                    $form_data['notes']
+                    $form_data['notes'],
+                    $form_data['status'],
+                    $challenge_id
                 ]);
             } else {
                 $stmt = $conn->prepare("
-                    INSERT INTO challenges (
-                        challenge_code, challenger_id, opponent_id, venue_id,
-                        challenge_date, expiry_date, sport_type, notes,
-                        status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', NOW())
+                    UPDATE challenges SET
+                        challenger_id = ?,
+                        opponent_id = ?,
+                        venue_id = ?,
+                        challenge_date = ?,
+                        expiry_date = ?,
+                        sport_type = ?,
+                        notes = ?,
+                        status = ?,
+                        updated_at = NOW()
+                    WHERE id = ?
                 ");
 
                 $stmt->execute([
-                    $challenge_code,
                     $form_data['challenger_id'],
                     $form_data['opponent_id'],
                     $form_data['venue_id'],
                     $challenge_datetime,
                     $expiry_datetime,
                     $form_data['sport_type'],
-                    $form_data['notes']
+                    $form_data['notes'],
+                    $form_data['status'],
+                    $challenge_id
                 ]);
             }
             
-            $_SESSION['success_message'] = "Challenge berhasil dibuat dengan kode: " . $challenge_code;
+            $_SESSION['success_message'] = "Challenge berhasil diperbarui!";
             header("Location: challenge.php");
             exit;
             
         } catch (PDOException $e) {
-            $errors['database'] = "Gagal menyimpan data: " . $e->getMessage();
+            $errors['database'] = "Gagal memperbarui data: " . $e->getMessage();
         }
+    } else {
+        // Update challenge_data with new form data for display
+        $challenge_data = array_merge($challenge_data, $form_data);
     }
 }
 ?>
@@ -335,9 +487,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buat Challenge</title>
+<title>Edit Challenge</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 :root {
@@ -748,25 +900,44 @@ body {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .team-vs-container {
-        flex-direction: column;
-        gap: 20px;
-    }
+/* Status Badge */
+.status-badge-large {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.status-open {
+    background: rgba(76, 201, 240, 0.1);
+    color: #4CC9F0;
+    border: 1px solid #4CC9F0;
+}
+
+.status-accepted {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.status-rejected {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.status-expired {
+    background: rgba(108, 117, 125, 0.1);
+    color: var(--gray);
+    border: 1px solid var(--gray);
+}
+
+.status-completed {
+    background: rgba(37, 99, 235, 0.12);
+    color: #1d4ed8;
+    border: 1px solid #1d4ed8;
 }
 
 
@@ -873,11 +1044,11 @@ body {
     }
 
     .page-title {
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .page-title i {
-        font-size: 26px;
+        font-size: 24px;
     }
 
 
@@ -933,12 +1104,12 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Buat Challenge Baru 🏆</h1>
-                <p>Buat tantangan antar team</p>
+                <h1>Edit Challenge 🏆</h1>
+                <p>Perbarui challenge: <?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
-                <a href="logout.php" class="logout-btn">
+                <a href="../admin/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -948,13 +1119,18 @@ body {
         <!-- PAGE HEADER -->
         <div class="page-header">
             <div class="page-title">
-                <i class="fas fa-plus-circle"></i>
-                <span>Buat Challenge Baru</span>
+                <i class="fas fa-edit"></i>
+                <span>Edit Challenge</span>
+                <span class="status-badge-large status-<?php echo strtolower($challenge_data['status']); ?>">
+                    <?php echo htmlspecialchars($challenge_data['status'] ?? ''); ?>
+                </span>
             </div>
-            <a href="challenge.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Kembali
-            </a>
+            <div class="action-buttons">
+                <a href="challenge.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <!-- ERROR MESSAGES -->
@@ -965,9 +1141,11 @@ body {
         </div>
         <?php endif; ?>
 
-        <!-- CREATE CHALLENGE FORM -->
+        <!-- EDIT CHALLENGE FORM -->
         <div class="form-container">
             <form method="POST" action="" id="challengeForm">
+                <input type="hidden" name="id" value="<?php echo $challenge_id; ?>">
+                
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-users"></i>
@@ -986,7 +1164,7 @@ body {
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>" 
                                             data-sport="<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>"
-                                            <?php echo $form_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
+                                            <?php echo $challenge_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -1006,7 +1184,7 @@ body {
                                 <option value="">Pilih Opponent Team</option>
                                 <?php foreach ($teams as $team): ?>
                                     <option value="<?php echo $team['id']; ?>"
-                                            <?php echo $form_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
+                                            <?php echo $challenge_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -1018,15 +1196,15 @@ body {
                     </div>
                     
                     <!-- VS Display -->
-                    <div class="vs-display" id="vsDisplay" style="display: none;">
+                    <div class="vs-display">
                         <div class="vs-title">PERTANDINGAN</div>
                         <div class="team-vs-container">
                             <div class="team-box" id="challengerBox">
-                                <!-- Filled by JavaScript -->
+                                <h4><?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?></h4>
                             </div>
                             <div class="vs-symbol">VS</div>
                             <div class="team-box" id="opponentBox">
-                                <!-- Filled by JavaScript -->
+                                <h4><?php echo htmlspecialchars($challenge_data['opponent_name'] ?? 'TBD'); ?></h4>
                             </div>
                         </div>
                     </div>
@@ -1040,29 +1218,47 @@ body {
                     
                     <div class="form-grid">
                         <div class="form-group">
+                            <label class="form-label" for="status">
+                                Status Challenge
+                            </label>
+                            <select id="status" name="status" class="form-select">
+                                <option value="open" <?php echo $challenge_data['status'] == 'open' ? 'selected' : ''; ?>>Open</option>
+                                <option value="accepted" <?php echo $challenge_data['status'] == 'accepted' ? 'selected' : ''; ?>>Accepted</option>
+                                <option value="rejected" <?php echo $challenge_data['status'] == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                                <option value="expired" <?php echo $challenge_data['status'] == 'expired' ? 'selected' : ''; ?>>Expired</option>
+                                <?php if ($challenge_data['challenger_score'] !== null && $challenge_data['opponent_score'] !== null): ?>
+                                <option value="completed" <?php echo $challenge_data['status'] == 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <label class="form-label" for="event_id">
                                 Event Aktif <span class="required">*</span>
                             </label>
                             <select id="event_id" name="event_id"
                                     class="form-select <?php echo isset($errors['event_id']) ? 'is-invalid' : ''; ?>"
-                                    required>
-                                <?php if (empty($active_events)): ?>
-                                    <option value="">Tidak ada event aktif</option>
+                                    required disabled>
+                                <?php if ($operator_event_locked): ?>
+                                    <option value="<?php echo (int)$operator_event_id; ?>" selected>
+                                        <?php echo htmlspecialchars($operator_event_name); ?>
+                                    </option>
                                 <?php else: ?>
-                                    <option value="">Pilih Event Aktif</option>
-                                    <?php foreach ($active_events as $active_event): ?>
-                                        <option value="<?php echo (int)($active_event['id'] ?? 0); ?>"
-                                                <?php echo $form_data['event_id'] === (string)($active_event['id'] ?? '') ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($active_event['name'] ?? ''); ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                    <option value="">Akun operator belum terhubung ke event</option>
                                 <?php endif; ?>
                             </select>
+                            <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($challenge_data['event_id'] ?? ''); ?>">
                             <?php if (isset($errors['event_id'])): ?>
                                 <span class="error"><?php echo $errors['event_id']; ?></span>
                             <?php endif; ?>
+                            <small style="color:#666; display:block; margin-top:5px;">
+                                Event dikunci otomatis sesuai akun operator.
+                            </small>
                         </div>
+                    </div>
 
+                    <div class="form-grid">
+                        
                         <div class="form-group">
                             <label class="form-label" for="venue_id">
                                 Venue/Lokasi <span class="required">*</span>
@@ -1073,7 +1269,7 @@ body {
                                 <option value="">Pilih Venue</option>
                                 <?php foreach ($venues as $venue): ?>
                                     <option value="<?php echo $venue['id']; ?>"
-                                            <?php echo $form_data['venue_id'] == $venue['id'] ? 'selected' : ''; ?>>
+                                            <?php echo $challenge_data['venue_id'] == $venue['id'] ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($venue['name'] ?? ''); ?> (<?php echo htmlspecialchars($venue['location'] ?? ''); ?>)
                                     </option>
                                 <?php endforeach; ?>
@@ -1082,7 +1278,9 @@ body {
                                 <span class="error"><?php echo $errors['venue_id']; ?></span>
                             <?php endif; ?>
                         </div>
-                        
+                    </div>
+                    
+                    <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="sport_type">
                                 Kategori <span class="required">*</span>
@@ -1092,7 +1290,7 @@ body {
                                     required>
                                 <option value="">Pilih Kategori</option>
                                 <?php foreach ($event_types as $event_option): ?>
-                                    <option value="<?php echo htmlspecialchars($event_option); ?>" <?php echo $form_data['sport_type'] == $event_option ? 'selected' : ''; ?>>
+                                    <option value="<?php echo htmlspecialchars($event_option); ?>" <?php echo $challenge_data['sport_type'] == $event_option ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($event_option); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -1101,6 +1299,14 @@ body {
                                 <span class="error"><?php echo $errors['sport_type']; ?></span>
                             <?php endif; ?>
                             <span class="error" id="teamCategoryWarning" style="display: none;"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="expiry_info">
+                                Challenge Expiry
+                            </label>
+                            <input type="text" id="expiry_info" class="form-input" value="Diatur otomatis oleh sistem" readonly>
+                            <small style="color: #666;">Offset saat ini dipertahankan: <?php echo htmlspecialchars($preserved_expiry_label); ?> sebelum pertandingan.</small>
                         </div>
                     </div>
                     
@@ -1113,7 +1319,7 @@ body {
                                    id="challenge_date" 
                                    name="challenge_date" 
                                    class="form-input <?php echo isset($errors['challenge_date']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['challenge_date'] ?? ''); ?>"
+                                   value="<?php echo htmlspecialchars($challenge_data['challenge_date_only']); ?>"
                                    min="<?php echo date('Y-m-d'); ?>"
                                    required>
                             <?php if (isset($errors['challenge_date'])): ?>
@@ -1129,7 +1335,7 @@ body {
                                    id="challenge_time" 
                                    name="challenge_time" 
                                    class="form-input <?php echo isset($errors['challenge_time']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['challenge_time'] ?? ''); ?>"
+                                   value="<?php echo htmlspecialchars($challenge_data['challenge_time_only']); ?>"
                                    required>
                             <?php if (isset($errors['challenge_time'])): ?>
                                 <span class="error"><?php echo $errors['challenge_time']; ?></span>
@@ -1139,14 +1345,6 @@ body {
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="expiry_info">
-                                Challenge Expiry
-                            </label>
-                            <input type="text" id="expiry_info" class="form-input" value="Otomatis 24 jam sebelum pertandingan" readonly>
-                            <small style="color: #666;">Batas penerimaan ditetapkan otomatis oleh sistem.</small>
-                        </div>
-                        
-                        <div class="form-group">
                             <label class="form-label" for="match_official">
                                 Wasit/Pengawas
                             </label>
@@ -1154,7 +1352,7 @@ body {
                                    id="match_official"
                                    name="match_official"
                                    class="form-input"
-                                   value="<?php echo htmlspecialchars($form_data['match_official'] ?? ''); ?>"
+                                   value="<?php echo htmlspecialchars($challenge_data['match_official'] ?? ''); ?>"
                                    placeholder="Pilih/ketik nama wasit"
                                    list="officials_list">
                             <?php if (!empty($perangkat_official_names)): ?>
@@ -1166,14 +1364,14 @@ body {
                                 <small style="color: #666;">Saran nama diambil dari data Perangkat aktif.</small>
                             <?php endif; ?>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="notes">
-                            Catatan Tambahan
-                        </label>
-                        <textarea id="notes" name="notes" class="form-textarea" 
-                                  placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($form_data['notes'] ?? ''); ?></textarea>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="notes">
+                                Catatan Tambahan
+                            </label>
+                            <textarea id="notes" name="notes" class="form-textarea" 
+                                      placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes'] ?? ''); ?></textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -1184,8 +1382,8 @@ body {
                         Reset
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i>
-                        Kirim Challenge
+                        <i class="fas fa-save"></i>
+                        Update Challenge
                     </button>
                 </div>
             </form>
@@ -1196,80 +1394,41 @@ body {
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
-// Simpan data teams untuk JavaScript
 const teamsData = <?php echo json_encode($teams); ?>;
 const teamEventsMap = <?php echo json_encode($team_events_map ?? []); ?>;
 
-
 document.addEventListener('DOMContentLoaded', function() {
-    function normalizeEventName(value) {
-        return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
-    }
-
-    function getTeamEvents(teamId) {
-        if (!teamId) return [];
-        const raw = teamEventsMap[String(teamId)] ?? teamEventsMap[Number(teamId)] ?? [];
-        if (Array.isArray(raw)) {
-            return raw.map(normalizeEventName).filter(Boolean);
-        }
-        if (typeof raw === 'string') {
-            return raw
-                .split(',')
-                .map(normalizeEventName)
-                .filter(Boolean);
-        }
-        return [];
-    }
-
-    function isTeamRegisteredInCategory(teamId, categoryName) {
-        const normalizedCategory = normalizeEventName(categoryName);
-        if (!normalizedCategory) return true;
-        const teamEvents = getTeamEvents(teamId);
-        return teamEvents.includes(normalizedCategory);
-    }
-
-    // Update VS Display when teams are selected
     function updateVSDisplay() {
         const challengerId = document.getElementById('challenger_id').value;
         const opponentId = document.getElementById('opponent_id').value;
         const selectedCategory = document.getElementById('sport_type').value;
-        const vsDisplay = document.getElementById('vsDisplay');
         const challengerBox = document.getElementById('challengerBox');
         const opponentBox = document.getElementById('opponentBox');
         const teamCategoryWarning = document.getElementById('teamCategoryWarning');
-        
-        // Find selected teams
+
         const challenger = teamsData.find(team => team.id == challengerId);
         const opponent = teamsData.find(team => team.id == opponentId);
-        
-        if (challenger && opponent) {
-            vsDisplay.style.display = 'block';
-            
-            // Update challenger box
-            challengerBox.innerHTML = `
-                <h4>${challenger.name}</h4>
-            `;
-            
-            // Update opponent box
-            opponentBox.innerHTML = `
-                <h4>${opponent.name}</h4>
-            `;
-            
-            // Auto-set sport type if not set
-            if (!document.getElementById('sport_type').value && challenger.sport_type === opponent.sport_type) {
-                document.getElementById('sport_type').value = challenger.sport_type;
-            }
-        } else {
-            vsDisplay.style.display = 'none';
+
+        if (challengerBox && challenger) {
+            challengerBox.innerHTML = `<h4>${challenger.name}</h4>`;
+        }
+        if (opponentBox && opponent) {
+            opponentBox.innerHTML = `<h4>${opponent.name}</h4>`;
         }
 
         if (teamCategoryWarning) {
             const warningMessages = [];
-            if (selectedCategory && challengerId && !isTeamRegisteredInCategory(challengerId, selectedCategory)) {
+            if (selectedCategory && challengerId) {
+                const challengerEvents = teamEventsMap[challengerId] || [];
+                if (!challengerEvents.includes(selectedCategory)) {
                     warningMessages.push('Challenger tidak terdaftar di kategori yang dipilih.');
+                }
             }
-            if (selectedCategory && opponentId && !isTeamRegisteredInCategory(opponentId, selectedCategory)) {
+            if (selectedCategory && opponentId) {
+                const opponentEvents = teamEventsMap[opponentId] || [];
+                if (!opponentEvents.includes(selectedCategory)) {
                     warningMessages.push('Opponent tidak terdaftar di kategori yang dipilih.');
+                }
             }
 
             if (warningMessages.length > 0) {
@@ -1281,13 +1440,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
-    // Attach event listeners
+
     document.getElementById('challenger_id').addEventListener('change', updateVSDisplay);
     document.getElementById('opponent_id').addEventListener('change', updateVSDisplay);
     document.getElementById('sport_type').addEventListener('change', updateVSDisplay);
-    
-    // Initial update
     updateVSDisplay();
     
     // Form Validation
@@ -1300,20 +1456,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const challengeDate = document.getElementById('challenge_date').value;
         const challengeTime = document.getElementById('challenge_time').value;
         const sportType = document.getElementById('sport_type').value;
-        const teamCategoryWarning = document.getElementById('teamCategoryWarning');
-
-        function showCategoryWarning(message) {
-            if (teamCategoryWarning) {
-                teamCategoryWarning.style.display = 'block';
-                teamCategoryWarning.textContent = message;
-            }
-        }
-        function clearCategoryWarning() {
-            if (teamCategoryWarning) {
-                teamCategoryWarning.style.display = 'none';
-                teamCategoryWarning.textContent = '';
-            }
-        }
         
         if (!challengerId || !opponentId || !eventId || !venueId || !challengeDate || !challengeTime || !sportType) {
             e.preventDefault();
@@ -1327,21 +1469,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (!isTeamRegisteredInCategory(challengerId, sportType)) {
+        const challengerEvents = teamEventsMap[challengerId] || [];
+        if (!challengerEvents.includes(sportType)) {
             e.preventDefault();
-            showCategoryWarning('Challenger tidak terdaftar di kategori yang dipilih.');
             toastr.error('Challenger tidak terdaftar pada kategori yang dipilih');
             return;
         }
 
-        if (!isTeamRegisteredInCategory(opponentId, sportType)) {
+        const opponentEvents = teamEventsMap[opponentId] || [];
+        if (!opponentEvents.includes(sportType)) {
             e.preventDefault();
-            showCategoryWarning('Opponent tidak terdaftar di kategori yang dipilih.');
             toastr.error('Opponent tidak terdaftar pada kategori yang dipilih');
             return;
         }
-
-        clearCategoryWarning();
         
         // Check if date is not in the past
         const selectedDate = new Date(challengeDate + 'T' + challengeTime);
@@ -1359,6 +1499,4 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('challenge_date').setAttribute('min', today);
 });
 </script>
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

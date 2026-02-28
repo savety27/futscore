@@ -2,20 +2,20 @@
 session_start();
 
 // Load database config
-$config_path = __DIR__ . '/config/database.php';
+$config_path = __DIR__ . '/../admin/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
 }
 
-$event_helper_path = __DIR__ . '/includes/event_helpers.php';
+$event_helper_path = __DIR__ . '/../admin/includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
     require_once $event_helper_path;
 }
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
+    header("Location: ../login.php");
     exit;
 }
 
@@ -54,8 +54,36 @@ if (!function_exists('adminHasTable')) {
 
 
 // Get admin info
-$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
+$admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Operator';
 $admin_email = $_SESSION['admin_email'] ?? '';
+$current_page = 'challenge';
+
+$operator_id = (int)($_SESSION['admin_id'] ?? 0);
+$operator_event_id = (int)($_SESSION['event_id'] ?? 0);
+$operator_event_name = 'Event Operator';
+$operator_event_image = '';
+$operator_event_locked = false;
+
+if ($operator_id > 0) {
+    try {
+        $stmtOperator = $conn->prepare("
+            SELECT au.event_id, e.name AS event_name, e.image AS event_image
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
+        $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
+        $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $operator_event_locked = ($operator_event_id > 0);
+        $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
+    } catch (PDOException $e) {
+        // keep defaults
+    }
+}
 
 $event_types = function_exists('getDynamicEventOptions') ? getDynamicEventOptions($conn) : [];
 $active_events = [];
@@ -67,7 +95,7 @@ $challenge_has_match_official = adminHasColumn($conn, 'challenges', 'match_offic
 $errors = [];
 $default_expiry_hours = 24;
 $form_data = [
-    'event_id' => '',
+    'event_id' => $operator_event_id > 0 ? (string)$operator_event_id : '',
     'challenger_id' => '',
     'opponent_id' => '',
     'venue_id' => '',
@@ -88,6 +116,11 @@ try {
         }
         if (adminHasColumn($conn, 'events', 'registration_status')) {
             $event_sql .= " AND registration_status = 'open'";
+        }
+        if ($operator_event_id > 0) {
+            $event_sql .= " AND id = " . (int)$operator_event_id;
+        } else {
+            $event_sql .= " AND 1=0";
         }
         $event_sql .= " ORDER BY created_at DESC, name ASC";
 
@@ -164,7 +197,7 @@ try {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $posted_event_id = (int) trim($_POST['event_id'] ?? '0');
+    $posted_event_id = $operator_event_id > 0 ? $operator_event_id : (int) trim($_POST['event_id'] ?? '0');
 
     // Get and sanitize form data
     $form_data = [
@@ -188,8 +221,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['opponent_id'] = "Opponent harus dipilih";
     }
 
-    if (empty($form_data['event_id'])) {
-        $errors['event_id'] = "Event aktif harus dipilih";
+    if ($operator_event_id <= 0 || empty($form_data['event_id'])) {
+        $errors['event_id'] = "Akun operator belum terhubung ke event aktif";
     } elseif (!isset($active_event_ids[(int)$form_data['event_id']])) {
         $errors['event_id'] = "Event yang dipilih tidak valid atau tidak aktif";
     }
@@ -337,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buat Challenge</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
 :root {
@@ -938,7 +971,7 @@ body {
             </div>
             
             <div class="user-actions">
-                <a href="logout.php" class="logout-btn">
+                <a href="../admin/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>
@@ -1045,22 +1078,22 @@ body {
                             </label>
                             <select id="event_id" name="event_id"
                                     class="form-select <?php echo isset($errors['event_id']) ? 'is-invalid' : ''; ?>"
-                                    required>
-                                <?php if (empty($active_events)): ?>
-                                    <option value="">Tidak ada event aktif</option>
+                                    required disabled>
+                                <?php if ($operator_event_locked): ?>
+                                    <option value="<?php echo (int)$operator_event_id; ?>" selected>
+                                        <?php echo htmlspecialchars($operator_event_name); ?>
+                                    </option>
                                 <?php else: ?>
-                                    <option value="">Pilih Event Aktif</option>
-                                    <?php foreach ($active_events as $active_event): ?>
-                                        <option value="<?php echo (int)($active_event['id'] ?? 0); ?>"
-                                                <?php echo $form_data['event_id'] === (string)($active_event['id'] ?? '') ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($active_event['name'] ?? ''); ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                    <option value="">Akun operator belum terhubung ke event</option>
                                 <?php endif; ?>
                             </select>
+                            <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($form_data['event_id'] ?? ''); ?>">
                             <?php if (isset($errors['event_id'])): ?>
                                 <span class="error"><?php echo $errors['event_id']; ?></span>
                             <?php endif; ?>
+                            <small style="color:#666; display:block; margin-top:5px;">
+                                Event dikunci otomatis sesuai akun operator.
+                            </small>
                         </div>
 
                         <div class="form-group">
@@ -1359,6 +1392,4 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('challenge_date').setAttribute('min', today);
 });
 </script>
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
-</body>
-</html>
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

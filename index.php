@@ -41,7 +41,7 @@ $pageTitle = "Home";
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>" class="active"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT halo</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
@@ -782,6 +782,10 @@ $pageTitle = "Home";
                     <div class="meta-item">
                         <i class="fas fa-map-marker-alt"></i>
                         <span id="matchLocation"></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-tie"></i>
+                        <span id="matchOfficial">-</span>
                     </div>
                 </div>
             </div>

@@ -33,6 +33,11 @@ Do not expose migration or schema-debug scripts in public web routes.
 - File: `migration_add_challenge_id_columns_to_event_brackets.sql`
 - Apply this migration before deploying bracket pages that must link each slot (`SF1/SF2/Final/3rd`) to an exact `challenges.id`.
 
+## Required migration for official staff match history
+
+- File: `migration_create_match_staff_assignments.sql`
+- Apply this migration before deploying `pelatih/match_lineup.php` and `staff.php` changes that record/show staff participation per match and per event.
+
 Example command:
 
 ```bash

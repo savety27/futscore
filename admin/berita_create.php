@@ -275,10 +275,14 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    background: white;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
     padding: 25px;
     border-radius: 20px;
-    box-shadow: var(--card-shadow);
+    box-shadow: var(--premium-shadow);
+    flex-wrap: wrap;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .page-title {
@@ -331,7 +335,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -732,13 +736,7 @@ body {
     .page-header {
         flex-direction: column;
         gap: 20px;
-        align-items: center;
-        text-align: center;
-    }
-    
-    .page-title {
-        width: 100%;
-        justify-content: center;
+        align-items: flex-start;
     }
 
     .btn {
@@ -787,6 +785,17 @@ body {
         max-width: 120px;
     }
 
+    /* Compact buttons */
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
 
 }
 @keyframes slideDown {
@@ -818,7 +827,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>

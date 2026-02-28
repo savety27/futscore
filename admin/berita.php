@@ -301,9 +301,10 @@ body {
     cursor: pointer;
 }
 
-.action-buttons {
+.page-header .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -343,7 +344,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -535,7 +536,7 @@ body {
     min-width: 180px;
 }
 
-.action-buttons {
+.action-cell .action-buttons {
     display: flex;
     gap: 8px;
 }
@@ -774,8 +775,7 @@ body {
     .page-header {
         flex-direction: column;
         gap: 20px;
-        align-items: center;
-        text-align: center;
+        align-items: flex-start;
     }
 
     .search-bar {
@@ -784,11 +784,16 @@ body {
         order: 2;
     }
     
-    .action-buttons {
+    .page-header .action-buttons {
         width: 100%;
-        flex-wrap: wrap;
-        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
         order: 3;
+    }
+
+    .page-header .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
     }
     
     /* Filter Controls vertically stacked */
@@ -856,6 +861,16 @@ body {
         width: 28px;
     }
 
+    /* Compact buttons */
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
 }
 @keyframes slideDown {
     from {
@@ -942,7 +957,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>

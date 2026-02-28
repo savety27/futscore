@@ -374,7 +374,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -837,13 +837,12 @@ body {
     .page-header {
         flex-direction: column;
         gap: 20px;
-        align-items: center;
-        text-align: center;
+        align-items: flex-start;
     }
     
     .page-title {
         width: 100%;
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .btn {
@@ -897,6 +896,17 @@ body {
         max-width: 120px;
     }
 
+    /* Compact buttons */
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
 
 }
 @keyframes slideDown {
@@ -928,7 +938,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>

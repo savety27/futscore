@@ -30,6 +30,16 @@ $offset = ($page - 1) * $limit;
 
 // Database connection
 $conn = $db->getConnection();
+$has_challenge_event_id = false;
+$has_challenge_match_official = false;
+if ($check_event_id_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'")) {
+    $has_challenge_event_id = $check_event_id_col->num_rows > 0;
+    $check_event_id_col->close();
+}
+if ($check_official_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'match_official'")) {
+    $has_challenge_match_official = $check_official_col->num_rows > 0;
+    $check_official_col->close();
+}
 
 // Query for Total Records (for pagination)
 $count_query = "SELECT COUNT(*) as total FROM perangkat p WHERE p.is_active = 1";
@@ -51,10 +61,62 @@ if ($count_result) {
 }
 $total_pages = max(1, (int)ceil($total_records / $limit));
 
-// Query for Perangkat Data with license counts
+// Query for Perangkat Data with license/match/event counts
+$matchCountSelect = "0 AS match_count";
+$eventCountSelect = "0 AS event_count";
+$eventNamesSelect = "'[]' AS event_names";
+
+if ($has_challenge_match_official) {
+    $officialNameMatchSql = "(
+        LOWER(TRIM(c.match_official)) = LOWER(TRIM(p.name))
+        OR FIND_IN_SET(
+            LOWER(TRIM(p.name)),
+            REPLACE(REPLACE(LOWER(TRIM(c.match_official)), ', ', ','), ' ,', ',')
+        ) > 0
+    )";
+
+    $matchCountSelect = "(SELECT COUNT(DISTINCT c.id)
+        FROM challenges c
+        WHERE c.match_official IS NOT NULL
+          AND TRIM(c.match_official) <> ''
+          AND $officialNameMatchSql
+    ) AS match_count";
+
+    if ($has_challenge_event_id) {
+        $eventCountSelect = "(SELECT COUNT(DISTINCT e.id)
+            FROM challenges c
+            INNER JOIN events e ON c.event_id = e.id
+            WHERE c.match_official IS NOT NULL
+              AND TRIM(c.match_official) <> ''
+              AND $officialNameMatchSql
+              AND c.event_id IS NOT NULL
+        ) AS event_count";
+
+        $eventNamesSelect = "(SELECT COALESCE(
+            CONCAT(
+                '[',
+                GROUP_CONCAT(DISTINCT JSON_QUOTE(TRIM(e.name)) ORDER BY TRIM(e.name) SEPARATOR ','),
+                ']'
+            ),
+            '[]'
+        )
+            FROM challenges c
+            INNER JOIN events e ON c.event_id = e.id
+            WHERE c.match_official IS NOT NULL
+              AND TRIM(c.match_official) <> ''
+              AND $officialNameMatchSql
+              AND c.event_id IS NOT NULL
+              AND TRIM(e.name) <> ''
+        ) AS event_names";
+    }
+}
+
 $query = "SELECT 
     p.*,
-    (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = p.id) as certificate_count
+    (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = p.id) as certificate_count,
+    $matchCountSelect,
+    $eventCountSelect,
+    $eventNamesSelect
     FROM perangkat p
     WHERE p.is_active = 1";
     
@@ -422,18 +484,221 @@ $pageTitle = "Perangkat Pertandingan";
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 10px;
-    background: #3b82f6;
-    color: white;
-    border-radius: 12px;
+    gap: 6px;
+    padding: 2px 8px;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
 }
+.event-match-count.zero {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+.event-match-count.event {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+.event-match-count.event.zero {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #cbd5e1;
+}
 
 .event-match-count i {
-    margin-right: 4px;
     font-size: 10px;
 }
+
+/* Popover for event count badge */
+.event-count-badge-wrap {
+    position: relative;
+    display: inline-block;
+}
+.event-match-count.event.event-popover-trigger {
+    cursor: pointer;
+    user-select: none;
+}
+.event-popover {
+    display: none;
+    position: absolute;
+    z-index: 9999;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.6;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+    pointer-events: auto;
+    width: clamp(220px, 32vw, 340px);
+    max-height: 280px;
+    overflow: hidden;
+    white-space: normal;
+    text-align: left;
+}
+.event-popover-header {
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #bfdbfe;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+.event-popover-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    max-height: calc(280px - 34px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.event-popover-item {
+    display: block;
+    padding: 6px 12px;
+}
+.event-popover-item + .event-popover-item {
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+.event-popover-name {
+    color: #f8fafc;
+    word-break: break-word;
+}
+.event-popover::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+.event-count-badge-wrap:hover .event-popover,
+.event-count-badge-wrap.pop-open .event-popover {
+    display: block;
+}
+.history-btn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.history-btn:hover {
+    background: #bfdbfe;
+    transform: translateY(-1px);
+}
+
+.match-history-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10002;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.6);
+    padding: 20px;
+}
+.match-history-modal.open {
+    display: flex;
+}
+.match-history-content {
+    width: min(1080px, 100%);
+    max-height: calc(100vh - 40px);
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.3);
+}
+.match-history-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+.match-history-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+.match-history-meta {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+}
+.match-history-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #334155;
+    cursor: pointer;
+}
+.match-history-body {
+    padding: 14px 18px 18px;
+    overflow: auto;
+}
+.match-history-loading,
+.match-history-empty {
+    text-align: center;
+    color: #64748b;
+    padding: 30px 10px;
+}
+.match-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 920px;
+}
+.match-history-table th,
+.match-history-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #0f172a;
+    text-align: left;
+    vertical-align: top;
+}
+.match-history-table th {
+    background: #f8fafc;
+    font-size: 12px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+.history-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+.history-status-pill.completed { background: #dcfce7; color: #166534; }
+.history-status-pill.accepted { background: #dbeafe; color: #1d4ed8; }
+.history-status-pill.pending { background: #fef3c7; color: #92400e; }
+.history-status-pill.default { background: #e2e8f0; color: #475569; }
 
 /* Created At */
 .col-created {
@@ -800,6 +1065,15 @@ $pageTitle = "Perangkat Pertandingan";
     .search-container {
         max-width: 100%;
     }
+
+    .event-popover {
+        width: min(320px, calc(100vw - 24px));
+        max-height: 45vh;
+    }
+
+    .event-popover-list {
+        max-height: calc(45vh - 34px);
+    }
     
     .pagination-info {
         flex-direction: column;
@@ -960,6 +1234,9 @@ $pageTitle = "Perangkat Pertandingan";
                             <th>No. KTP</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
+                            <th class="col-matches">Match</th>
+                            <th class="col-events">Event</th>
+                            <th class="col-center">Riwayat</th>
                             <th>Status</th>
                             <th>Dibuat</th>
                         </tr>
@@ -967,7 +1244,7 @@ $pageTitle = "Perangkat Pertandingan";
                     <tbody>
                         <?php if (empty($perangkatRows)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">
+                                <td colspan="11" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada perangkat ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1040,6 +1317,56 @@ $pageTitle = "Perangkat Pertandingan";
                                     <?php else: ?>
                                         <span class="muted">-</span>
                                     <?php endif; ?>
+                                </td>
+
+                                <td class="col-matches" data-label="Match">
+                                    <?php $matchCount = (int)($p['match_count'] ?? 0); ?>
+                                    <span class="event-match-count <?php echo $matchCount === 0 ? 'zero' : ''; ?>">
+                                        <i class="fas fa-futbol"></i><?php echo $matchCount; ?>
+                                    </span>
+                                </td>
+
+                                <td class="col-events" data-label="Event">
+                                    <?php
+                                    $eventCount = (int)($p['event_count'] ?? 0);
+                                    $eventNamesList = parsePerangkatEventNamesPayload($p['event_names'] ?? '');
+                                    $event_popover_id = 'perangkat-event-popover-' . (int)($p['id'] ?? 0);
+                                    ?>
+                                    <span class="event-count-badge-wrap">
+                                        <span
+                                            class="event-match-count event <?php echo $eventCount === 0 ? 'zero' : 'event-popover-trigger'; ?>"
+                                            <?php if ($eventCount > 0): ?>
+                                            role="button"
+                                            tabindex="0"
+                                            aria-haspopup="true"
+                                            aria-expanded="false"
+                                            aria-controls="<?php echo htmlspecialchars($event_popover_id); ?>"
+                                            <?php endif; ?>>
+                                            <i class="fas fa-calendar-check"></i><?php echo $eventCount; ?>
+                                        </span>
+                                        <?php if ($eventCount > 0): ?>
+                                        <div class="event-popover" id="<?php echo htmlspecialchars($event_popover_id); ?>" role="tooltip">
+                                            <div class="event-popover-header">Total <?php echo $eventCount; ?> event</div>
+                                            <ul class="event-popover-list">
+                                                <?php foreach ($eventNamesList as $eventNameItem): ?>
+                                                <li class="event-popover-item">
+                                                    <span class="event-popover-name"><?php echo htmlspecialchars($eventNameItem); ?></span>
+                                                </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                        <?php endif; ?>
+                                    </span>
+                                </td>
+
+                                <td class="col-center" data-label="Riwayat">
+                                    <button class="history-btn btn-perangkat-history"
+                                            type="button"
+                                            data-perangkat-id="<?php echo (int)$p['id']; ?>"
+                                            data-perangkat-name="<?php echo htmlspecialchars($p['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Lihat Riwayat Match/Event">
+                                        <i class="fas fa-chart-line"></i>
+                                    </button>
                                 </td>
 
                                 <td data-label="Status">
@@ -1127,6 +1454,21 @@ $pageTitle = "Perangkat Pertandingan";
     </div>
 </div>
 
+<div class="match-history-modal" id="matchHistoryModal">
+    <div class="match-history-content">
+        <div class="match-history-header">
+            <div>
+                <h3><i class="fas fa-chart-line"></i> <span id="historyPerangkatName">-</span></h3>
+                <div class="match-history-meta" id="historyPerangkatMeta">Memuat data...</div>
+            </div>
+            <button class="match-history-close" id="historyPerangkatCloseBtn" type="button">&times;</button>
+        </div>
+        <div class="match-history-body" id="historyPerangkatBody">
+            <div class="match-history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>
+        </div>
+    </div>
+</div>
+
 <script>
 const SITE_URL = '<?php echo SITE_URL; ?>';
 
@@ -1173,6 +1515,108 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
     window.addEventListener('resize', () => {
         if (window.innerWidth > 992) {
             setSidebarOpen(false);
+        }
+    });
+}
+
+const matchHistoryModal = document.getElementById('matchHistoryModal');
+const historyPerangkatBody = document.getElementById('historyPerangkatBody');
+const historyPerangkatName = document.getElementById('historyPerangkatName');
+const historyPerangkatMeta = document.getElementById('historyPerangkatMeta');
+const historyPerangkatCloseBtn = document.getElementById('historyPerangkatCloseBtn');
+
+const escapeHtmlText = (value) => {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+};
+
+function closeMatchHistoryModal() {
+    if (matchHistoryModal) {
+        matchHistoryModal.classList.remove('open');
+    }
+}
+
+document.querySelectorAll('.btn-perangkat-history').forEach((btn) => {
+    btn.addEventListener('click', function () {
+        const perangkatId = this.dataset.perangkatId;
+        const perangkatName = this.dataset.perangkatName || '-';
+
+        historyPerangkatName.textContent = perangkatName;
+        historyPerangkatMeta.textContent = 'Memuat ringkasan event dan match...';
+        historyPerangkatBody.innerHTML = '<div class="match-history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>';
+        matchHistoryModal.classList.add('open');
+
+        fetch(`get_perangkat_match_history.php?perangkat_id=${encodeURIComponent(perangkatId)}`)
+            .then((response) => response.json())
+            .then((data) => {
+                if (!data.success) {
+                    historyPerangkatBody.innerHTML = `<div class="match-history-empty"><i class="fas fa-exclamation-circle"></i><p>${escapeHtmlText(data.message || 'Terjadi kesalahan saat memuat data.')}</p></div>`;
+                    return;
+                }
+
+                const eventTotal = Number(data.event_total || 0);
+                const matchTotal = Number(data.total || 0);
+                historyPerangkatMeta.textContent = `Event: ${eventTotal} | Match: ${matchTotal}`;
+
+                if (!Array.isArray(data.matches) || data.matches.length === 0) {
+                    historyPerangkatBody.innerHTML = '<div class="match-history-empty"><i class="fas fa-futbol"></i><p>Belum ada match yang tercatat untuk perangkat ini.</p></div>';
+                    return;
+                }
+
+                let rows = '';
+                data.matches.forEach((m, idx) => {
+                    const safeStatus = String(m.status || 'default').toLowerCase();
+                    const statusClass = ['completed', 'accepted', 'pending'].includes(safeStatus) ? safeStatus : 'default';
+                    const scoreText = (m.challenger_score !== null && m.opponent_score !== null)
+                        ? `${m.challenger_score} - ${m.opponent_score}`
+                        : '-';
+
+                    rows += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${escapeHtmlText(m.event_name || '-')}</td>
+                            <td>${escapeHtmlText(m.sport_type || '-')}</td>
+                            <td>#${escapeHtmlText(String(m.challenge_id || ''))}<br><small style="color:#94a3b8">${escapeHtmlText(m.challenge_code || '-')}</small></td>
+                            <td>${escapeHtmlText(m.challenger_name || '-')} <span style="color:#94a3b8">vs</span> ${escapeHtmlText(m.opponent_name || '-')}</td>
+                            <td>${escapeHtmlText(m.challenge_date_fmt || '-')}</td>
+                            <td><span class="history-status-pill ${statusClass}">${escapeHtmlText(m.status || '-')}</span></td>
+                            <td>${escapeHtmlText(scoreText)}</td>
+                        </tr>
+                    `;
+                });
+
+                historyPerangkatBody.innerHTML = `
+                    <table class="match-history-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Event</th>
+                                <th>Kategori</th>
+                                <th>Match</th>
+                                <th>Pertandingan</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                                <th>Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            })
+            .catch(() => {
+                historyPerangkatBody.innerHTML = '<div class="match-history-empty"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat data riwayat. Periksa koneksi server.</p></div>';
+            });
+    });
+});
+
+if (historyPerangkatCloseBtn) {
+    historyPerangkatCloseBtn.addEventListener('click', closeMatchHistoryModal);
+}
+if (matchHistoryModal) {
+    matchHistoryModal.addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeMatchHistoryModal();
         }
     });
 }
@@ -1404,6 +1848,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCertificateModal();
         closeImageViewer();
+        closeMatchHistoryModal();
     }
 });
 
@@ -1452,6 +1897,77 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script>
+// Tap-to-expand popover for event count badges (mobile-friendly)
+(function () {
+    function syncAria(wrap, expanded) {
+        var trigger = wrap.querySelector('.event-popover-trigger');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+    }
+
+    function closeWrap(wrap) {
+        if (!wrap) return;
+        wrap.classList.remove('pop-open');
+        syncAria(wrap, false);
+    }
+
+    function closeAll(exceptWrap) {
+        document.querySelectorAll('.event-count-badge-wrap.pop-open').forEach(function (el) {
+            if (el !== exceptWrap) {
+                closeWrap(el);
+            }
+        });
+    }
+
+    function toggleWrap(wrap) {
+        if (!wrap) return;
+        var shouldOpen = !wrap.classList.contains('pop-open');
+        closeAll(wrap);
+        if (shouldOpen) {
+            wrap.classList.add('pop-open');
+            syncAria(wrap, true);
+        } else {
+            closeWrap(wrap);
+        }
+    }
+
+    document.querySelectorAll('.event-popover-trigger').forEach(function (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+    });
+
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('.event-popover-trigger');
+        if (trigger) {
+            toggleWrap(trigger.closest('.event-count-badge-wrap'));
+            return;
+        }
+
+        if (!e.target.closest('.event-count-badge-wrap')) {
+            closeAll(null);
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAll(null);
+            return;
+        }
+
+        if (e.key !== 'Enter' && e.key !== ' ') {
+            return;
+        }
+
+        var trigger = e.target.closest('.event-popover-trigger');
+        if (!trigger) {
+            return;
+        }
+        e.preventDefault();
+        toggleWrap(trigger.closest('.event-count-badge-wrap'));
+    });
+})();
+</script>
 
 </body>
 </html>

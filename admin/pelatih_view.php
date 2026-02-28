@@ -23,13 +23,15 @@ if ($pelatih_id <= 0) {
 }
 
 
-// Fetch pelatih data dengan JOIN ke tabel teams
+// Fetch pelatih data dengan JOIN ke tabel teams dan events
 try {
     $stmt = $conn->prepare("
         SELECT au.*, t.name as team_name, t.logo as team_logo, t.alias as team_alias, 
-               t.sport_type, t.uniform_color, t.coach as team_coach, t.basecamp as team_basecamp
+               t.sport_type, t.uniform_color, t.coach as team_coach, t.basecamp as team_basecamp,
+               e.name as event_name
         FROM admin_users au 
         LEFT JOIN teams t ON au.team_id = t.id 
+        LEFT JOIN events e ON au.event_id = e.id
         WHERE au.id = ?
     ");
     $stmt->execute([$pelatih_id]);
@@ -173,9 +175,10 @@ body {
     font-size: 32px;
 }
 
-.action-buttons {
+.page-header .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -204,7 +207,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -276,7 +279,7 @@ body {
     color: white;
 }
 
-.role-editor, .role-pelatih {
+.role-operator, .role-editor, .role-pelatih {
     background: linear-gradient(135deg, var(--warning), #FFD166);
     color: var(--dark);
 }
@@ -527,13 +530,14 @@ body {
         align-items: flex-start;
     }
 
-    .action-buttons {
+    .page-header .action-buttons {
         width: 100%;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 10px;
     }
 
-    .btn {
-        flex: 1;
+    .page-header .action-buttons .btn {
+        width: 100%;
         justify-content: center;
     }
 
@@ -689,7 +693,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -701,13 +705,13 @@ body {
                 <span>Detail Pelatih</span>
             </div>
             <div class="action-buttons">
-                <a href="pelatih_edit.php?id=<?php echo $pelatih_id; ?>" class="btn btn-primary">
-                    <i class="fas fa-edit"></i>
-                    Edit Pelatih
-                </a>
                 <a href="pelatih.php" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
                     Kembali
+                </a>
+                <a href="pelatih_edit.php?id=<?php echo $pelatih_id; ?>" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Pelatih
                 </a>
             </div>
         </div>
@@ -724,6 +728,10 @@ body {
                     <?php 
                     if ($pelatih_data['role'] === 'superadmin') {
                         echo 'Super Admin';
+                    } elseif ($pelatih_data['role'] === 'admin') {
+                        echo 'Admin';
+                    } elseif ($pelatih_data['role'] === 'operator' || $pelatih_data['role'] === 'editor') {
+                        echo 'Operator';
                     } else {
                         echo 'Pelatih';
                     }
@@ -880,11 +888,22 @@ body {
                             <?php 
                             if ($pelatih_data['role'] === 'superadmin') {
                                 echo 'Super Admin';
+                            } elseif ($pelatih_data['role'] === 'admin') {
+                                echo 'Admin';
+                            } elseif ($pelatih_data['role'] === 'operator' || $pelatih_data['role'] === 'editor') {
+                                echo 'Operator';
                             } else {
                                 echo 'Pelatih';
                             }
                             ?>
                         </span>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Event Operator</span>
+                    <div class="info-value">
+                        <?php echo !empty($pelatih_data['event_name']) ? htmlspecialchars($pelatih_data['event_name']) : '-'; ?>
                     </div>
                 </div>
                 

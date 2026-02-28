@@ -63,294 +63,334 @@ $position_labels = [
 ];
 ?>
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Team Staff - Area Pelatih</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .main {
-            background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-        }
+<style>
+    .main {
+        background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+    }
 
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .page-title {
-            font-size: 28px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .btn {
-            padding: 12px 25px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
-            font-size: 15px;
-            text-decoration: none;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(10, 36, 99, 0.3);
-        }
-        
-        .info-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        }
-        
-        .info-header {
-            display: flex;
-            justify-content: space-between;
+    .header-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .header-card .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .header-card .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-helper {
+        margin-top: -6px;
+        color: var(--gray);
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 12px 30px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.3s;
+        font-size: 15px;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        background: #5a6268;
+    }
+
+    /* Match back-button style with player_form.php */
+    .btn-back-model {
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-size: 16px;
+        background: #f8f9fa;
+        color: var(--dark);
+        border: 2px solid #e1e5eb;
+        box-shadow: none;
+    }
+
+    .btn-back-model:hover {
+        transform: none;
+        background: #e9ecef;
+        border-color: #ced4da;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 20px;
+        padding: 26px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+        border: 1px solid #eef2f7;
+    }
+
+    .info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #edf2f7;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .staff-main-info {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .staff-photo-large {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #ffffff;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .staff-basic-info h2 {
+        font-size: 28px;
+        color: var(--primary);
+        margin-bottom: 8px;
+        line-height: 1.2;
+    }
+
+    .staff-basic-info .position {
+        font-size: 17px;
+        color: var(--accent);
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .staff-basic-info .team {
+        font-size: 14px;
+        color: var(--gray);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-success {
+        background: rgba(46, 125, 50, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(46, 125, 50, 0.2);
+    }
+
+    .badge-danger {
+        background: rgba(211, 47, 47, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(211, 47, 47, 0.2);
+    }
+
+    .info-title {
+        font-size: 20px;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        margin-bottom: 18px;
+    }
+
+    .info-title i {
+        color: var(--secondary);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .info-item {
+        padding: 16px 18px;
+        background: #f8fafd;
+        border: 1px solid #e8eef6;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .info-item:hover {
+        background: #eef5ff;
+        transform: translateY(-1px);
+    }
+
+    .info-label {
+        display: block;
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 6px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #0f172a;
+        font-weight: 600;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .certificate-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .certificate-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        background: #ffffff;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+    }
+
+    .certificate-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .certificate-name {
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 8px;
+        font-size: 15px;
+        line-height: 1.35;
+    }
+
+    .certificate-meta {
+        font-size: 13px;
+        color: var(--gray);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .certificate-file {
+        margin-top: 12px;
+    }
+
+    .view-certificate-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 13px;
+        background: linear-gradient(135deg, var(--accent), #00b4d8);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .view-certificate-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(76, 201, 240, 0.25);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 52px 20px;
+        color: var(--gray);
+    }
+
+    .empty-state i {
+        font-size: 54px;
+        margin-bottom: 14px;
+        opacity: 0.3;
+    }
+
+    @media (max-width: 768px) {
+        .header-card .section-header {
+            flex-direction: column;
             align-items: flex-start;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
         }
-        
-        .staff-main-info {
-            display: flex;
-            gap: 25px;
-            align-items: center;
-        }
-        
-        .staff-photo-large {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 5px solid white;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        
-        .staff-basic-info h2 {
-            font-size: 28px;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-        
-        .staff-basic-info .position {
-            font-size: 18px;
-            color: var(--accent);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .staff-basic-info .team {
-            font-size: 15px;
-            color: var(--gray);
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .badge-success {
-            background: rgba(46, 125, 50, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(46, 125, 50, 0.2);
-        }
-        
-        .badge-danger {
-            background: rgba(211, 47, 47, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(211, 47, 47, 0.2);
-        }
-        
-        .info-title {
-            font-size: 22px;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            margin-bottom: 25px;
-        }
-        
-        .info-title i {
-            color: var(--secondary);
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .info-item {
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            transition: all 0.3s;
-        }
-        
-        .info-item:hover {
-            background: #f0f7ff;
-            transform: translateY(-2px);
-        }
-        
-        .info-label {
-            display: block;
-            font-size: 14px;
-            color: var(--gray);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .info-value {
-            font-size: 16px;
-            color: var(--dark);
-            font-weight: 600;
-        }
-        
-        .certificate-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .certificate-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 20px;
-            background: white;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-        
-        .certificate-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        
-        .certificate-name {
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .certificate-meta {
-            font-size: 14px;
-            color: var(--gray);
-            margin-bottom: 5px;
-        }
-        
-        .certificate-file {
-            margin-top: 15px;
-        }
-        
-        .view-certificate-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: linear-gradient(135deg, var(--accent), #00B4D8);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .view-certificate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--gray);
-        }
-        
-        .empty-state i {
-            font-size: 60px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-        
-        @media (max-width: 768px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .staff-main-info {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
-</head>
-<body>
 
-<!-- Page Header -->
-<div class="page-header">
-    <h2 class="page-title">
-        <i class="fas fa-user-tie"></i>
-        <span>Detail Staf Team</span>
-    </h2>
-    <div class="action-buttons">
-        <a href="team_staff.php" class="btn btn-secondary">
+        .header-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .info-card {
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .staff-main-info {
+            flex-direction: column;
+            text-align: center;
+            width: 100%;
+        }
+
+        .staff-photo-large {
+            width: 112px;
+            height: 112px;
+        }
+
+        .info-header {
+            justify-content: center;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="card header-card">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-user-tie"></i>
+            <span>Detail Staff Team</span>
+        </h2>
+        <a href="team_staff.php" class="btn btn-secondary btn-back-model">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
     </div>
+    <div class="section-helper">Profil lengkap staf, kontak, dan dokumen sertifikat.</div>
 </div>
 
 <!-- Main Info Card -->
@@ -371,7 +411,15 @@ $position_labels = [
             <div class="staff-basic-info">
                 <h2><?php echo htmlspecialchars($staff_data['name']); ?></h2>
                 <div class="position"><?php echo $position_labels[$staff_data['position']] ?? htmlspecialchars($staff_data['position']); ?></div>
-                <div class="team"><?php echo htmlspecialchars($staff_data['team_name']); ?> (<?php echo htmlspecialchars($staff_data['team_alias']); ?>)</div>
+                <div class="team">
+                    <?php
+                    $team_alias = trim((string)($staff_data['team_alias'] ?? ''));
+                    echo htmlspecialchars($staff_data['team_name'] ?? '');
+                    if ($team_alias !== '') {
+                        echo ' (' . htmlspecialchars($team_alias) . ')';
+                    }
+                    ?>
+                </div>
             </div>
         </div>
         

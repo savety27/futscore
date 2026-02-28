@@ -18,6 +18,24 @@ if ($eventId <= 0 || $teamId <= 0) {
     exit;
 }
 
+function parseMatchDurationMinutes($raw): int
+{
+    if ($raw === null) {
+        return 90;
+    }
+    $text = trim((string)$raw);
+    if ($text === '') {
+        return 90;
+    }
+
+    if (preg_match('/\d+/', $text, $m)) {
+        $val = (int)$m[0];
+        return $val > 0 ? $val : 90;
+    }
+
+    return 90;
+}
+
 try {
     // 1. Get Team Info
     $stmtTeam = $conn->prepare("SELECT id, name, logo FROM teams WHERE id = ?");
@@ -29,11 +47,22 @@ try {
         exit;
     }
 
-    // 2. Get Team Event Info (Total matches, cards, goals for team from event_team_values)
-    $stmtEventVal = $conn->prepare("SELECT mn, gm, gk, red_cards, yellow_cards, green_cards 
-                                    FROM event_team_values 
-                                    WHERE event_id = ? AND team_id = ? AND sport_type = ? LIMIT 1");
-    $stmtEventVal->execute([$eventId, $teamId, $sportType]);
+    // 2. Get Team Event Info (prefer exact category, fallback to legacy blank category)
+    if ($sportType !== '') {
+        $stmtEventVal = $conn->prepare("SELECT mn, gm, gk, red_cards, yellow_cards, green_cards
+                                        FROM event_team_values
+                                        WHERE event_id = ? AND team_id = ?
+                                          AND (sport_type = ? OR sport_type = '' OR sport_type IS NULL)
+                                        ORDER BY CASE WHEN sport_type = ? THEN 0 WHEN sport_type = '' OR sport_type IS NULL THEN 1 ELSE 2 END
+                                        LIMIT 1");
+        $stmtEventVal->execute([$eventId, $teamId, $sportType, $sportType]);
+    } else {
+        $stmtEventVal = $conn->prepare("SELECT mn, gm, gk, red_cards, yellow_cards, green_cards
+                                        FROM event_team_values
+                                        WHERE event_id = ? AND team_id = ?
+                                        LIMIT 1");
+        $stmtEventVal->execute([$eventId, $teamId]);
+    }
     $eventVal = $stmtEventVal->fetch(PDO::FETCH_ASSOC);
 
     // Get Event name
@@ -60,10 +89,27 @@ try {
     }
 
     // 5. Get Player Cards
-    $stmtCards = $conn->prepare("SELECT player_id, yellow_cards, red_cards, green_cards 
-                                 FROM player_event_cards 
-                                 WHERE event_id = ? AND team_id = ? AND sport_type = ?");
-    $stmtCards->execute([$eventId, $teamId, $sportType]);
+    // Legacy data may have empty sport_type; include it as fallback when category is provided.
+    if ($sportType !== '') {
+        $stmtCards = $conn->prepare("SELECT player_id,
+                                            COALESCE(SUM(yellow_cards), 0) AS yellow_cards,
+                                            COALESCE(SUM(red_cards), 0) AS red_cards,
+                                            COALESCE(SUM(green_cards), 0) AS green_cards
+                                     FROM player_event_cards
+                                     WHERE event_id = ? AND team_id = ?
+                                       AND (sport_type = ? OR sport_type = '' OR sport_type IS NULL)
+                                     GROUP BY player_id");
+        $stmtCards->execute([$eventId, $teamId, $sportType]);
+    } else {
+        $stmtCards = $conn->prepare("SELECT player_id,
+                                            COALESCE(SUM(yellow_cards), 0) AS yellow_cards,
+                                            COALESCE(SUM(red_cards), 0) AS red_cards,
+                                            COALESCE(SUM(green_cards), 0) AS green_cards
+                                     FROM player_event_cards
+                                     WHERE event_id = ? AND team_id = ?
+                                     GROUP BY player_id");
+        $stmtCards->execute([$eventId, $teamId]);
+    }
     $cardsMap = [];
     while ($row = $stmtCards->fetch(PDO::FETCH_ASSOC)) {
         $cardsMap[$row['player_id']] = [
@@ -95,11 +141,78 @@ try {
         $matchCountMap[(int)$row['player_id']] = (int)$row['match_count'];
     }
 
+    // 7. Per-player play time from lineups + challenges.match_duration
+    $hasHalfCol = false;
+    $halfColStmt = $conn->query("SHOW COLUMNS FROM lineups LIKE 'half'");
+    if ($halfColStmt && $halfColStmt->fetch(PDO::FETCH_ASSOC)) {
+        $hasHalfCol = true;
+    }
+
+    if ($hasHalfCol) {
+        $ptSql = "
+            SELECT l.player_id,
+                   l.match_id,
+                   COUNT(DISTINCT CASE WHEN l.half IN (1,2) THEN l.half END) AS half_count,
+                   MAX(c.match_duration) AS match_duration
+            FROM lineups l
+            INNER JOIN challenges c ON l.match_id = c.id
+            WHERE c.event_id = ?
+              AND l.team_id = ?
+              AND c.status IN ('accepted', 'completed')
+        ";
+    } else {
+        $ptSql = "
+            SELECT l.player_id,
+                   l.match_id,
+                   0 AS half_count,
+                   MAX(c.match_duration) AS match_duration
+            FROM lineups l
+            INNER JOIN challenges c ON l.match_id = c.id
+            WHERE c.event_id = ?
+              AND l.team_id = ?
+              AND c.status IN ('accepted', 'completed')
+        ";
+    }
+    $ptParams = [$eventId, $teamId];
+    if ($sportType !== '') {
+        $ptSql .= " AND c.sport_type = ?";
+        $ptParams[] = $sportType;
+    }
+    $ptSql .= " GROUP BY l.player_id, l.match_id";
+
+    $stmtPlayTime = $conn->prepare($ptSql);
+    $stmtPlayTime->execute($ptParams);
+    $playTimeMap = [];
+    while ($ptRow = $stmtPlayTime->fetch(PDO::FETCH_ASSOC)) {
+        $playerId = (int)($ptRow['player_id'] ?? 0);
+        if ($playerId <= 0) {
+            continue;
+        }
+
+        $duration = parseMatchDurationMinutes($ptRow['match_duration'] ?? null);
+        $minutes = $duration;
+
+        if ($hasHalfCol) {
+            $halfCount = (int)($ptRow['half_count'] ?? 0);
+            if ($halfCount === 1) {
+                $minutes = (int)round($duration / 2);
+            } elseif ($halfCount >= 2) {
+                $minutes = $duration;
+            }
+        }
+
+        if (!isset($playTimeMap[$playerId])) {
+            $playTimeMap[$playerId] = 0;
+        }
+        $playTimeMap[$playerId] += $minutes;
+    }
+
     $playerList = [];
     $totalPlayerGoals = 0;
     $totalRed = 0;
     $totalYellow = 0;
     $totalGreen = 0;
+    $totalPlayTime = 0;
 
     foreach ($players as $p) {
         $pId = (int)$p['id'];
@@ -110,6 +223,8 @@ try {
         $totalRed += $c['red'];
         $totalYellow += $c['yellow'];
         $totalGreen += $c['green'];
+        $playTime = $playTimeMap[$pId] ?? 0;
+        $totalPlayTime += $playTime;
 
         $playerList[] = [
             'id' => $pId,
@@ -121,7 +236,7 @@ try {
             'red' => $c['red'],
             'yellow' => $c['yellow'],
             'green' => $c['green'],
-            'play_time' => 0 // Placeholder
+            'play_time' => $playTime
         ];
     }
 
@@ -131,7 +246,7 @@ try {
         'red' => $eventVal ? $eventVal['red_cards'] : $totalRed,
         'yellow' => $eventVal ? $eventVal['yellow_cards'] : $totalYellow,
         'green' => $eventVal ? $eventVal['green_cards'] : $totalGreen,
-        'pt' => 0,
+        'pt' => $totalPlayTime,
         'matches' => $eventVal ? $eventVal['mn'] : 0
     ];
 

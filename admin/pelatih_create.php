@@ -25,6 +25,16 @@ try {
     $teams_error = "Gagal mengambil data tim: " . $e->getMessage();
 }
 
+// Ambil data event dari database untuk dropdown operator
+$events = [];
+try {
+    $stmt = $conn->prepare("SELECT id, name FROM events ORDER BY name ASC");
+    $stmt->execute();
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $events_error = "Gagal mengambil data event: " . $e->getMessage();
+}
+
 // Initialize variables
 $errors = [];
 $form_data = [
@@ -33,8 +43,9 @@ $form_data = [
     'password' => '',
     'confirm_password' => '',
     'full_name' => '',
-    'role' => 'pelatih',
+    'role' => '',
     'team_id' => '',
+    'event_id' => '',
     'is_active' => 1
 ];
 
@@ -47,8 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'password' => $_POST['password'] ?? '',
         'confirm_password' => $_POST['confirm_password'] ?? '',
         'full_name' => trim($_POST['full_name'] ?? ''),
-        'role' => $_POST['role'] ?? 'admin',
+        'role' => $_POST['role'] ?? '',
         'team_id' => !empty($_POST['team_id']) ? (int)$_POST['team_id'] : null,
+        'event_id' => !empty($_POST['event_id']) ? (int)$_POST['event_id'] : null,
         'is_active' => isset($_POST['is_active']) ? 1 : 0
     ];
     
@@ -80,6 +92,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($form_data['full_name'])) {
         $errors['full_name'] = "Nama lengkap harus diisi";
     }
+
+    $allowed_roles = ['superadmin', 'operator', 'pelatih'];
+    if (empty($form_data['role'])) {
+        $errors['role'] = "Role harus dipilih";
+    } elseif (!in_array($form_data['role'], $allowed_roles, true)) {
+        $errors['role'] = "Role tidak valid";
+    }
     
     // Check for existing username and email
     if (empty($errors)) {
@@ -104,9 +123,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    // Jika role bukan superadmin, validasi team_id
-    if ($form_data['role'] !== 'superadmin' && empty($form_data['team_id'])) {
+    // Team wajib hanya untuk role pelatih
+    if ($form_data['role'] === 'pelatih' && empty($form_data['team_id'])) {
         $errors['team_id'] = "Tim harus dipilih untuk role pelatih";
+    }
+
+    // Event wajib hanya untuk role operator
+    if ($form_data['role'] === 'operator' && empty($form_data['event_id'])) {
+        $errors['event_id'] = "Event harus dipilih untuk role operator";
     }
     
     // If no errors, insert to database
@@ -116,8 +140,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $password_hash = password_hash($form_data['password'], PASSWORD_DEFAULT);
             
             $stmt = $conn->prepare("
-                INSERT INTO admin_users (username, email, password_hash, full_name, role, team_id, is_active, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                INSERT INTO admin_users (username, email, password_hash, full_name, role, team_id, event_id, is_active, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ");
             
             $stmt->execute([
@@ -127,6 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $form_data['full_name'],
                 $form_data['role'],
                 $form_data['team_id'],
+                $form_data['event_id'],
                 $form_data['is_active']
             ]);
             
@@ -368,7 +393,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -739,7 +764,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -750,10 +775,12 @@ body {
                 <i class="fas fa-user-plus"></i>
                 <span>Tambah Pelatih Baru</span>
             </div>
-            <a href="pelatih.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Kembali ke Daftar Pelatih
-            </a>
+            <div class="action-buttons">
+                <a href="pelatih.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </div>
         </div>
 
         <!-- ERROR MESSAGES -->
@@ -875,12 +902,17 @@ body {
                             <label class="form-label" for="role">
                                 Role <span class="required">*</span>
                             </label>
-                            <select id="role" name="role" class="form-select" required>
+                            <select id="role" name="role" class="form-select <?php echo isset($errors['role']) ? 'is-invalid' : ''; ?>" required>
+                                <option value="" <?php echo $form_data['role'] === '' ? 'selected' : ''; ?> disabled>-- Pilih Role --</option>
                                 <option value="pelatih" <?php echo $form_data['role'] == 'pelatih' ? 'selected' : ''; ?>>Pelatih</option>
+                                <option value="operator" <?php echo $form_data['role'] == 'operator' ? 'selected' : ''; ?>>Operator</option>
                                 <option value="superadmin" <?php echo $form_data['role'] == 'superadmin' ? 'selected' : ''; ?>>Super Admin</option>
                             </select>
+                            <?php if (isset($errors['role'])): ?>
+                                <span class="error"><?php echo $errors['role']; ?></span>
+                            <?php endif; ?>
                             <small style="color: #666; display: block; margin-top: 5px;">
-                                Super Admin memiliki akses penuh, Pelatih memiliki akses terbatas pada tim
+                                Super Admin memiliki akses penuh. Pelatih terikat tim, Operator tidak wajib tim.
                             </small>
                         </div>
                         
@@ -909,7 +941,36 @@ body {
                                 <span class="error"><?php echo $errors['team_id']; ?></span>
                             <?php endif; ?>
                             <small style="color: #666; display: block; margin-top: 5px;">
-                                Pilih tim untuk pelatih. Super Admin tidak perlu memilih tim.
+                                Tim wajib untuk Pelatih. Super Admin dan Operator tidak perlu memilih tim.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="event_id">
+                                Event <span class="required">*</span>
+                            </label>
+                            <div class="team-select-wrapper">
+                                <select id="event_id" name="event_id" class="form-select <?php echo isset($errors['event_id']) ? 'is-invalid' : ''; ?>">
+                                    <option value="">-- Pilih Event --</option>
+                                    <?php if (!empty($events_error)): ?>
+                                        <option value="" disabled>Error: <?php echo $events_error; ?></option>
+                                    <?php elseif (empty($events)): ?>
+                                        <option value="" disabled>Belum ada event aktif</option>
+                                    <?php else: ?>
+                                        <?php foreach ($events as $event): ?>
+                                            <option value="<?php echo $event['id']; ?>" 
+                                                <?php echo $form_data['event_id'] == $event['id'] ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($event['name'] ?? ''); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <?php if (isset($errors['event_id'])): ?>
+                                <span class="error"><?php echo $errors['event_id']; ?></span>
+                            <?php endif; ?>
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Event wajib untuk Operator. Pelatih dan Super Admin tidak perlu memilih event.
                             </small>
                         </div>
                     </div>
@@ -953,10 +1014,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // Tampilkan/sembunyikan field tim berdasarkan role
     const roleSelect = document.getElementById('role');
     const teamSelect = document.getElementById('team_id');
+    const eventSelect = document.getElementById('event_id');
     
-    function toggleTeamField() {
+    function toggleRoleFields() {
         const teamGroup = teamSelect.closest('.form-group');
-        if (roleSelect.value === 'superadmin') {
+        const eventGroup = eventSelect.closest('.form-group');
+        if (roleSelect.value === 'superadmin' || roleSelect.value === 'operator') {
             teamGroup.style.opacity = '0.6';
             teamGroup.style.pointerEvents = 'none';
             teamSelect.required = false;
@@ -966,13 +1029,24 @@ document.addEventListener('DOMContentLoaded', function() {
             teamGroup.style.pointerEvents = 'auto';
             teamSelect.required = true;
         }
+
+        if (roleSelect.value === 'operator') {
+            eventGroup.style.opacity = '1';
+            eventGroup.style.pointerEvents = 'auto';
+            eventSelect.required = true;
+        } else {
+            eventGroup.style.opacity = '0.6';
+            eventGroup.style.pointerEvents = 'none';
+            eventSelect.required = false;
+            eventSelect.value = '';
+        }
     }
     
     // Jalankan saat halaman dimuat
-    toggleTeamField();
+    toggleRoleFields();
     
     // Jalankan saat role berubah
-    roleSelect.addEventListener('change', toggleTeamField);
+    roleSelect.addEventListener('change', toggleRoleFields);
 
     // Form Validation
     const form = document.getElementById('coachForm');
@@ -984,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const fullName = document.getElementById('full_name').value.trim();
         const role = document.getElementById('role').value;
         const teamId = document.getElementById('team_id').value;
+        const eventId = document.getElementById('event_id').value;
 
         // Clear previous error highlights
         document.querySelectorAll('.is-invalid').forEach(el => {
@@ -1032,8 +1107,18 @@ document.addEventListener('DOMContentLoaded', function() {
             hasError = true;
         }
 
-        if (role !== 'superadmin' && !teamId) {
+        if (!role) {
+            markError('role', 'Role harus dipilih');
+            hasError = true;
+        }
+
+        if (role === 'pelatih' && !teamId) {
             markError('team_id', 'Tim harus dipilih untuk role pelatih');
+            hasError = true;
+        }
+
+        if (role === 'operator' && !eventId) {
+            markError('event_id', 'Event harus dipilih untuk role operator');
             hasError = true;
         }
 

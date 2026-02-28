@@ -65,9 +65,14 @@ function openMatchModal(matchId) {
             // Set date and location
             document.getElementById('matchDateTime').textContent = matchDetail.date + ', ' + matchDetail.time;
             document.getElementById('matchLocation').textContent = matchDetail.location;
+            const matchOfficialEl = document.getElementById('matchOfficial');
+            if (matchOfficialEl) {
+                const officialName = (matchDetail.match_official || '').trim();
+                matchOfficialEl.textContent = officialName || '-';
+            }
 
             // Populate content
-            populateGoals(matchDetail.goals);
+            populateGoalsByHalf(matchDetail.goals);
             populateLineups(matchDetail.lineups);
 
             // Show modal
@@ -157,6 +162,70 @@ function populateGoals(goals) {
 }
 
 
+
+function populateGoalsByHalf(goals) {
+    const goalsList = document.getElementById('goalsList');
+    goalsList.innerHTML = '';
+    goalsList.classList.add('pro-goals-container');
+
+    if (!goals || goals.length === 0) {
+        goalsList.innerHTML = '<div class="no-data">Belum ada gol tercipta</div>';
+        return;
+    }
+
+    const goalsByHalf = { 1: [], 2: [] };
+    goals.forEach(goal => {
+        let half = parseInt(goal.half, 10);
+        if (half !== 1 && half !== 2) {
+            const minute = parseInt(goal.minute, 10) || parseInt(String(goal.time || '').replace('"', ''), 10) || 0;
+            half = minute > 45 ? 2 : 1;
+        }
+        goalsByHalf[half].push(goal);
+    });
+
+    [1, 2].forEach(half => {
+        if (!goalsByHalf[half].length) return;
+
+        const halfTitle = document.createElement('div');
+        halfTitle.className = 'goals-half-title';
+        halfTitle.textContent = half === 1 ? 'Babak 1' : 'Babak 2';
+        goalsList.appendChild(halfTitle);
+
+        goalsByHalf[half].forEach(goal => {
+            const goalItem = document.createElement('div');
+            goalItem.className = 'goal-row';
+
+            const isTeam1 = goal.team === 'team1';
+            let team1Content = '';
+            let team2Content = '';
+            const playerHtml = `
+                <div class="goal-details">
+                    <span class="goal-player-name">${goal.player}</span>
+                    <span class="goal-icon">⚽</span>
+                    ${goal.number ? `<span class="goal-player-number">(${goal.number})</span>` : ''}
+                </div>
+            `;
+
+            if (isTeam1) {
+                team1Content = playerHtml;
+            } else {
+                team2Content = playerHtml;
+            }
+
+            goalItem.innerHTML = `
+                <div class="goal-side team-1-side ${isTeam1 ? 'active' : ''}">
+                    ${team1Content}
+                </div>
+                <div class="goal-time-pill">${goal.time}</div>
+                <div class="goal-side team-2-side ${!isTeam1 ? 'active' : ''}">
+                    ${team2Content}
+                </div>
+            `;
+
+            goalsList.appendChild(goalItem);
+        });
+    });
+}
 
 // Store lineups globally for switching
 let currentMatchLineups = { team1: {}, team2: {} };
@@ -316,6 +385,7 @@ function openScheduleMatchModal(matchId) {
                     <div class="schedule-date-venue">
                         <p><i class="fas fa-calendar-alt"></i> <strong>Tanggal & Waktu:</strong> ${scheduleData.date}, ${scheduleData.time}</p>
                         <p><i class="fas fa-map-marker-alt"></i> <strong>Lokasi:</strong> ${scheduleData.location}</p>
+                        <p><i class="fas fa-user-tie"></i> <strong>Wasit/Pengawas:</strong> ${scheduleData.match_official || '-'}</p>
                     </div>
                     
                     <div class="schedule-teams-large">

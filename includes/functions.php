@@ -258,6 +258,45 @@ function searchNews($keyword, $limit = 10) {
     return $news;
 }
 
+/**
+ * Parse aggregated event names payload from perangkat query.
+ * Prefer JSON array payload and fallback to legacy " || " format.
+ */
+function parsePerangkatEventNamesPayload($rawPayload) {
+    $payload = trim((string) $rawPayload);
+    if ($payload === '') {
+        return [];
+    }
+
+    $normalizeItems = static function (array $items): array {
+        $normalized = [];
+        $seen = [];
+
+        foreach ($items as $item) {
+            if (!is_scalar($item) && $item !== null) {
+                continue;
+            }
+
+            $value = trim((string) $item);
+            if ($value === '' || isset($seen[$value])) {
+                continue;
+            }
+
+            $seen[$value] = true;
+            $normalized[] = $value;
+        }
+
+        return $normalized;
+    };
+
+    $decoded = json_decode($payload, true);
+    if (is_array($decoded)) {
+        return $normalizeItems($decoded);
+    }
+
+    return $normalizeItems(explode(' || ', $payload));
+}
+
 // ========== FUNGSI MATCH ==========
 
 /**
@@ -756,14 +795,25 @@ function getCompletedChallenges($limit = 10) {
 function getMatchGoals($matchId) {
     global $db;
     $conn = $db->getConnection();
+
+    $goalsHasHalfColumn = false;
+    $columnCheck = $conn->query("SHOW COLUMNS FROM goals LIKE 'half'");
+    if ($columnCheck instanceof mysqli_result) {
+        $goalsHasHalfColumn = $columnCheck->num_rows > 0;
+        $columnCheck->free();
+    }
+
+    $goalHalfExpr = $goalsHasHalfColumn
+        ? "COALESCE(NULLIF(g.half, 0), CASE WHEN g.minute > 45 THEN 2 ELSE 1 END)"
+        : "CASE WHEN g.minute > 45 THEN 2 ELSE 1 END";
     
-    $sql = "SELECT g.*, p.name as player_name, p.jersey_number,
+    $sql = "SELECT g.*, {$goalHalfExpr} AS goal_half, p.name as player_name, p.jersey_number,
                    t.name as team_name, t.logo as team_logo
             FROM goals g
             LEFT JOIN players p ON g.player_id = p.id
             LEFT JOIN teams t ON g.team_id = t.id
             WHERE g.match_id = ?
-            ORDER BY g.minute";
+            ORDER BY goal_half ASC, g.minute ASC";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $matchId);

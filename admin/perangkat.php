@@ -486,16 +486,31 @@ try {
             gap: 8px
         }
 
-        .action-btn {
-            width: 36px;
-            height: 36px;
+        .action-cell {
+            width: 1%;
+            min-width: 0;
+            white-space: nowrap;
+            padding-left: 4px !important;
+            padding-right: 4px !important
+        }
+
+        .action-cell .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap
+        }
+
+        .action-cell .action-btn {
+            width: 40px;
+            height: 40px;
             border-radius: 10px;
             border: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            text-decoration: none
+            text-decoration: none;
+            font-size: 16px
         }
 
         .certificate-link {
@@ -628,7 +643,14 @@ try {
             .topbar,
             .page-header {
                 flex-direction: column;
-                align-items: flex-start
+                align-items: flex-start;
+                gap: 12px
+            }
+
+            .user-actions {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end
             }
 
             .page-title {
@@ -649,6 +671,31 @@ try {
                 width: 100%;
                 justify-content: center
             }
+
+            .page-header .action-buttons {
+                width: 100%;
+                flex-direction: column
+            }
+
+            .page-header .btn {
+                width: 100%;
+                justify-content: center
+            }
+        }
+
+        @media (max-width:480px) {
+            .logout-btn {
+                background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
+                border: none;
+                padding: 10px 20px;
+                font-size: 14px;
+                gap: 10px;
+                box-shadow: 0 5px 15px rgba(211, 47, 47, .2)
+            }
+
+            .btn {
+                font-size: 14px
+            }
         }
     </style>
 </head>
@@ -663,7 +710,7 @@ try {
                     <p>Kelola data perangkat</p>
                 </div>
                 <div class="user-actions">
-                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                    <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i>Keluar</a>
                 </div>
             </div>
 
@@ -762,7 +809,7 @@ try {
                                     </td>
                                     <td><?php echo (int)$row['is_active'] === 1 ? '<span class="badge badge-success">Aktif</span>' : '<span class="badge badge-danger">Non-Aktif</span>'; ?></td>
                                     <td><?php echo date('d M Y', strtotime($row['created_at'])); ?></td>
-                                    <td>
+                                    <td class="action-cell">
                                         <div class="action-buttons">
                                             <a href="perangkat_view.php?id=<?php echo (int)$row['id']; ?>" class="action-btn btn-view"><i class="fas fa-eye"></i></a>
                                             <a href="perangkat_edit.php?id=<?php echo (int)$row['id']; ?>" class="action-btn btn-edit"><i class="fas fa-edit"></i></a>

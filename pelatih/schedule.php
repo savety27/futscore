@@ -31,13 +31,37 @@ $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
+$has_challenge_event_id = false;
+$has_events_table = false;
+$can_join_event_name = false;
+
+try {
+    $check_event_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
+    $has_challenge_event_id = $check_event_col && $check_event_col->rowCount() > 0;
+} catch (PDOException $e) {
+    $has_challenge_event_id = false;
+}
+
+try {
+    $check_events_tbl = $conn->query("SHOW TABLES LIKE 'events'");
+    $has_events_table = $check_events_tbl && $check_events_tbl->rowCount() > 0;
+} catch (PDOException $e) {
+    $has_events_table = false;
+}
+
+$can_join_event_name = $has_challenge_event_id && $has_events_table;
 
 // Ambil semua tipe olahraga yang tersedia untuk filter
 $sport_types = [];
 try {
-    $sport_query = "SELECT DISTINCT sport_type FROM challenges WHERE sport_type IS NOT NULL AND sport_type != '' ORDER BY sport_type";
+    $sport_query = "SELECT DISTINCT sport_type 
+                    FROM challenges 
+                    WHERE sport_type IS NOT NULL 
+                      AND sport_type != '' 
+                      AND (challenger_id = ? OR opponent_id = ?)
+                    ORDER BY sport_type";
     $sport_stmt = $conn->prepare($sport_query);
-    $sport_stmt->execute();
+    $sport_stmt->execute([$my_team_id, $my_team_id]);
     $sport_types = $sport_stmt->fetchAll(PDO::FETCH_COLUMN);
 } catch (PDOException $e) {
     // Jika error, sport_types akan tetap array kosong
@@ -46,18 +70,24 @@ try {
 // Base query untuk challenges dengan join ke teams untuk nama team
 $base_query = "SELECT 
     c.*,
+    " . ($can_join_event_name
+        ? "TRIM(COALESCE(NULLIF(e.name, ''), NULLIF(c.sport_type, ''))) AS event_name,"
+        : "TRIM(c.sport_type) AS event_name,") . "
     t1.name as challenger_name,
     t1.logo as challenger_logo,
     t2.name as opponent_name,
     t2.logo as opponent_logo,
     v.name as venue_name
     FROM challenges c
+    " . ($can_join_event_name ? "LEFT JOIN events e ON c.event_id = e.id" : "") . "
     LEFT JOIN teams t1 ON c.challenger_id = t1.id
     LEFT JOIN teams t2 ON c.opponent_id = t2.id
     LEFT JOIN venues v ON c.venue_id = v.id
-    WHERE 1=1";
+    WHERE (c.challenger_id = ? OR c.opponent_id = ?)";
 
-$count_query = "SELECT COUNT(*) as total FROM challenges c WHERE 1=1";
+$count_query = "SELECT COUNT(*) as total 
+                FROM challenges c 
+                WHERE (c.challenger_id = ? OR c.opponent_id = ?)";
 
 // Tambahkan kondisi untuk search
 if (!empty($search)) {
@@ -65,13 +95,14 @@ if (!empty($search)) {
     $base_query .= " AND (c.challenge_code LIKE ? 
                 OR t1.name LIKE ? 
                 OR t2.name LIKE ? 
-                OR c.sport_type LIKE ?
+                OR c.sport_type LIKE ? " . ($can_join_event_name ? "OR e.name LIKE ? " : "") . "
                 OR c.status LIKE ?
                 OR c.match_status LIKE ?)";
     $count_query .= " AND (c.challenge_code LIKE ? 
                 OR EXISTS (SELECT 1 FROM teams t WHERE t.id = c.challenger_id AND t.name LIKE ?)
                 OR EXISTS (SELECT 1 FROM teams t WHERE t.id = c.opponent_id AND t.name LIKE ?)
                 OR c.sport_type LIKE ?
+                " . ($can_join_event_name ? "OR EXISTS (SELECT 1 FROM events e2 WHERE e2.id = c.event_id AND e2.name LIKE ?) " : "") . "
                 OR c.status LIKE ?
                 OR c.match_status LIKE ?)";
 }
@@ -89,77 +120,38 @@ $total_pages = 1;
 $challenges = [];
 
 try {
-    // Hitung total data dengan filter
-    if (!empty($search) && !empty($sport_filter)) {
-        // Keduanya: search dan filter olahraga
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([
-            $search_term, $search_term, $search_term, 
-            $search_term, $search_term, $search_term,
-            $sport_filter
-        ]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } elseif (!empty($search)) {
-        // Hanya search
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([
-            $search_term, $search_term, $search_term, 
-            $search_term, $search_term, $search_term
-        ]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } elseif (!empty($sport_filter)) {
-        // Hanya filter olahraga
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute([$sport_filter]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
-    } else {
-        // Tidak ada filter
-        $stmt = $conn->prepare($count_query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total_data = $result['total'];
+    $filter_params = [$my_team_id, $my_team_id];
+    if (!empty($search)) {
+        $search_params = [$search_term, $search_term, $search_term, $search_term];
+        if ($can_join_event_name) {
+            $search_params[] = $search_term;
+        }
+        $search_params[] = $search_term;
+        $search_params[] = $search_term;
+        $filter_params = array_merge($filter_params, $search_params);
     }
+    if (!empty($sport_filter)) {
+        $filter_params[] = $sport_filter;
+    }
+
+    // Hitung total data dengan filter
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($filter_params);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_data = $result['total'];
     
     $total_pages = ceil($total_data / $limit);
     
     // Query data dengan pagination
     $query = $base_query . " LIMIT ? OFFSET ?";
     $stmt = $conn->prepare($query);
-    
-    if (!empty($search) && !empty($sport_filter)) {
-        // Keduanya: search dan filter olahraga
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $search_term);
-        $stmt->bindValue(6, $search_term);
-        $stmt->bindValue(7, $sport_filter);
-        $stmt->bindValue(8, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(9, $offset, PDO::PARAM_INT);
-    } elseif (!empty($search)) {
-        // Hanya search
-        $stmt->bindValue(1, $search_term);
-        $stmt->bindValue(2, $search_term);
-        $stmt->bindValue(3, $search_term);
-        $stmt->bindValue(4, $search_term);
-        $stmt->bindValue(5, $search_term);
-        $stmt->bindValue(6, $search_term);
-        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
-    } elseif (!empty($sport_filter)) {
-        // Hanya filter olahraga
-        $stmt->bindValue(1, $sport_filter);
-        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
-    } else {
-        // Tidak ada filter
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+
+    $bind_index = 1;
+    foreach ($filter_params as $param) {
+        $stmt->bindValue($bind_index++, $param);
     }
+    $stmt->bindValue($bind_index++, $limit, PDO::PARAM_INT);
+    $stmt->bindValue($bind_index, $offset, PDO::PARAM_INT);
     
     $stmt->execute();
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -233,6 +225,64 @@ try {
 <style>
 .main {
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.page-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.15;
+}
+
+.page-title i {
+    color: var(--secondary);
+}
+
+.page-subtitle {
+    margin: 0;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.summary-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef5ff;
+    color: var(--primary);
+    border: 1px solid #dbeafe;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.section-header {
+    margin-bottom: 16px;
 }
 
 .filter-container {
@@ -490,6 +540,15 @@ try {
 }
 
 @media (max-width: 768px) {
+    .page-header {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .page-title {
+        font-size: 23px;
+    }
+
     .data-table tbody tr:hover,
     .data-table tbody tr:focus-within {
         transform: translateY(-1px);
@@ -507,9 +566,19 @@ try {
 }
 </style>
 
+<div class="page-header">
+    <div class="page-title-wrap">
+        <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Jadwal Pertandingan</h1>
+        <p class="page-subtitle">Pantau jadwal, hasil, status challenge, dan atur lineup untuk pertandingan aktif tim Anda.</p>
+    </div>
+    <div class="page-summary">
+        <span class="summary-pill"><i class="fas fa-futbol"></i> <?php echo (int)$total_data; ?> Pertandingan</span>
+    </div>
+</div>
+
 <div class="card">
     <div class="section-header">
-        <h2 class="section-title">Jadwal Pertandingan</h2>
+        <h2 class="section-title">Daftar Jadwal Pertandingan</h2>
         <!-- Read Only: No Add Button -->
     </div>
 
@@ -569,15 +638,15 @@ try {
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Kode Pertandingan</th>
-                        <th>Tanggal</th>
-                        <th>Team</th>
-                        <th>Event</th>
-                        <th>Lokasi</th>
-                        <th>Skor</th>
-                        <th>Status</th>
-                        <th>Status Pertandingan</th>
-                        <th>Aksi</th>
+                        <th style="text-align:center;">Kode Pertandingan</th>
+                        <th style="text-align:center;">Tanggal</th>
+                        <th style="text-align:center;">Team</th>
+                        <th style="text-align:center;">Event</th>
+                        <th style="text-align:center;">Lokasi</th>
+                        <th style="text-align:center;">Skor</th>
+                        <th style="text-align:center;">Status</th>
+                        <th style="text-align:center;">Status Pertandingan</th>
+                        <th style="text-align:center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -614,9 +683,14 @@ try {
                             </div>
                         </td>
                         <td>
-                            <span class="event-badge" title="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>" style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 600;">
-                                <?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>
-                            </span>
+                            <div style="display:flex; flex-direction:column; gap:4px; align-items:center; text-align:center;">
+                                <span class="event-badge" title="<?php echo htmlspecialchars($challenge['event_name'] ?? ''); ?>" style="padding: 6px 12px; background: #f0f7ff; color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                    <?php echo htmlspecialchars($challenge['event_name'] ?? ($challenge['sport_type'] ?? '-')); ?>
+                                </span>
+                                <span style="font-size:11px; color: var(--gray);">
+                                    Kategori: <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
+                                </span>
+                            </div>
                         </td>
                         <td>
                             <?php if (!empty($challenge['venue_name'])): ?>
@@ -688,11 +762,13 @@ try {
                                 <span style="color: var(--gray); font-style: italic;">-</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td style="text-align:center;">
                             <?php if ($challenge['status'] === 'accepted' && ($my_team_id == $challenge['challenger_id'] || $my_team_id == $challenge['opponent_id'])): ?>
-                            <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-block;">
-                                <i class="fas fa-users-cog"></i> Atur Lineup
+                            <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="fas fa-users-cog"></i> Lineup
                             </a>
+                            <?php else: ?>
+                            <span style="color: var(--gray);">-</span>
                             <?php endif; ?>
                         </td>
                     </tr>

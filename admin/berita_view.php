@@ -213,9 +213,10 @@ body {
     font-size: 32px;
 }
 
-.action-buttons {
+.page-header .action-buttons {
     display: flex;
     gap: 15px;
+    flex-wrap: wrap;
 }
 
 .btn {
@@ -255,7 +256,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: #6b7280;
     color: white;
     box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
 }
@@ -276,7 +277,7 @@ body {
 
 .berita-header {
     margin-bottom: 40px;
-    text-align: center;
+    text-align: left;
     position: relative;
 }
 
@@ -290,7 +291,7 @@ body {
 
 .berita-meta {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     gap: 20px;
     margin-bottom: 20px;
@@ -621,13 +622,14 @@ body {
         justify-content: center;
     }
 
-    .action-buttons {
+    .page-header .action-buttons {
         width: 100%;
-        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
     }
 
-    .btn {
-        flex: 1;
+    .page-header .action-buttons .btn {
+        width: 100%;
         justify-content: center;
     }
 
@@ -639,6 +641,7 @@ body {
     .berita-meta {
         flex-direction: column;
         gap: 15px;
+        align-items: flex-start;
     }
     
     .stats-section {
@@ -687,6 +690,17 @@ body {
         max-width: 120px;
     }
 
+    /* Compact buttons */
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
 
 }
 @keyframes slideDown {
@@ -718,7 +732,7 @@ body {
             <div class="user-actions">
                 <a href="logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    Keluar
                 </a>
             </div>
         </div>
@@ -732,7 +746,7 @@ body {
             <div class="action-buttons">
                 <a href="berita.php" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i>
-                    Kembali ke Daftar
+                    Kembali
                 </a>
                 <a href="berita_edit.php?id=<?php echo $berita_id; ?>" class="btn btn-primary">
                     <i class="fas fa-edit"></i>

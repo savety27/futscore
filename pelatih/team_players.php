@@ -82,7 +82,7 @@ try {
                 <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Pemain</span></h2>
             </div>
         </div>
-        <a href="team.php" class="btn-secondary">
+        <a href="team.php" class="btn-secondary btn-back-refined">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
         </a>
     </div>
@@ -326,6 +326,22 @@ try {
 }
 .btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
 .btn-secondary:hover { background: #d5d5d5; color: #000; }
+.btn-back-refined {
+    background: #ffffff;
+    color: #334155;
+    border: 1px solid #d3dcea;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(10, 36, 99, 0.08);
+}
+.btn-back-refined:hover {
+    background: #f2f6fc;
+    color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.12);
+}
 
 /* Photo */
 .player-photo { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: #f8f9fa; }
