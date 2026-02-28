@@ -1381,6 +1381,25 @@ body {
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Staff</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus staff <strong>"<span id="deleteStaffName"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 <!-- Modal untuk melihat sertifikat -->
 <div id="certificatesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 15px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; padding: 30px;">
@@ -1413,10 +1432,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-if (confirmDeleteBtn) {
+
+    if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener('click', function() {
             if (currentStaffId) {
                 deleteStaff(currentStaffId);
+            }
+        });
+    }
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
             }
         });
     }
@@ -1430,23 +1457,28 @@ function closeDeleteModal() {
     currentStaffId = null;
 }
 
-const deleteModalElement = document.getElementById('deleteModal');
-if (deleteModalElement) {
-    deleteModalElement.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeDeleteModal();
-        }
-    });
-}
-
 function deleteStaff(staffId) {
-    fetch(`team_staff_delete.php?id=${staffId}`, {
+    fetch(`team_staff_delete.php?id=${encodeURIComponent(staffId)}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         }
     })
-    .then(response => response.json())
+    .then(async response => {
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch (err) {
+            throw new Error(`Invalid server response (${response.status})`);
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error ${response.status}`);
+        }
+
+        return data;
+    })
     .then(data => {
         if (data.success) {
             closeDeleteModal();
@@ -1455,13 +1487,13 @@ function deleteStaff(staffId) {
                 window.location.reload();
             }, 1000);
         } else {
-            toastr.error('Error: ' + data.message);
+            toastr.error('Error: ' + (data.message || 'Gagal menghapus staff.'));
             closeDeleteModal();
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        toastr.error('Terjadi kesalahan saat menghapus staff.');
+        toastr.error(error.message || 'Terjadi kesalahan saat menghapus staff.');
         closeDeleteModal();
     });
 }
@@ -1554,3 +1586,4 @@ document.getElementById('certificatesModal').addEventListener('click', function(
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
+

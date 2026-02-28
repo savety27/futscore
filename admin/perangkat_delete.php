@@ -24,13 +24,39 @@ if ($staff_id <= 0) {
 try {
     $conn->beginTransaction();
 
-    $stmt = $conn->prepare("SELECT photo, ktp_photo FROM perangkat WHERE id = ?");
+    $stmt = $conn->prepare("SELECT name, photo, ktp_photo FROM perangkat WHERE id = ?");
     $stmt->execute([$staff_id]);
     $staff = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$staff) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         echo json_encode(['success' => false, 'message' => 'Staff not found']);
         exit;
+    }
+
+    // Cegah hapus jika perangkat masih dipakai pada data match (challenges.match_official)
+    $stmt = $conn->prepare("SHOW COLUMNS FROM challenges LIKE 'match_official'");
+    $stmt->execute();
+    $has_match_official_column = (bool) $stmt->fetchColumn();
+
+    if ($has_match_official_column) {
+        $stmt = $conn->prepare("SELECT COUNT(*) as usage_count FROM challenges WHERE LOWER(TRIM(match_official)) = LOWER(TRIM(?))");
+        $stmt->execute([(string) ($staff['name'] ?? '')]);
+        $usage = $stmt->fetch(PDO::FETCH_ASSOC);
+        $usage_count = (int) ($usage['usage_count'] ?? 0);
+
+        if ($usage_count > 0) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            echo json_encode([
+                'success' => false,
+                'message' => 'Tidak dapat menghapus perangkat yang sudah terdaftar pada match. Nonaktifkan perangkat jika tidak dipakai lagi.'
+            ]);
+            exit;
+        }
     }
 
     $stmt = $conn->prepare("SELECT license_file FROM perangkat_licenses WHERE perangkat_id = ?");
@@ -56,10 +82,10 @@ try {
 
     if ($success) {
         $conn->commit();
-        echo json_encode(['success' => true, 'message' => 'Staff berhasil dihapus']);
+        echo json_encode(['success' => true, 'message' => 'Perangkat berhasil dihapus']);
     } else {
         $conn->rollBack();
-        echo json_encode(['success' => false, 'message' => 'Gagal menghapus staff']);
+        echo json_encode(['success' => false, 'message' => 'Gagal menghapus perangkat']);
     }
 } catch (PDOException $e) {
     if ($conn->inTransaction()) {

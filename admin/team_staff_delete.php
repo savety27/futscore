@@ -28,6 +28,29 @@ if ($staff_id <= 0) {
 try {
     // Start transaction
     $conn->beginTransaction();
+
+    // Cegah hapus jika staff masih dipakai di assignment match
+    $stmt = $conn->prepare("SHOW TABLES LIKE 'match_staff_assignments'");
+    $stmt->execute();
+    $has_match_staff_assignments = (bool) $stmt->fetchColumn();
+
+    if ($has_match_staff_assignments) {
+        $stmt = $conn->prepare("SELECT COUNT(*) as assignment_count FROM match_staff_assignments WHERE staff_id = ?");
+        $stmt->execute([$staff_id]);
+        $usage = $stmt->fetch(PDO::FETCH_ASSOC);
+        $assignment_count = (int) ($usage['assignment_count'] ?? 0);
+
+        if ($assignment_count > 0) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            echo json_encode([
+                'success' => false,
+                'message' => 'Tidak dapat menghapus staff yang sudah terdaftar pada match. Nonaktifkan staff jika tidak dipakai lagi.'
+            ]);
+            exit;
+        }
+    }
     
     // Get staff data for file deletion
     $stmt = $conn->prepare("SELECT photo FROM team_staff WHERE id = ?");
@@ -70,7 +93,9 @@ try {
     }
     
 } catch (PDOException $e) {
-    $conn->rollBack();
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?>

@@ -853,14 +853,15 @@ try {
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
     <div class="modal" id="deleteModal">
         <div class="modal-content">
             <div class="modal-header">
                 <i class="fas fa-exclamation-triangle"></i>
-                <h3>Konfirmasi Hapus Staff</h3>
+                <h3>Konfirmasi Hapus Perangkat</h3>
             </div>
             <div class="modal-body">
-                <p>Apakah Anda yakin ingin menghapus staff <strong>"<span id="deleteStaffName"></span>"</strong>?</p>
+                <p>Apakah Anda yakin ingin menghapus perangkat <strong>"<span id="deleteStaffName"></span>"</strong>?</p>
                 <p style="color: var(--danger); font-weight: 600; margin-top: 10px;"><i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!</p>
             </div>
             <div class="modal-footer">
@@ -928,28 +929,42 @@ try {
         }
 
         function deleteStaff(staffId) {
-            fetch(`perangkat_delete.php?id=${staffId}`, {
+            fetch(`perangkat_delete.php?id=${encodeURIComponent(staffId)}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
+                .then(async response => {
+                    let data = null;
+
+                    try {
+                        data = await response.json();
+                    } catch (err) {
+                        throw new Error(`Invalid server response (${response.status})`);
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(data.message || `HTTP error ${response.status}`);
+                    }
+
+                    return data;
+                })
                 .then(data => {
                     if (data.success) {
                         closeDeleteModal();
-                        toastr.success('Staff berhasil dihapus!');
+                        toastr.success('Perangkat berhasil dihapus!');
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
                     } else {
-                        toastr.error('Error: ' + data.message);
+                        toastr.error('Error: ' + (data.message || 'Gagal menghapus perangkat.'));
                         closeDeleteModal();
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    toastr.error('Terjadi kesalahan saat menghapus staff.');
+                    toastr.error(error.message || 'Terjadi kesalahan saat menghapus perangkat.');
                     closeDeleteModal();
                 });
         }
