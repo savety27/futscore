@@ -7,6 +7,12 @@ require_once 'includes/header.php';
 $team_id = $_SESSION['team_id'] ?? 0;
 $player_count = 0;
 $team_name = 'Unknown Team';
+$staff_count = 0;
+$wins = 0;
+$losses = 0;
+$draws = 0;
+$next_match = null;
+$today_matches = [];
 
 if ($team_id) {
     try {
@@ -54,12 +60,30 @@ if ($team_id) {
             LEFT JOIN venues v ON c.venue_id = v.id
             WHERE c.status = 'accepted' 
               AND (c.challenger_id = ? OR c.opponent_id = ?)
-              AND DATE(c.challenge_date) > CURDATE()
+              AND c.challenge_date >= NOW()
             ORDER BY c.challenge_date ASC
             LIMIT 1
         ");
         $stmt->execute([$team_id, $team_id]);
         $next_match = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Get All Matches Today
+        $stmt = $conn->prepare("
+            SELECT c.*, 
+                   t1.name as team1_name, t1.logo as team1_logo,
+                   t2.name as team2_name, t2.logo as team2_logo,
+                   v.name as venue_name
+            FROM challenges c
+            JOIN teams t1 ON c.challenger_id = t1.id
+            JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.status = 'accepted'
+              AND (c.challenger_id = ? OR c.opponent_id = ?)
+              AND DATE(c.challenge_date) = CURDATE()
+            ORDER BY c.challenge_date ASC
+        ");
+        $stmt->execute([$team_id, $team_id]);
+        $today_matches = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
     } catch (PDOException $e) {
         $player_count = 0;
@@ -68,6 +92,7 @@ if ($team_id) {
         $losses = 0;
         $draws = 0;
         $next_match = null;
+        $today_matches = [];
         $team_name = 'Unknown Team';
         $team_logo = null;
     }
@@ -249,6 +274,34 @@ if ($team_id) {
     /* Match Spotlight */
     .match-spotlight {
         margin-top: 50px;
+    }
+    .today-match-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+    }
+    .today-match-card {
+        background: white;
+        border: 1px solid var(--premium-border);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: var(--soft-shadow);
+    }
+    .today-teams {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--premium-accent);
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+    .today-meta {
+        font-size: 0.9rem;
+        color: var(--premium-text-muted);
+        margin-bottom: 6px;
+    }
+    .today-meta strong {
+        color: var(--premium-text);
+        font-weight: 700;
     }
 
     .section-header {
@@ -583,6 +636,44 @@ if ($team_id) {
                 <i class="far fa-calendar-times"></i>
                 <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">Tidak Ada Pertandingan Terjadwal</h3>
                 <p style="color: var(--premium-text-muted);">Team saat ini sedang dalam masa istirahat di antara jadwal pertandingan.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Matches Today -->
+    <div class="match-spotlight reveal" style="animation-delay: 0.7s;">
+        <div class="section-header">
+            <h2 class="section-title">Pertandingan Hari Ini</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <?php if (!empty($today_matches)): ?>
+            <div class="today-match-list">
+                <?php foreach ($today_matches as $today_match): ?>
+                    <?php $today_match_date = new DateTime($today_match['challenge_date']); ?>
+                    <div class="today-match-card">
+                        <div class="today-teams">
+                            <?php echo htmlspecialchars($today_match['team1_name'] ?? ''); ?>
+                            vs
+                            <?php echo htmlspecialchars($today_match['team2_name'] ?? ''); ?>
+                        </div>
+                        <div class="today-meta">
+                            <strong>Kickoff:</strong> <?php echo $today_match_date->format('H:i'); ?> WIB
+                        </div>
+                        <div class="today-meta">
+                            <strong>Venue:</strong> <?php echo htmlspecialchars($today_match['venue_name'] ?: 'Akan diumumkan'); ?>
+                        </div>
+                        <div class="today-meta">
+                            <strong>Kategori:</strong> <?php echo htmlspecialchars($today_match['sport_type'] ?: 'Pertandingan Persahabatan'); ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="empty-state-light" style="padding: 55px 30px; border-radius: 20px;">
+                <i class="far fa-calendar-check"></i>
+                <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">Tidak Ada Pertandingan Hari Ini</h3>
+                <p style="color: var(--premium-text-muted);">Belum ada jadwal pertandingan team kamu untuk hari ini.</p>
             </div>
         <?php endif; ?>
     </div>
