@@ -991,6 +991,10 @@ body {
 </style>
 </head>
 <body>
+<div class="menu-overlay"></div>
+<button class="mobile-menu-toggle" aria-label="Toggle menu">
+    <i class="fas fa-bars"></i>
+</button>
 
 <!-- Delete Confirmation Modal -->
 <div class="modal" id="deleteModal">

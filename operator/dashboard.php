@@ -21,6 +21,14 @@ $event_id = (int) ($_SESSION['event_id'] ?? 0);
 $event_name = '';
 $event_image = '';
 $event_category = '-';
+$event_slug = '';
+$event_location = '';
+$event_contact = '';
+$event_description = '';
+$event_start_date = '';
+$event_end_date = '';
+$event_registration_status = 'closed';
+$event_is_active = 1;
 $challenge_total = 0;
 $challenge_upcoming = 0;
 $challenge_completed = 0;
@@ -30,7 +38,18 @@ $today_matches = [];
 if ($operator_id > 0) {
     try {
         $stmt = $conn->prepare("
-            SELECT au.event_id, e.name AS event_name, e.category AS event_category, e.image AS event_image
+            SELECT au.event_id,
+                   e.name AS event_name,
+                   e.category AS event_category,
+                   e.image AS event_image,
+                   e.slug AS event_slug,
+                   e.location AS event_location,
+                   e.contact AS event_contact,
+                   e.description AS event_description,
+                   e.start_date AS event_start_date,
+                   e.end_date AS event_end_date,
+                   e.registration_status AS event_registration_status,
+                   COALESCE(e.is_active, 1) AS event_is_active
             FROM admin_users au
             LEFT JOIN events e ON e.id = au.event_id
             WHERE au.id = ?
@@ -42,6 +61,14 @@ if ($operator_id > 0) {
         $event_name = trim((string) ($row['event_name'] ?? ''));
         $event_image = trim((string) ($row['event_image'] ?? ''));
         $event_category = trim((string) ($row['event_category'] ?? '-'));
+        $event_slug = trim((string) ($row['event_slug'] ?? ''));
+        $event_location = trim((string) ($row['event_location'] ?? ''));
+        $event_contact = trim((string) ($row['event_contact'] ?? ''));
+        $event_description = trim((string) ($row['event_description'] ?? ''));
+        $event_start_date = trim((string) ($row['event_start_date'] ?? ''));
+        $event_end_date = trim((string) ($row['event_end_date'] ?? ''));
+        $event_registration_status = trim((string) ($row['event_registration_status'] ?? 'closed'));
+        $event_is_active = (int) ($row['event_is_active'] ?? 1);
         $_SESSION['event_id'] = $event_id > 0 ? $event_id : null;
     } catch (PDOException $e) {
         $event_id = 0;
@@ -89,6 +116,72 @@ if ($event_id > 0) {
     } catch (PDOException $e) {
         // Keep dashboard rendering even if any query fails.
     }
+}
+
+$event_period_label = '-';
+$event_duration_label = '-';
+$event_start_display = '-';
+$event_end_display = '-';
+$event_progress_percent = 0;
+$event_runtime_label = 'Jadwal Belum Lengkap';
+$event_runtime_class = 'neutral';
+$event_countdown_label = '-';
+
+$event_registration_is_open = (strtolower($event_registration_status) === 'open');
+$event_registration_label = $event_registration_is_open ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup';
+$event_registration_class = $event_registration_is_open ? 'registration-open' : 'registration-closed';
+
+$event_visibility_label = $event_is_active ? 'Event Aktif' : 'Event Disembunyikan';
+$event_visibility_class = $event_is_active ? 'visibility-active' : 'visibility-inactive';
+
+$startDateObj = DateTime::createFromFormat('Y-m-d', $event_start_date);
+$endDateObj = DateTime::createFromFormat('Y-m-d', $event_end_date);
+
+if ($startDateObj instanceof DateTime) {
+    $event_start_display = $startDateObj->format('d M Y');
+}
+if ($endDateObj instanceof DateTime) {
+    $event_end_display = $endDateObj->format('d M Y');
+}
+if ($startDateObj instanceof DateTime && $endDateObj instanceof DateTime && $endDateObj >= $startDateObj) {
+    $event_period_label = $startDateObj->format('d M Y') . ' - ' . $endDateObj->format('d M Y');
+    $durationDays = ((int)$startDateObj->diff($endDateObj)->format('%a')) + 1;
+    $event_duration_label = $durationDays . ' hari';
+
+    $today = new DateTime('today');
+    if ($today < $startDateObj) {
+        $daysToStart = (int)$today->diff($startDateObj)->format('%a');
+        $event_runtime_label = 'Akan Dimulai';
+        $event_runtime_class = 'upcoming';
+        $event_countdown_label = 'Mulai ' . $daysToStart . ' hari lagi';
+        $event_progress_percent = 0;
+    } elseif ($today > $endDateObj) {
+        $daysAfterEnd = (int)$endDateObj->diff($today)->format('%a');
+        $event_runtime_label = 'Selesai';
+        $event_runtime_class = 'ended';
+        $event_countdown_label = 'Berakhir ' . $daysAfterEnd . ' hari lalu';
+        $event_progress_percent = 100;
+    } else {
+        $currentDay = ((int)$startDateObj->diff($today)->format('%a')) + 1;
+        $event_runtime_label = 'Sedang Berjalan';
+        $event_runtime_class = 'ongoing';
+        $event_countdown_label = 'Hari ke-' . $currentDay . ' dari ' . $durationDays;
+        if ($durationDays <= 1) {
+            $event_progress_percent = 100;
+        } else {
+            $event_progress_percent = (int)round((($currentDay - 1) / ($durationDays - 1)) * 100);
+        }
+    }
+}
+
+$event_progress_percent = max(0, min(100, $event_progress_percent));
+$event_location_display = $event_location !== '' ? $event_location : '-';
+$event_contact_display = $event_contact !== '' ? $event_contact : '-';
+$event_slug_display = $event_slug !== '' ? $event_slug : '-';
+$event_description_display = $event_description !== '' ? $event_description : 'Belum ada deskripsi event.';
+$event_image_path = '';
+if ($event_image !== '' && file_exists(__DIR__ . '/../images/events/' . $event_image)) {
+    $event_image_path = '../images/events/' . $event_image;
 }
 
 $operator_event_name = $event_name !== '' ? $event_name : 'Event Operator';
@@ -337,6 +430,204 @@ require_once __DIR__ . '/includes/header.php';
     }
     .empty-state-light i { font-size: 2.4rem; color: #9eb8dd; margin-bottom: 14px; }
 
+    .event-intel-wrap {
+        margin-bottom: 44px;
+        display: grid;
+        grid-template-columns: minmax(300px, 420px) 1fr;
+        gap: 22px;
+    }
+    .event-poster-card,
+    .event-details-card {
+        background: var(--premium-card);
+        border: 1px solid var(--premium-border);
+        border-radius: 26px;
+        box-shadow: var(--soft-shadow);
+        overflow: hidden;
+    }
+    .event-poster {
+        position: relative;
+        min-height: 240px;
+        background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 42%, #e0f2fe 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .event-poster::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.55), rgba(255,255,255,0));
+        pointer-events: none;
+    }
+    .event-poster img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .event-poster-fallback {
+        color: #475569;
+        text-align: center;
+        padding: 26px;
+    }
+    .event-poster-fallback i {
+        font-size: 56px;
+        margin-bottom: 12px;
+        color: #3b82f6;
+    }
+    .event-poster-content {
+        padding: 22px;
+    }
+    .event-readonly {
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #1d4ed8;
+        margin-bottom: 8px;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+    }
+    .event-name-heading {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.28;
+        color: var(--premium-accent);
+        font-weight: 800;
+    }
+    .event-sub-meta {
+        margin-top: 9px;
+        color: var(--premium-text-muted);
+        font-weight: 600;
+    }
+    .event-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+    }
+    .event-chip {
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        border: 1px solid transparent;
+    }
+    .event-chip.registration-open {
+        color: #166534;
+        background: #dcfce7;
+        border-color: #bbf7d0;
+    }
+    .event-chip.registration-closed {
+        color: #991b1b;
+        background: #fee2e2;
+        border-color: #fecaca;
+    }
+    .event-chip.visibility-active {
+        color: #0f2744;
+        background: #dbeafe;
+        border-color: #bfdbfe;
+    }
+    .event-chip.visibility-inactive {
+        color: #78350f;
+        background: #fef3c7;
+        border-color: #fde68a;
+    }
+    .event-chip.upcoming {
+        color: #3730a3;
+        background: #e0e7ff;
+        border-color: #c7d2fe;
+    }
+    .event-chip.ongoing {
+        color: #0f766e;
+        background: #ccfbf1;
+        border-color: #99f6e4;
+    }
+    .event-chip.ended {
+        color: #9f1239;
+        background: #ffe4e6;
+        border-color: #fecdd3;
+    }
+    .event-chip.neutral {
+        color: #334155;
+        background: #e2e8f0;
+        border-color: #cbd5e1;
+    }
+    .event-progress-wrap {
+        margin-top: 16px;
+    }
+    .event-progress-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #475569;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    .event-progress-track {
+        height: 10px;
+        border-radius: 999px;
+        background: #dbeafe;
+        overflow: hidden;
+    }
+    .event-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #1d4ed8, #2563eb, #0ea5e9);
+        transition: width .5s ease;
+    }
+    .event-details-card {
+        padding: 22px;
+    }
+    .event-detail-title {
+        margin: 0 0 14px;
+        color: var(--premium-accent);
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+    .event-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .event-info-item {
+        border: 1px solid #dbeafe;
+        border-radius: 14px;
+        padding: 12px;
+        background: #f8fbff;
+    }
+    .event-info-label {
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        margin-bottom: 7px;
+        font-weight: 700;
+    }
+    .event-info-value {
+        color: #0f2744;
+        font-size: 0.96rem;
+        font-weight: 700;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+    .event-description-box {
+        margin-top: 12px;
+        border: 1px solid #dbeafe;
+        border-radius: 14px;
+        background: #f8fbff;
+        padding: 13px;
+    }
+    .event-description-text {
+        margin: 0;
+        color: #334155;
+        line-height: 1.65;
+        font-size: 0.95rem;
+    }
+
     @media (max-width: 992px) {
         .main { padding: 20px 15px !important; }
         .premium-card:hover,
@@ -352,6 +643,9 @@ require_once __DIR__ . '/includes/header.php';
         .hero-title { font-size: 2rem; }
         .match-body { flex-direction: column; gap: 34px; padding: 36px 20px; }
         .match-footer { grid-template-columns: 1fr; }
+        .event-intel-wrap { grid-template-columns: 1fr; }
+        .event-info-grid { grid-template-columns: 1fr; }
+        .event-poster { min-height: 200px; }
     }
 
     @keyframes slideUp {
@@ -380,6 +674,9 @@ require_once __DIR__ . '/includes/header.php';
     .d-3 { animation-delay: 0.3s; }
     .d-4 { animation-delay: 0.4s; }
     .d-5 { animation-delay: 0.5s; }
+    .d-6 { animation-delay: 0.6s; }
+    .d-7 { animation-delay: 0.7s; }
+    .d-8 { animation-delay: 0.8s; }
 </style>
 
 <div class="dashboard-container">
@@ -435,7 +732,99 @@ require_once __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <div class="section-header match-spotlight reveal d-5">
+    <div class="section-header reveal d-5">
+        <h2 class="section-title">Profil Event</h2>
+        <div class="section-line"></div>
+    </div>
+
+    <?php if ($event_id <= 0): ?>
+        <div class="empty-state-light" style="margin-bottom: 44px;">
+            <i class="fas fa-unlink"></i>
+            <h3 style="font-weight:800;color:#0f2744;margin-bottom:6px;">Belum ada detail event</h3>
+            <p style="color:#5f728a;">Akun operator belum memiliki event aktif untuk ditampilkan detailnya.</p>
+        </div>
+    <?php else: ?>
+        <div class="event-intel-wrap">
+            <article class="event-poster-card reveal d-6">
+                <div class="event-poster">
+                    <?php if ($event_image_path !== ''): ?>
+                        <img src="<?php echo htmlspecialchars($event_image_path); ?>" alt="<?php echo htmlspecialchars($event_name !== '' ? $event_name : 'Event'); ?>">
+                    <?php else: ?>
+                        <div class="event-poster-fallback">
+                            <i class="fas fa-flag-checkered"></i>
+                            <div>Poster event belum ditambahkan</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <div class="event-poster-content">
+                    <span class="event-readonly"><i class="fas fa-lock"></i> Informasi Hanya-Baca</span>
+                    <h3 class="event-name-heading"><?php echo htmlspecialchars($event_name !== '' ? $event_name : 'Event Operator'); ?></h3>
+                    <div class="event-sub-meta">Kategori: <?php echo htmlspecialchars($event_category !== '' ? $event_category : '-'); ?></div>
+
+                    <div class="event-chip-list">
+                        <span class="event-chip <?php echo htmlspecialchars($event_registration_class); ?>"><?php echo htmlspecialchars($event_registration_label); ?></span>
+                        <span class="event-chip <?php echo htmlspecialchars($event_visibility_class); ?>"><?php echo htmlspecialchars($event_visibility_label); ?></span>
+                        <span class="event-chip <?php echo htmlspecialchars($event_runtime_class); ?>"><?php echo htmlspecialchars($event_runtime_label); ?></span>
+                    </div>
+
+                    <div class="event-progress-wrap">
+                        <div class="event-progress-head">
+                            <span>Progres Periode</span>
+                            <span><?php echo (int)$event_progress_percent; ?>%</span>
+                        </div>
+                        <div class="event-progress-track">
+                            <div class="event-progress-fill" style="width: <?php echo (int)$event_progress_percent; ?>%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="event-details-card reveal d-7">
+                <h3 class="event-detail-title">Dossier Event Operator</h3>
+                <div class="event-info-grid">
+                    <div class="event-info-item">
+                        <span class="event-info-label">Periode</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_period_label); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Durasi</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_duration_label); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Countdown</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_countdown_label); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Slug</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_slug_display); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Lokasi</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_location_display); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Kontak</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_contact_display); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Tanggal Mulai</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_start_display); ?></span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Tanggal Selesai</span>
+                        <span class="event-info-value"><?php echo htmlspecialchars($event_end_display); ?></span>
+                    </div>
+                </div>
+
+                <div class="event-description-box">
+                    <span class="event-info-label">Deskripsi Event</span>
+                    <p class="event-description-text"><?php echo nl2br(htmlspecialchars($event_description_display)); ?></p>
+                </div>
+            </article>
+        </div>
+    <?php endif; ?>
+
+    <div class="section-header match-spotlight reveal d-8">
         <h2 class="section-title">Highlight Pertandingan Hari Ini</h2>
         <div class="section-line"></div>
     </div>

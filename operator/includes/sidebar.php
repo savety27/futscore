@@ -1,5 +1,5 @@
 <?php
-$current_page = $current_page ?? '';
+$current_page = $current_page ?? pathinfo((string)basename($_SERVER['PHP_SELF'] ?? ''), PATHINFO_FILENAME);
 $operator_event_name = $operator_event_name ?? 'Operator';
 $operator_event_image = trim((string)($operator_event_image ?? ''));
 $has_event_logo = ($operator_event_image !== '' && file_exists(__DIR__ . '/../../images/events/' . $operator_event_image));
@@ -31,6 +31,13 @@ $has_event_logo = ($operator_event_image !== '' && file_exists(__DIR__ . '/../..
             <a href="challenge.php" class="menu-link <?php echo $current_page === 'challenge' ? 'active' : ''; ?>">
                 <span class="menu-icon"><i class="fas fa-futbol"></i></span>
                 <span class="menu-text">Challenge</span>
+            </a>
+        </div>
+
+        <div class="menu-item">
+            <a href="event.php" class="menu-link <?php echo in_array($current_page, ['event', 'event_value', 'event_bracket'], true) ? 'active' : ''; ?>">
+                <span class="menu-icon"><i class="fas fa-trophy"></i></span>
+                <span class="menu-text">Event</span>
             </a>
         </div>
 
