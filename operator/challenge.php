@@ -61,11 +61,13 @@ $operator_id = (int)($_SESSION['admin_id'] ?? 0);
 $operator_event_id = (int)($_SESSION['event_id'] ?? 0);
 $operator_event_name = 'Event Operator';
 $operator_event_image = '';
+$operator_event_is_active = true;
 
 if ($operator_id > 0) {
     try {
         $stmtOperator = $conn->prepare("
-            SELECT au.event_id, e.name AS event_name, e.image AS event_image
+            SELECT au.event_id, e.name AS event_name, e.image AS event_image,
+                   COALESCE(e.is_active, 1) AS event_is_active
             FROM admin_users au
             LEFT JOIN events e ON e.id = au.event_id
             WHERE au.id = ?
@@ -76,11 +78,14 @@ if ($operator_id > 0) {
         $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
         $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
         $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $operator_event_is_active = ((int)($operator_row['event_is_active'] ?? 1) === 1);
         $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
     } catch (PDOException $e) {
         // keep defaults
     }
 }
+
+$operator_read_only = ($operator_event_id > 0 && !$operator_event_is_active);
 
 
 // Handle search
@@ -1055,16 +1060,27 @@ body {
             </form>
             
             <div class="action-buttons">
-                <a href="challenge_create.php" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Tambah Challenge
-                </a>
-                <button type="button" class="btn btn-success" onclick="exportChallenges()">
-                    <i class="fas fa-download"></i>
-                    Export Excel
-                </button>
+                <?php if (!$operator_read_only): ?>
+                    <a href="challenge_create.php" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Tambah Challenge
+                    </a>
+                <?php endif; ?>
+                <?php if (!$operator_read_only): ?>
+                    <button type="button" class="btn btn-success" onclick="exportChallenges()">
+                        <i class="fas fa-download"></i>
+                        Export Excel
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
+
+        <?php if ($operator_read_only): ?>
+            <div class="alert alert-danger">
+                <i class="fas fa-lock"></i>
+                <span>Event Anda sedang non-aktif. Mode operator hanya lihat data.</span>
+            </div>
+        <?php endif; ?>
 
         <?php if (isset($error) && !empty($error)): ?>
         <div class="alert alert-danger">
@@ -1077,6 +1093,13 @@ body {
         <div class="alert alert-success">
             <i class="fas fa-check-circle"></i>
             <span><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></span>
+        </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></span>
         </div>
         <?php endif; ?>
 
@@ -1218,23 +1241,22 @@ body {
                                        class="action-btn btn-view">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <!-- TOMBOL EDIT SELALU TAMPIL -->
-                                    <a href="challenge_edit.php?id=<?php echo $challenge['id']; ?>" 
-                                       class="action-btn btn-edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <!-- TOMBOL RESULT/BOLA SELALU TAMPIL -->
-                                    <a href="challenge_result.php?id=<?php echo $challenge['id']; ?>" 
-                                       class="action-btn btn-result">
-                                        <i class="fas fa-futbol"></i>
-                                    </a>
-                                    <!-- TOMBOL DELETE SELALU TAMPIL -->
-                                    <button class="action-btn btn-delete" 
-                                            data-challenge-id="<?php echo (int) $challenge['id']; ?>"
-                                            data-challenge-code="<?php echo htmlspecialchars($challenge['challenge_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <?php if (!$operator_read_only): ?>
+                                        <a href="challenge_edit.php?id=<?php echo $challenge['id']; ?>" 
+                                           class="action-btn btn-edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="challenge_result.php?id=<?php echo $challenge['id']; ?>" 
+                                           class="action-btn btn-result">
+                                            <i class="fas fa-futbol"></i>
+                                        </a>
+                                        <button class="action-btn btn-delete" 
+                                                data-challenge-id="<?php echo (int) $challenge['id']; ?>"
+                                                data-challenge-code="<?php echo htmlspecialchars($challenge['challenge_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>

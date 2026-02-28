@@ -8,7 +8,6 @@ if (file_exists($config_path)) {
 } else {
     die("Database configuration file not found at: $config_path");
 }
-
 if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
     header("Location: ../login.php");
     exit;

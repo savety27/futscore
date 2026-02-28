@@ -10,7 +10,6 @@ if (file_exists($config_path)) {
     echo json_encode(['success' => false, 'message' => 'Database configuration not found']);
     exit;
 }
-
 if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
@@ -46,6 +45,25 @@ if (!function_exists('adminHasColumn')) {
 }
 
 try {
+    $operator_event_is_active = true;
+    if ($operator_id > 0) {
+        $stmtOperator = $conn->prepare("
+            SELECT COALESCE(e.is_active, 1) AS event_is_active
+            FROM admin_users au
+            LEFT JOIN events e ON e.id = au.event_id
+            WHERE au.id = ?
+            LIMIT 1
+        ");
+        $stmtOperator->execute([$operator_id]);
+        $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
+        $operator_event_is_active = ((int)($operator_row['event_is_active'] ?? 1) === 1);
+    }
+
+    if (!$operator_event_is_active) {
+        echo json_encode(['success' => false, 'message' => 'Event operator sedang non-aktif. Mode hanya lihat data.']);
+        exit;
+    }
+
     $berita_has_created_by = adminHasColumn($conn, 'berita', 'created_by');
     $ownership_where_sql = '';
     $ownership_params = [];

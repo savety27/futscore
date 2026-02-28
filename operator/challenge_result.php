@@ -62,11 +62,13 @@ $operator_id = (int)($_SESSION['admin_id'] ?? 0);
 $operator_event_id = (int)($_SESSION['event_id'] ?? 0);
 $operator_event_name = 'Event Operator';
 $operator_event_image = '';
+$operator_event_is_active = true;
 
 if ($operator_id > 0) {
     try {
         $stmtOperator = $conn->prepare("
-            SELECT au.event_id, e.name AS event_name, e.image AS event_image
+            SELECT au.event_id, e.name AS event_name, e.image AS event_image,
+                   COALESCE(e.is_active, 1) AS event_is_active
             FROM admin_users au
             LEFT JOIN events e ON e.id = au.event_id
             WHERE au.id = ?
@@ -77,10 +79,17 @@ if ($operator_id > 0) {
         $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
         $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
         $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $operator_event_is_active = ((int)($operator_row['event_is_active'] ?? 1) === 1);
         $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
     } catch (PDOException $e) {
         // keep defaults
     }
+}
+
+if ($operator_event_id > 0 && !$operator_event_is_active) {
+    $_SESSION['error_message'] = 'Event operator sedang non-aktif. Mode hanya lihat data.';
+    header("Location: challenge.php");
+    exit;
 }
 
 

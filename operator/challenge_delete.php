@@ -10,7 +10,6 @@ if (file_exists($config_path)) {
     echo json_encode(['success' => false, 'message' => 'Database configuration file not found']);
     exit;
 }
-
 if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'operator') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
@@ -43,12 +42,20 @@ if (!function_exists('adminHasColumn')) {
 }
 
 try {
+    $operator_event_is_active = true;
     if ($operator_id > 0) {
         try {
-            $stmtOperator = $conn->prepare("SELECT event_id FROM admin_users WHERE id = ? LIMIT 1");
+            $stmtOperator = $conn->prepare("
+                SELECT au.event_id, COALESCE(e.is_active, 1) AS event_is_active
+                FROM admin_users au
+                LEFT JOIN events e ON e.id = au.event_id
+                WHERE au.id = ?
+                LIMIT 1
+            ");
             $stmtOperator->execute([$operator_id]);
             $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
             $operator_event_id = (int)($operator_row['event_id'] ?? $operator_event_id);
+            $operator_event_is_active = ((int)($operator_row['event_is_active'] ?? 1) === 1);
             $_SESSION['event_id'] = $operator_event_id > 0 ? $operator_event_id : null;
         } catch (PDOException $e) {
             // keep session value
@@ -59,6 +66,12 @@ try {
 
     // Start transaction
     $conn->beginTransaction();
+
+    if (!$operator_event_is_active) {
+        $conn->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Event operator sedang non-aktif. Mode hanya lihat data.']);
+        exit;
+    }
 
     if ($challenge_has_event_id) {
         if ($operator_event_id <= 0) {

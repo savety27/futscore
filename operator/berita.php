@@ -43,11 +43,13 @@ $operator_id = (int)($_SESSION['admin_id'] ?? 0);
 $current_page = 'berita';
 $operator_event_name = 'Event Operator';
 $operator_event_image = '';
+$operator_event_is_active = true;
 
 if ($operator_id > 0) {
     try {
         $stmtOperator = $conn->prepare("
-            SELECT e.name AS event_name, e.image AS event_image
+            SELECT e.name AS event_name, e.image AS event_image,
+                   COALESCE(e.is_active, 1) AS event_is_active
             FROM admin_users au
             LEFT JOIN events e ON e.id = au.event_id
             WHERE au.id = ?
@@ -57,10 +59,13 @@ if ($operator_id > 0) {
         $operator_row = $stmtOperator->fetch(PDO::FETCH_ASSOC);
         $operator_event_name = trim((string)($operator_row['event_name'] ?? '')) !== '' ? (string)$operator_row['event_name'] : 'Event Operator';
         $operator_event_image = trim((string)($operator_row['event_image'] ?? ''));
+        $operator_event_is_active = ((int)($operator_row['event_is_active'] ?? 1) === 1);
     } catch (PDOException $e) {
         // keep defaults
     }
 }
+
+$operator_read_only = !$operator_event_is_active;
 
 
 // Handle search
@@ -1015,16 +1020,27 @@ body {
             </form>
             
             <div class="action-buttons">
-                <a href="berita_create.php" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Tambah Berita
-                </a>
-                <button class="btn btn-success" onclick="exportBerita()">
-                    <i class="fas fa-download"></i>
-                    Export Excel
-                </button>
+                <?php if (!$operator_read_only): ?>
+                    <a href="berita_create.php" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Tambah Berita
+                    </a>
+                <?php endif; ?>
+                <?php if (!$operator_read_only): ?>
+                    <button class="btn btn-success" onclick="exportBerita()">
+                        <i class="fas fa-download"></i>
+                        Export Excel
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
+
+        <?php if ($operator_read_only): ?>
+            <div class="alert alert-danger">
+                <i class="fas fa-lock"></i>
+                <span>Event Anda sedang non-aktif. Mode operator hanya lihat data.</span>
+            </div>
+        <?php endif; ?>
 
         <!-- FILTER CONTROLS -->
         <div class="filter-controls">
@@ -1057,6 +1073,13 @@ body {
         <div class="alert alert-success">
             <i class="fas fa-check-circle"></i>
             <span><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></span>
+        </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></span>
         </div>
         <?php endif; ?>
 
@@ -1140,16 +1163,18 @@ body {
                                        class="action-btn btn-view" title="View">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="berita_edit.php?id=<?php echo $b['id']; ?>" 
-                                       class="action-btn btn-edit" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button class="action-btn btn-delete" 
-                                            data-berita-id="<?php echo (int) $b['id']; ?>"
-                                            data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <?php if (!$operator_read_only): ?>
+                                        <a href="berita_edit.php?id=<?php echo $b['id']; ?>" 
+                                           class="action-btn btn-edit" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="action-btn btn-delete" 
+                                                data-berita-id="<?php echo (int) $b['id']; ?>"
+                                                data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -1163,10 +1188,12 @@ body {
                                     </div>
                                     <h3>Belum Ada Data Berita</h3>
                                     <p>Mulai dengan membuat berita pertama Anda menggunakan tombol "Buat Berita Baru" di atas.</p>
-                                    <a href="berita_create.php" class="btn btn-primary" style="margin-top: 20px;">
-                                        <i class="fas fa-plus"></i>
-                                        Buat Berita Pertama
-                                    </a>
+                                    <?php if (!$operator_read_only): ?>
+                                        <a href="berita_create.php" class="btn btn-primary" style="margin-top: 20px;">
+                                            <i class="fas fa-plus"></i>
+                                            Buat Berita Pertama
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
