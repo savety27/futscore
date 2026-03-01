@@ -24,13 +24,22 @@ if ($berita_id <= 0) {
 header('Content-Type: application/json');
 
 try {
-    // Get gambar path before deletion
-    $stmt = $conn->prepare("SELECT gambar FROM berita WHERE id = ?");
+    // Get berita data before deletion
+    $stmt = $conn->prepare("SELECT gambar, status FROM berita WHERE id = ?");
     $stmt->execute([$berita_id]);
     $berita = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$berita) {
         die(json_encode(['success' => false, 'message' => 'Berita not found']));
+    }
+
+    // Business rule: published berita cannot be deleted
+    if (($berita['status'] ?? '') === 'published') {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Berita dengan status Published tidak bisa dihapus.'
+        ]);
+        exit;
     }
     
     // Delete the berita

@@ -586,6 +586,13 @@ body {
     color: white;
 }
 
+.btn-delete-disabled {
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* Badge Styles */
 .badge {
     padding: 4px 8px;
@@ -1107,12 +1114,20 @@ body {
                                        class="action-btn btn-edit" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="action-btn btn-delete" 
-                                            data-berita-id="<?php echo (int) $b['id']; ?>"
-                                            data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <?php if (($b['status'] ?? '') === 'published'): ?>
+                                        <button class="action-btn btn-delete-disabled"
+                                                type="button"
+                                                title="Berita published tidak bisa dihapus">
+                                            <i class="fas fa-lock"></i>
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="action-btn btn-delete" 
+                                                data-berita-id="<?php echo (int) $b['id']; ?>"
+                                                data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -1227,6 +1242,26 @@ body {
                     <div style="color: var(--gray); font-size: 14px;">Total Views</div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Berita</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus berita <strong>"<span id="deleteBeritaTitle"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Hapus</button>
         </div>
     </div>
 </div>

@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if (empty($form_data['konten'])) {
-        $errors['konten'] = "Konten berita harus diisi";
+        $errors['konten'] = true;
     }
     
     if (empty($form_data['penulis'])) {
@@ -981,9 +981,6 @@ body {
                         <div class="char-count">
                             <span id="kontenCount">0</span> karakter
                         </div>
-                        <?php if (isset($errors['konten'])): ?>
-                            <span class="error"><?php echo $errors['konten']; ?></span>
-                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1299,46 +1296,79 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         let hasError = false;
+        let firstInvalidFieldId = null;
 
         if (!judul) {
-            markError('judul', 'Judul berita harus diisi');
+            markError('judul', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'judul';
         } else if (judul.length < 5) {
             markError('judul', 'Judul minimal 5 karakter');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'judul';
         } else if (judul.length > 200) {
-            markError('judul', 'Judul maksimal 200 karakter');
+            markError('judul', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'judul';
         }
 
         if (!konten) {
-            markError('konten', 'Konten berita harus diisi');
+            markError('konten', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'konten';
         }
 
         if (!penulis) {
-            markError('penulis', 'Penulis harus diisi');
+            markError('penulis', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'penulis';
         }
 
         if (hasError) {
             e.preventDefault();
-            toastr.error('Harap perbaiki kesalahan di form');
+            focusInvalidField(firstInvalidFieldId);
         }
     });
 
+    function focusInvalidField(fieldId) {
+        if (!fieldId) return;
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        // Summernote hides textarea; focus editable area instead.
+        if (fieldId === 'konten') {
+            const noteEditor = field.closest('.form-group')?.querySelector('.note-editor');
+            if (noteEditor) {
+                noteEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const editable = noteEditor.querySelector('.note-editable');
+                if (editable) {
+                    setTimeout(() => editable.focus(), 150);
+                    return;
+                }
+            }
+        }
+
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => field.focus(), 150);
+    }
+
     function markError(fieldId, message) {
         const field = document.getElementById(fieldId);
-        const errorSpan = field.nextElementSibling?.classList.contains('error') 
-            ? field.nextElementSibling 
+        const formGroup = field.closest('.form-group');
+        const existingError = formGroup ? formGroup.querySelector('.error') : null;
+        const errorSpan = existingError
+            ? formGroup.querySelector('.error')
             : document.createElement('span');
         
         field.classList.add('is-invalid');
-        errorSpan.className = 'error';
-        errorSpan.textContent = message;
-        
-        if (!field.nextElementSibling?.classList.contains('error')) {
-            field.parentNode.appendChild(errorSpan);
+        if (message) {
+            errorSpan.className = 'error';
+            errorSpan.textContent = message;
+            if (!existingError) {
+                field.parentNode.appendChild(errorSpan);
+            }
+        } else if (existingError) {
+            existingError.remove();
         }
     }
 
