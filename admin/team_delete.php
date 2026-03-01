@@ -103,9 +103,7 @@ try {
         ['table' => 'lineups', 'column' => 'team_id', 'label' => 'lineup'],
         ['table' => 'transfers', 'column' => 'from_team_id', 'label' => 'transfer'],
         ['table' => 'transfers', 'column' => 'to_team_id', 'label' => 'transfer'],
-        ['table' => 'team_events', 'column' => 'team_id', 'label' => 'event'],
         ['table' => 'match_staff_assignments', 'column' => 'team_id', 'label' => 'match_staff'],
-        ['table' => 'event_team_values', 'column' => 'team_id', 'label' => 'event_value'],
         ['table' => 'player_event_cards', 'column' => 'team_id', 'label' => 'event_card']
     ];
 

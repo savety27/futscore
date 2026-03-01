@@ -196,13 +196,46 @@ body {
     border: 1px solid var(--border);
     background: var(--surface);
     box-shadow: var(--shadow-sm);
-    transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
+    position: relative;
+    overflow: hidden;
+    will-change: transform;
 }
 
-.stat-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-md);
+.stat-card:hover,
+.stat-card:focus-within {
+    transform: translateY(-11px) scale(1.017);
+    box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
+    border-color: #8ebeff;
+}
+
+.stat-card:active {
+    transform: translateY(-4px) scale(1.008);
+}
+
+.stat-card.d-1:hover,
+.stat-card.d-1:focus-within {
+    transform: perspective(900px) translateY(-13px) translateZ(18px) scale(1.032);
+    box-shadow: 0 30px 60px rgba(30, 64, 175, 0.3), 0 0 0 4px rgba(76, 138, 255, 0.28);
+    border-color: #79abf5;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: -120%;
+    left: -35%;
+    width: 35%;
+    height: 300%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+    transform: rotate(14deg);
+    transition: transform 0.8s ease, left 0.8s ease;
+    pointer-events: none;
+}
+
+.stat-card:hover::before,
+.stat-card:focus-within::before {
+    left: 120%;
 }
 
 .stat-icon {
@@ -216,6 +249,14 @@ body {
     font-size: 1.25rem;
     color: var(--accent);
     background: var(--accent-soft);
+    transition: transform 0.28s ease, background-color 0.28s ease, color 0.28s ease;
+}
+
+.stat-card:hover .stat-icon,
+.stat-card:focus-within .stat-icon {
+    background: var(--accent);
+    color: #ffffff;
+    transform: translateY(-3px) scale(1.06);
 }
 
 .stat-card:nth-child(3) .stat-icon {
@@ -256,14 +297,39 @@ body {
     flex-direction: column;
     align-items: flex-start;
     text-align: left;
-    transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
+    position: relative;
+    overflow: hidden;
+    will-change: transform;
 }
 
 .action-card:hover,
 .action-card:focus-within {
-    transform: translateY(-3px);
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-11px) scale(1.017);
+    box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
+    border-color: #8ebeff;
+}
+
+.action-card:active {
+    transform: translateY(-4px) scale(1.008);
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: -120%;
+    left: -35%;
+    width: 35%;
+    height: 300%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+    transform: rotate(14deg);
+    transition: transform 0.8s ease, left 0.8s ease;
+    pointer-events: none;
+}
+
+.action-card:hover::before,
+.action-card:focus-within::before {
+    left: 120%;
 }
 
 .action-icon {
@@ -277,6 +343,14 @@ body {
     color: var(--accent);
     background: var(--accent-soft);
     font-size: 1.15rem;
+    transition: transform 0.28s ease, background-color 0.28s ease, color 0.28s ease;
+}
+
+.action-card:hover .action-icon,
+.action-card:focus-within .action-icon {
+    background: var(--accent);
+    color: #ffffff;
+    transform: translateY(-3px) scale(1.06);
 }
 
 .action-title {
@@ -385,6 +459,18 @@ body {
 
     .action-card {
         min-height: 220px;
+    }
+
+    .stat-card:hover,
+    .stat-card:focus-within,
+    .action-card:hover,
+    .action-card:focus-within {
+        transform: translateY(-4px) scale(1.006);
+    }
+
+    .stat-card.d-1:hover,
+    .stat-card.d-1:focus-within {
+        transform: translateY(-5px) scale(1.01);
     }
 }
 
