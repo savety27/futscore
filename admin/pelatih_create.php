@@ -1106,6 +1106,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmPasswordInput = document.getElementById('confirm_password');
     const passwordMatchStatus = document.getElementById('passwordMatchStatus');
 
+    function attachPasswordPasteGuard(inputEl) {
+        if (!inputEl) return;
+
+        inputEl.addEventListener('paste', function(e) {
+            var clipboard = e.clipboardData || window.clipboardData;
+            var pasted = clipboard ? (clipboard.getData('text') || '') : '';
+            var lowered = pasted.toLowerCase();
+            var suspicious = lowered.indexOf('<' + '?php') !== -1 || lowered.indexOf('<html') !== -1 || lowered.indexOf('<!doctype') !== -1;
+            var multiline = /[\r\n]/.test(pasted);
+            var tooLong = pasted.length > 256;
+
+            if (suspicious || multiline || tooLong) {
+                e.preventDefault();
+                this.value = '';
+                this.classList.add('is-invalid');
+                toastr.error('Silakan tulis ulang password di kolom ini.');
+                return;
+            }
+
+            this.classList.remove('is-invalid');
+        });
+    }
+
+    attachPasswordPasteGuard(passwordInput);
+    attachPasswordPasteGuard(confirmPasswordInput);
+
     function updatePasswordMatchStatus() {
         if (!passwordInput || !confirmPasswordInput || !passwordMatchStatus) return;
 
@@ -1233,7 +1259,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!field) return;
 
         const formGroup = field.closest('.form-group') || field.parentNode;
-        let errorSpan = formGroup.querySelector(`.error[data-field="${fieldId}"]`) || formGroup.querySelector('.error');
+        let errorSpan = formGroup.querySelector('.error[data-field="' + fieldId + '"]') || formGroup.querySelector('.error');
         if (!errorSpan) {
             errorSpan = document.createElement('span');
             errorSpan.className = 'error';
