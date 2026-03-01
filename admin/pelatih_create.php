@@ -846,7 +846,7 @@ body {
                                    placeholder="Masukkan username (min. 3 karakter)"
                                    required>
                             <?php if (isset($errors['username'])): ?>
-                                <span class="error"><?php echo $errors['username']; ?></span>
+                                <span class="error" data-field="username"><?php echo $errors['username']; ?></span>
                             <?php endif; ?>
                         </div>
                         
@@ -862,7 +862,7 @@ body {
                                    placeholder="contoh@email.com"
                                    required>
                             <?php if (isset($errors['email'])): ?>
-                                <span class="error"><?php echo $errors['email']; ?></span>
+                                <span class="error" data-field="email"><?php echo $errors['email']; ?></span>
                             <?php endif; ?>
                         </div>
                         
@@ -882,7 +882,7 @@ body {
                                 </button>
                             </div>
                             <?php if (isset($errors['password'])): ?>
-                                <span class="error"><?php echo $errors['password']; ?></span>
+                                <span class="error" data-field="password"><?php echo $errors['password']; ?></span>
                             <?php endif; ?>
                         </div>
                         
@@ -902,7 +902,7 @@ body {
                                 </button>
                             </div>
                             <?php if (isset($errors['confirm_password'])): ?>
-                                <span class="error"><?php echo $errors['confirm_password']; ?></span>
+                                <span class="error" data-field="confirm_password"><?php echo $errors['confirm_password']; ?></span>
                             <?php endif; ?>
                             <span id="passwordMatchStatus" class="password-match-status"></span>
                         </div>
@@ -928,7 +928,7 @@ body {
                                    placeholder="Masukkan nama lengkap"
                                    required>
                             <?php if (isset($errors['full_name'])): ?>
-                                <span class="error"><?php echo $errors['full_name']; ?></span>
+                                <span class="error" data-field="full_name"><?php echo $errors['full_name']; ?></span>
                             <?php endif; ?>
                         </div>
                         
@@ -943,7 +943,7 @@ body {
                                 <option value="superadmin" <?php echo $form_data['role'] == 'superadmin' ? 'selected' : ''; ?>>Super Admin</option>
                             </select>
                             <?php if (isset($errors['role'])): ?>
-                                <span class="error"><?php echo $errors['role']; ?></span>
+                                <span class="error" data-field="role"><?php echo $errors['role']; ?></span>
                             <?php endif; ?>
                             <small style="color: #666; display: block; margin-top: 5px;">
                                 Super Admin memiliki akses penuh. Pelatih terikat tim, Operator tidak wajib tim.
@@ -972,7 +972,7 @@ body {
                                 </select>
                             </div>
                             <?php if (isset($errors['team_id'])): ?>
-                                <span class="error"><?php echo $errors['team_id']; ?></span>
+                                <span class="error" data-field="team_id"><?php echo $errors['team_id']; ?></span>
                             <?php endif; ?>
                             <small style="color: #666; display: block; margin-top: 5px;">
                                 Tim wajib untuk Pelatih. Super Admin dan Operator tidak perlu memilih tim.
@@ -1001,7 +1001,7 @@ body {
                                 </select>
                             </div>
                             <?php if (isset($errors['event_id'])): ?>
-                                <span class="error"><?php echo $errors['event_id']; ?></span>
+                                <span class="error" data-field="event_id"><?php echo $errors['event_id']; ?></span>
                             <?php endif; ?>
                             <small style="color: #666; display: block; margin-top: 5px;">
                                 Event wajib untuk Operator. Pelatih dan Super Admin tidak perlu memilih event.
@@ -1140,6 +1140,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (passwordInput && confirmPasswordInput) {
+        const attachPasswordPasteGuard = (inputEl) => {
+            inputEl.addEventListener('paste', function(e) {
+                const pasted = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+                const suspicious = pasted.includes('<?php') || pasted.includes('<html') || pasted.includes('<!DOCTYPE');
+                const multiline = /[\r\n]/.test(pasted);
+                const tooLong = pasted.length > 256;
+
+                if (suspicious || multiline || tooLong) {
+                    e.preventDefault();
+                    this.value = '';
+                    this.classList.add('is-invalid');
+                    toastr.error('Silakan tulis ulang password di kolom ini.');
+                    return;
+                }
+
+                this.classList.remove('is-invalid');
+            });
+        };
+
+        attachPasswordPasteGuard(passwordInput);
+        attachPasswordPasteGuard(confirmPasswordInput);
         passwordInput.addEventListener('input', updatePasswordMatchStatus);
         confirmPasswordInput.addEventListener('input', updatePasswordMatchStatus);
         updatePasswordMatchStatus();
@@ -1233,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!field) return;
 
         const formGroup = field.closest('.form-group') || field.parentNode;
-        let errorSpan = formGroup.querySelector(`.error[data-field="${fieldId}"]`) || formGroup.querySelector('.error');
+        let errorSpan = formGroup.querySelector(`.error[data-field="${fieldId}"]`);
         if (!errorSpan) {
             errorSpan = document.createElement('span');
             errorSpan.className = 'error';
