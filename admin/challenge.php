@@ -616,6 +616,20 @@ body {
     color: white;
 }
 
+.btn-delete.is-disabled,
+.btn-delete:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-delete.is-disabled:hover,
+.btn-delete:disabled:hover {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
 .btn-view {
     background: rgba(10, 36, 99, 0.1);
     color: var(--primary);
@@ -955,6 +969,25 @@ body {
 </head>
 <body>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Challenge</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus challenge <strong>"<span id="deleteChallengeCode"></span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
+    </div>
+</div>
 
 <div class="wrapper">
     <?php include __DIR__ . '/includes/sidebar.php'; ?>
@@ -1176,10 +1209,18 @@ body {
                                         <i class="fas fa-futbol"></i>
                                     </a>
                                     <!-- TOMBOL DELETE SELALU TAMPIL -->
-                                    <button class="action-btn btn-delete" 
+                                    <?php
+                                    $canDeleteChallenge = strtolower(trim((string)($challenge['status'] ?? ''))) === 'open';
+                                    $deleteBtnClass = 'action-btn btn-delete' . ($canDeleteChallenge ? '' : ' is-disabled');
+                                    ?>
+                                    <button class="<?php echo $deleteBtnClass; ?>" 
+                                            type="button"
                                             data-challenge-id="<?php echo (int) $challenge['id']; ?>"
                                             data-challenge-code="<?php echo htmlspecialchars($challenge['challenge_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
+                                            <?php if (!$canDeleteChallenge): ?>
+                                            disabled
+                                            <?php endif; ?>
+                                            title="<?php echo $canDeleteChallenge ? 'Delete' : 'Hanya challenge status OPEN yang dapat dihapus'; ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
