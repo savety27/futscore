@@ -1054,6 +1054,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Jalankan saat role berubah
     roleSelect.addEventListener('change', toggleRoleFields);
 
+    // Password visibility toggle
+    document.querySelectorAll('.toggle-password').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            if (!targetId) {
+                return;
+            }
+
+            const passwordField = document.getElementById(targetId);
+            if (!passwordField) {
+                return;
+            }
+
+            const isPasswordType = passwordField.type === 'password';
+            passwordField.type = isPasswordType ? 'text' : 'password';
+
+            const icon = this.querySelector('i');
+            if (!icon) {
+                return;
+            }
+
+            icon.classList.remove(isPasswordType ? 'fa-eye' : 'fa-eye-slash');
+            icon.classList.add(isPasswordType ? 'fa-eye-slash' : 'fa-eye');
+        });
+    });
+
     // Form Validation
     const form = document.getElementById('pelatihForm');
     form.addEventListener('submit', function(e) {
