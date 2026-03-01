@@ -26,17 +26,53 @@ try {
         $result->close();
     }
 
-    $half_select = $has_half_column ? 'l.half' : 'NULL as half';
+    $has_goals_table = false;
+    if ($result = $conn->query("SHOW TABLES LIKE 'goals'")) {
+        $has_goals_table = $result->num_rows > 0;
+        $result->close();
+    }
+
+    $stmt_player = $conn->prepare("SELECT team_id FROM players WHERE id = ? LIMIT 1");
+    if (!$stmt_player) {
+        throw new Exception('Gagal menyiapkan query pemain.');
+    }
+    $stmt_player->bind_param('i', $player_id);
+    $stmt_player->execute();
+    $res_player = $stmt_player->get_result();
+    $player_row = $res_player ? $res_player->fetch_assoc() : null;
+    $stmt_player->close();
+
+    if (!$player_row) {
+        echo json_encode(['success' => false, 'message' => 'Pemain tidak ditemukan.']);
+        exit;
+    }
+    $player_team_id = (int)($player_row['team_id'] ?? 0);
+
+    $lineup_half_select = $has_half_column
+        ? "MIN(CASE WHEN l.half IN (1, 2) THEN l.half ELSE NULL END) AS half,"
+        : "NULL AS half,";
+
+    $goals_join = $has_goals_table
+        ? "LEFT JOIN (
+                SELECT
+                    g.match_id,
+                    COUNT(*) AS goal_count
+                FROM goals g
+                WHERE g.player_id = ?
+                GROUP BY g.match_id
+           ) gs ON gs.match_id = c.id"
+        : "LEFT JOIN (
+                SELECT
+                    NULL AS match_id,
+                    0 AS goal_count
+           ) gs ON 1=0";
+
     $event_name_select = $has_event_id_column
-        ? "TRIM(e.name) AS event_name,"
-        : "'' AS event_name,";
+        ? "CASE WHEN e.name IS NULL OR TRIM(e.name) = '' THEN 'Tanpa Event' ELSE TRIM(e.name) END AS event_name,"
+        : "'Tanpa Event' AS event_name,";
     $event_join = $has_event_id_column ? "LEFT JOIN events e ON c.event_id = e.id" : "";
     $sql = "
         SELECT
-            l.player_id,
-            l.is_starting,
-            l.position,
-            $half_select,
             $event_name_select
             c.id AS challenge_id,
             c.challenge_code,
@@ -49,29 +85,58 @@ try {
             c.opponent_score,
             t1.name AS challenger_name,
             t2.name AS opponent_name,
-            p.team_id AS player_team_id
-        FROM lineups l
-        INNER JOIN challenges c ON l.match_id = c.id
+            COALESCE(ls.is_starting, 0) AS is_starting,
+            COALESCE(ls.position, '') AS position,
+            ls.half,
+            COALESCE(ls.lineup_count, 0) AS lineup_count,
+            COALESCE(gs.goal_count, 0) AS goal_count
+        FROM challenges c
         $event_join
         INNER JOIN teams t1 ON c.challenger_id = t1.id
         INNER JOIN teams t2 ON c.opponent_id = t2.id
-        INNER JOIN players p ON l.player_id = p.id
-        WHERE l.player_id = ?
-        ORDER BY c.challenge_date DESC, l.id DESC
+        LEFT JOIN (
+            SELECT
+                l.match_id,
+                MAX(COALESCE(l.is_starting, 0)) AS is_starting,
+                SUBSTRING_INDEX(
+                    GROUP_CONCAT(
+                        NULLIF(TRIM(l.position), '')
+                        ORDER BY COALESCE(l.is_starting, 0) DESC, l.id DESC
+                        SEPARATOR '||'
+                    ),
+                    '||',
+                    1
+                ) AS position,
+                $lineup_half_select
+                COUNT(*) AS lineup_count
+            FROM lineups l
+            WHERE l.player_id = ?
+            GROUP BY l.match_id
+        ) ls ON ls.match_id = c.id
+        $goals_join
+        WHERE (
+            ls.match_id IS NOT NULL
+            OR gs.match_id IS NOT NULL
+        )
+          AND c.status IN ('accepted', 'completed')
+        ORDER BY c.challenge_date DESC, c.id DESC
     ";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         throw new Exception('Gagal menyiapkan query.');
     }
-    $stmt->bind_param('i', $player_id);
+    if ($has_goals_table) {
+        $stmt->bind_param('ii', $player_id, $player_id);
+    } else {
+        $stmt->bind_param('i', $player_id);
+    }
     $stmt->execute();
     $res = $stmt->get_result();
 
     $matches = [];
     $event_counter = [];
     while ($row = $res->fetch_assoc()) {
-        $player_team_id = (int) $row['player_team_id'];
         $player_team_side = null;
         if ($player_team_id === (int) $row['challenger_id']) {
             $player_team_side = 'challenger';
@@ -90,11 +155,29 @@ try {
         }
 
         $event_name = trim((string) ($row['event_name'] ?? ''));
-        if ($event_name !== '') {
-            if (!isset($event_counter[$event_name])) {
-                $event_counter[$event_name] = 0;
+        if ($event_name === '') {
+            $event_name = 'Tanpa Event';
+        }
+        if (!isset($event_counter[$event_name])) {
+            $event_counter[$event_name] = 0;
+        }
+        $event_counter[$event_name]++;
+
+        $lineup_count = (int)($row['lineup_count'] ?? 0);
+        $goal_count = (int)($row['goal_count'] ?? 0);
+        $appearance_source = 'team';
+        if ($lineup_count > 0) {
+            $appearance_source = 'lineup';
+        } elseif ($goal_count > 0) {
+            $appearance_source = 'goal';
+        }
+
+        $half_value = null;
+        if ($row['half'] !== null) {
+            $half_candidate = (int)$row['half'];
+            if ($half_candidate === 1 || $half_candidate === 2) {
+                $half_value = $half_candidate;
             }
-            $event_counter[$event_name]++;
         }
 
         $matches[] = [
@@ -113,9 +196,11 @@ try {
             'opponent_score' => $row['opponent_score'],
             'player_team_id' => $player_team_id,
             'player_team_side' => $player_team_side,
-            'is_starting' => (int) $row['is_starting'],
-            'position' => $row['position'] ?? '',
-            'half' => $row['half'] !== null ? (int) $row['half'] : null,
+            'is_starting' => $appearance_source === 'lineup' ? (int) $row['is_starting'] : null,
+            'position' => $appearance_source === 'lineup' ? (string)($row['position'] ?? '') : '',
+            'half' => $appearance_source === 'lineup' ? $half_value : null,
+            'appearance_source' => $appearance_source,
+            'goal_count' => $goal_count,
         ];
     }
 

@@ -37,6 +37,11 @@ function parseMatchDurationMinutes($raw): int
 }
 
 try {
+    $normalizedSportType = trim((string)$sportType);
+    $hasSportTypeFilter = ($normalizedSportType !== '');
+    $eventScopeSql = "c.event_id = ?";
+    $eventScopeParams = [$eventId];
+
     // 1. Get Team Info
     $stmtTeam = $conn->prepare("SELECT id, name, logo FROM teams WHERE id = ?");
     $stmtTeam->execute([$teamId]);
@@ -77,12 +82,22 @@ try {
     $players = $stmtPlayers->fetchAll(PDO::FETCH_ASSOC);
 
     // 4. Get Player Goals
-    $stmtGoals = $conn->prepare("SELECT g.player_id, COUNT(g.id) AS total_goals 
-                                 FROM goals g 
-                                 INNER JOIN challenges c ON g.match_id = c.id 
-                                 WHERE c.event_id = ? AND g.team_id = ? AND c.status IN ('accepted', 'completed')
-                                 GROUP BY g.player_id");
-    $stmtGoals->execute([$eventId, $teamId]);
+    $goalsSql = "SELECT g.player_id, COUNT(g.id) AS total_goals 
+                 FROM goals g 
+                 INNER JOIN challenges c ON g.match_id = c.id 
+                 WHERE {$eventScopeSql}
+                   AND g.team_id = ?
+                   AND c.status IN ('accepted', 'completed')";
+    if ($hasSportTypeFilter) {
+        $goalsSql .= " AND LOWER(TRIM(c.sport_type)) = LOWER(TRIM(?))";
+    }
+    $goalsSql .= " GROUP BY g.player_id";
+    $stmtGoals = $conn->prepare($goalsSql);
+    $goalsParams = array_merge($eventScopeParams, [$teamId]);
+    if ($hasSportTypeFilter) {
+        $goalsParams[] = $normalizedSportType;
+    }
+    $stmtGoals->execute($goalsParams);
     $goalsMap = [];
     while ($row = $stmtGoals->fetch(PDO::FETCH_ASSOC)) {
         $goalsMap[$row['player_id']] = (int)$row['total_goals'];
@@ -119,21 +134,41 @@ try {
         ];
     }
 
-    // 6. Per-player match count from lineups (how many matches each player actually played in this event)
+    // 6. Per-player match count in this event/category.
+    // Count participation from lineups, and fallback to goals if lineup rows are missing.
     $mcSql = "
-        SELECT l.player_id, COUNT(DISTINCT l.match_id) AS match_count
-        FROM lineups l
-        INNER JOIN challenges c ON l.match_id = c.id
-        WHERE c.event_id = ?
-          AND l.team_id  = ?
-          AND c.status IN ('accepted', 'completed')
+        SELECT src.player_id, COUNT(DISTINCT src.match_id) AS match_count
+        FROM (
+            SELECT l.player_id, l.match_id
+            FROM lineups l
+            INNER JOIN challenges c ON l.match_id = c.id
+            WHERE {$eventScopeSql}
+              AND c.status IN ('accepted', 'completed')
+              AND l.team_id = ?
     ";
-    $mcParams = [$eventId, $teamId];
-    if ($sportType !== '') {
-        $mcSql   .= " AND c.sport_type = ?";
-        $mcParams[] = $sportType;
+    $mcParams = array_merge($eventScopeParams, [$teamId]);
+    if ($hasSportTypeFilter) {
+        $mcSql   .= " AND LOWER(TRIM(c.sport_type)) = LOWER(TRIM(?))";
+        $mcParams[] = $normalizedSportType;
     }
-    $mcSql .= " GROUP BY l.player_id";
+    $mcSql .= "
+            UNION
+            SELECT g.player_id, g.match_id
+            FROM goals g
+            INNER JOIN challenges c ON g.match_id = c.id
+            WHERE {$eventScopeSql}
+              AND c.status IN ('accepted', 'completed')
+              AND g.team_id = ?
+    ";
+    $mcParams = array_merge($mcParams, $eventScopeParams, [$teamId]);
+    if ($hasSportTypeFilter) {
+        $mcSql   .= " AND LOWER(TRIM(c.sport_type)) = LOWER(TRIM(?))";
+        $mcParams[] = $normalizedSportType;
+    }
+    $mcSql .= "
+        ) src
+        GROUP BY src.player_id
+    ";
     $stmtMatchCount = $conn->prepare($mcSql);
     $stmtMatchCount->execute($mcParams);
     $matchCountMap = [];
@@ -156,7 +191,7 @@ try {
                    MAX(c.match_duration) AS match_duration
             FROM lineups l
             INNER JOIN challenges c ON l.match_id = c.id
-            WHERE c.event_id = ?
+            WHERE {$eventScopeSql}
               AND l.team_id = ?
               AND c.status IN ('accepted', 'completed')
         ";
@@ -168,15 +203,15 @@ try {
                    MAX(c.match_duration) AS match_duration
             FROM lineups l
             INNER JOIN challenges c ON l.match_id = c.id
-            WHERE c.event_id = ?
+            WHERE {$eventScopeSql}
               AND l.team_id = ?
               AND c.status IN ('accepted', 'completed')
         ";
     }
-    $ptParams = [$eventId, $teamId];
-    if ($sportType !== '') {
-        $ptSql .= " AND c.sport_type = ?";
-        $ptParams[] = $sportType;
+    $ptParams = array_merge($eventScopeParams, [$teamId]);
+    if ($hasSportTypeFilter) {
+        $ptSql .= " AND LOWER(TRIM(c.sport_type)) = LOWER(TRIM(?))";
+        $ptParams[] = $normalizedSportType;
     }
     $ptSql .= " GROUP BY l.player_id, l.match_id";
 

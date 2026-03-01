@@ -1357,7 +1357,7 @@ if ($eventId > 0 && !empty($event)) {
                                         <div style="margin-top:20px;">
                                             <div class="top-scorer-grid">
                                                 <?php foreach ($eventTopScorersByCategory[$categoryName] as $scorer): ?>
-                                                    <div class="top-scorer-card">
+                                                    <a href="player.php?id=<?php echo (int) ($scorer['player_id'] ?? 0); ?>#player-detail" class="top-scorer-card" aria-label="Lihat profil <?php echo htmlspecialchars($scorer['player_name']); ?>">
                                                         <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                                                         <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
                                                         <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
@@ -1373,7 +1373,7 @@ if ($eventId > 0 && !empty($event)) {
                                                         <div class="top-scorer-goals">
                                                             <i class="fas fa-futbol"></i> <?php echo (int) $scorer['total_goals']; ?> goal
                                                         </div>
-                                                    </div>
+                                                    </a>
                                                 <?php endforeach; ?>
                                             </div>
                                         </div>
@@ -1565,7 +1565,7 @@ if ($eventId > 0 && !empty($event)) {
                                     <h4 style="margin: 12px 0 10px 0; color:#0f172a;"><?php echo htmlspecialchars($categoryName); ?></h4>
                                     <div class="top-scorer-grid" style="margin-bottom:14px;">
                                         <?php foreach ($eventTopScorersLigaByCategory[$categoryName] as $scorer): ?>
-                                            <div class="top-scorer-card">
+                                            <a href="player.php?id=<?php echo (int) ($scorer['player_id'] ?? 0); ?>#player-detail" class="top-scorer-card" aria-label="Lihat profil <?php echo htmlspecialchars($scorer['player_name']); ?>">
                                                 <img src="<?php echo SITE_URL; ?>/images/players/<?php echo htmlspecialchars($scorer['player_photo'] ?: 'default-player.jpg'); ?>" alt="Photo" class="top-scorer-photo" onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
                                                 <div class="top-scorer-name" title="<?php echo htmlspecialchars($scorer['player_name']); ?>"><?php echo htmlspecialchars($scorer['player_name']); ?></div>
                                                 <div class="top-scorer-team" title="<?php echo htmlspecialchars($scorer['team_name']); ?>">
@@ -1581,7 +1581,7 @@ if ($eventId > 0 && !empty($event)) {
                                                 <div class="top-scorer-goals">
                                                     <i class="fas fa-futbol"></i> <?php echo (int) $scorer['total_goals']; ?> goal
                                                 </div>
-                                            </div>
+                                            </a>
                                         <?php endforeach; ?>
                                     </div>
                                 <?php endforeach; ?>
