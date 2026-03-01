@@ -22,7 +22,7 @@ SET @global_unique_name_index = (
 
 SET @drop_global_unique_name_sql = IF(
     @global_unique_name_index IS NULL,
-    'SELECT 1',
+    'DO 1',
     CONCAT('ALTER TABLE players DROP INDEX `', REPLACE(@global_unique_name_index, '`', '``'), '`')
 );
 
@@ -48,7 +48,7 @@ SET @has_unique_player_team_name = (
 SET @create_unique_player_team_name_sql = IF(
     @has_unique_player_team_name = 0,
     'ALTER TABLE players ADD CONSTRAINT uq_players_team_name UNIQUE (team_id, name)',
-    'SELECT 1'
+    'DO 1'
 );
 
 PREPARE create_unique_player_team_name_stmt FROM @create_unique_player_team_name_sql;

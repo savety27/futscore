@@ -136,10 +136,12 @@ assertSafeDatabaseName($database);
 
 $baseDsn = sprintf('mysql:host=%s;port=%s;charset=utf8mb4', $host, $port);
 
+// Buffer mysql result sets so sequential script statements cannot trip SQLSTATE 2014.
 $basePdo = new PDO($baseDsn, $username, $password, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES => false,
+    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
 ]);
 
 $basePdo->exec(sprintf(
@@ -157,6 +159,7 @@ $dbPdo = new PDO($dbDsn, $username, $password, [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES => false,
+    PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
 ]);
 
 $projectRoot = dirname(__DIR__, 2);
