@@ -1477,6 +1477,21 @@ if ($eventId > 0 && !empty($event)) {
                                     $sf2Done = ((string) ($sf2Outcome['status'] ?? '') === 'done');
                                     $finalDone = ((string) ($finalOutcome['status'] ?? '') === 'done');
                                     $thirdDone = ((string) ($thirdOutcome['status'] ?? '') === 'done');
+
+                                    // Rank labels must follow winners, not fixed top/bottom rows.
+                                    $finalTopRankText = '1st';
+                                    $finalBottomRankText = '2nd';
+                                    if ($finalDone && (int)($finalOutcome['winner'] ?? 0) === $finalTeam2) {
+                                        $finalTopRankText = '2nd';
+                                        $finalBottomRankText = '1st';
+                                    }
+
+                                    $thirdTopRankText = '3rd';
+                                    $thirdBottomRankText = '4th';
+                                    if ($thirdDone && (int)($thirdOutcome['winner'] ?? 0) === $thirdTeam2) {
+                                        $thirdTopRankText = '4th';
+                                        $thirdBottomRankText = '3rd';
+                                    }
                                     ?>
                                     <div class="event-bracket-wrap">
                                         <h4 class="event-bracket-title"><?php echo htmlspecialchars($categoryName); ?></h4>
@@ -1513,8 +1528,8 @@ if ($eventId > 0 && !empty($event)) {
                                                     <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $finalTeam2, $finalChallengeId, (int)$eventId); ?></div>
                                                     <div class="evb-score <?php echo $finalDone && (int) ($finalOutcome['winner'] ?? 0) === $finalTeam2 ? 'green' : 'red'; ?>"><?php echo $finalScore2 !== null ? (int) $finalScore2 : '-'; ?></div>
                                                 </div>
-                                                <span class="evb-rank first">1st</span>
-                                                <span class="evb-rank second">2nd</span>
+                                                <span class="evb-rank first"><?php echo $finalTopRankText; ?></span>
+                                                <span class="evb-rank second"><?php echo $finalBottomRankText; ?></span>
                                             </div>
 
                                             <div class="evb-match" style="left:460px; top:380px;">
@@ -1526,8 +1541,8 @@ if ($eventId > 0 && !empty($event)) {
                                                     <div class="evb-name"><?php echo renderBracketTeamLabelPublic($teamMap, $teamLogoMap, $thirdTeam2, $thirdChallengeId, (int)$eventId); ?></div>
                                                     <div class="evb-score <?php echo $thirdDone && (int) ($thirdOutcome['winner'] ?? 0) === $thirdTeam2 ? 'green' : 'red'; ?>"><?php echo $thirdScore2 !== null ? (int) $thirdScore2 : '-'; ?></div>
                                                 </div>
-                                                <span class="evb-rank third">3rd</span>
-                                                <span class="evb-rank fourth">4th</span>
+                                                <span class="evb-rank third"><?php echo $thirdTopRankText; ?></span>
+                                                <span class="evb-rank fourth"><?php echo $thirdBottomRankText; ?></span>
                                             </div>
 
                                             <div class="evb-line gold" style="left:270px; top:84px; width:90px; border-top-width:3px;"></div>

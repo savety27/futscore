@@ -479,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         sf2_team1_id, sf2_team2_id, sf2_challenge_id, sf2_score1, sf2_score2,
                                         final_challenge_id, final_score1, final_score2,
                                         third_challenge_id, third_score1, third_score2
-                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                     ON DUPLICATE KEY UPDATE
                                         sf1_team1_id = VALUES(sf1_team1_id),
                                         sf1_team2_id = VALUES(sf1_team2_id),
@@ -1038,6 +1038,19 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                         $vSf2Done = ((string)($vSf2Outcome['status'] ?? '') === 'done');
                         $vFinalDone = ((string)($vFinalOutcome['status'] ?? '') === 'done');
                         $vThirdDone = ((string)($vThirdOutcome['status'] ?? '') === 'done');
+
+                        $vFinalTopRankText = '1st';
+                        $vFinalBottomRankText = '2nd';
+                        if ($vFinalDone && (int)($vFinalOutcome['winner'] ?? 0) === $vFinalTeam2) {
+                            $vFinalTopRankText = '2nd';
+                            $vFinalBottomRankText = '1st';
+                        }
+                        $vThirdTopRankText = '3rd';
+                        $vThirdBottomRankText = '4th';
+                        if ($vThirdDone && (int)($vThirdOutcome['winner'] ?? 0) === $vThirdTeam2) {
+                            $vThirdTopRankText = '4th';
+                            $vThirdBottomRankText = '3rd';
+                        }
                         ?>
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin:8px 0 10px;">
                             <div class="match-title" style="margin:0;"><?php echo htmlspecialchars($vCategory); ?></div>
@@ -1078,8 +1091,8 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                                         <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vFinalTeam2); ?></div>
                                         <div class="d-score <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam2 ? 'green' : 'red'; ?>"><?php echo $vFinalScore2 !== null ? (int)$vFinalScore2 : '-'; ?></div>
                                     </div>
-                                    <span class="d-rank first" style="animation-delay:.35s;">1st</span>
-                                    <span class="d-rank second" style="animation-delay:.4s;">2nd</span>
+                                    <span class="d-rank first" style="animation-delay:.35s;"><?php echo $vFinalTopRankText; ?></span>
+                                    <span class="d-rank second" style="animation-delay:.4s;"><?php echo $vFinalBottomRankText; ?></span>
                                 </div>
                                 <div class="d-match" style="left:460px; top:380px; animation-delay:.3s;">
                                     <div class="d-row <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vThirdTeam1; ?>">
@@ -1090,8 +1103,8 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                                         <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vThirdTeam2); ?></div>
                                         <div class="d-score <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam2 ? 'green' : 'red'; ?>"><?php echo $vThirdScore2 !== null ? (int)$vThirdScore2 : '-'; ?></div>
                                     </div>
-                                    <span class="d-rank third" style="animation-delay:.45s;">3rd</span>
-                                    <span class="d-rank fourth" style="animation-delay:.5s;">4th</span>
+                                    <span class="d-rank third" style="animation-delay:.45s;"><?php echo $vThirdTopRankText; ?></span>
+                                    <span class="d-rank fourth" style="animation-delay:.5s;"><?php echo $vThirdBottomRankText; ?></span>
                                 </div>
                                 <div class="d-line gold" style="left:270px; top:84px; width:90px; border-top-width:3px; animation-delay:.28s;"></div>
                                 <div class="d-line gold" style="left:360px; top:84px; height:92px; border-right-width:3px; animation-delay:.32s;"></div>
@@ -1236,6 +1249,19 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                         $sf2Done = ((string)$sf2Outcome['status'] === 'done');
                         $finalDone = ((string)$finalOutcome['status'] === 'done');
                         $thirdDone = ((string)$thirdOutcome['status'] === 'done');
+
+                        $finalTopRankText = '1st';
+                        $finalBottomRankText = '2nd';
+                        if ($finalDone && (int)$finalOutcome['winner'] === $finalTeam2) {
+                            $finalTopRankText = '2nd';
+                            $finalBottomRankText = '1st';
+                        }
+                        $thirdTopRankText = '3rd';
+                        $thirdBottomRankText = '4th';
+                        if ($thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2) {
+                            $thirdTopRankText = '4th';
+                            $thirdBottomRankText = '3rd';
+                        }
                         ?>
                         <div class="d-match" style="left:10px; top:48px; animation-delay:.05s;">
                             <div class="d-row <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$sf1Team1; ?>">
@@ -1268,8 +1294,8 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                                 <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $finalTeam2); ?></div>
                                 <div class="d-score <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam2 ? 'green' : 'red'; ?>"><?php echo $finalScore2 !== null ? (int)$finalScore2 : '-'; ?></div>
                             </div>
-                            <span class="d-rank first" style="animation-delay:.35s;">1st</span>
-                            <span class="d-rank second" style="animation-delay:.4s;">2nd</span>
+                            <span class="d-rank first" style="animation-delay:.35s;"><?php echo $finalTopRankText; ?></span>
+                            <span class="d-rank second" style="animation-delay:.4s;"><?php echo $finalBottomRankText; ?></span>
                         </div>
 
                         <div class="d-match" style="left:460px; top:380px; animation-delay:.3s;">
@@ -1281,8 +1307,8 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                                 <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $thirdTeam2); ?></div>
                                 <div class="d-score <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2 ? 'green' : 'red'; ?>"><?php echo $thirdScore2 !== null ? (int)$thirdScore2 : '-'; ?></div>
                             </div>
-                            <span class="d-rank third" style="animation-delay:.45s;">3rd</span>
-                            <span class="d-rank fourth" style="animation-delay:.5s;">4th</span>
+                            <span class="d-rank third" style="animation-delay:.45s;"><?php echo $thirdTopRankText; ?></span>
+                            <span class="d-rank fourth" style="animation-delay:.5s;"><?php echo $thirdBottomRankText; ?></span>
                         </div>
 
                         <div class="d-line gold" style="left:270px; top:84px; width:90px; border-top-width:3px; animation-delay:.28s;"></div>
