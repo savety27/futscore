@@ -684,6 +684,8 @@ body {
 /* Password Toggle */
 .password-toggle {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .password-toggle input {
@@ -692,7 +694,7 @@ body {
 
 .toggle-password {
     position: absolute;
-    right: 15px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -700,10 +702,41 @@ body {
     color: var(--gray);
     cursor: pointer;
     font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    z-index: 2;
+}
+
+.toggle-password i {
+    display: block;
+    line-height: 1;
+    pointer-events: none;
 }
 
 .toggle-password:hover {
     color: var(--primary);
+}
+
+.password-match-status {
+    display: none;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.password-match-status.match {
+    display: block;
+    color: var(--success);
+}
+
+.password-match-status.mismatch {
+    display: block;
+    color: var(--danger);
 }
 
 /* Password Notice */
@@ -880,6 +913,7 @@ body {
                             <?php if (isset($errors['confirm_password'])): ?>
                                 <span class="error"><?php echo $errors['confirm_password']; ?></span>
                             <?php endif; ?>
+                            <span id="passwordMatchStatus" class="password-match-status"></span>
                         </div>
                     </div>
                 </div>
@@ -911,11 +945,15 @@ body {
                             <label class="form-label" for="role">
                                 Role <span class="required">*</span>
                             </label>
-                             <select id="role" name="role" class="form-select" required>
+                             <select id="role" name="role" class="form-select <?php echo isset($errors['role']) ? 'is-invalid' : ''; ?>" required>
+                                 <option value="" <?php echo ($pelatih_data['role'] ?? '') === '' ? 'selected' : ''; ?> disabled>-- Pilih Role --</option>
                                  <option value="pelatih" <?php echo ($pelatih_data['role'] == 'pelatih' || $pelatih_data['role'] == 'editor') ? 'selected' : ''; ?>>Pelatih</option>
                                  <option value="operator" <?php echo $pelatih_data['role'] == 'operator' ? 'selected' : ''; ?>>Operator</option>
                                  <option value="superadmin" <?php echo $pelatih_data['role'] == 'superadmin' ? 'selected' : ''; ?>>Super Admin</option>
                              </select>
+                            <?php if (isset($errors['role'])): ?>
+                                <span class="error"><?php echo $errors['role']; ?></span>
+                            <?php endif; ?>
                              <small style="color: #666; display: block; margin-top: 5px;">
                                  Super Admin: akses penuh. Pelatih: wajib tim. Operator: tidak wajib tim.
                              </small>
@@ -1054,6 +1092,69 @@ document.addEventListener('DOMContentLoaded', function() {
     // Jalankan saat role berubah
     roleSelect.addEventListener('change', toggleRoleFields);
 
+    // Toggle show/hide password
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            const icon = this.querySelector('i');
+            const isPassword = input.type === 'password';
+
+            input.type = isPassword ? 'text' : 'password';
+
+            if (icon) {
+                icon.classList.toggle('fa-eye', !isPassword);
+                icon.classList.toggle('fa-eye-slash', isPassword);
+            }
+        });
+    });
+
+    // Live password match indicator
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const passwordMatchStatus = document.getElementById('passwordMatchStatus');
+
+    function updatePasswordMatchStatus() {
+        if (!passwordInput || !confirmPasswordInput || !passwordMatchStatus) return;
+
+        const passwordVal = passwordInput.value;
+        const confirmVal = confirmPasswordInput.value;
+        const formGroup = confirmPasswordInput.closest('.form-group');
+        const existingError = formGroup ? formGroup.querySelector('.error[data-field="confirm_password"]') : null;
+
+        if (!passwordVal && !confirmVal) {
+            passwordMatchStatus.textContent = '';
+            passwordMatchStatus.className = 'password-match-status';
+            confirmPasswordInput.classList.remove('is-invalid');
+            if (existingError) existingError.remove();
+            return;
+        }
+
+        if (passwordVal && confirmVal && passwordVal === confirmVal) {
+            passwordMatchStatus.textContent = 'Password cocok';
+            passwordMatchStatus.className = 'password-match-status match';
+            confirmPasswordInput.classList.remove('is-invalid');
+            if (existingError) existingError.remove();
+        } else if (confirmVal) {
+            passwordMatchStatus.textContent = 'Password tidak cocok';
+            passwordMatchStatus.className = 'password-match-status mismatch';
+            confirmPasswordInput.classList.add('is-invalid');
+        } else {
+            passwordMatchStatus.textContent = '';
+            passwordMatchStatus.className = 'password-match-status';
+            confirmPasswordInput.classList.remove('is-invalid');
+            if (existingError) existingError.remove();
+        }
+    }
+
+    if (passwordInput && confirmPasswordInput) {
+        passwordInput.addEventListener('input', updatePasswordMatchStatus);
+        confirmPasswordInput.addEventListener('input', updatePasswordMatchStatus);
+        updatePasswordMatchStatus();
+    }
+
     // Form Validation
     const form = document.getElementById('pelatihForm');
     form.addEventListener('submit', function(e) {
@@ -1069,6 +1170,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear previous error highlights
         document.querySelectorAll('.is-invalid').forEach(el => {
             el.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.error[data-field]').forEach(el => {
+            el.remove();
         });
 
         let hasError = false;
@@ -1127,17 +1231,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function markError(fieldId, message) {
         const field = document.getElementById(fieldId);
-        const errorSpan = field.nextElementSibling?.classList.contains('error') 
-            ? field.nextElementSibling 
-            : document.createElement('span');
-        
-        field.classList.add('is-invalid');
-        errorSpan.className = 'error';
-        errorSpan.textContent = message;
-        
-        if (!field.nextElementSibling?.classList.contains('error')) {
-            field.parentNode.appendChild(errorSpan);
+        if (!field) return;
+
+        const formGroup = field.closest('.form-group') || field.parentNode;
+        let errorSpan = formGroup.querySelector(`.error[data-field="${fieldId}"]`) || formGroup.querySelector('.error');
+        if (!errorSpan) {
+            errorSpan = document.createElement('span');
+            errorSpan.className = 'error';
+            formGroup.appendChild(errorSpan);
         }
+        
+        errorSpan.dataset.field = fieldId;
+        field.classList.add('is-invalid');
+        errorSpan.textContent = message;
     }
 
     function isValidEmail(email) {

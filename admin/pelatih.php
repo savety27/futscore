@@ -1129,6 +1129,7 @@ body {
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button class="action-btn btn-delete" 
+                                            type="button"
                                             data-pelatih-id="<?php echo (int) $p['id']; ?>"
                                             data-pelatih-name="<?php echo htmlspecialchars($p['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                             title="Delete">
@@ -1193,6 +1194,26 @@ body {
             <?php endif; ?>
         </div>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Konfirmasi Hapus Pelatih</h3>
+        </div>
+        <div class="modal-body">
+            <p>Apakah Anda yakin ingin menghapus akun pelatih <strong>"<span id="deletePelatihName">-</span>"</strong>?</p>
+            <p style="color: var(--danger); font-weight: 600; margin-top: 10px;">
+                <i class="fas fa-exclamation-circle"></i> Data yang dihapus tidak dapat dikembalikan!
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Hapus</button>
+        </div>
     </div>
 </div>
 

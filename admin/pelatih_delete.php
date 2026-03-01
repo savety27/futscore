@@ -17,8 +17,13 @@ if (!isset($_SESSION['admin_logged_in'])) {
 // Set header for JSON response
 header('Content-Type: application/json');
 
-// Get pelatih ID
-$pelatih_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if (!isset($conn) || !$conn) {
+    echo json_encode(['success' => false, 'message' => 'Koneksi database gagal']);
+    exit;
+}
+
+// Get pelatih ID (support GET/POST)
+$pelatih_id = isset($_REQUEST['id']) ? (int) $_REQUEST['id'] : 0;
 
 if ($pelatih_id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Invalid pelatih ID']);
@@ -26,15 +31,25 @@ if ($pelatih_id <= 0) {
 }
 
 try {
-    // Start transaction
-    $conn->beginTransaction();
-    
-    // Check if trying to delete self
-    if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $pelatih_id) {
-        echo json_encode(['success' => false, 'message' => 'Tidak dapat menghapus akun sendiri']);
-        exit;
-    }
-    
+    $tableExists = function (string $table) use ($conn): bool {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+        return (bool) $stmt->fetchColumn();
+    };
+
+    $columnExists = function (string $table, string $column) use ($conn, $tableExists): bool {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !$tableExists($table)) {
+            return false;
+        }
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+        return (bool) $stmt->fetchColumn();
+    };
+
     // Get pelatih data
     $stmt = $conn->prepare("SELECT * FROM admin_users WHERE id = ?");
     $stmt->execute([$pelatih_id]);
@@ -56,6 +71,31 @@ try {
             exit;
         }
     }
+
+    // Check if trying to delete currently logged in account
+    $sessionUsername = $_SESSION['admin_username'] ?? null;
+    $sessionEmail = $_SESSION['admin_email'] ?? null;
+    if (($sessionUsername && $pelatih['username'] === $sessionUsername) ||
+        ($sessionEmail && $pelatih['email'] === $sessionEmail)) {
+        echo json_encode(['success' => false, 'message' => 'Tidak dapat menghapus akun sendiri']);
+        exit;
+    }
+
+    // Aturan konsisten:
+    // - Akun aktif + sudah pernah login (last_login terisi) => tidak bisa dihapus
+    // - Akun nonaktif => boleh dihapus
+    $isActive = (int)($pelatih['is_active'] ?? 0) === 1;
+    $hasLastLogin = !empty($pelatih['last_login']) && $pelatih['last_login'] !== '0000-00-00 00:00:00';
+    if ($isActive && $hasLastLogin) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Akun aktif yang sudah pernah login tidak dapat dihapus. Nonaktifkan akun terlebih dahulu jika ingin menghapus.'
+        ]);
+        exit;
+    }
+
+    // Start transaction only for delete operation
+    $conn->beginTransaction();
     
     // Delete pelatih
     $stmt = $conn->prepare("DELETE FROM admin_users WHERE id = ?");
@@ -70,7 +110,19 @@ try {
     }
     
 } catch (PDOException $e) {
-    $conn->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
+    $message = 'Terjadi kesalahan saat memproses penghapusan pelatih. Silakan coba lagi.';
+    $sqlState = $e->getCode();
+    $dbCode = (int)($e->errorInfo[1] ?? 0);
+
+    if ($sqlState === '23000' || $dbCode === 1451 || $dbCode === 1452) {
+        $message = 'Data pelatih tidak bisa dihapus karena masih terhubung dengan data lain.';
+    } elseif ($sqlState === '42000' || $dbCode === 1064) {
+        $message = 'Terjadi kesalahan konfigurasi query. Hubungi admin sistem.';
+    }
+
+    echo json_encode(['success' => false, 'message' => $message]);
 }
 ?>
