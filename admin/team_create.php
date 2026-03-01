@@ -83,13 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!$established_date || $has_date_errors) {
             $errors['established_year'] = "Tanggal berdiri tidak valid";
         } else {
-            $min_date = new DateTime('1900-01-01');
-            $max_date = new DateTime('today');
-            if ($established_date < $min_date || $established_date > $max_date) {
-                $errors['established_year'] = "Tanggal berdiri harus antara 1900-01-01 dan " . $max_date->format('Y-m-d');
-            } else {
-                $form_data['established_year'] = $established_date->format('Y-m-d');
-            }
+            $form_data['established_year'] = $established_date->format('Y-m-d');
         }
     }
     
@@ -930,8 +924,6 @@ body {
                                    class="form-input <?php echo isset($errors['established_year']) ? 'is-invalid' : ''; ?>" 
                                    value="<?php echo htmlspecialchars($form_data['established_year'] ?? ''); ?>"
                                    placeholder="Contoh: 2020-01-31"
-                                   min="1900-01-01" 
-                                   max="<?php echo date('Y-m-d'); ?>"
                                    required>
                             <?php if (isset($errors['established_year'])): ?>
                                 <span class="error"><?php echo $errors['established_year']; ?></span>
@@ -1007,7 +999,7 @@ body {
                             <label class="form-label" for="sport_type">
                                 Event <span class="required">*</span>
                             </label>
-                            <div class="event-list">
+                            <div class="event-list" id="sport_type_group">
                                 <?php foreach ($event_types as $event_option): ?>
                                     <label class="event-option">
                                         <input type="checkbox" name="sport_types[]" value="<?php echo htmlspecialchars($event_option); ?>"
@@ -1056,6 +1048,55 @@ body {
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('teamForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        const requiredFields = [
+            { id: 'name', message: 'Nama team harus diisi' },
+            { id: 'coach', message: 'Manager harus diisi' },
+            { id: 'established_year', message: 'Tanggal berdiri harus diisi' }
+        ];
+
+        let firstInvalid = null;
+        let firstMessage = '';
+
+        for (const field of requiredFields) {
+            const input = document.getElementById(field.id);
+            if (!input) continue;
+            if (!input.value.trim()) {
+                firstInvalid = input;
+                firstMessage = field.message;
+                break;
+            }
+        }
+
+        if (!firstInvalid) {
+            const checkedEvents = form.querySelectorAll('input[name="sport_types[]"]:checked');
+            if (!checkedEvents.length) {
+                firstInvalid = document.getElementById('sport_type_group');
+                firstMessage = 'Event harus diisi';
+            }
+        }
+
+        if (firstInvalid) {
+            e.preventDefault();
+            if (typeof toastr !== 'undefined') {
+                toastr.error(firstMessage);
+            }
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const focusTarget = firstInvalid.matches('input, select, textarea, button')
+                ? firstInvalid
+                : firstInvalid.querySelector('input, select, textarea, button');
+            if (focusTarget) {
+                focusTarget.focus({ preventScroll: true });
+            }
+        }
+    });
+});
+</script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>

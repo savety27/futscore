@@ -454,7 +454,7 @@ body {
 
 .data-table th {
     padding: 12px 8px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     white-space: nowrap;
@@ -1149,7 +1149,7 @@ body {
                         <th>Player</th>
                         <th>Staff</th>
                         <th>Basecamp</th>
-                        <th>Event</th>
+                        <th>Kategori</th>
                         <th>Status</th>
                         <th>Tanggal Dibuat</th>
                         <th>Aksi</th>
