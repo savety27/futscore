@@ -142,6 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors['database'])) {
     }
     if ($form_data['contact'] === '') {
         $errors['contact'] = 'Kontak harus diisi';
+    } elseif (!preg_match('/^\d+$/', $form_data['contact'])) {
+        $errors['contact'] = 'No telp hanya boleh berisi angka';
     }
 
     $start_date = DateTime::createFromFormat('Y-m-d', $form_data['start_date']);
@@ -452,8 +454,8 @@ body {
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="contact">Kontak <span class="required">*</span></label>
-                            <input class="form-input" type="text" id="contact" name="contact" required value="<?php echo htmlspecialchars($form_data['contact']); ?>" placeholder="Contoh: 08981434528">
+                            <label class="form-label" for="contact">No Telp <span class="required">*</span></label>
+                            <input class="form-input" type="text" id="contact" name="contact" required inputmode="numeric" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'');" value="<?php echo htmlspecialchars($form_data['contact']); ?>" placeholder="Contoh: 08981434528">
                             <?php if (isset($errors['contact'])): ?><span class="error"><?php echo $errors['contact']; ?></span><?php endif; ?>
                         </div>
                     </div>
@@ -610,10 +612,18 @@ function formatFileSize(bytes) {
 document.getElementById('eventForm').addEventListener('submit', function (e) {
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
+    const contact = document.getElementById('contact').value.trim();
     if (startDate && endDate && endDate < startDate) {
         e.preventDefault();
         if (typeof toastr !== 'undefined') {
             toastr.error('Tanggal selesai harus lebih besar atau sama dengan tanggal mulai.');
+        }
+        return;
+    }
+    if (contact !== '' && !/^\d+$/.test(contact)) {
+        e.preventDefault();
+        if (typeof toastr !== 'undefined') {
+            toastr.error('No telp hanya boleh berisi angka.');
         }
     }
 });

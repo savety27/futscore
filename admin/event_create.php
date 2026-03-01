@@ -103,6 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($form_data['contact'] === '') {
         $errors['contact'] = 'Kontak harus diisi';
+    } elseif (!preg_match('/^\d+$/', $form_data['contact'])) {
+        $errors['contact'] = 'No telp hanya boleh berisi angka';
     }
 
     $start_date = DateTime::createFromFormat('Y-m-d', $form_data['start_date']);
@@ -432,8 +434,8 @@ body {
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="contact">Kontak <span class="required">*</span></label>
-                            <input class="form-input" type="text" id="contact" name="contact" required value="<?php echo htmlspecialchars($form_data['contact']); ?>" placeholder="Contoh: 08981434528">
+                            <label class="form-label" for="contact">No Telp <span class="required">*</span></label>
+                            <input class="form-input" type="text" id="contact" name="contact" required inputmode="numeric" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'');" value="<?php echo htmlspecialchars($form_data['contact']); ?>" placeholder="Contoh: 08981434528">
                             <?php if (isset($errors['contact'])): ?><span class="error"><?php echo $errors['contact']; ?></span><?php endif; ?>
                         </div>
                     </div>
@@ -601,3 +603,4 @@ document.getElementById('eventForm').addEventListener('submit', function (e) {
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
+

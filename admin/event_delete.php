@@ -35,12 +35,98 @@ if ($event_id <= 0) {
     exit;
 }
 
+function ensure_events_active_column(PDO $conn): void
+{
+    try {
+        $check = $conn->query("SHOW COLUMNS FROM events LIKE 'is_active'");
+        $exists = $check && $check->fetch(PDO::FETCH_ASSOC);
+        if (!$exists) {
+            $conn->exec("ALTER TABLE events ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER registration_status");
+            try {
+                $conn->exec("CREATE INDEX idx_is_active ON events (is_active)");
+            } catch (PDOException $e) {
+                // Index may already exist.
+            }
+        }
+    } catch (PDOException $e) {
+        // Keep delete flow running; query checks below will surface issues if any.
+    }
+}
+
+function get_related_event_tables(PDO $conn, int $eventId): array
+{
+    $relatedTables = [];
+    $usageTables = [
+        'matches',
+        'challenges',
+        'team_events',
+        'event_team_values',
+        'player_event_cards'
+    ];
+
+    foreach ($usageTables as $tableName) {
+        if (!table_has_column($conn, $tableName, 'event_id')) {
+            continue;
+        }
+
+        $countStmt = $conn->prepare("SELECT COUNT(*) FROM `$tableName` WHERE event_id = ?");
+        $countStmt->execute([$eventId]);
+        $count = (int) $countStmt->fetchColumn();
+        if ($count > 0) {
+            $relatedTables[] = $tableName;
+        }
+    }
+
+    return $relatedTables;
+}
+
+function table_has_column(PDO $conn, string $tableName, string $columnName): bool
+{
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $tableName) || !preg_match('/^[a-zA-Z0-9_]+$/', $columnName)) {
+        return false;
+    }
+
+    $stmt = $conn->prepare(
+        "SELECT 1
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?
+           AND COLUMN_NAME = ?
+         LIMIT 1"
+    );
+    $stmt->execute([$tableName, $columnName]);
+    return (bool) $stmt->fetchColumn();
+}
+
 try {
+    ensure_events_active_column($conn);
+
     $stmt = $conn->prepare("SELECT image FROM events WHERE id = ?");
     $stmt->execute([$event_id]);
     $event = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    if (!$event) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Event tidak ditemukan']);
+        exit;
+    }
+
+    $relatedTables = get_related_event_tables($conn, $event_id);
+    if (!empty($relatedTables)) {
+        http_response_code(409);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Event tidak bisa dihapus karena sudah dipakai data terkait: ' . implode(', ', array_slice($relatedTables, 0, 4)) . (count($relatedTables) > 4 ? ', dll.' : '.')
+        ]);
+        exit;
+    }
+
     $conn->beginTransaction();
+
+    if (table_has_column($conn, 'admin_users', 'event_id')) {
+        $clearAdminEvent = $conn->prepare("UPDATE admin_users SET event_id = NULL WHERE event_id = ?");
+        $clearAdminEvent->execute([$event_id]);
+    }
 
     $stmt = $conn->prepare("DELETE FROM events WHERE id = ?");
     $stmt->execute([$event_id]);
