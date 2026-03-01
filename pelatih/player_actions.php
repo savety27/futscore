@@ -74,6 +74,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute($params);
         return (bool)$stmt->fetchColumn();
     }
+
+    function tableExists(PDO $conn, string $table): bool
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+        return (bool) $stmt->fetchColumn();
+    }
+
+    function columnExists(PDO $conn, string $table, string $column): bool
+    {
+        if (!tableExists($conn, $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+        return (bool) $stmt->fetchColumn();
+    }
+
+    function countByPlayerRef(PDO $conn, string $table, string $column, int $playerId): int
+    {
+        if (!columnExists($conn, $table, $column)) {
+            return 0;
+        }
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+        $stmt->execute([$playerId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    function deleteByPlayerRef(PDO $conn, string $table, string $column, int $playerId): void
+    {
+        if (!columnExists($conn, $table, $column)) {
+            return;
+        }
+        $stmt = $conn->prepare("DELETE FROM `{$table}` WHERE `{$column}` = ?");
+        $stmt->execute([$playerId]);
+    }
     
     // Track newly uploaded files so we can clean them up if DB write fails.
     $uploaded_files_to_cleanup = [];
@@ -323,40 +360,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Invalid player ID.');
             }
             
-            // Get player files for deletion
-            $stmt = $conn->prepare("SELECT photo, ktp_image, kk_image, birth_cert_image, diploma_image 
+            // Get player data for deletion (and ensure player belongs to coach team)
+            $stmt = $conn->prepare("SELECT id, status, photo, ktp_image, kk_image, birth_cert_image, diploma_image 
                                    FROM players WHERE id = ? AND team_id = ?");
             $stmt->execute([$id, $team_id]);
-            $player_files = $stmt->fetch();
-            
-            // Delete player
+            $player = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$player) {
+                header("Location: players.php?msg=not_found");
+                exit;
+            }
+
+            $statusRaw = strtolower(trim((string)($player['status'] ?? 'inactive')));
+            $isInactive = in_array($statusRaw, ['inactive', 'nonaktif', 'non-aktif', 'non active', '0'], true);
+
+            $usage_map = [
+                ['table' => 'lineups', 'column' => 'player_id', 'label' => 'lineup'],
+                ['table' => 'goals', 'column' => 'player_id', 'label' => 'goal'],
+                ['table' => 'transfers', 'column' => 'player_id', 'label' => 'transfer'],
+                ['table' => 'player_event_cards', 'column' => 'player_id', 'label' => 'event_card']
+            ];
+
+            $usage_sources = [];
+            foreach ($usage_map as $usage) {
+                $count = countByPlayerRef($conn, $usage['table'], $usage['column'], $id);
+                if ($count > 0) {
+                    $usage_sources[] = $usage['label'];
+                }
+            }
+            $usage_sources = array_values(array_unique($usage_sources));
+
+            // Rule:
+            // - Nonaktif => bisa hapus tanpa terkecuali (override)
+            // - Aktif + ada data turunan => tidak bisa hapus
+            // - Aktif + belum ada data turunan => bisa hapus
+            if (!$isInactive && !empty($usage_sources)) {
+                throw new Exception('Player aktif tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.');
+            }
+
+            $conn->beginTransaction();
+
+            // Cleanup data turunan agar delete player tidak mentok FK
+            deleteByPlayerRef($conn, 'goals', 'player_id', $id);
+            deleteByPlayerRef($conn, 'lineups', 'player_id', $id);
+            deleteByPlayerRef($conn, 'transfers', 'player_id', $id);
+            deleteByPlayerRef($conn, 'player_event_cards', 'player_id', $id);
+            deleteByPlayerRef($conn, 'player_documents', 'player_id', $id);
+            deleteByPlayerRef($conn, 'player_skills', 'player_id', $id);
+
             $stmt = $conn->prepare("DELETE FROM players WHERE id = ? AND team_id = ?");
             $stmt->execute([$id, $team_id]);
-            
-            $affectedRows = $stmt->rowCount();
-            
-            if ($affectedRows > 0) {
-                // Delete all associated files
-                $files_to_delete = [
-                    'photo', 'ktp_image', 'kk_image', 'birth_cert_image', 'diploma_image'
-                ];
-                
-                foreach ($files_to_delete as $file_field) {
-                    if ($player_files && !empty($player_files[$file_field])) {
-                        $file_path = '../images/players/' . $player_files[$file_field];
-                        if (file_exists($file_path)) {
-                            unlink($file_path);
-                        }
+
+            if ($stmt->rowCount() <= 0) {
+                $conn->rollBack();
+                header("Location: players.php?msg=not_found");
+                exit;
+            }
+
+            $conn->commit();
+
+            // Delete player files from disk only after DB delete succeeds
+            $files_to_delete = ['photo', 'ktp_image', 'kk_image', 'birth_cert_image', 'diploma_image'];
+            foreach ($files_to_delete as $file_field) {
+                if (!empty($player[$file_field])) {
+                    $file_path = '../images/players/' . $player[$file_field];
+                    if (file_exists($file_path)) {
+                        @unlink($file_path);
                     }
                 }
-                
-                header("Location: players.php?msg=deleted");
-            } else {
-                header("Location: players.php?msg=not_found");
             }
+
+            header("Location: players.php?msg=deleted");
             exit;
         }
     } catch (Exception $e) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         // Roll back uploaded files when operation fails.
         foreach ($uploaded_files_to_cleanup as $new_file) {
             $new_file_path = '../images/players/' . $new_file;

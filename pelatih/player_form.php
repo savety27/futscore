@@ -114,6 +114,11 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
         </div>
     <?php endif; ?>
 
+    <div class="alert alert-danger" id="clientAlertBox" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="clientAlertText"></span>
+    </div>
+
     <div class="form-container">
         <form action="player_actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
             <input type="hidden" name="action" value="<?php echo $action; ?>">
@@ -385,6 +390,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                    inputmode="numeric"
                                    pattern="[0-9]{16}"
                                    title="NIK harus terdiri dari tepat 16 digit angka"
+                                   data-original="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>"
                                    value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
                             <button type="button" class="verify-btn" id="nikVerifyBtn" onclick="verifyNIK()" disabled>
                                 <i class="fas fa-shield-alt"></i> Verifikasi
@@ -409,6 +415,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                    inputmode="numeric"
                                    pattern="[0-9]{10}"
                                    title="NISN harus terdiri dari tepat 10 digit angka"
+                                   data-original="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>"
                                    value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>">
                             <button type="button" class="verify-btn" id="nisnVerifyBtn" onclick="verifyNISN()" disabled>
                                 <i class="fas fa-shield-alt"></i> Verifikasi
@@ -976,6 +983,14 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 
 .verify-btn.verified {
     background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+    color: #ffffff;
+}
+
+.verify-btn.verified:disabled {
+    background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+    color: #ffffff;
+    opacity: 1;
+    cursor: default;
 }
 
 .verify-feedback {
@@ -1024,6 +1039,11 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 .verify-details .detail-value {
     color: var(--dark);
     font-weight: 600;
+}
+
+.kk-highlight {
+    box-shadow: 0 0 20px rgba(211, 47, 47, 0.45) !important;
+    border-color: var(--danger) !important;
 }
 
 @keyframes verifyPulse {
@@ -1128,8 +1148,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleFileSelect(file, previewContainer) {
-        if (!file.type.startsWith('image/')) { alert('Harap pilih file gambar!'); return; }
-        if (file.size > 5 * 1024 * 1024) { alert('Ukuran file terlalu besar! Maksimal 5MB.'); return; }
+        if (!file.type.startsWith('image/')) { showClientAlert('Harap pilih file gambar!'); return; }
+        if (file.size > 5 * 1024 * 1024) { showClientAlert('Ukuran file terlalu besar! Maksimal 5MB.'); return; }
         const reader = new FileReader();
         reader.onload = function(e) {
             previewContainer.innerHTML = `
@@ -1149,6 +1169,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showClientAlert(message) {
+        const alertBox = document.getElementById('clientAlertBox');
+        const alertText = document.getElementById('clientAlertText');
+        if (!alertBox || !alertText) {
+            return;
+        }
+        alertText.textContent = message;
+        alertBox.style.display = 'flex';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideClientAlert() {
+        const alertBox = document.getElementById('clientAlertBox');
+        if (alertBox) {
+            alertBox.style.display = 'none';
+        }
     }
 
     // Initialize file uploads
@@ -1173,11 +1211,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nikInput) {
         nikInput.addEventListener('input', function(e) {
             const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 16);
+            const originalValue = String(nikInput.dataset.original || '').replace(/[^0-9]/g, '').slice(0, 16);
+            const unchangedValidOriginal = playerId > 0 && originalValue.length === 16 && numericValue === originalValue;
             nikInput.value = numericValue;
+
+            if (unchangedValidOriginal) {
+                nikVerified.value = '1';
+                nikDetails.style.display = 'none';
+                nikVerifyBtn.classList.remove('loading');
+                nikVerifyBtn.classList.add('verified');
+                nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Tersimpan';
+                nikVerifyBtn.disabled = true;
+                nikInput.style.borderColor = 'var(--success)';
+                nikFeedback.textContent = 'NIK tidak diubah - verifikasi lama tetap valid';
+                nikFeedback.className = 'verify-feedback success';
+                return;
+            }
             // Reset verification when value changes
             nikVerified.value = '0';
             nikDetails.style.display = 'none';
             nikVerifyBtn.classList.remove('verified');
+            nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
             nikInput.style.borderColor = '#e1e5eb';
 
             if (numericValue.length === 16) {
@@ -1204,11 +1258,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Auto-trigger on page load for edit mode
-        if (nikInput.value && nikInput.value.length === 16) {
-            nikFeedback.textContent = '16 digit — Klik "Verifikasi" untuk memvalidasi';
-            nikFeedback.className = 'verify-feedback warning';
-            nikVerifyBtn.disabled = false;
-        }
+        nikInput.dispatchEvent(new Event('input'));
     }
 
     // NIK Verify via AJAX
@@ -1282,10 +1332,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (nisnInput) {
         nisnInput.addEventListener('input', function(e) {
             const numericValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+            const originalValue = String(nisnInput.dataset.original || '').replace(/[^0-9]/g, '').slice(0, 10);
+            const unchangedValidOriginal = playerId > 0 && originalValue.length === 10 && numericValue === originalValue;
             nisnInput.value = numericValue;
+
+            if (unchangedValidOriginal) {
+                nisnVerified.value = '1';
+                nisnVerifyBtn.classList.remove('loading');
+                nisnVerifyBtn.classList.add('verified');
+                nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Tersimpan';
+                nisnVerifyBtn.disabled = true;
+                nisnInput.style.borderColor = 'var(--success)';
+                const nisnDetailsEl = document.getElementById('nisnDetails');
+                if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
+                nisnFeedback.textContent = 'NISN tidak diubah - verifikasi lama tetap valid';
+                nisnFeedback.className = 'verify-feedback success';
+                return;
+            }
             // Reset verification
             nisnVerified.value = '0';
             nisnVerifyBtn.classList.remove('verified');
+            nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
             nisnInput.style.borderColor = '#e1e5eb';
             const nisnDetailsEl = document.getElementById('nisnDetails');
             if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
@@ -1314,11 +1381,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Auto-trigger on page load for edit mode
-        if (nisnInput.value && nisnInput.value.length === 10) {
-            nisnFeedback.textContent = '10 digit — Klik "Verifikasi" untuk memvalidasi';
-            nisnFeedback.className = 'verify-feedback warning';
-            nisnVerifyBtn.disabled = false;
-        }
+        nisnInput.dispatchEvent(new Event('input'));
     }
 
     // NISN Verify via AJAX
@@ -1389,6 +1452,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const playerForm = document.getElementById('playerForm');
     if (playerForm) {
         playerForm.addEventListener('submit', function(e) {
+            hideClientAlert();
             const name = document.querySelector('input[name="name"]').value.trim();
             const jerseyNumber = document.querySelector('input[name="jersey_number"]').value.trim();
             const position = document.querySelector('select[name="position"]').value;
@@ -1401,35 +1465,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!name || !jerseyNumber || !position || !sportType || !birthDate || !birthPlace || !gender || !nik || !nisn) {
                 e.preventDefault();
-                alert('Harap lengkapi semua field yang wajib diisi!');
+                showClientAlert('Harap lengkapi semua field yang wajib diisi!');
                 return false;
             }
 
             // Validate NIK format
             if (!/^[0-9]{16}$/.test(nik)) {
                 e.preventDefault();
-                alert('NIK harus terdiri dari tepat 16 digit angka!');
+                showClientAlert('NIK harus terdiri dari tepat 16 digit angka!');
                 return false;
             }
 
             // Validate NISN format
             if (!/^[0-9]{10}$/.test(nisn)) {
                 e.preventDefault();
-                alert('NISN harus terdiri dari tepat 10 digit angka!');
+                showClientAlert('NISN harus terdiri dari tepat 10 digit angka!');
                 return false;
             }
 
             // CHECK VERIFICATION STATUS
             if (nikVerified.value !== '1') {
                 e.preventDefault();
-                alert('❌ NIK belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
+                showClientAlert('NIK belum terverifikasi. Silakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
                 nikInput.focus();
                 return false;
             }
 
             if (nisnVerified.value !== '1') {
                 e.preventDefault();
-                alert('❌ NISN belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
+                showClientAlert('NISN belum terverifikasi. Silakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
                 nisnInput.focus();
                 return false;
             }
@@ -1441,7 +1505,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const kkSelected = kkInput && kkInput.files && kkInput.files.length > 0;
             if (!hasExistingKk && !kkSelected) {
                 e.preventDefault();
-                alert('File Kartu Keluarga (KK) wajib diupload!');
+                showClientAlert('File Kartu Keluarga (KK) wajib diupload!');
+                const kkUpload = document.getElementById('kk_imageUpload');
+                if (kkUpload) {
+                    kkUpload.classList.add('kk-highlight');
+                    kkUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const kkFileEl = document.getElementById('kk_imageFile');
+                    if (kkFileEl) {
+                        kkFileEl.focus({ preventScroll: true });
+                    }
+                    setTimeout(() => kkUpload.classList.remove('kk-highlight'), 3000);
+                }
                 return false;
             }
 
@@ -1450,7 +1524,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
             if (birth > today) {
                 e.preventDefault();
-                alert('Tanggal lahir tidak boleh di masa depan!');
+                showClientAlert('Tanggal lahir tidak boleh di masa depan!');
                 return false;
             }
         });
@@ -1467,3 +1541,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
+
