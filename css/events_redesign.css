@@ -707,6 +707,9 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         position: relative;
         overflow: hidden;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
         transition: transform .24s ease, box-shadow .24s ease, border-color .24s ease, background .24s ease;
     }
 

@@ -19,11 +19,11 @@ require_once 'includes/header.php';
     .player-table-new td {
         padding: 11px 12px;
         font-size: 14px;
-        line-height: 1.2;
+        line-height: 1.3;
     }
     .player-table-new td.cell-name .player-link {
         font-size: 14px;
-        line-height: 1.2;
+        line-height: 1.35;
     }
     .player-table-new th.col-name-head,
     .player-table-new td.cell-name {
@@ -47,15 +47,15 @@ require_once 'includes/header.php';
     }
     .col-team-stack {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        justify-content: center;
-        gap: 6px;
-        text-align: center;
+        justify-content: flex-start;
+        gap: 8px;
+        text-align: left;
     }
     .team-name-stack {
         font-weight: 600;
-        line-height: 1.2;
+        line-height: 1.3;
         font-size: 12px;
     }
     .player-table-new th.col-team-head,
@@ -63,7 +63,29 @@ require_once 'includes/header.php';
         min-width: 160px;
     }
     .player-table-new th.col-team-head {
-        padding-left: 60px;
+        padding-left: 12px;
+        text-align: left;
+    }
+    .player-table-new td.cell-team {
+        text-align: left;
+    }
+    .mobile-profile-cell {
+        display: none;
+    }
+    .mobile-profile-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.22);
     }
     .player-table-new th.col-jersey,
     .player-table-new td.col-jersey {
@@ -447,6 +469,22 @@ require_once 'includes/header.php';
             height: 30px;
             font-size: 13px;
         }
+        .mobile-profile-cell {
+            display: block !important;
+            order: 99;
+            padding: 10px 12px !important;
+            border-bottom: none !important;
+            background: #f8fbff;
+        }
+        .player-table-new td.mobile-profile-cell::before {
+            content: none !important;
+            display: none !important;
+        }
+        .mobile-profile-btn {
+            min-height: 38px;
+            font-size: 12px;
+            letter-spacing: 0.2px;
+        }
         .history-modal {
             padding: 10px;
         }
@@ -549,7 +587,7 @@ if (!empty($players)) {
     if (!empty($player_ids)) {
         $placeholders = implode(',', array_fill(0, count($player_ids), '?'));
         $sql_counts = "
-            SELECT l.player_id, COUNT(DISTINCT l.match_id) as total_match
+            SELECT l.player_id, COUNT(l.id) as total_match
             FROM lineups l
             INNER JOIN challenges c ON l.match_id = c.id
             WHERE l.player_id IN ($placeholders)
@@ -571,15 +609,20 @@ if (!empty($players)) {
             $sql_event_counts = "
                 SELECT
                     l.player_id,
-                    TRIM(e.name) AS event_name,
-                    COUNT(DISTINCT l.match_id) as total_match_in_event
+                    CASE
+                        WHEN e.name IS NULL OR TRIM(e.name) = '' THEN 'Tanpa Event'
+                        ELSE TRIM(e.name)
+                    END AS event_name,
+                    COUNT(l.id) as total_match_in_event
                 FROM lineups l
                 INNER JOIN challenges c ON l.match_id = c.id
-                INNER JOIN events e ON c.event_id = e.id
+                LEFT JOIN events e ON c.event_id = e.id
                 WHERE l.player_id IN ($placeholders)
-                  AND e.name IS NOT NULL
-                  AND TRIM(e.name) <> ''
-                GROUP BY l.player_id, e.name
+                GROUP BY l.player_id,
+                         CASE
+                             WHEN e.name IS NULL OR TRIM(e.name) = '' THEN 'Tanpa Event'
+                             ELSE TRIM(e.name)
+                         END
             ";
             $stmt_event_counts = $conn->prepare($sql_event_counts);
             if ($stmt_event_counts) {
@@ -590,11 +633,37 @@ if (!empty($players)) {
                 while ($row = $result_event_counts->fetch_assoc()) {
                     $pid = (int) $row['player_id'];
                     $event_name = trim((string) ($row['event_name'] ?? ''));
-                    if ($event_name === '') continue;
+                    if ($event_name === '') $event_name = 'Tanpa Event';
                     if (!isset($player_event_stats[$pid])) {
                         $player_event_stats[$pid] = [];
                     }
                     $player_event_stats[$pid][$event_name] = (int) $row['total_match_in_event'];
+                }
+                $stmt_event_counts->close();
+            }
+        } else {
+            $sql_event_counts = "
+                SELECT
+                    l.player_id,
+                    'Tanpa Event' AS event_name,
+                    COUNT(l.id) as total_match_in_event
+                FROM lineups l
+                INNER JOIN challenges c ON l.match_id = c.id
+                WHERE l.player_id IN ($placeholders)
+                GROUP BY l.player_id
+            ";
+            $stmt_event_counts = $conn->prepare($sql_event_counts);
+            if ($stmt_event_counts) {
+                $types = str_repeat('i', count($player_ids));
+                $stmt_event_counts->bind_param($types, ...$player_ids);
+                $stmt_event_counts->execute();
+                $result_event_counts = $stmt_event_counts->get_result();
+                while ($row = $result_event_counts->fetch_assoc()) {
+                    $pid = (int) $row['player_id'];
+                    if (!isset($player_event_stats[$pid])) {
+                        $player_event_stats[$pid] = [];
+                    }
+                    $player_event_stats[$pid]['Tanpa Event'] = (int) ($row['total_match_in_event'] ?? 0);
                 }
                 $stmt_event_counts->close();
             }
@@ -725,7 +794,7 @@ function maskNIK($nik) {
             </div>
         </header>
 
-        <div class="dashboard-body">
+        <div class="dashboard-body <?php echo ($player_id > 0) ? 'has-player-detail' : ''; ?>">
             <?php if ($player_id > 0): ?>
                 <section class="player-detail-card" id="player-detail">
                     <?php if (!$player_detail): ?>
@@ -801,6 +870,66 @@ function maskNIK($nik) {
                             </div>
                         </div>
 
+                        <div class="player-skills-section" id="playerSkillsPanel">
+                            <button type="button" class="player-skills-toggle" id="playerSkillsToggle" aria-expanded="false" aria-controls="playerSkillsContent">
+                                <span class="player-skills-toggle-label">
+                                    <i class="fas fa-bolt"></i> Skill Pemain
+                                </span>
+                                <i class="fas fa-chevron-down player-skills-toggle-icon" aria-hidden="true"></i>
+                            </button>
+
+                            <div class="player-skills-content" id="playerSkillsContent">
+                                <div class="player-skills-head">
+                                    <h3 style="margin-bottom: 10px;">Skill Pemain</h3>
+                                    <span class="player-skills-scale">Skala 0 - 10</span>
+                                </div>
+
+                                <div class="player-skills-grid">
+                                    <?php
+                                    $detailSkills = [
+                                        'dribbling' => ['label' => 'Dribbling', 'icon' => 'fa-person-running'],
+                                        'technique' => ['label' => 'Technique', 'icon' => 'fa-gears'],
+                                        'speed' => ['label' => 'Speed', 'icon' => 'fa-gauge-high'],
+                                        'juggling' => ['label' => 'Juggling', 'icon' => 'fa-futbol'],
+                                        'shooting' => ['label' => 'Shooting', 'icon' => 'fa-crosshairs'],
+                                        'setplay_position' => ['label' => 'Setplay Position', 'icon' => 'fa-chess-board'],
+                                        'passing' => ['label' => 'Passing', 'icon' => 'fa-share-nodes'],
+                                        'control' => ['label' => 'Control', 'icon' => 'fa-sliders']
+                                    ];
+
+                                    foreach ($detailSkills as $key => $meta):
+                                        $rawSkill = isset($player_detail[$key]) ? (int) $player_detail[$key] : 5;
+                                        $skillValue = max(0, min(10, $rawSkill));
+                                        $skillPercent = (int) round(($skillValue / 10) * 100);
+                                    ?>
+                                        <div class="player-skill-item">
+                                            <div class="player-skill-top">
+                                                <span class="player-skill-name"><i class="fas <?php echo $meta['icon']; ?>"></i> <?php echo htmlspecialchars($meta['label']); ?></span>
+                                                <span class="player-skill-value"><?php echo $skillValue; ?>/10</span>
+                                            </div>
+                                            <div class="player-skill-bar">
+                                                <span class="player-skill-fill" style="width: <?php echo $skillPercent; ?>%;"></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="player-history-panel" id="playerHistoryPanel" data-player-id="<?php echo (int) ($player_detail['id'] ?? 0); ?>" data-player-name="<?php echo htmlspecialchars((string)($player_detail['name'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>" data-player-team="<?php echo htmlspecialchars((string)($player_detail['team_name'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <button type="button" class="player-history-toggle" id="playerHistoryToggle" aria-expanded="false" aria-controls="playerHistoryContent">
+                                <span class="player-history-toggle-label">
+                                    <i class="fas fa-chart-line"></i> Riwayat Match Player
+                                </span>
+                                <i class="fas fa-chevron-down player-history-toggle-icon" aria-hidden="true"></i>
+                            </button>
+                            <div class="player-history-content" id="playerHistoryContent">
+                                <div class="history-loading">
+                                    <i class="fas fa-spinner"></i> Klik tombol di atas untuk melihat riwayat pertandingan.
+                                </div>
+                            </div>
+                        </div>
+
                     <?php endif; ?>
                 </section>
             <?php endif; ?>
@@ -841,14 +970,13 @@ function maskNIK($nik) {
                             <th>Kategori</th>
                             <th class="col-center">Match</th>
                             <th class="col-center">Event</th>
-                            <th class="col-center">Aksi</th>
                             <th>Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($players)): ?>
                             <tr>
-                                <td colspan="15">
+                                <td colspan="14">
                                     <div class="empty-state">
                                         <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
                                         <h3>Pemain tidak ditemukan</h3>
@@ -936,16 +1064,12 @@ function maskNIK($nik) {
                                         <?php endif; ?>
                                     </span>
                                 </td>
-                                <td class="col-center" data-label="Aksi">
-                                    <button class="history-btn btn-history"
-                                        data-player-id="<?php echo (int) $p['id']; ?>"
-                                        data-player-name="<?php echo htmlspecialchars($p['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                        data-player-team="<?php echo htmlspecialchars($p['team_name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
-                                        title="Riwayat Match">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
-                                </td>
                                 <td data-label="Dibuat Pada"><?php echo date('d M Y, H:i', strtotime($p['created_at'])); ?></td>
+                                <td class="mobile-profile-cell">
+                                    <a href="player.php?id=<?php echo $p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#player-detail" class="mobile-profile-btn">
+                                        <i class="fas fa-user"></i> Cek Profil Pemain
+                                    </a>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -1002,23 +1126,6 @@ function maskNIK($nik) {
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="history-modal" id="historyModal">
-            <div class="history-modal-content">
-                <div class="history-modal-header">
-                    <div>
-                        <h3><i class="fas fa-chart-line"></i> <span id="historyPlayerName">-</span></h3>
-                        <div class="history-modal-meta" id="historyPlayerMeta"></div>
-                    </div>
-                    <button class="history-close-btn" id="historyCloseBtn" type="button"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="history-modal-body" id="historyModalBody">
-                    <div class="history-loading">
-                        <i class="fas fa-spinner"></i> Memuat riwayat pertandingan...
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -1083,123 +1190,223 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 </script>
 
 <script>
-const historyModal = document.getElementById('historyModal');
-const historyBody = document.getElementById('historyModalBody');
-const historyNameEl = document.getElementById('historyPlayerName');
-const historyMetaEl = document.getElementById('historyPlayerMeta');
-const historyCloseBtn = document.getElementById('historyCloseBtn');
-
 const escapeHtml = (value) => {
     const div = document.createElement('div');
     div.textContent = value ?? '';
     return div.innerHTML;
 };
 
-document.querySelectorAll('.btn-history').forEach((btn) => {
-    btn.addEventListener('click', function () {
-        const playerId = this.dataset.playerId;
-        const playerName = this.dataset.playerName || '-';
-        const playerTeam = this.dataset.playerTeam || '-';
+const skillsPanel = document.getElementById('playerSkillsPanel');
+const skillsToggle = document.getElementById('playerSkillsToggle');
+const skillsContent = document.getElementById('playerSkillsContent');
 
-        historyNameEl.textContent = playerName;
-        historyMetaEl.textContent = 'Tim: ' + playerTeam;
-        historyBody.innerHTML = '<div class="history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>';
-        historyModal.classList.add('open');
+if (skillsPanel && skillsToggle && skillsContent) {
+    const mobileSkillsMedia = window.matchMedia('(max-width: 768px)');
+    let mobileSkillsInitialized = false;
+
+    const refreshSkillsHeight = () => {
+        if (!skillsPanel.classList.contains('open')) return;
+        skillsContent.style.maxHeight = 'none';
+        const nextHeight = skillsContent.scrollHeight;
+        skillsContent.style.maxHeight = `${nextHeight}px`;
+    };
+
+    const openSkillsPanel = () => {
+        skillsToggle.setAttribute('aria-expanded', 'true');
+        skillsPanel.classList.add('open');
+        requestAnimationFrame(() => {
+            skillsContent.style.maxHeight = `${skillsContent.scrollHeight}px`;
+        });
+    };
+
+    const closeSkillsPanel = () => {
+        skillsToggle.setAttribute('aria-expanded', 'false');
+        skillsContent.style.maxHeight = `${skillsContent.scrollHeight}px`;
+        requestAnimationFrame(() => {
+            skillsPanel.classList.remove('open');
+            skillsContent.style.maxHeight = '0px';
+        });
+    };
+
+    const syncSkillsPanelByViewport = () => {
+        if (mobileSkillsMedia.matches) {
+            if (!mobileSkillsInitialized) {
+                mobileSkillsInitialized = true;
+                closeSkillsPanel();
+            } else if (skillsPanel.classList.contains('open')) {
+                requestAnimationFrame(refreshSkillsHeight);
+            }
+        } else {
+            skillsPanel.classList.add('open');
+            skillsToggle.setAttribute('aria-expanded', 'true');
+            skillsContent.style.maxHeight = 'none';
+        }
+    };
+
+    skillsToggle.addEventListener('click', () => {
+        if (!mobileSkillsMedia.matches) return;
+        const isOpen = skillsToggle.getAttribute('aria-expanded') === 'true';
+        if (isOpen) {
+            closeSkillsPanel();
+        } else {
+            openSkillsPanel();
+        }
+    });
+
+    window.addEventListener('resize', syncSkillsPanelByViewport);
+    syncSkillsPanelByViewport();
+}
+
+const renderPlayerHistoryRows = (matches) => {
+    let rows = '';
+
+    matches.forEach((m, i) => {
+        let resultHtml = '<span class="h-result-na">-</span>';
+        if (m.status === 'completed' && m.player_team_side !== null) {
+            const myScore = m.player_team_side === 'challenger' ? parseInt(m.challenger_score, 10) : parseInt(m.opponent_score, 10);
+            const oppScore = m.player_team_side === 'challenger' ? parseInt(m.opponent_score, 10) : parseInt(m.challenger_score, 10);
+            if (!Number.isNaN(myScore) && !Number.isNaN(oppScore)) {
+                if (myScore > oppScore) resultHtml = `<span class="h-result-win">M ${myScore}-${oppScore}</span>`;
+                else if (myScore < oppScore) resultHtml = `<span class="h-result-lose">K ${myScore}-${oppScore}</span>`;
+                else resultHtml = `<span class="h-result-draw">S ${myScore}-${oppScore}</span>`;
+            }
+        }
+
+        const hasLineup = (m.appearance_source || '') === 'lineup';
+        const starterHtml = hasLineup
+            ? (Number(m.is_starting) === 1
+                ? '<span class="h-starter-badge h-starter-yes"><i class="fas fa-star"></i> Starter</span>'
+                : '<span class="h-starter-badge h-starter-sub"><i class="fas fa-random"></i> Sub</span>')
+            : '<span class="h-starter-badge h-starter-sub"><i class="fas fa-info-circle"></i> Belum ada lineup</span>';
+
+        const halfLabel = hasLineup
+            ? (m.half ? `<span class="h-half-pill">Babak ${escapeHtml(String(m.half))}</span>` : '<span class="h-half-pill">B1</span>')
+            : '<span class="h-half-pill">-</span>';
+        const lawan = m.player_team_side === 'challenger' ? m.opponent_name : m.challenger_name;
+        const myTeam = m.player_team_side === 'challenger' ? m.challenger_name : m.opponent_name;
+
+        rows += `
+            <tr>
+                <td class="col-no">${i + 1}</td>
+                <td class="col-event"><span class="h-event-badge" title="${escapeHtml(m.event_name || '-')}">${escapeHtml(m.event_name || '-')}</span></td>
+                <td class="col-kategori"><span class="h-event-badge" title="${escapeHtml(m.sport_type || '-')}">${escapeHtml(m.sport_type || '-')}</span></td>
+                <td class="col-match">#${escapeHtml(String(m.challenge_id || ''))}<br><small style="color:#94a3b8">${escapeHtml(m.challenge_code || '-')}</small></td>
+                <td class="col-pertandingan">${escapeHtml(myTeam || '-')} <span style="color:#94a3b8">vs</span> ${escapeHtml(lawan || '-')}</td>
+                <td class="col-tanggal">${escapeHtml(m.challenge_date_fmt || '-')}</td>
+                <td class="col-babak">${halfLabel}</td>
+                <td class="col-posisi">${escapeHtml(m.position || '-')}</td>
+                <td class="col-peran">${starterHtml}</td>
+                <td class="col-hasil">${resultHtml}</td>
+            </tr>
+        `;
+    });
+
+    return `
+        <div class="history-table-wrap">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Event</th>
+                        <th>Kategori</th>
+                        <th>Match</th>
+                        <th>Pertandingan</th>
+                        <th>Tanggal</th>
+                        <th>Babak</th>
+                        <th>Posisi</th>
+                        <th>Peran</th>
+                        <th>Hasil</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+};
+
+const historyPanel = document.getElementById('playerHistoryPanel');
+const historyToggle = document.getElementById('playerHistoryToggle');
+const historyContent = document.getElementById('playerHistoryContent');
+
+if (historyPanel && historyToggle && historyContent) {
+    let loaded = false;
+    let loading = false;
+
+    const playerId = historyPanel.dataset.playerId || '0';
+    const playerTeam = historyPanel.dataset.playerTeam || '-';
+    const refreshPanelHeight = () => {
+        if (!historyPanel.classList.contains('open')) return;
+        historyContent.style.maxHeight = 'none';
+        const nextHeight = historyContent.scrollHeight;
+        historyContent.style.maxHeight = `${nextHeight}px`;
+    };
+    const openPanel = () => {
+        historyToggle.setAttribute('aria-expanded', 'true');
+        historyPanel.classList.add('open');
+        requestAnimationFrame(() => {
+            historyContent.style.maxHeight = `${historyContent.scrollHeight}px`;
+        });
+    };
+    const closePanel = () => {
+        historyToggle.setAttribute('aria-expanded', 'false');
+        historyContent.style.maxHeight = `${historyContent.scrollHeight}px`;
+        requestAnimationFrame(() => {
+            historyPanel.classList.remove('open');
+            historyContent.style.maxHeight = '0px';
+        });
+    };
+
+    const loadHistory = () => {
+        if (loaded || loading || !playerId || playerId === '0') return;
+        loading = true;
+        historyContent.innerHTML = '<div class="history-loading"><i class="fas fa-spinner"></i> Memuat riwayat pertandingan...</div>';
 
         fetch(`get_player_match_history.php?player_id=${encodeURIComponent(playerId)}`)
             .then((response) => response.json())
             .then((data) => {
                 if (!data.success) {
-                    historyBody.innerHTML = `<div class="history-empty"><i class="fas fa-exclamation-circle"></i><p>${escapeHtml(data.message || 'Terjadi kesalahan.')}</p></div>`;
+                    historyContent.innerHTML = `<div class="history-empty"><i class="fas fa-exclamation-circle"></i><p>${escapeHtml(data.message || 'Terjadi kesalahan.')}</p></div>`;
+                    requestAnimationFrame(refreshPanelHeight);
                     return;
-                }
-                if (Array.isArray(data.event_summary) && data.event_summary.length > 0) {
-                    historyMetaEl.textContent = `Tim: ${playerTeam} | Event: ${data.event_total || data.event_summary.length}`;
                 }
 
                 if (!data.matches || data.matches.length === 0) {
-                    historyBody.innerHTML = '<div class="history-empty"><i class="fas fa-futbol"></i><p>Belum ada riwayat pertandingan untuk pemain ini.</p></div>';
+                    historyContent.innerHTML = '<div class="history-empty"><i class="fas fa-futbol"></i><p>Belum ada riwayat pertandingan untuk pemain ini.</p></div>';
+                    requestAnimationFrame(refreshPanelHeight);
                     return;
                 }
 
-                let rows = '';
-                data.matches.forEach((m, i) => {
-                    let resultHtml = '<span class="h-result-na">-</span>';
-                    if (m.status === 'completed' && m.player_team_side !== null) {
-                        const myScore = m.player_team_side === 'challenger' ? parseInt(m.challenger_score, 10) : parseInt(m.opponent_score, 10);
-                        const oppScore = m.player_team_side === 'challenger' ? parseInt(m.opponent_score, 10) : parseInt(m.challenger_score, 10);
-                        if (!Number.isNaN(myScore) && !Number.isNaN(oppScore)) {
-                            if (myScore > oppScore) resultHtml = `<span class="h-result-win">M ${myScore}-${oppScore}</span>`;
-                            else if (myScore < oppScore) resultHtml = `<span class="h-result-lose">K ${myScore}-${oppScore}</span>`;
-                            else resultHtml = `<span class="h-result-draw">S ${myScore}-${oppScore}</span>`;
-                        }
-                    }
-
-                    const starterHtml = Number(m.is_starting) === 1
-                        ? '<span class="h-starter-badge h-starter-yes"><i class="fas fa-star"></i> Starter</span>'
-                        : '<span class="h-starter-badge h-starter-sub"><i class="fas fa-random"></i> Sub</span>';
-
-                    const halfLabel = m.half ? `<span class="h-half-pill">Babak ${escapeHtml(String(m.half))}</span>` : '<span class="h-half-pill">B1</span>';
-                    const lawan = m.player_team_side === 'challenger' ? m.opponent_name : m.challenger_name;
-                    const myTeam = m.player_team_side === 'challenger' ? m.challenger_name : m.opponent_name;
-
-                    rows += `
-                        <tr>
-                            <td class="col-no">${i + 1}</td>
-                            <td class="col-event"><span class="h-event-badge" title="${escapeHtml(m.event_name || '-')}">${escapeHtml(m.event_name || '-')}</span></td>
-                            <td class="col-kategori"><span class="h-event-badge" title="${escapeHtml(m.sport_type || '-')}">${escapeHtml(m.sport_type || '-')}</span></td>
-                            <td class="col-match">#${escapeHtml(String(m.challenge_id || ''))}<br><small style="color:#94a3b8">${escapeHtml(m.challenge_code || '-')}</small></td>
-                            <td class="col-pertandingan">${escapeHtml(myTeam || '-')} <span style="color:#94a3b8">vs</span> ${escapeHtml(lawan || '-')}</td>
-                            <td class="col-tanggal">${escapeHtml(m.challenge_date_fmt || '-')}</td>
-                            <td class="col-babak">${halfLabel}</td>
-                            <td class="col-posisi">${escapeHtml(m.position || '-')}</td>
-                            <td class="col-peran">${starterHtml}</td>
-                            <td class="col-hasil">${resultHtml}</td>
-                        </tr>
-                    `;
-                });
-
-                historyBody.innerHTML = `
-                    <div class="history-table-wrap">
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Event</th>
-                                    <th>Kategori</th>
-                                    <th>Match</th>
-                                    <th>Pertandingan</th>
-                                    <th>Tanggal</th>
-                                    <th>Babak</th>
-                                    <th>Posisi</th>
-                                    <th>Peran</th>
-                                    <th>Hasil</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows}</tbody>
-                        </table>
+                const eventCount = Array.isArray(data.event_summary) ? data.event_summary.length : (data.event_total || 0);
+                const summaryHtml = `
+                    <div class="player-history-summary">
+                        <span class="meta-pill meta-pill-outline"><i class="fas fa-shield-alt"></i> Tim: ${escapeHtml(playerTeam)}</span>
+                        <span class="meta-pill meta-pill-outline"><i class="fas fa-calendar-check"></i> Event: ${escapeHtml(String(eventCount))}</span>
+                        <span class="meta-pill meta-pill-outline"><i class="fas fa-futbol"></i> Match: ${escapeHtml(String(data.total || data.matches.length))}</span>
                     </div>
                 `;
+                historyContent.innerHTML = summaryHtml + renderPlayerHistoryRows(data.matches);
+                loaded = true;
+                requestAnimationFrame(refreshPanelHeight);
             })
             .catch(() => {
-                historyBody.innerHTML = '<div class="history-empty"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat data. Periksa koneksi server.</p></div>';
+                historyContent.innerHTML = '<div class="history-empty"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat data. Periksa koneksi server.</p></div>';
+                requestAnimationFrame(refreshPanelHeight);
+            })
+            .finally(() => {
+                loading = false;
             });
-    });
-});
+    };
 
-const closeHistoryModal = () => {
-    if (historyModal) historyModal.classList.remove('open');
-};
-
-if (historyCloseBtn) historyCloseBtn.addEventListener('click', closeHistoryModal);
-if (historyModal) {
-    historyModal.addEventListener('click', (e) => {
-        if (e.target === historyModal) closeHistoryModal();
+    historyToggle.addEventListener('click', () => {
+        const isOpen = historyToggle.getAttribute('aria-expanded') === 'true';
+        if (isOpen) {
+            closePanel();
+        } else {
+            openPanel();
+            loadHistory();
+        }
     });
 }
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeHistoryModal();
-});
 </script>
 
 <script>

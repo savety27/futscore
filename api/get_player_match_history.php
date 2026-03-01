@@ -51,6 +51,11 @@ try {
     $eventRecord = $stmtEvent->fetch(PDO::FETCH_ASSOC);
     $eventName = $eventRecord ? $eventRecord['name'] : 'Event';
 
+    $normalizedSportType = trim((string)$sportType);
+    $hasSportTypeFilter = ($normalizedSportType !== '');
+    $eventScopeSql = "c.event_id = ?";
+    $eventScopeParams = [$eventId];
+
     // --- Build match history query ---
     // Strategy:
     //   1. Join lineups → challenges where player_id matches
@@ -68,66 +73,68 @@ try {
         ? "COUNT(DISTINCT CASE WHEN l.half IN (1,2) THEN l.half END)"
         : "0";
 
-    $baseSql = "
+    $lineupAggSql = "
         SELECT
-            c.id                AS match_id,
+            l.match_id,
+            {$halfCountExpr} AS half_count,
+            COUNT(*) AS lineup_rows
+        FROM lineups l
+        WHERE l.player_id = ?
+          AND l.team_id = ?
+        GROUP BY l.match_id
+    ";
+
+    $goalAggSql = "
+        SELECT
+            g.match_id,
+            COUNT(*) AS goal_count
+        FROM goals g
+        WHERE g.player_id = ?
+          AND g.team_id = ?
+        GROUP BY g.match_id
+    ";
+
+    $teamIdInt = (int)$teamId;
+    $sql = "
+        SELECT
+            c.id AS match_id,
             c.challenge_date,
-            c.notes             AS match_info,
-            c.sport_type        AS category_name,
-            c.match_duration    AS match_duration,
+            c.notes AS match_info,
+            c.sport_type AS category_name,
+            c.match_duration AS match_duration,
             c.challenger_id,
             c.opponent_id,
             c.challenger_score,
             c.opponent_score,
-            {$halfCountExpr}    AS half_count,
-            CASE WHEN c.challenger_id = ? THEN c.opponent_id        ELSE c.challenger_id    END AS opp_team_id,
-            CASE WHEN c.challenger_id = ? THEN c.challenger_score   ELSE c.opponent_score   END AS my_score,
-            CASE WHEN c.challenger_id = ? THEN c.opponent_score     ELSE c.challenger_score END AS their_score,
-            t_opp.name          AS opp_team_name,
-            t_opp.logo          AS opp_team_logo
-        FROM lineups l
-        INNER JOIN challenges c   ON l.match_id = c.id
-        INNER JOIN teams t_opp    ON t_opp.id = CASE WHEN c.challenger_id = ? THEN c.opponent_id ELSE c.challenger_id END
-        WHERE l.player_id = ?
+            COALESCE(la.half_count, 0) AS half_count,
+            COALESCE(la.lineup_rows, 0) AS lineup_rows,
+            COALESCE(ga.goal_count, 0) AS goals_in_match,
+            CASE WHEN c.challenger_id = {$teamIdInt} THEN c.opponent_id ELSE c.challenger_id END AS opp_team_id,
+            CASE WHEN c.challenger_id = {$teamIdInt} THEN c.challenger_score ELSE c.opponent_score END AS my_score,
+            CASE WHEN c.challenger_id = {$teamIdInt} THEN c.opponent_score ELSE c.challenger_score END AS their_score,
+            t_opp.name AS opp_team_name,
+            t_opp.logo AS opp_team_logo
+        FROM challenges c
+        INNER JOIN teams t_opp
+            ON t_opp.id = CASE WHEN c.challenger_id = {$teamIdInt} THEN c.opponent_id ELSE c.challenger_id END
+        LEFT JOIN ({$lineupAggSql}) la ON la.match_id = c.id
+        LEFT JOIN ({$goalAggSql}) ga ON ga.match_id = c.id
+        WHERE {$eventScopeSql}
           AND (c.challenger_id = ? OR c.opponent_id = ?)
           AND c.status IN ('accepted', 'completed')
+          AND (la.match_id IS NOT NULL OR ga.match_id IS NOT NULL)
     ";
 
-    // Try with event_id filter first
-    $sqlWithEvent  = $baseSql . " AND c.event_id = ?";
-    $paramsWithEvent = [$teamId, $teamId, $teamId, $teamId, $playerId, $teamId, $teamId, $eventId];
-
-    if ($sportType !== '') {
-        $sqlWithEvent    .= " AND c.sport_type = ?";
-        $paramsWithEvent[] = $sportType;
+    $params = array_merge([$playerId, $teamId, $playerId, $teamId], $eventScopeParams, [$teamId, $teamId]);
+    if ($hasSportTypeFilter) {
+        $sql .= " AND LOWER(TRIM(c.sport_type)) = LOWER(TRIM(?))";
+        $params[] = $normalizedSportType;
     }
-    $sqlWithEvent .= " GROUP BY c.id ORDER BY c.challenge_date DESC";
+    $sql .= " ORDER BY c.challenge_date DESC";
 
-    $stmtM = $conn->prepare($sqlWithEvent);
-    $stmtM->execute($paramsWithEvent);
+    $stmtM = $conn->prepare($sql);
+    $stmtM->execute($params);
     $matchRows = $stmtM->fetchAll(PDO::FETCH_ASSOC);
-
-    // Fallback: if no rows found with event_id, try with sport_type only (or team-based match)
-    if (empty($matchRows) && $sportType !== '') {
-        $sqlFallback = $baseSql . " AND c.sport_type = ?";
-        $paramsFallback = [$teamId, $teamId, $teamId, $teamId, $playerId, $teamId, $teamId, $sportType];
-        $sqlFallback .= " GROUP BY c.id ORDER BY c.challenge_date DESC";
-        $stmtF = $conn->prepare($sqlFallback);
-        $stmtF->execute($paramsFallback);
-        $matchRows = $stmtF->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // Fetch goals per match for this player
-    $goalsMap = [];
-    if (!empty($matchRows)) {
-        $matchIds  = array_column($matchRows, 'match_id');
-        $inClause  = implode(',', array_fill(0, count($matchIds), '?'));
-        $stmtGoals = $conn->prepare("SELECT match_id, COUNT(*) AS cnt FROM goals WHERE player_id = ? AND match_id IN ($inClause) GROUP BY match_id");
-        $stmtGoals->execute(array_merge([$playerId], $matchIds));
-        foreach ($stmtGoals->fetchAll(PDO::FETCH_ASSOC) as $gRow) {
-            $goalsMap[(int)$gRow['match_id']] = (int)$gRow['cnt'];
-        }
-    }
 
     // Get aggregate player cards for this event
     // Include legacy blank-category data when specific sport_type is requested.
@@ -163,13 +170,17 @@ try {
 
         $matchId   = (int)$row['match_id'];
         $matchDuration = parseMatchDurationMinutes($row['match_duration'] ?? null);
-        $playTime = $matchDuration;
-        if ($hasLineupHalfCol) {
-            $halfCount = (int)($row['half_count'] ?? 0);
-            if ($halfCount === 1) {
-                $playTime = (int)round($matchDuration / 2);
-            } elseif ($halfCount >= 2) {
-                $playTime = $matchDuration;
+        $lineupRows = (int)($row['lineup_rows'] ?? 0);
+        $halfCount = (int)($row['half_count'] ?? 0);
+        $playTime = 0;
+        if ($lineupRows > 0) {
+            $playTime = $matchDuration;
+            if ($hasLineupHalfCol) {
+                if ($halfCount === 1) {
+                    $playTime = (int)round($matchDuration / 2);
+                } elseif ($halfCount >= 2) {
+                    $playTime = $matchDuration;
+                }
             }
         }
         $matchCategory = trim((string)($row['category_name'] ?? ''));
@@ -188,7 +199,7 @@ try {
             'my_score'      => $myScore !== null ? (int)$myScore : null,
             'their_score'   => $theirScore !== null ? (int)$theirScore : null,
             'result'        => $result,
-            'goals'         => $goalsMap[$matchId] ?? 0,
+            'goals'         => (int)($row['goals_in_match'] ?? 0),
         ];
     }
 

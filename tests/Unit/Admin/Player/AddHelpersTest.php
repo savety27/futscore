@@ -371,8 +371,8 @@ final class AddHelpersTest extends TestCase
     {
         return [
             [
-                ['23000', 1062, "Duplicate entry for key 'uq_players_name'"],
-                "Duplicate entry for key 'uq_players_name'",
+                ['23000', 1062, "Duplicate entry for key 'uq_players_team_name'"],
+                "Duplicate entry for key 'uq_players_team_name'",
                 'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.',
             ],
             [

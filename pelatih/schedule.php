@@ -225,6 +225,9 @@ try {
 <style>
 .main {
     background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+    width: calc(100% - 280px);
+    max-width: calc(100vw - 280px);
+    overflow-x: hidden;
 }
 
 .page-header {
@@ -474,7 +477,33 @@ try {
     background: #f2f6fc;
 }
 
+.schedule-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.schedule-table-wrap .data-table {
+    min-width: 1180px;
+    margin: 0;
+}
+
+@media (max-width: 1024px) {
+    .main {
+        width: calc(100% - 240px);
+        max-width: calc(100vw - 240px);
+    }
+}
+
 @media (max-width: 768px) {
+    .main {
+        width: 100%;
+        max-width: 100%;
+    }
+
     .schedule-filter-form {
         grid-template-columns: 1fr;
     }
@@ -486,8 +515,7 @@ try {
     }
 
     .schedule-table-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
     }
 
     .data-table {

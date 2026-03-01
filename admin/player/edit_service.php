@@ -18,8 +18,13 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
             throw new Exception($validationError);
         }
 
-        $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
-        $stmtCheckName->execute([$input['name'], $playerId]);
+        if (($input['team_id'] ?? null) === null || $input['team_id'] === '') {
+            $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id IS NULL AND TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
+            $stmtCheckName->execute([$input['name'], $playerId]);
+        } else {
+            $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id = ? AND TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
+            $stmtCheckName->execute([$input['team_id'], $input['name'], $playerId]);
+        }
         if ($stmtCheckName->fetchColumn()) {
             throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
         }

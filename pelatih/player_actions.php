@@ -58,10 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         return $filename;
     }
 
-    // Check duplicate player name globally across all teams.
-    function isDuplicatePlayerName($conn, $name, $exclude_id = 0) {
-        $sql = "SELECT id FROM players WHERE TRIM(name) = TRIM(?)";
-        $params = [$name];
+    // Check duplicate player name within the same team.
+    function isDuplicatePlayerName($conn, $team_id, $name, $exclude_id = 0) {
+        $sql = "SELECT id FROM players WHERE team_id = ? AND TRIM(name) = TRIM(?)";
+        $params = [$team_id, $name];
 
         if ($exclude_id > 0) {
             $sql .= " AND id <> ?";
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // --- ADD PLAYER ---
         if ($action === 'add') {
-            if (isDuplicatePlayerName($conn, $name)) {
+            if (isDuplicatePlayerName($conn, $team_id, $name)) {
                 throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
             }
 
@@ -217,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Invalid player ID.');
             }
 
-            if (isDuplicatePlayerName($conn, $name, $id)) {
+            if (isDuplicatePlayerName($conn, $team_id, $name, $id)) {
                 throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
             }
             
@@ -373,7 +373,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error_msg = 'Tidak dapat menghapus data player yang sudah pernah berkontribusi pada suatu team.';
         }
 
-        // Check duplicate key violation from DB (e.g. NIK or global name unique)
+        // Check duplicate key violation from DB (e.g. NIK or per-team name unique)
         if ($e instanceof PDOException) {
             $driver_code = (int)($e->errorInfo[1] ?? 0);
             $message_lc = strtolower($e->getMessage());
@@ -382,6 +382,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (strpos($message_lc, 'nik') !== false) {
                     $error_msg = 'NIK sudah terdaftar. Gunakan NIK yang berbeda.';
                 } elseif (
+                    strpos($message_lc, 'uq_players_team_name') !== false ||
                     strpos($message_lc, 'uq_players_name') !== false ||
                     strpos($message_lc, 'name') !== false
                 ) {

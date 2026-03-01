@@ -188,7 +188,11 @@ function playerEditMapUpdateError(PDOException $e): string
     $messageLc = strtolower($e->getMessage());
 
     if ($driverCode === 1062) {
-        if (strpos($messageLc, 'uq_players_name') !== false || strpos($messageLc, 'name') !== false) {
+        if (
+            strpos($messageLc, 'uq_players_team_name') !== false ||
+            strpos($messageLc, 'uq_players_name') !== false ||
+            strpos($messageLc, 'name') !== false
+        ) {
             return 'Error: Nama pemain sudah terdaftar. Gunakan nama yang berbeda.';
         }
 

@@ -1,5 +1,6 @@
--- Migration: enforce player name uniqueness per team
--- Date: 2026-02-13 (updated 2026-03-01)
+-- Migration: fix player-name uniqueness scope to per team
+-- Date: 2026-03-01
+-- Use this when an environment already has global UNIQUE(name).
 
 -- Optional cleanup: trim accidental leading/trailing spaces
 UPDATE players

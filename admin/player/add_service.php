@@ -11,8 +11,8 @@ function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $
         throw new Exception($validationError);
     }
 
-    $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE TRIM(name) = TRIM(?) LIMIT 1');
-    $stmtCheckName->execute([$input['name']]);
+    $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id = ? AND TRIM(name) = TRIM(?) LIMIT 1');
+    $stmtCheckName->execute([$input['team_id'], $input['name']]);
     if ($stmtCheckName->fetchColumn()) {
         throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
     }
