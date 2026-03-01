@@ -63,12 +63,12 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
         $this->assertSame('new-kk.jpg', $saved['kk_image']);
     }
 
-    public function testDuplicateNameMapsToFriendlyUpdateError(): void
+    public function testDuplicateNameInSameTeamMapsToFriendlyUpdateError(): void
     {
-        $idA = $this->insertPlayer('ITEST Nama Tetap', $this->randomNik(), 1700000000);
-        $idB = $this->insertPlayer('ITEST Nama Update', $this->randomNik(), 1700000001);
+        $idA = $this->insertPlayer('ITEST Nama Tetap', $this->randomNik(), 1700000000, '1');
+        $idB = $this->insertPlayer('ITEST Nama Update', $this->randomNik(), 1700000001, '1');
 
-        $editInput = $this->validEditInput('ITEST Nama Tetap', $this->randomNik());
+        $editInput = $this->validEditInput('ITEST Nama Tetap', $this->randomNik(), '1');
         $params = playerEditBuildUpdateParams($editInput, [], $idB);
 
         try {
@@ -81,6 +81,25 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
         }
 
         $this->assertIsInt($idA);
+    }
+
+    public function testDuplicateNameAcrossDifferentTeamsCanBeSaved(): void
+    {
+        $this->insertPlayer('ITEST Nama Lintas Tim', $this->randomNik(), 1700000000, '1');
+        $idB = $this->insertPlayer('ITEST Nama Update', $this->randomNik(), 1700000001, '2');
+
+        $editInput = $this->validEditInput('ITEST Nama Lintas Tim', $this->randomNik(), '2');
+        $params = playerEditBuildUpdateParams($editInput, [], $idB);
+
+        $stmt = $this->pdo->prepare(playerEditUpdateSql());
+        $stmt->execute($params);
+
+        $verify = $this->pdo->prepare('SELECT name, team_id FROM players WHERE id = :id LIMIT 1');
+        $verify->execute([':id' => $idB]);
+        $saved = $verify->fetch();
+
+        $this->assertSame('ITEST Nama Lintas Tim', $saved['name']);
+        $this->assertSame('2', (string)$saved['team_id']);
     }
 
     public function testDuplicateNikMapsToFriendlyUpdateError(): void
@@ -102,9 +121,9 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
         }
     }
 
-    private function insertPlayer(string $name, string $nik, int $timestamp): int
+    private function insertPlayer(string $name, string $nik, int $timestamp, string $teamId = '1'): int
     {
-        $input = $this->validAddInput($name, $nik);
+        $input = $this->validAddInput($name, $nik, $teamId);
         $slug = playerAddGenerateSlug($name, $timestamp);
         $params = playerAddBuildInsertParams($input, [
             'photo_file' => 'orig-photo.jpg',
@@ -120,7 +139,7 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
         return (int)$this->pdo->lastInsertId();
     }
 
-    private function validAddInput(string $name, string $nik): array
+    private function validAddInput(string $name, string $nik, string $teamId = '1'): array
     {
         return [
             'name' => $name,
@@ -140,7 +159,7 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
             'province' => 'DKI Jakarta',
             'postal_code' => '12345',
             'country' => 'Indonesia',
-            'team_id' => '1',
+            'team_id' => $teamId,
             'jersey_number' => '10',
             'dominant_foot' => 'Kanan',
             'position' => 'Forward',
@@ -157,7 +176,7 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
         ];
     }
 
-    private function validEditInput(string $name, string $nik): array
+    private function validEditInput(string $name, string $nik, string $teamId = '1'): array
     {
         return [
             'name' => $name,
@@ -177,7 +196,7 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
             'province' => 'Jawa Barat',
             'postal_code' => '40211',
             'country' => 'Indonesia',
-            'team_id' => '1',
+            'team_id' => $teamId,
             'jersey_number' => '9',
             'dominant_foot' => 'Kanan',
             'position' => 'FW',

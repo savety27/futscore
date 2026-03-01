@@ -58,11 +58,11 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
         $this->assertSame('kk-a.jpg', $saved['kk_image']);
     }
 
-    public function testDuplicateNameMapsToFriendlyErrorMessage(): void
+    public function testDuplicateNameInSameTeamMapsToFriendlyErrorMessage(): void
     {
         playerAddCreatePlayer(
             $this->pdo,
-            $this->validPostInput('ITEST Nama Sama', $this->randomNik()),
+            $this->validPostInput('ITEST Nama Sama', $this->randomNik(), '1'),
             ['kk_file' => ['error' => UPLOAD_ERR_OK]],
             $this->fakeUploadResolver('photo-1.jpg', 'ktp-1.jpg', 'kk-1.jpg', 'akte-1.jpg', 'ijazah-1.jpg')
         );
@@ -72,10 +72,34 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
 
         playerAddCreatePlayer(
             $this->pdo,
-            $this->validPostInput('ITEST Nama Sama', $this->randomNik()),
+            $this->validPostInput('ITEST Nama Sama', $this->randomNik(), '1'),
             ['kk_file' => ['error' => UPLOAD_ERR_OK]],
             $this->fakeUploadResolver('photo-2.jpg', 'ktp-2.jpg', 'kk-2.jpg', 'akte-2.jpg', 'ijazah-2.jpg')
         );
+    }
+
+    public function testDuplicateNameAcrossDifferentTeamsIsAllowed(): void
+    {
+        playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Beda Tim', $this->randomNik(), '1'),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-1.jpg', 'ktp-1.jpg', 'kk-1.jpg', 'akte-1.jpg', 'ijazah-1.jpg')
+        );
+
+        $playerId = playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Beda Tim', $this->randomNik(), '2'),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-2.jpg', 'ktp-2.jpg', 'kk-2.jpg', 'akte-2.jpg', 'ijazah-2.jpg')
+        );
+
+        $stmt = $this->pdo->prepare('SELECT team_id, name FROM players WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $playerId]);
+        $saved = $stmt->fetch();
+
+        $this->assertSame('2', (string)$saved['team_id']);
+        $this->assertSame('ITEST Nama Beda Tim', $saved['name']);
     }
 
     public function testDuplicateNikMapsToFriendlyErrorMessage(): void
@@ -100,7 +124,7 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
         );
     }
 
-    private function validPostInput(string $name, string $nik): array
+    private function validPostInput(string $name, string $nik, string $teamId = '1'): array
     {
         return [
             'name' => $name,
@@ -120,7 +144,7 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
             'province' => 'DKI Jakarta',
             'postal_code' => '12345',
             'country' => 'Indonesia',
-            'team_id' => '1',
+            'team_id' => $teamId,
             'jersey_number' => '10',
             'dominant_foot' => 'Kanan',
             'position' => 'Forward',
