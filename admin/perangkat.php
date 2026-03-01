@@ -717,7 +717,7 @@ try {
             <div class="page-header">
                 <div class="page-title"><i class="fas fa-user-tie"></i><span>Daftar Perangkat</span></div>
                 <div class="action-buttons">
-                    <a href="perangkat_create.php" class="btn btn-primary"><i class="fas fa-plus"></i>Tambah Staff</a>
+                    <a href="perangkat_create.php" class="btn btn-primary"><i class="fas fa-plus"></i>Tambah Perangkat</a>
                     <button type="button" class="btn btn-success" onclick="exportPerangkat()"><i class="fas fa-download"></i>Export Excel</button>
                 </div>
             </div>
@@ -823,8 +823,8 @@ try {
                                 <td colspan="9" style="text-align:center;padding:40px;">
                                     <div class="empty-state">
                                         <i class="fas fa-user-tie"></i>
-                                        <h3>Belum Ada Data Staff</h3>
-                                        <p>Mulai dengan menambahkan staff pertama Anda menggunakan tombol "Add Staff" di atas.</p>
+                                        <h3>Belum Ada Data Perangkat</h3>
+                                        <p>Mulai dengan menambahkan perangkat pertama Anda menggunakan tombol "Tambah Perangkat" di atas.</p>
                                     </div>
                                 </td>
                             </tr>

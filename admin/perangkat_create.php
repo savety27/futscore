@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ];
 
     if (empty($form_data['name'])) {
-        $errors['name'] = "Nama staff harus diisi";
+        $errors['name'] = "Nama perangkat harus diisi";
     }
 
     if (empty($form_data['no_ktp'])) {
@@ -259,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $conn->commit();
             unset($_SESSION[$temp_upload_session_key]);
-            $_SESSION['success_message'] = "Staff berhasil ditambahkan!";
+            $_SESSION['success_message'] = "Perangkat berhasil ditambahkan!";
             header("Location: perangkat.php");
             exit;
         } catch (PDOException $e) {
@@ -941,17 +941,17 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                     </div>
 
                     <div class="form-section">
-                        <div class="section-title"><i class="fas fa-toggle-on"></i>Status Staff</div>
+                        <div class="section-title"><i class="fas fa-toggle-on"></i>Status Perangkat</div>
                         <div class="checkbox-group">
                             <input type="checkbox" id="is_active" name="is_active" value="1" <?php echo $form_data['is_active'] ? 'checked' : ''; ?>>
-                            <label for="is_active">Staff Aktif</label>
+                            <label for="is_active">Perangkat Aktif</label>
                         </div>
-                        <small style="color:#666;">Staff aktif akan tampil dalam sistem</small>
+                        <small style="color:#666;">Perangkat aktif akan tampil dalam sistem</small>
                     </div>
 
                     <div class="form-actions">
                         <button type="reset" class="btn btn-secondary"><i class="fas fa-redo"></i>Reset</button>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>Simpan Staff</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>Simpan Perangkat</button>
                     </div>
                 </form>
             </div>
@@ -1274,6 +1274,12 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
             document.getElementById('perangkatForm').addEventListener('submit', function(e) {
                 let valid = true;
                 const errorMessages = [];
+                let firstInvalidTarget = null;
+                const setFirstInvalidTarget = function(target) {
+                    if (!firstInvalidTarget && target) {
+                        firstInvalidTarget = target;
+                    }
+                };
 
                 const name = document.getElementById('name').value.trim();
                 const noKtp = document.getElementById('no_ktp').value.trim();
@@ -1284,34 +1290,42 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 const ktpPhoto = document.getElementById('ktp_photo');
 
                 if (!name) {
-                    errorMessages.push('Nama staff harus diisi');
+                    errorMessages.push('Nama perangkat harus diisi');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('name'));
                 }
                 if (!noKtp) {
                     errorMessages.push('No. KTP harus diisi');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('no_ktp'));
                 } else if (!/^[0-9]{16}$/.test(noKtp)) {
                     errorMessages.push('No. KTP harus 16 digit angka');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('no_ktp'));
                 } else if (!noKtpVerified || noKtpVerified.value !== '1') {
                     errorMessages.push('No. KTP belum diverifikasi');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('no_ktp'));
                 }
                 if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                     errorMessages.push('Format email tidak valid');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('email'));
                 }
                 if (phone && !/^[0-9+\-\s]{8,20}$/.test(phone)) {
                     errorMessages.push('No. telepon harus 8-20 karakter');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('phone'));
                 }
                 if (postalCode && !/^[0-9]{5}$/.test(postalCode)) {
                     errorMessages.push('Kode pos harus 5 digit angka');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('postal_code'));
                 }
                 if (!dateOfBirth) {
                     errorMessages.push('Tanggal lahir harus diisi');
                     valid = false;
+                    setFirstInvalidTarget(document.getElementById('date_of_birth'));
                 }
                 if (!ktpPhoto.files.length && !hasPersistedKtpPhoto) {
                     errorMessages.push('Foto KTP wajib diupload');
@@ -1325,6 +1339,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                             block: 'center'
                         });
                     }
+                    setFirstInvalidTarget(ktpUploadContainer || ktpPhoto);
                 } else if (ktpUploadContainer && ktpPhotoAlert) {
                     ktpUploadContainer.classList.remove('required-missing');
                     ktpPhotoAlert.classList.remove('show');
@@ -1342,6 +1357,18 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 if (!valid) {
                     e.preventDefault();
                     toastr.error(errorMessages.join('<br>'));
+                    if (firstInvalidTarget) {
+                        firstInvalidTarget.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                        const focusableTarget = firstInvalidTarget.matches('input, select, textarea, button')
+                            ? firstInvalidTarget
+                            : firstInvalidTarget.querySelector('input, select, textarea, button');
+                        if (focusableTarget) {
+                            focusableTarget.focus({ preventScroll: true });
+                        }
+                    }
                 }
             });
         });
