@@ -2,6 +2,8 @@
 session_start();
 require_once '../config/database.php';
 
+header('Content-Type: application/json');
+
 if (!isset($_SESSION['admin_logged_in'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -16,36 +18,95 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $player_id = (int)$_GET['id'];
 
+function tableExists(PDO $conn, string $table): bool
+{
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+        return false;
+    }
+    $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+    return (bool) $stmt->fetchColumn();
+}
+
+function columnExists(PDO $conn, string $table, string $column): bool
+{
+    if (!tableExists($conn, $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+        return false;
+    }
+    $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+    return (bool) $stmt->fetchColumn();
+}
+
+function countByPlayerRef(PDO $conn, string $table, string $column, int $playerId): int
+{
+    if (!columnExists($conn, $table, $column)) {
+        return 0;
+    }
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+    $stmt->execute([$playerId]);
+    return (int) $stmt->fetchColumn();
+}
+
+function deleteByPlayerRef(PDO $conn, string $table, string $column, int $playerId): void
+{
+    if (!columnExists($conn, $table, $column)) {
+        return;
+    }
+    $stmt = $conn->prepare("DELETE FROM `{$table}` WHERE `{$column}` = ?");
+    $stmt->execute([$playerId]);
+}
+
 try {
-    // First get player data (files are deleted only after DB delete succeeds)
-    $stmt = $conn->prepare("SELECT photo, ktp_image, kk_image, birth_cert_image, diploma_image FROM players WHERE id = ?");
+    // Get player data first (files are deleted only after DB delete succeeds)
+    $stmt = $conn->prepare("SELECT id, status, photo, ktp_image, kk_image, birth_cert_image, diploma_image FROM players WHERE id = ?");
     $stmt->execute([$player_id]);
     $player = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $conn->beginTransaction();
-    
-    // Hapus data terkait lebih dulu untuk menghindari constraint FK
-    try {
-        $stmt = $conn->prepare("DELETE FROM transfers WHERE player_id = ?");
-        $stmt->execute([$player_id]);
-    } catch (Exception $e) {
-        // Table mungkin tidak ada, tidak perlu khawatir
+    if (!$player) {
+        echo json_encode(['success' => false, 'message' => 'Player tidak ditemukan']);
+        exit;
     }
 
-    // Juga hapus dari tabel player_documents dan player_skills jika ada
-    try {
-        $stmt = $conn->prepare("DELETE FROM player_documents WHERE player_id = ?");
-        $stmt->execute([$player_id]);
-    } catch (Exception $e) {
-        // Table mungkin tidak ada, tidak perlu khawatir
+    $statusRaw = strtolower(trim((string)($player['status'] ?? 'inactive')));
+    $isInactive = in_array($statusRaw, ['inactive', 'nonaktif', 'non-aktif', 'non active', '0'], true);
+
+    // Data turunan utama yang menandakan player sudah dipakai di data pertandingan/event
+    $usage_map = [
+        ['table' => 'lineups', 'column' => 'player_id', 'label' => 'lineup'],
+        ['table' => 'goals', 'column' => 'player_id', 'label' => 'goal'],
+        ['table' => 'transfers', 'column' => 'player_id', 'label' => 'transfer'],
+        ['table' => 'player_event_cards', 'column' => 'player_id', 'label' => 'event_card']
+    ];
+
+    $usage_sources = [];
+    foreach ($usage_map as $usage) {
+        $count = countByPlayerRef($conn, $usage['table'], $usage['column'], $player_id);
+        if ($count > 0) {
+            $usage_sources[] = $usage['label'];
+        }
     }
-    
-    try {
-        $stmt = $conn->prepare("DELETE FROM player_skills WHERE player_id = ?");
-        $stmt->execute([$player_id]);
-    } catch (Exception $e) {
-        // Table mungkin tidak ada, tidak perlu khawatir
+    $usage_sources = array_values(array_unique($usage_sources));
+
+    // Rule:
+    // - Nonaktif => bisa hapus tanpa terkecuali (override)
+    // - Aktif + ada data turunan => tidak bisa hapus
+    // - Aktif + belum ada data turunan => bisa hapus
+    if (!$isInactive && !empty($usage_sources)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Player aktif tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.'
+        ]);
+        exit;
     }
+
+    $conn->beginTransaction();
+
+    // Cleanup data turunan agar delete player tidak mentok FK
+    deleteByPlayerRef($conn, 'goals', 'player_id', $player_id);
+    deleteByPlayerRef($conn, 'lineups', 'player_id', $player_id);
+    deleteByPlayerRef($conn, 'transfers', 'player_id', $player_id);
+    deleteByPlayerRef($conn, 'player_event_cards', 'player_id', $player_id);
+    deleteByPlayerRef($conn, 'player_documents', 'player_id', $player_id);
+    deleteByPlayerRef($conn, 'player_skills', 'player_id', $player_id);
 
     // HARD DELETE (benar-benar hapus dari database)
     $stmt = $conn->prepare("DELETE FROM players WHERE id = ?");
@@ -85,23 +146,22 @@ try {
             }
         }
 
-        echo json_encode(['success' => true, 'message' => 'Player berhasil dihapus permanen']);
+        echo json_encode(['success' => true, 'message' => 'Player berhasil dihapus']);
     } else {
         $conn->rollBack();
-        echo json_encode(['success' => false, 'message' => 'Player tidak ditemukan']);
+        echo json_encode(['success' => false, 'message' => 'Gagal menghapus player']);
     }
 } catch (Exception $e) {
     if ($conn->inTransaction()) {
         $conn->rollBack();
     }
-    http_response_code(500);
-    $message = $e->getMessage();
-    
-    // Check for foreign key constraint violation
-    if (strpos($message, '1451') !== false || strpos($message, 'foreign key constraint fails') !== false) {
-        $message = 'Tidak dapat menghapus data player yang sudah pernah berkontribusi pada suatu team.';
+    $sqlState = (string) $e->getCode();
+    $dbCode = (int) ($e->errorInfo[1] ?? 0);
+    if ($sqlState === '23000' || $dbCode === 1451 || $dbCode === 1452) {
+        echo json_encode(['success' => false, 'message' => 'Data player tidak bisa dihapus karena masih terhubung dengan data turunan.']);
+        exit;
     }
-    
-    echo json_encode(['success' => false, 'message' => $message]);
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Terjadi kesalahan saat menghapus player.']);
 }
 ?>

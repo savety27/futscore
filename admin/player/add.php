@@ -848,6 +848,13 @@ try {
         }
         .verify-btn.verified {
             background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+            color: #ffffff;
+        }
+        .verify-btn.verified:disabled {
+            background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+            color: #ffffff;
+            opacity: 1;
+            cursor: default;
         }
         .verify-feedback {
             margin-top: 8px;
@@ -926,6 +933,11 @@ try {
                 </div>
             <?php endif; ?>
 
+            <div class="alert alert-error" id="clientAlertBox" style="display: none;">
+                <span class="alert-icon">!</span>
+                <span id="clientAlertText"></span>
+            </div>
+
             <!-- Form -->
             <form action="" method="POST" enctype="multipart/form-data" id="playerForm">
                 <!-- Profile Section -->
@@ -961,11 +973,11 @@ try {
 
                             <div class="form-group">
                                 <label class="form-label">
-                                    <span class="required-field">Event</span>
+                                    <span class="required-field">Kategori</span>
                                     <span class="note">Wajib diisi</span>
                                 </label>
                                 <select name="sport" class="form-control" required>
-                                    <option value="">Pilih Event</option>
+                                    <option value="">Pilih Kategori</option>
                                     <?php foreach ($event_options as $sport_option): ?>
                                         <option value="<?php echo htmlspecialchars($sport_option); ?>" 
                                             <?php echo (isset($_POST['sport']) && $_POST['sport'] == $sport_option) ? 'selected' : ''; ?>>
@@ -1206,7 +1218,7 @@ try {
                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--danger);">Maksimal 5MB</p>
                                         <p class="kk-warning">* FILE KARTU KELUARGA WAJIB DIUPLOAD!</p>
                                     </div>
-                                    <input type="file" name="kk_file" id="kkFile" accept="image/*" required>
+                                    <input type="file" name="kk_file" id="kkFile" accept="image/*">
                                 </div>
                                 <div class="file-preview" id="kkPreview"></div>
                             </div>
@@ -1450,7 +1462,7 @@ try {
 
     function handleFileSelect(file, previewContainer, uploadArea, isRequired = false) {
         if (!file.type.startsWith('image/')) {
-            alert('Harap pilih file gambar!');
+            showClientAlert('Harap pilih file gambar!');
             return;
         }
 
@@ -1499,6 +1511,24 @@ try {
         const errorMessage = document.getElementById('kkErrorMessage');
         if (errorMessage) {
             errorMessage.classList.remove('show');
+        }
+    }
+
+    function showClientAlert(message) {
+        const alertBox = document.getElementById('clientAlertBox');
+        const alertText = document.getElementById('clientAlertText');
+        if (!alertBox || !alertText) {
+            return;
+        }
+        alertText.textContent = message;
+        alertBox.style.display = 'flex';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideClientAlert() {
+        const alertBox = document.getElementById('clientAlertBox');
+        if (alertBox) {
+            alertBox.style.display = 'none';
         }
     }
 
@@ -1734,73 +1764,120 @@ try {
     const playerForm = document.getElementById('playerForm');
     if (playerForm) {
         playerForm.addEventListener('submit', function(e) {
-            const name = document.querySelector('input[name="name"]').value.trim();
-            const placeOfBirth = document.querySelector('input[name="place_of_birth"]').value.trim();
-            const dateOfBirth = document.querySelector('input[name="date_of_birth"]').value.trim();
-            const sport = document.querySelector('select[name="sport"]').value;
+            hideClientAlert();
+            const nameInput = document.querySelector('input[name="name"]');
+            const placeOfBirthInput = document.querySelector('input[name="place_of_birth"]');
+            const dateOfBirthInput = document.querySelector('input[name="date_of_birth"]');
+            const sportInput = document.querySelector('select[name="sport"]');
+            const genderInput = document.querySelector('input[name="gender"]');
+            const nikField = document.querySelector('input[name="nik"]');
+            const nisnField = document.querySelector('input[name="nisn"]');
+            const teamInput = document.querySelector('select[name="team_id"]');
+            const jerseyNumberInput = document.querySelector('input[name="jersey_number"]');
+            const dominantFootInput = document.querySelector('input[name="dominant_foot"]');
+            const positionInput = document.querySelector('select[name="position"]');
+
+            const name = nameInput ? nameInput.value.trim() : '';
+            const placeOfBirth = placeOfBirthInput ? placeOfBirthInput.value.trim() : '';
+            const dateOfBirth = dateOfBirthInput ? dateOfBirthInput.value.trim() : '';
+            const sport = sportInput ? sportInput.value : '';
             const gender = document.querySelector('input[name="gender"]:checked');
-            const nik = document.querySelector('input[name="nik"]').value.trim();
-            const nisn = document.querySelector('input[name="nisn"]').value.trim();
-            const teamId = document.querySelector('select[name="team_id"]').value;
-            const jerseyNumber = document.querySelector('input[name="jersey_number"]').value.trim();
+            const nik = nikField ? nikField.value.trim() : '';
+            const nisn = nisnField ? nisnField.value.trim() : '';
+            const teamId = teamInput ? teamInput.value : '';
+            const jerseyNumber = jerseyNumberInput ? jerseyNumberInput.value.trim() : '';
             const dominantFoot = document.querySelector('input[name="dominant_foot"]:checked');
-            const position = document.querySelector('select[name="position"]').value;
+            const position = positionInput ? positionInput.value : '';
+
+            function focusToField(target) {
+                if (!target) return;
+                const focusTarget = target.matches('input, select, textarea, button')
+                    ? target
+                    : target.querySelector('input, select, textarea, button');
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (focusTarget) {
+                    focusTarget.focus({ preventScroll: true });
+                }
+            }
+
+            const requiredChecks = [
+                { valid: !!name, target: nameInput, message: 'Nama wajib diisi.' },
+                { valid: !!placeOfBirth, target: placeOfBirthInput, message: 'Tempat lahir wajib diisi.' },
+                { valid: !!dateOfBirth, target: dateOfBirthInput, message: 'Tanggal lahir wajib diisi.' },
+                { valid: !!sport, target: sportInput, message: 'Kategori wajib dipilih.' },
+                { valid: !!gender, target: genderInput, message: 'Jenis kelamin wajib dipilih.' },
+                { valid: !!nik, target: nikField, message: 'NIK wajib diisi.' },
+                { valid: !!nisn, target: nisnField, message: 'NISN wajib diisi.' }
+            ];
+
+            for (const check of requiredChecks) {
+                if (!check.valid) {
+                    e.preventDefault();
+                    showClientAlert(check.message);
+                    focusToField(check.target);
+                    return false;
+                }
+            }
             
             // VALIDASI FILE KK - WAJIB DIISI
             const kkFile = document.getElementById('kkFile');
             if (!kkFile.files || kkFile.files.length === 0) {
                 e.preventDefault();
                 showKKErrorMessage();
-                const documentsSection = document.querySelector('.form-section:nth-child(3)');
-                if (documentsSection) {
-                    documentsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    setTimeout(() => {
-                        const kkUpload = document.getElementById('kkUpload');
-                        if (kkUpload) {
-                            kkUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            kkUpload.classList.add('kk-highlight');
-                            setTimeout(() => kkUpload.classList.remove('kk-highlight'), 3000);
-                        }
-                    }, 500);
+                const kkUpload = document.getElementById('kkUpload');
+                if (kkUpload) {
+                    kkUpload.setAttribute('tabindex', '-1');
+                    focusToField(kkUpload);
+                    kkUpload.classList.add('kk-highlight');
+                    setTimeout(() => kkUpload.classList.remove('kk-highlight'), 3000);
                 }
-                alert('❌ PERHATIAN!\n\nFile Kartu Keluarga (KK) belum diupload!\n\nSilakan upload file KK terlebih dahulu.');
                 return false;
+            }
+
+            const tailRequiredChecks = [
+                { valid: !!teamId, target: teamInput, message: 'Team wajib dipilih.' },
+                { valid: !!jerseyNumber, target: jerseyNumberInput, message: 'No punggung wajib diisi.' },
+                { valid: !!dominantFoot, target: dominantFootInput, message: 'Kaki dominan wajib dipilih.' },
+                { valid: !!position, target: positionInput, message: 'Posisi wajib dipilih.' }
+            ];
+
+            for (const check of tailRequiredChecks) {
+                if (!check.valid) {
+                    e.preventDefault();
+                    showClientAlert(check.message);
+                    focusToField(check.target);
+                    return false;
+                }
             }
 
             // Validasi NIK 16 digit
             if (!/^[0-9]{16}$/.test(nik)) {
                 e.preventDefault();
-                alert('NIK harus terdiri dari tepat 16 digit angka!');
-                nikInput.focus();
+                showClientAlert('NIK harus terdiri dari tepat 16 digit angka!');
+                focusToField(nikField);
                 return false;
             }
 
             // Validasi NISN 10 digit
             if (!/^[0-9]{10}$/.test(nisn)) {
                 e.preventDefault();
-                alert('NISN harus terdiri dari tepat 10 digit angka!');
-                nisnInput.focus();
+                showClientAlert('NISN harus terdiri dari tepat 10 digit angka!');
+                focusToField(nisnField);
                 return false;
             }
 
             // CHECK VERIFICATION STATUS
             if (nikVerified.value !== '1') {
                 e.preventDefault();
-                alert('❌ NIK belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
-                nikInput.focus();
+                showClientAlert('❌ NIK belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
+                focusToField(nikField);
                 return false;
             }
 
             if (nisnVerified.value !== '1') {
                 e.preventDefault();
-                alert('❌ NISN belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
-                nisnInput.focus();
-                return false;
-            }
-
-            if (!name || !placeOfBirth || !dateOfBirth || !sport || !gender || !nik || !nisn || !teamId || !jerseyNumber || !dominantFoot || !position) {
-                e.preventDefault();
-                alert('Harap lengkapi semua field yang wajib diisi!');
+                showClientAlert('❌ NISN belum terverifikasi!\n\nSilakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
+                focusToField(nisnField);
                 return false;
             }
         });
