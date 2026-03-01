@@ -1092,69 +1092,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Jalankan saat role berubah
     roleSelect.addEventListener('change', toggleRoleFields);
 
-    // Toggle show/hide password
-    document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            if (!input) return;
-
-            const icon = this.querySelector('i');
-            const isPassword = input.type === 'password';
-
-            input.type = isPassword ? 'text' : 'password';
-
-            if (icon) {
-                icon.classList.toggle('fa-eye', !isPassword);
-                icon.classList.toggle('fa-eye-slash', isPassword);
-            }
-        });
-    });
-
-    // Live password match indicator
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirm_password');
-    const passwordMatchStatus = document.getElementById('passwordMatchStatus');
-
-    function updatePasswordMatchStatus() {
-        if (!passwordInput || !confirmPasswordInput || !passwordMatchStatus) return;
-
-        const passwordVal = passwordInput.value;
-        const confirmVal = confirmPasswordInput.value;
-        const formGroup = confirmPasswordInput.closest('.form-group');
-        const existingError = formGroup ? formGroup.querySelector('.error[data-field="confirm_password"]') : null;
-
-        if (!passwordVal && !confirmVal) {
-            passwordMatchStatus.textContent = '';
-            passwordMatchStatus.className = 'password-match-status';
-            confirmPasswordInput.classList.remove('is-invalid');
-            if (existingError) existingError.remove();
-            return;
-        }
-
-        if (passwordVal && confirmVal && passwordVal === confirmVal) {
-            passwordMatchStatus.textContent = 'Password cocok';
-            passwordMatchStatus.className = 'password-match-status match';
-            confirmPasswordInput.classList.remove('is-invalid');
-            if (existingError) existingError.remove();
-        } else if (confirmVal) {
-            passwordMatchStatus.textContent = 'Password tidak cocok';
-            passwordMatchStatus.className = 'password-match-status mismatch';
-            confirmPasswordInput.classList.add('is-invalid');
-        } else {
-            passwordMatchStatus.textContent = '';
-            passwordMatchStatus.className = 'password-match-status';
-            confirmPasswordInput.classList.remove('is-invalid');
-            if (existingError) existingError.remove();
-        }
-    }
-
-    if (passwordInput && confirmPasswordInput) {
-        passwordInput.addEventListener('input', updatePasswordMatchStatus);
-        confirmPasswordInput.addEventListener('input', updatePasswordMatchStatus);
-        updatePasswordMatchStatus();
-    }
-
     // Form Validation
     const form = document.getElementById('pelatihForm');
     form.addEventListener('submit', function(e) {
