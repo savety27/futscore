@@ -1530,13 +1530,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Set default birth date to 18 years ago
-    const birthDateInput = document.querySelector('input[name="birth_date"]');
-    if (birthDateInput && !birthDateInput.value) {
-        const defaultDate = new Date();
-        defaultDate.setFullYear(defaultDate.getFullYear() - 18);
-        birthDateInput.value = defaultDate.toISOString().split('T')[0];
-    }
+    // Keep birth date empty on initial load; user must choose manually.
 });
 </script>
 

@@ -1883,16 +1883,11 @@ try {
         });
     }
 
-    // Auto-fill date of birth format hint
+    // Keep date of birth empty on initial load; user must choose manually.
     const dateInput = document.querySelector('input[name="date_of_birth"]');
     if (dateInput) {
         const today = new Date();
         dateInput.max = today.toISOString().split('T')[0];
-        if (!dateInput.value) {
-            const defaultDate = new Date();
-            defaultDate.setFullYear(defaultDate.getFullYear() - 18);
-            dateInput.value = defaultDate.toISOString().split('T')[0];
-        }
     }
 
     // Trigger validation on page load
