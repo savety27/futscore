@@ -1073,6 +1073,12 @@ select.form-control {
                                 <p>Upload Photo Player Baru (Opsional)</p>
                                 <small>Format: JPG, PNG | Maks: 5MB</small>
                             </div>
+                            <?php if (!empty($player['photo'])): ?>
+                                <div class="delete-checkbox">
+                                    <input type="checkbox" id="delete_photo" name="delete_photo" value="1">
+                                    <label for="delete_photo">Hapus foto saat ini</label>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="form-group">
@@ -1504,6 +1510,11 @@ function previewImage(input) {
         reader.onload = function(e) {
             const preview = document.getElementById('photoPreview');
             preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+
+            const deletePhotoCheckbox = document.getElementById('delete_photo');
+            if (deletePhotoCheckbox) {
+                deletePhotoCheckbox.checked = false;
+            }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -1985,4 +1996,3 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php include __DIR__ . '/../includes/sidebar_js.php'; ?>
 </body>
 </html>
-

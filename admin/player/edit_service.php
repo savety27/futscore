@@ -41,7 +41,7 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
         playerEditEnsureUploadDirectory($uploadDir);
 
         $resolvedFiles = [
-            'photo' => playerEditHandlePhotoUpload($files, $existingPlayer['photo'] ?? null, $uploadDir),
+            'photo' => playerEditHandlePhotoUpload($post, $files, $existingPlayer['photo'] ?? null, $uploadDir),
             'ktp_image' => playerEditHandleDocumentUpload($post, $files, 'ktp_image', 'ktp', $existingPlayer['ktp_image'] ?? null, $uploadDir),
             'kk_image' => playerEditHandleDocumentUpload($post, $files, 'kk_image', 'kk', $existingPlayer['kk_image'] ?? null, $uploadDir),
             'birth_cert_image' => playerEditHandleDocumentUpload($post, $files, 'birth_cert_image', 'akte', $existingPlayer['birth_cert_image'] ?? null, $uploadDir),
@@ -74,16 +74,21 @@ function playerEditEnsureUploadDirectory(string $uploadDir): void
     playerFileEnsureUploadDirectory($uploadDir);
 }
 
-function playerEditHandlePhotoUpload(array $files, ?string $existingPhoto, string $uploadDir): ?string
+function playerEditHandlePhotoUpload(array $post, array $files, ?string $existingPhoto, string $uploadDir): ?string
 {
-    if (!isset($files['photo']) || $files['photo']['error'] !== UPLOAD_ERR_OK) {
+    if (isset($files['photo']) && $files['photo']['error'] === UPLOAD_ERR_OK) {
+        playerFileDeleteIfExists($uploadDir, $existingPhoto);
+        $newFilename = playerFileMoveUploaded($files['photo'], $uploadDir, 'player_');
+        if ($newFilename !== null) {
+            return $newFilename;
+        }
+
         return $existingPhoto;
     }
 
-    playerFileDeleteIfExists($uploadDir, $existingPhoto);
-    $newFilename = playerFileMoveUploaded($files['photo'], $uploadDir, 'player_');
-    if ($newFilename !== null) {
-        return $newFilename;
+    if (isset($post['delete_photo']) && $post['delete_photo'] === '1') {
+        playerFileDeleteIfExists($uploadDir, $existingPhoto);
+        return null;
     }
 
     return $existingPhoto;
