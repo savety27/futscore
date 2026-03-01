@@ -79,6 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!empty($form_data['email']) && !filter_var($form_data['email'], FILTER_VALIDATE_EMAIL)) {
         $errors['email'] = "Format email tidak valid";
     }
+    if (!empty($form_data['phone']) && !preg_match('/^\d+$/', $form_data['phone'])) {
+        $errors['phone'] = "No. telepon hanya boleh berisi angka";
+    }
     
     // Handle photo upload
     $photo_path = null;
@@ -1112,12 +1115,18 @@ body {
                             <label class="form-label" for="phone">
                                 No. Telepon
                             </label>
-                            <input type="tel" 
+                            <input type="text" 
                                    id="phone" 
                                    name="phone" 
-                                   class="form-input" 
+                                    class="form-input" 
+                                   inputmode="numeric"
+                                   pattern="[0-9]+"
+                                   oninput="this.value=this.value.replace(/[^0-9]/g,'');"
                                    value="<?php echo htmlspecialchars($form_data['phone'] ?? ''); ?>"
-                                   placeholder="+62 812-3456-7890">
+                                   placeholder="Contoh: 081234567890">
+                            <?php if (isset($errors['phone'])): ?>
+                                <span class="error"><?php echo $errors['phone']; ?></span>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="form-group">
@@ -1542,6 +1551,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const name = document.getElementById('name').value.trim();
         const position = document.getElementById('position').value.trim();
         const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
         
         let valid = true;
         let errorMessage = '';
@@ -1563,6 +1573,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (email && !isValidEmail(email)) {
             errorMessage += 'Format email tidak valid\n';
+            valid = false;
+        }
+        if (phone && !/^\d+$/.test(phone)) {
+            errorMessage += 'No. telepon hanya boleh berisi angka\n';
             valid = false;
         }
         
