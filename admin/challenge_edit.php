@@ -454,6 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<link rel="stylesheet" href="../css/challenge_official_combobox.css?v=<?php echo (int) @filemtime(__DIR__ . '/../css/challenge_official_combobox.css'); ?>">
 <style>
 :root {
     --primary: #0f2744;
@@ -1308,23 +1309,25 @@ body {
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="match_official">
+                            <label class="form-label" for="match_official_search">
                                 Wasit/Pengawas
                             </label>
-                            <input type="text"
-                                   id="match_official_search"
-                                   class="form-input"
-                                   placeholder="Ketik untuk filter wasit/pengawas...">
-                            <select id="match_official"
-                                    name="match_official"
-                                    class="form-select <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
-                                <option value="">Pilih Wasit/Pengawas</option>
-                                <?php foreach ($perangkat_official_names as $official_name): ?>
-                                    <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($challenge_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($official_name); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="official-combobox" data-official-combobox>
+                                <input type="text"
+                                       id="match_official_search"
+                                       class="form-input official-combobox-input"
+                                       placeholder="Cari dan pilih wasit/pengawas...">
+                                <select id="match_official"
+                                        name="match_official"
+                                        class="form-select official-combobox-native <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
+                                    <option value="">Pilih Wasit/Pengawas</option>
+                                    <?php foreach ($perangkat_official_names as $official_name): ?>
+                                        <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($challenge_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($official_name); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                             <?php if (isset($errors['match_official'])): ?>
                                 <span class="error"><?php echo $errors['match_official']; ?></span>
                             <?php endif; ?>
