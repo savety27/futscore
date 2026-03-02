@@ -1248,6 +1248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectEl || !searchEl) {
             return;
         }
+        const formEl = searchEl.form || selectEl.form || document.getElementById('challengeForm');
 
         const allOptions = Array.from(selectEl.options)
             .filter((opt) => String(opt.value || '').trim() !== '')
@@ -1300,6 +1301,13 @@ document.addEventListener('DOMContentLoaded', function() {
         selectEl.addEventListener('change', function () {
             renderOfficialOptions(searchEl.value);
         });
+        if (formEl) {
+            formEl.addEventListener('reset', function () {
+                setTimeout(function () {
+                    renderOfficialOptions(searchEl.value);
+                }, 0);
+            });
+        }
     }
 
     // Update VS Display when teams are selected
