@@ -1248,6 +1248,32 @@ $db_status = $db ? "connected" : "disconnected";
                 spin 0.8s linear infinite,
                 spinner-glow 1s ease-in-out infinite alternate;
         }
+
+        .btn-back-dashboard {
+            margin-top: var(--space-md);
+            width: 100%;
+            min-height: 50px;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.08);
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            text-decoration: none;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            transition: all 0.25s var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-back-dashboard:hover {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--text-primary);
+            border-color: rgba(56, 189, 248, 0.55);
+        }
         
         @keyframes spinner-glow {
             from {
@@ -1700,6 +1726,11 @@ $db_status = $db ? "connected" : "disconnected";
                         <i class="fas fa-arrow-right btn-icon"></i>
                         <div class="loading-spinner"></div>
                     </button>
+
+                    <a href="index.php" class="btn-back-dashboard" id="backDashboardBtn">
+                        <i class="fas fa-arrow-left"></i>
+                        Kembali ke Dashboard
+                    </a>
                 </form>
             </div>
             
@@ -1744,7 +1775,7 @@ $db_status = $db ? "connected" : "disconnected";
             }
             
             // Add ripple effect to buttons
-            const buttons = document.querySelectorAll('.toggle-password, .btn-submit');
+            const buttons = document.querySelectorAll('.toggle-password, .btn-submit, .btn-back-dashboard');
             buttons.forEach(button => {
                 button.addEventListener('click', createRipple);
             });
