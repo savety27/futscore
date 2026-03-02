@@ -44,13 +44,13 @@ if ($check_official_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'match
 // Query for Total Records (for pagination)
 $count_query = "SELECT COUNT(*) as total FROM perangkat p WHERE p.is_active = 1";
 if (!empty($search)) {
-    $count_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
+    $count_query .= " AND (p.name LIKE ?)";
 }
 
 $stmt_count = $conn->prepare($count_query);
 if (!empty($search)) {
     $search_param = "%$search%";
-    $stmt_count->bind_param("ssssss", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param);
+    $stmt_count->bind_param("s", $search_param);
 }
 $stmt_count->execute();
 $count_result = $stmt_count->get_result();
@@ -121,13 +121,13 @@ $query = "SELECT
     WHERE p.is_active = 1";
     
 if (!empty($search)) {
-    $query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
+    $query .= " AND (p.name LIKE ?)";
 }
 $query .= " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($query);
 if (!empty($search)) {
-    $stmt->bind_param("ssssssii", $search_param, $search_param, $search_param, $search_param, $search_param, $search_param, $limit, $offset);
+    $stmt->bind_param("sii", $search_param, $limit, $offset);
 } else {
     $stmt->bind_param("ii", $limit, $offset);
 }
@@ -299,7 +299,7 @@ $pageTitle = "Perangkat Pertandingan";
 /* Specific alignments and styles from reference */
 .col-no { width: 40px; text-align: center; }
 .col-photo { width: 80px; text-align: center; }
-.col-name { color: #0066cc; font-weight: 500; }
+.col-name { color: #111827; font-weight: 500; }
 .col-team { display: flex; align-items: center; gap: 8px; }
 .team-logo-small { width: 24px; height: 24px; border-radius: 50%; object-fit: contain; background: #eee; }
 .col-center { text-align: center; }
@@ -371,7 +371,7 @@ $pageTitle = "Perangkat Pertandingan";
 /* Staff Info Styles */
 .staff-name {
     font-weight: 600;
-    color: #0066cc;
+    color: #111827;
     font-size: 14px;
     margin-bottom: 3px;
 }
@@ -1088,6 +1088,11 @@ $pageTitle = "Perangkat Pertandingan";
 </style>
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo time(); ?>">
+<style>
+.staff-table-new td.col-name .staff-name {
+    color: #111827 !important;
+}
+</style>
 </head>
 <body>
 
@@ -1198,7 +1203,7 @@ $pageTitle = "Perangkat Pertandingan";
                     <div class="filter-group">
                         <label for="search">Pencarian Perangkat</label>
                         <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" 
-                               placeholder="Cari perangkat (nama, no. KTP, email, telepon, kota, provinsi)...">
+                               placeholder="Cari nama perangkat...">
                     </div>
                     <div class="filter-actions-new">
                         <button type="submit" class="btn-filter-apply">
@@ -1230,7 +1235,7 @@ $pageTitle = "Perangkat Pertandingan";
                         <tr>
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
-                            <th>Nama Perangkat</th>
+                            <th style="text-align:center;">Nama Perangkat</th>
                             <th>No. KTP</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>

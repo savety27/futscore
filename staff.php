@@ -45,13 +45,13 @@ if ($check_staff_assignment_table && $check_staff_assignment_table->num_rows > 0
 // Query for Total Records (for pagination)
 $count_query = "SELECT COUNT(*) as total FROM team_staff ts WHERE ts.is_active = 1";
 if (!empty($search)) {
-    $count_query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ?)";
+    $count_query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ?)";
 }
 
 $stmt_count = $conn->prepare($count_query);
 if (!empty($search)) {
     $search_param = "%$search%";
-    $stmt_count->bind_param("ssss", $search_param, $search_param, $search_param, $search_param);
+    $stmt_count->bind_param("sss", $search_param, $search_param, $search_param);
 }
 $stmt_count->execute();
 $count_result = $stmt_count->get_result();
@@ -74,13 +74,13 @@ $query = "SELECT
     WHERE ts.is_active = 1";
     
 if (!empty($search)) {
-    $query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ?)";
+    $query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ?)";
 }
 $query .= " ORDER BY ts.created_at DESC LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($query);
 if (!empty($search)) {
-    $stmt->bind_param("ssssii", $search_param, $search_param, $search_param, $search_param, $limit, $offset);
+    $stmt->bind_param("sssii", $search_param, $search_param, $search_param, $limit, $offset);
 } else {
     $stmt->bind_param("ii", $limit, $offset);
 }
@@ -1195,7 +1195,7 @@ $pageTitle = "Staff List";
                     <div class="filter-group">
                         <label for="search">Pencarian Staf</label>
                         <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" 
-                               placeholder="Cari staf (nama, email, telepon, jabatan)...">
+                               placeholder="Cari staf (nama, email, telepon)...">
                     </div>
                     <div class="filter-actions-new">
                         <button type="submit" class="btn-filter-apply">
