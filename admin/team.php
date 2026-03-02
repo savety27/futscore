@@ -19,6 +19,70 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('tableExists')) {
+    function tableExists(PDO $conn, string $table): bool
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+        return (bool) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('columnExists')) {
+    function columnExists(PDO $conn, string $table, string $column): bool
+    {
+        if (!tableExists($conn, $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+        return (bool) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('countByTeamRef')) {
+    function countByTeamRef(PDO $conn, string $table, string $column, int $teamId): int
+    {
+        if (!columnExists($conn, $table, $column)) {
+            return 0;
+        }
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+        $stmt->execute([$teamId]);
+        return (int) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('getTeamDependencySources')) {
+    function getTeamDependencySources(PDO $conn, int $teamId): array
+    {
+        $usageMap = [
+            ['table' => 'players', 'column' => 'team_id', 'label' => 'player'],
+            ['table' => 'team_staff', 'column' => 'team_id', 'label' => 'staff'],
+            ['table' => 'challenges', 'column' => 'challenger_id', 'label' => 'challenge'],
+            ['table' => 'challenges', 'column' => 'opponent_id', 'label' => 'challenge'],
+            ['table' => 'challenges', 'column' => 'winner_team_id', 'label' => 'challenge'],
+            ['table' => 'matches', 'column' => 'team1_id', 'label' => 'match'],
+            ['table' => 'matches', 'column' => 'team2_id', 'label' => 'match'],
+            ['table' => 'goals', 'column' => 'team_id', 'label' => 'goal'],
+            ['table' => 'lineups', 'column' => 'team_id', 'label' => 'lineup'],
+            ['table' => 'transfers', 'column' => 'from_team_id', 'label' => 'transfer'],
+            ['table' => 'transfers', 'column' => 'to_team_id', 'label' => 'transfer'],
+            ['table' => 'match_staff_assignments', 'column' => 'team_id', 'label' => 'match_staff'],
+            ['table' => 'player_event_cards', 'column' => 'team_id', 'label' => 'event_card']
+        ];
+
+        $sources = [];
+        foreach ($usageMap as $usage) {
+            $count = countByTeamRef($conn, $usage['table'], $usage['column'], $teamId);
+            if ($count > 0) {
+                $sources[] = $usage['label'];
+            }
+        }
+        return array_values(array_unique($sources));
+    }
+}
+
 // Menu items sesuai dengan file pertama
 
 // Handle search
@@ -97,6 +161,17 @@ try {
     $stmt->execute();
     
     $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($teams as &$teamRow) {
+        $usageSources = getTeamDependencySources($conn, (int)($teamRow['id'] ?? 0));
+        $hasDependencies = !empty($usageSources);
+        $teamRow['can_delete'] = !$hasDependencies;
+        if ($hasDependencies) {
+            $teamRow['delete_block_reason'] = 'Tidak bisa dihapus karena sudah ada data turunan: ' . implode(', ', $usageSources) . '.';
+        } else {
+            $teamRow['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($teamRow);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
@@ -604,6 +679,14 @@ body {
 .btn-delete:hover {
     background: var(--danger);
     color: white;
+}
+
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .btn-view {
@@ -1242,10 +1325,19 @@ body {
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="action-btn btn-delete" 
+                                    <?php
+                                    $deleteDisabled = empty($team['can_delete']);
+                                    $deleteTitle = (string)($team['delete_block_reason'] ?? 'Delete');
+                                    ?>
+                                    <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>" 
+                                            type="button"
+                                            <?php if (!$deleteDisabled): ?>
                                             data-team-id="<?php echo (int) $team['id']; ?>"
                                             data-team-name="<?php echo htmlspecialchars($team['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
+                                            <?php endif; ?>
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

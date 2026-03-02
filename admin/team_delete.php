@@ -88,8 +88,6 @@ try {
         exit;
     }
 
-    $isActive = (int) ($team['is_active'] ?? 0) === 1;
-
     // Deteksi data turunan utama
     $usage_map = [
         ['table' => 'players', 'column' => 'team_id', 'label' => 'player'],
@@ -117,13 +115,13 @@ try {
     $usage_sources = array_values(array_unique($usage_sources));
 
     // Rule:
-    // - Nonaktif => bisa hapus tanpa terkecuali (override)
-    // - Aktif + ada data turunan => tidak bisa hapus
-    // - Aktif + belum ada data turunan => bisa hapus
-    if ($isActive && !empty($usage_sources)) {
+    // - Status aktif/nonaktif tidak berpengaruh
+    // - Jika sudah ada data turunan => tidak bisa hapus
+    // - Hanya team baru/tanpa turunan yang bisa dihapus
+    if (!empty($usage_sources)) {
         echo json_encode([
             'success' => false,
-            'message' => 'Team aktif tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.'
+            'message' => 'Team tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.'
         ]);
         exit;
     }
