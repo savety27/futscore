@@ -31,23 +31,46 @@ if ($pelatih_id <= 0) {
 }
 
 try {
-    $tableExists = function (string $table) use ($conn): bool {
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
-            return false;
+    $getDependencySources = function (int $adminUserId) use ($conn): array {
+        if ($adminUserId <= 0) {
+            return [];
         }
-        $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
-        return (bool) $stmt->fetchColumn();
-    };
 
-    $columnExists = function (string $table, string $column) use ($conn, $tableExists): bool {
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !$tableExists($table)) {
-            return false;
+        $sources = [];
+        $candidateColumns = ['admin_id', 'operator_id', 'pelatih_id', 'coach_id', 'created_by', 'updated_by', 'user_id'];
+
+        $dbName = (string) $conn->query("SELECT DATABASE()")->fetchColumn();
+        if ($dbName === '') {
+            return [];
         }
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
-            return false;
+
+        $inList = "'" . implode("','", $candidateColumns) . "'";
+        $stmt = $conn->prepare("
+            SELECT DISTINCT TABLE_NAME, COLUMN_NAME
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = ?
+              AND TABLE_NAME <> 'admin_users'
+              AND COLUMN_NAME IN ({$inList})
+        ");
+        $stmt->execute([$dbName]);
+        $pairs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($pairs as $pair) {
+            $table = (string)($pair['TABLE_NAME'] ?? '');
+            $column = (string)($pair['COLUMN_NAME'] ?? '');
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+                continue;
+            }
+
+            $countStmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+            $countStmt->execute([$adminUserId]);
+            $count = (int) $countStmt->fetchColumn();
+            if ($count > 0) {
+                $sources["{$table}.{$column}"] = $count;
+            }
         }
-        $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
-        return (bool) $stmt->fetchColumn();
+
+        return $sources;
     };
 
     // Get pelatih data
@@ -81,15 +104,24 @@ try {
         exit;
     }
 
-    // Aturan konsisten:
-    // - Akun aktif + sudah pernah login (last_login terisi) => tidak bisa dihapus
-    // - Akun nonaktif => boleh dihapus
-    $isActive = (int)($pelatih['is_active'] ?? 0) === 1;
     $hasLastLogin = !empty($pelatih['last_login']) && $pelatih['last_login'] !== '0000-00-00 00:00:00';
-    if ($isActive && $hasLastLogin) {
+    if ($hasLastLogin) {
         echo json_encode([
             'success' => false,
-            'message' => 'Akun aktif yang sudah pernah login tidak dapat dihapus. Nonaktifkan akun terlebih dahulu jika ingin menghapus.'
+            'message' => 'Akun tidak bisa dihapus karena sudah pernah login.'
+        ]);
+        exit;
+    }
+
+    // Aturan delete baru:
+    // - Status aktif/nonaktif tetap bisa dihapus
+    // - Hanya untuk data baru (belum pernah login)
+    // - Jika sudah punya data turunan (event/match/dll) maka tidak bisa dihapus
+    $usageSources = $getDependencySources($pelatih_id);
+    if (!empty($usageSources)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Data pelatih tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', array_keys($usageSources)) . '.'
         ]);
         exit;
     }

@@ -19,6 +19,55 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('getAdminUserDependencySources')) {
+    function getAdminUserDependencySources(PDO $conn, int $adminUserId): array
+    {
+        if ($adminUserId <= 0) {
+            return [];
+        }
+
+        $sources = [];
+        $candidateColumns = ['admin_id', 'operator_id', 'pelatih_id', 'coach_id', 'created_by', 'updated_by', 'user_id'];
+
+        try {
+            $dbName = (string) $conn->query("SELECT DATABASE()")->fetchColumn();
+            if ($dbName === '') {
+                return [];
+            }
+
+            $inList = "'" . implode("','", $candidateColumns) . "'";
+            $stmt = $conn->prepare("
+                SELECT DISTINCT TABLE_NAME, COLUMN_NAME
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = ?
+                  AND TABLE_NAME <> 'admin_users'
+                  AND COLUMN_NAME IN ({$inList})
+            ");
+            $stmt->execute([$dbName]);
+            $pairs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($pairs as $pair) {
+                $table = (string)($pair['TABLE_NAME'] ?? '');
+                $column = (string)($pair['COLUMN_NAME'] ?? '');
+                if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+                    continue;
+                }
+
+                $countStmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+                $countStmt->execute([$adminUserId]);
+                $count = (int) $countStmt->fetchColumn();
+                if ($count > 0) {
+                    $sources["{$table}.{$column}"] = $count;
+                }
+            }
+        } catch (PDOException $e) {
+            return [];
+        }
+
+        return $sources;
+    }
+}
+
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -91,6 +140,37 @@ try {
     $stmt->execute();
     
     $pelatih = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $sessionUsername = (string)($_SESSION['admin_username'] ?? '');
+    $sessionEmail = (string)($_SESSION['admin_email'] ?? '');
+
+    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM admin_users WHERE role = 'superadmin'");
+    $stmt->execute();
+    $superadminCount = (int)($stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+
+    foreach ($pelatih as &$row) {
+        $rowId = (int)($row['id'] ?? 0);
+        $usageSources = getAdminUserDependencySources($conn, $rowId);
+        $hasDependencies = !empty($usageSources);
+        $hasLastLogin = !empty($row['last_login']) && $row['last_login'] !== '0000-00-00 00:00:00';
+        $isOwnAccount = ($sessionUsername !== '' && ($row['username'] ?? '') === $sessionUsername)
+            || ($sessionEmail !== '' && ($row['email'] ?? '') === $sessionEmail);
+        $isLastSuperadmin = (($row['role'] ?? '') === 'superadmin' && $superadminCount <= 1);
+
+        $row['can_delete'] = !$hasDependencies && !$hasLastLogin && !$isOwnAccount && !$isLastSuperadmin;
+        if ($hasDependencies) {
+            $row['delete_block_reason'] = 'Tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', array_keys($usageSources)) . '.';
+        } elseif ($hasLastLogin) {
+            $row['delete_block_reason'] = 'Tidak bisa dihapus karena akun sudah pernah login.';
+        } elseif ($isLastSuperadmin) {
+            $row['delete_block_reason'] = 'Tidak dapat menghapus superadmin terakhir.';
+        } elseif ($isOwnAccount) {
+            $row['delete_block_reason'] = 'Tidak dapat menghapus akun sendiri.';
+        } else {
+            $row['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($row);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
@@ -596,6 +676,15 @@ body {
 .btn-delete:hover {
     background: var(--danger);
     color: white;
+}
+
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .btn-view {
@@ -1128,11 +1217,19 @@ body {
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="action-btn btn-delete" 
+                                    <?php
+                                    $deleteDisabled = empty($p['can_delete']);
+                                    $deleteTitle = (string)($p['delete_block_reason'] ?? 'Delete');
+                                    ?>
+                                    <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>" 
                                             type="button"
+                                            <?php if (!$deleteDisabled): ?>
                                             data-pelatih-id="<?php echo (int) $p['id']; ?>"
                                             data-pelatih-name="<?php echo htmlspecialchars($p['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
+                                            <?php endif; ?>
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
