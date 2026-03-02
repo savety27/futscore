@@ -454,6 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<link rel="stylesheet" href="../css/challenge_official_combobox.css?v=<?php echo (int) @filemtime(__DIR__ . '/../css/challenge_official_combobox.css'); ?>">
 <style>
 :root {
     --primary: #0f2744;
@@ -1308,19 +1309,25 @@ body {
                     
                     <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="match_official">
+                            <label class="form-label" for="match_official_search">
                                 Wasit/Pengawas
                             </label>
-                            <select id="match_official"
-                                    name="match_official"
-                                    class="form-select <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
-                                <option value="">Pilih Wasit/Pengawas</option>
-                                <?php foreach ($perangkat_official_names as $official_name): ?>
-                                    <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($challenge_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($official_name); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <div class="official-combobox" data-official-combobox>
+                                <input type="text"
+                                       id="match_official_search"
+                                       class="form-input official-combobox-input"
+                                       placeholder="Cari dan pilih wasit/pengawas...">
+                                <select id="match_official"
+                                        name="match_official"
+                                        class="form-select official-combobox-native <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
+                                    <option value="">Pilih Wasit/Pengawas</option>
+                                    <?php foreach ($perangkat_official_names as $official_name): ?>
+                                        <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($challenge_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($official_name); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                             <?php if (isset($errors['match_official'])): ?>
                                 <span class="error"><?php echo $errors['match_official']; ?></span>
                             <?php endif; ?>
@@ -1355,6 +1362,7 @@ body {
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="../js/challenge_official_search.js?v=<?php echo (int) @filemtime(__DIR__ . '/../js/challenge_official_search.js'); ?>"></script>
 <script>
 const teamsData = <?php echo json_encode($teams); ?>;
 const teamEventsMap = <?php echo json_encode($team_events_map ?? []); ?>;
@@ -1407,6 +1415,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('opponent_id').addEventListener('change', updateVSDisplay);
     document.getElementById('sport_type').addEventListener('change', updateVSDisplay);
     updateVSDisplay();
+    if (typeof initOfficialSearch === 'function') {
+        initOfficialSearch('match_official', 'match_official_search');
+    } else {
+        console.warn('initOfficialSearch is not available');
+    }
     
     // Form Validation
     const form = document.getElementById('challengeForm');

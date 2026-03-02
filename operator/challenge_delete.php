@@ -128,22 +128,16 @@ try {
             exit;
         }
 
-        $stmtChallenge = $conn->prepare("SELECT id, status FROM challenges WHERE id = ? AND event_id = ? LIMIT 1");
+        $stmtChallenge = $conn->prepare("SELECT id FROM challenges WHERE id = ? AND event_id = ? LIMIT 1");
         $stmtChallenge->execute([$challenge_id, $operator_event_id]);
     } else {
-        $stmtChallenge = $conn->prepare("SELECT id, status FROM challenges WHERE id = ? LIMIT 1");
+        $stmtChallenge = $conn->prepare("SELECT id FROM challenges WHERE id = ? LIMIT 1");
         $stmtChallenge->execute([$challenge_id]);
     }
     $challenge = $stmtChallenge->fetch(PDO::FETCH_ASSOC);
 
     if (!$challenge) {
         echo json_encode(['success' => false, 'message' => 'Challenge tidak ditemukan atau tidak punya akses']);
-        exit;
-    }
-
-    $statusRaw = strtolower(trim((string)($challenge['status'] ?? '')));
-    if ($statusRaw !== 'open') {
-        echo json_encode(['success' => false, 'message' => 'Challenge hanya bisa dihapus jika status masih open.']);
         exit;
     }
 

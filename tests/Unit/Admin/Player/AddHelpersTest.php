@@ -147,6 +147,45 @@ final class AddHelpersTest extends TestCase
         $this->assertSame('-1700000000', $slug);
     }
 
+    public function testIsDuplicateSlugErrorDetectsSlugConstraintViolation(): void
+    {
+        $e = new PDOException("Duplicate entry 'abc' for key 'players.slug'");
+        $e->errorInfo = ['23000', 1062, "Duplicate entry 'abc' for key 'players.slug'"];
+
+        $this->assertTrue(playerAddIsDuplicateSlugError($e));
+    }
+
+    public function testIsDuplicateSlugErrorReturnsFalseForNonSlugDuplicateViolation(): void
+    {
+        $e = new PDOException("Duplicate entry '123' for key 'players_nik_unique'");
+        $e->errorInfo = ['23000', 1062, "Duplicate entry '123' for key 'players_nik_unique'"];
+
+        $this->assertFalse(playerAddIsDuplicateSlugError($e));
+    }
+
+    public function testIsDuplicateSlugErrorReturnsFalseForNonDuplicateDriverCode(): void
+    {
+        $e = new PDOException('Some SQL error');
+        $e->errorInfo = ['HY000', 1234, 'Some SQL error with slug text'];
+
+        $this->assertFalse(playerAddIsDuplicateSlugError($e));
+    }
+
+    public function testBuildCollisionRetrySlugAddsSuffixAndRespectsMaxLength(): void
+    {
+        $retrySlug = playerAddBuildCollisionRetrySlug(str_repeat('a', 255), 2);
+
+        $this->assertLessThanOrEqual(255, strlen($retrySlug));
+        $this->assertMatchesRegularExpression('/-r2-\d{6}$/', $retrySlug);
+    }
+
+    public function testBuildCollisionRetrySlugUsesFallbackBaseWhenEmpty(): void
+    {
+        $retrySlug = playerAddBuildCollisionRetrySlug('', 3);
+
+        $this->assertMatchesRegularExpression('/^player-r3-\d{6}$/', $retrySlug);
+    }
+
     public function testBuildInsertParamsMapsRequiredAndDerivedValues(): void
     {
         $input = $this->validInput();

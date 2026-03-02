@@ -104,22 +104,13 @@ if (!function_exists('getChallengeDependencySources')) {
 }
 
 try {
-    // Validasi challenge + status sebelum delete
-    $stmt = $conn->prepare("SELECT id, status FROM challenges WHERE id = ?");
+    // Validasi challenge sebelum delete
+    $stmt = $conn->prepare("SELECT id FROM challenges WHERE id = ?");
     $stmt->execute([$challenge_id]);
     $challenge = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$challenge) {
         echo json_encode(['success' => false, 'message' => 'Challenge tidak ditemukan']);
-        exit;
-    }
-
-    $status = strtolower(trim((string)($challenge['status'] ?? '')));
-    if ($status !== 'open') {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Challenge tidak dapat dihapus karena status bukan OPEN. Hanya challenge status OPEN yang bisa dihapus.'
-        ]);
         exit;
     }
 
