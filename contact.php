@@ -2,7 +2,7 @@
 $hideNavbars = true;
 $pageTitle = "Contact";
 require_once 'includes/header.php';
-$contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixofficial@gmail.com&su=Halo%20ALVETRIX";
+$contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixofficial@gmail.com&su=Halo%20Alvetrix";
 ?>
 
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
@@ -114,12 +114,12 @@ $contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixoffic
                             <span class="contact-label">Layanan Cepat</span>
                             <h2 class="contact-card-title">WhatsApp Layanan</h2>
                         </div>
-                        <p class="contact-card-subtitle">Gunakan WhatsApp untuk pertanyaan umum dan informasi cepat terkait layanan ALVETRIX.</p>
+                        <p class="contact-card-subtitle">Gunakan WhatsApp untuk pertanyaan umum dan informasi cepat terkait layanan Alvetrix.</p>
                     </div>
 
                     <div class="dc-grid">
                         
-                        <div class="dc-card" role="button" tabindex="0" data-contact-context="Layanan ALVETRIX" onclick="openWhatsApp('6282186582328', 'Detang', 'Layanan ALVETRIX')">
+                        <div class="dc-card" role="button" tabindex="0" data-contact-context="Layanan Alvetrix" onclick="openWhatsApp('6282186582328', 'Detang', 'Layanan Alvetrix')">
                             <div class="dc-header">
                                 <h3>Kontak WhatsApp</h3>
                                 <span class="dc-badge">Aktif</span>
@@ -127,11 +127,11 @@ $contactEmailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=alvetrixoffic
                             <div class="dc-content">
                                 <div class="dc-person">
                                     <i class="fas fa-user"></i>
-                                    <span>Savety</span>
+                                    <span>Alvetrix</span>
                                 </div>
                                 <div class="dc-phone">
                                     <i class="fas fa-phone"></i>
-                                    <span>+62 878-9895-4988</span>
+                                    <span>+62 813-6891-226</span>
                                 </div>
                                 <button class="dc-whatsapp" type="button">
                                     <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function(e) {
             e.stopPropagation();
             const card = this.closest('.dc-card');
-            const region = card.dataset.contactContext || 'layanan ALVETRIX';
+            const region = card.dataset.contactContext || 'layanan Alvetrix';
             const person = card.querySelector('.dc-person span').textContent;
             const phone = card.querySelector('.dc-phone span').textContent.replace(/\D/g, '');
             openWhatsApp(phone, person, region);
