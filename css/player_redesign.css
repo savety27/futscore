@@ -665,14 +665,19 @@
    ================================================ */
 .player-table-container {
     background: var(--white);
-    border-radius: 20px;
-    overflow-x: auto;
+    border-radius: 22px;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--gray-100);
     min-width: 0;
     transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
     position: relative;
     isolation: isolate;
+}
+
+.player-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: inherit;
 }
 
 .player-table-container:hover {

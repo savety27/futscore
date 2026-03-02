@@ -15,6 +15,7 @@ require_once 'includes/header.php';
         letter-spacing: 0.6px;
         line-height: 1.2;
         white-space: nowrap;
+        text-align: center !important;
     }
     .player-table-new td {
         padding: 11px 12px;
@@ -24,10 +25,13 @@ require_once 'includes/header.php';
     .player-table-new td.cell-name .player-link {
         font-size: 14px;
         line-height: 1.35;
+        display: inline-block;
+        text-align: center;
     }
     .player-table-new th.col-name-head,
     .player-table-new td.cell-name {
         min-width: 100px;
+        text-align: center !important;
     }
     .player-table-new th:first-child,
     .player-table-new td:first-child {
@@ -379,7 +383,8 @@ require_once 'includes/header.php';
         -webkit-overflow-scrolling: touch;
     }
     @media (max-width: 768px) {
-        .player-table-container {
+        .player-table-container,
+        .player-table-responsive {
             overflow: visible !important;
         }
         .player-table-new {
@@ -954,7 +959,8 @@ function maskNIK($nik) {
 
             <!-- Table -->
             <div class="player-table-container">
-                <table class="player-table-new">
+                <div class="player-table-responsive">
+                    <table class="player-table-new">
                     <thead>
                         <tr>
                             <th class="col-no">No</th>
@@ -1076,6 +1082,7 @@ function maskNIK($nik) {
                     </tbody>
                 </table>
             </div>
+        </div>
 
             <!-- Pagination -->
             <div class="pagination-info">
