@@ -41,6 +41,59 @@ if (!function_exists('adminHasColumn')) {
     }
 }
 
+if (!function_exists('adminHasTable')) {
+    function adminHasTable(PDO $conn, $tableName) {
+        try {
+            $quotedTable = $conn->quote((string) $tableName);
+            $stmt = $conn->query("SHOW TABLES LIKE {$quotedTable}");
+            return $stmt && $stmt->fetchColumn() !== false;
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+
+function countByColumnValue(PDO $conn, string $table, string $column, int $value): int
+{
+    if (!adminHasTable($conn, $table) || !adminHasColumn($conn, $table, $column)) {
+        return 0;
+    }
+
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+    $stmt->execute([$value]);
+    return (int)$stmt->fetchColumn();
+}
+
+function getChallengeDependencySources(PDO $conn, int $challengeId): array
+{
+    $usageMap = [
+        ['table' => 'lineups', 'column' => 'match_id', 'label' => 'lineup'],
+        ['table' => 'goals', 'column' => 'match_id', 'label' => 'goal'],
+        ['table' => 'match_stats', 'column' => 'match_id', 'label' => 'match_stats'],
+        ['table' => 'match_staff_assignments', 'column' => 'match_id', 'label' => 'match_staff'],
+        ['table' => 'predictions', 'column' => 'match_id', 'label' => 'prediction']
+    ];
+
+    $sources = [];
+    foreach ($usageMap as $usage) {
+        $count = countByColumnValue($conn, $usage['table'], $usage['column'], $challengeId);
+        if ($count > 0) {
+            $sources[] = $usage['label'];
+        }
+    }
+
+    $bracketColumns = ['sf1_challenge_id', 'sf2_challenge_id', 'final_challenge_id', 'third_challenge_id'];
+    foreach ($bracketColumns as $column) {
+        $count = countByColumnValue($conn, 'event_brackets', $column, $challengeId);
+        if ($count > 0) {
+            $sources[] = 'event_bracket';
+            break;
+        }
+    }
+
+    return array_values(array_unique($sources));
+}
+
 try {
     $operator_event_is_active = true;
     if ($operator_id > 0) {
@@ -64,22 +117,49 @@ try {
 
     $challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
 
-    // Start transaction
-    $conn->beginTransaction();
-
     if (!$operator_event_is_active) {
-        $conn->rollBack();
         echo json_encode(['success' => false, 'message' => 'Event operator sedang non-aktif. Mode hanya lihat data.']);
         exit;
     }
 
     if ($challenge_has_event_id) {
         if ($operator_event_id <= 0) {
-            $conn->rollBack();
             echo json_encode(['success' => false, 'message' => 'Akun operator belum terhubung ke event']);
             exit;
         }
 
+        $stmtChallenge = $conn->prepare("SELECT id, status FROM challenges WHERE id = ? AND event_id = ? LIMIT 1");
+        $stmtChallenge->execute([$challenge_id, $operator_event_id]);
+    } else {
+        $stmtChallenge = $conn->prepare("SELECT id, status FROM challenges WHERE id = ? LIMIT 1");
+        $stmtChallenge->execute([$challenge_id]);
+    }
+    $challenge = $stmtChallenge->fetch(PDO::FETCH_ASSOC);
+
+    if (!$challenge) {
+        echo json_encode(['success' => false, 'message' => 'Challenge tidak ditemukan atau tidak punya akses']);
+        exit;
+    }
+
+    $statusRaw = strtolower(trim((string)($challenge['status'] ?? '')));
+    if ($statusRaw !== 'open') {
+        echo json_encode(['success' => false, 'message' => 'Challenge hanya bisa dihapus jika status masih open.']);
+        exit;
+    }
+
+    $usageSources = getChallengeDependencySources($conn, $challenge_id);
+    if (!empty($usageSources)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Challenge tidak bisa dihapus karena sudah dipakai di data turunan: ' . implode(', ', $usageSources) . '.'
+        ]);
+        exit;
+    }
+
+    // Start transaction after validation passes
+    $conn->beginTransaction();
+
+    if ($challenge_has_event_id) {
         $stmt = $conn->prepare("DELETE FROM challenges WHERE id = ? AND event_id = ?");
         $success = $stmt->execute([$challenge_id, $operator_event_id]);
     } else {
@@ -98,7 +178,9 @@ try {
     }
     
 } catch (PDOException $e) {
-    $conn->rollBack();
+    if ($conn->inTransaction()) {
+        $conn->rollBack();
+    }
     $message = $e->getMessage();
 
     // Constraint: challenge already referenced by lineup/score/event related tables.
