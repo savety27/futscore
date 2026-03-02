@@ -22,6 +22,49 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('getVenueDependencySources')) {
+    function getVenueDependencySources(PDO $conn, int $venueId): array
+    {
+        if ($venueId <= 0) {
+            return [];
+        }
+
+        $sources = [];
+        $referenceTargets = [
+            ['table' => 'challenges', 'column' => 'venue_id', 'label' => 'challenge'],
+            ['table' => 'matches', 'column' => 'venue_id', 'label' => 'match'],
+            ['table' => 'events', 'column' => 'venue_id', 'label' => 'event'],
+        ];
+
+        foreach ($referenceTargets as $target) {
+            $table = $target['table'];
+            $column = $target['column'];
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+                continue;
+            }
+
+            try {
+                $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+                $hasColumn = (bool) $stmt->fetchColumn();
+                if (!$hasColumn) {
+                    continue;
+                }
+
+                $countStmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+                $countStmt->execute([$venueId]);
+                $count = (int) $countStmt->fetchColumn();
+                if ($count > 0) {
+                    $sources[$target['label']] = $count;
+                }
+            } catch (PDOException $e) {
+                continue;
+            }
+        }
+
+        return $sources;
+    }
+}
+
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
@@ -102,6 +145,18 @@ try {
     $stmt->execute();
     
     $venues = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($venues as &$row) {
+        $usageSources = getVenueDependencySources($conn, (int)($row['id'] ?? 0));
+        $hasDependencies = !empty($usageSources);
+
+        $row['can_delete'] = !$hasDependencies;
+        if ($hasDependencies) {
+            $row['delete_block_reason'] = 'Tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', array_keys($usageSources)) . '.';
+        } else {
+            $row['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($row);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
@@ -601,6 +656,15 @@ body {
 .btn-delete:hover {
     background: var(--danger);
     color: white;
+}
+
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .btn-view {
@@ -1313,10 +1377,19 @@ body {
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="action-btn btn-delete" 
+                                    <?php
+                                    $deleteDisabled = empty($venue['can_delete']);
+                                    $deleteTitle = (string)($venue['delete_block_reason'] ?? 'Delete');
+                                    ?>
+                                    <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>" 
+                                            type="button"
+                                            <?php if (!$deleteDisabled): ?>
                                             data-venue-id="<?php echo (int) $venue['id']; ?>"
                                             data-venue-name="<?php echo htmlspecialchars($venue['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
+                                            <?php endif; ?>
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

@@ -50,7 +50,7 @@ try {
         return (bool) $stmt->fetchColumn();
     };
 
-    // Get venue status first for business rule validation
+    // Get venue data first for business rule validation
     $stmt = $conn->prepare("SELECT id, is_active FROM venues WHERE id = ?");
     $stmt->execute([$venue_id]);
     $venue = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -59,8 +59,6 @@ try {
         echo json_encode(['success' => false, 'message' => 'Venue tidak ditemukan']);
         exit;
     }
-
-    $isActive = (int) ($venue['is_active'] ?? 0) === 1;
 
     // Hitung apakah venue pernah dipakai di challenge/match/event (jika tabel+kolom tersedia)
     $referenceTargets = [
@@ -89,14 +87,13 @@ try {
     }
 
     // Rule:
-    // - Venue belum pernah dipakai => bisa hapus
-    // - Venue nonaktif => bisa hapus walau sudah pernah dipakai
-    // - Venue aktif + sudah pernah dipakai => tidak bisa hapus
-    if ($isActive && $usageTotal > 0) {
+    // - Status aktif/nonaktif tetap boleh
+    // - Delete hanya untuk venue tanpa data turunan
+    if ($usageTotal > 0) {
         $sourceText = !empty($usedIn) ? implode('/', array_unique($usedIn)) : 'match/challenge/event';
         echo json_encode([
             'success' => false,
-            'message' => "Venue aktif yang sudah pernah terdaftar pada {$sourceText} tidak dapat dihapus. Nonaktifkan venue terlebih dahulu jika ingin menghapus."
+            'message' => "Venue tidak bisa dihapus karena sudah terdaftar pada data turunan: {$sourceText}."
         ]);
         exit;
     }
