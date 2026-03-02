@@ -47,6 +47,51 @@ if (!function_exists('adminHasTable')) {
     }
 }
 
+if (!function_exists('countByColumnValue')) {
+    function countByColumnValue(PDO $conn, string $table, string $column, int $value): int
+    {
+        if (!adminHasTable($conn, $table) || !adminHasColumn($conn, $table, $column)) {
+            return 0;
+        }
+
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+        $stmt->execute([$value]);
+        return (int)$stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('getChallengeDependencySources')) {
+    function getChallengeDependencySources(PDO $conn, int $challengeId): array
+    {
+        $usageMap = [
+            ['table' => 'lineups', 'column' => 'match_id', 'label' => 'lineup'],
+            ['table' => 'goals', 'column' => 'match_id', 'label' => 'goal'],
+            ['table' => 'match_stats', 'column' => 'match_id', 'label' => 'match_stats'],
+            ['table' => 'match_staff_assignments', 'column' => 'match_id', 'label' => 'match_staff'],
+            ['table' => 'predictions', 'column' => 'match_id', 'label' => 'prediction']
+        ];
+
+        $sources = [];
+        foreach ($usageMap as $usage) {
+            $count = countByColumnValue($conn, $usage['table'], $usage['column'], $challengeId);
+            if ($count > 0) {
+                $sources[] = $usage['label'];
+            }
+        }
+
+        $bracketColumns = ['sf1_challenge_id', 'sf2_challenge_id', 'final_challenge_id', 'third_challenge_id'];
+        foreach ($bracketColumns as $column) {
+            $count = countByColumnValue($conn, 'event_brackets', $column, $challengeId);
+            if ($count > 0) {
+                $sources[] = 'event_bracket';
+                break;
+            }
+        }
+
+        return array_values(array_unique($sources));
+    }
+}
+
 $challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
 $events_table_exists = adminHasTable($conn, 'events');
 $can_join_event_name = $challenge_has_event_id && $events_table_exists;
@@ -150,6 +195,22 @@ try {
     $stmt->execute($params);
     
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($challenges as &$challenge) {
+        $statusRaw = strtolower(trim((string)($challenge['status'] ?? '')));
+        $isOpenStatus = ($statusRaw === 'open');
+        $dependencySources = getChallengeDependencySources($conn, (int)($challenge['id'] ?? 0));
+        $hasDependency = !empty($dependencySources);
+
+        $challenge['can_delete'] = $isOpenStatus && !$hasDependency;
+        if (!$isOpenStatus) {
+            $challenge['delete_block_reason'] = 'Hanya challenge berstatus open yang bisa dihapus.';
+        } elseif ($hasDependency) {
+            $challenge['delete_block_reason'] = 'Tidak bisa dihapus karena sudah ada data turunan: ' . implode(', ', $dependencySources) . '.';
+        } else {
+            $challenge['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($challenge);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
@@ -1210,17 +1271,19 @@ body {
                                     </a>
                                     <!-- TOMBOL DELETE SELALU TAMPIL -->
                                     <?php
-                                    $canDeleteChallenge = strtolower(trim((string)($challenge['status'] ?? ''))) === 'open';
-                                    $deleteBtnClass = 'action-btn btn-delete' . ($canDeleteChallenge ? '' : ' is-disabled');
+                                    $deleteDisabled = empty($challenge['can_delete']);
+                                    $deleteBtnClass = 'action-btn btn-delete' . ($deleteDisabled ? ' is-disabled' : '');
+                                    $deleteTitle = (string)($challenge['delete_block_reason'] ?? 'Delete');
                                     ?>
                                     <button class="<?php echo $deleteBtnClass; ?>" 
                                             type="button"
+                                            <?php if (!$deleteDisabled): ?>
                                             data-challenge-id="<?php echo (int) $challenge['id']; ?>"
                                             data-challenge-code="<?php echo htmlspecialchars($challenge['challenge_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            <?php if (!$canDeleteChallenge): ?>
-                                            disabled
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
                                             <?php endif; ?>
-                                            title="<?php echo $canDeleteChallenge ? 'Delete' : 'Hanya challenge status OPEN yang dapat dihapus'; ?>">
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
