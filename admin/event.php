@@ -39,6 +39,51 @@ function ensure_events_active_column(PDO $conn) {
     }
 }
 
+function table_has_column(PDO $conn, string $tableName, string $columnName): bool
+{
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $tableName) || !preg_match('/^[a-zA-Z0-9_]+$/', $columnName)) {
+        return false;
+    }
+
+    $stmt = $conn->prepare(
+        "SELECT 1
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?
+           AND COLUMN_NAME = ?
+         LIMIT 1"
+    );
+    $stmt->execute([$tableName, $columnName]);
+    return (bool) $stmt->fetchColumn();
+}
+
+function get_related_event_tables(PDO $conn, int $eventId): array
+{
+    $relatedTables = [];
+    $usageTables = [
+        'matches',
+        'challenges',
+        'team_events',
+        'event_team_values',
+        'player_event_cards'
+    ];
+
+    foreach ($usageTables as $tableName) {
+        if (!table_has_column($conn, $tableName, 'event_id')) {
+            continue;
+        }
+
+        $countStmt = $conn->prepare("SELECT COUNT(*) FROM `$tableName` WHERE event_id = ?");
+        $countStmt->execute([$eventId]);
+        $count = (int) $countStmt->fetchColumn();
+        if ($count > 0) {
+            $relatedTables[] = $tableName;
+        }
+    }
+
+    return $relatedTables;
+}
+
 ensure_events_active_column($conn);
 
 $email = $_SESSION['admin_email'] ?? '';
@@ -147,6 +192,20 @@ try {
     $stmt->bindValue($idx, $offset, PDO::PARAM_INT);
     $stmt->execute();
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($events as &$eventRow) {
+        $relatedTables = get_related_event_tables($conn, (int)($eventRow['id'] ?? 0));
+        $hasDependencies = !empty($relatedTables);
+        $eventRow['can_delete'] = !$hasDependencies;
+        if ($hasDependencies) {
+            $eventRow['delete_block_reason'] = 'Tidak bisa dihapus karena sudah dipakai data turunan: '
+                . implode(', ', array_slice($relatedTables, 0, 4))
+                . (count($relatedTables) > 4 ? ', dll.' : '.');
+        } else {
+            $eventRow['delete_block_reason'] = 'Hapus';
+        }
+    }
+    unset($eventRow);
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
 }
@@ -305,6 +364,13 @@ body {
 .btn-bracket:hover { background: #d97706; color: #fff; }
 .btn-delete { background: rgba(211, 47, 47, 0.1); color: var(--danger); }
 .btn-delete:hover { background: var(--danger); color: #fff; }
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
 .alert { padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .alert-success { background: rgba(46, 125, 50, 0.1); border-left: 4px solid #10b981; color: #047857; }
 .alert-danger { background: rgba(211, 47, 47, 0.1); border-left: 4px solid #ef4444; color: #b91c1c; }
@@ -545,12 +611,20 @@ body {
                                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                         <button type="submit" class="action-btn btn-registration" title="Toggle Open/Closed"><i class="fas fa-toggle-on"></i></button>
                                     </form>
+                                    <?php
+                                    $deleteDisabled = empty($event['can_delete']);
+                                    $deleteTitle = (string)($event['delete_block_reason'] ?? 'Hapus');
+                                    ?>
                                     <button
                                         type="button"
-                                        class="action-btn btn-delete"
-                                        title="Hapus"
+                                        class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>"
+                                        title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>"
+                                        <?php if (!$deleteDisabled): ?>
                                         data-event-id="<?php echo (int) $event['id']; ?>"
                                         data-event-name="<?php echo htmlspecialchars($event['name'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
+                                        <?php else: ?>
+                                        disabled aria-disabled="true"
+                                        <?php endif; ?>
                                     ><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
