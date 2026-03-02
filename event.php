@@ -187,7 +187,7 @@ function formatEventDate($datetime) {
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="events.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
@@ -234,7 +234,7 @@ function formatEventDate($datetime) {
                     <p class="header-subtitle">Klik event untuk melihat daftar peserta berdasarkan kategori seperti U10, U12, U14, dan lainnya.</p>
                 </div>
                 <div class="header-actions">
-                    <a href="EVENTS.PHP" class="btn-primary"><i class="fas fa-arrow-left"></i> Hub Event</a>
+                    <a href="events.php" class="btn-primary"><i class="fas fa-arrow-left"></i> Hub Event</a>
                 </div>
             </div>
         </header>

@@ -111,7 +111,7 @@
     background: rgba(10, 22, 40, 0.52);
 }
 
-/* Keep header secondary button color identical to EVENTS.PHP */
+/* Keep header secondary button color identical to events.php */
 .dashboard-header .btn-secondary {
     background: rgba(10, 22, 40, 0.38);
     border-color: rgba(255, 255, 255, 0.4);

@@ -737,7 +737,7 @@ function maskNIK($nik) {
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="events.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">

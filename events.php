@@ -606,7 +606,7 @@ if ($eventId > 0) {
     $event = $stmt->get_result()->fetch_assoc();
 
     if (!$event) {
-        header('Location: ' . SITE_URL . '/EVENTS.PHP');
+        header('Location: ' . SITE_URL . '/events.php');
         exit;
     }
     $pageTitle = $event['name'];
@@ -1082,7 +1082,7 @@ if ($eventId > 0 && !empty($event)) {
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="EVENTS.PHP" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="events.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
@@ -1134,7 +1134,7 @@ if ($eventId > 0 && !empty($event)) {
                 <div class="header-actions">
                     <?php if ($eventId > 0): ?>
                         <a href="event.php" class="btn-primary"><i class="fas fa-sitemap"></i> Event Kategori</a>
-                        <a href="EVENTS.PHP" class="btn-secondary"><i class="fas fa-arrow-left"></i> Semua Event</a>
+                        <a href="events.php" class="btn-secondary"><i class="fas fa-arrow-left"></i> Semua Event</a>
                         <a href="team.php" class="btn-primary"><i class="fas fa-users"></i> Lihat Team</a>
                     <?php else: ?>
                         <a href="event.php" class="btn-primary"><i class="fas fa-sitemap"></i> Event Kategori</a>
@@ -1616,7 +1616,7 @@ if ($eventId > 0 && !empty($event)) {
                     <div class="team-filter-card">
                         <label class="team-filter-label" for="eventSelector">Pilih Event</label>
                         <div class="team-selector">
-                            <select id="eventSelector" class="event-selector-select" onchange="if(this.value) window.location.href='EVENTS.PHP?id=' + this.value">
+                            <select id="eventSelector" class="event-selector-select" onchange="if(this.value) window.location.href='events.php?id=' + this.value">
                                 <option value="">Pilih event dari dropdown</option>
                                 <?php foreach ($events as $ev): ?>
                                     <option value="<?php echo (int) $ev['id']; ?>"><?php echo htmlspecialchars($ev['name']); ?></option>
@@ -1644,7 +1644,7 @@ if ($eventId > 0 && !empty($event)) {
                         </div>
                         <div class="teams-grid team-directory-grid">
                             <?php foreach ($events as $ev): ?>
-                                <a href="EVENTS.PHP?id=<?php echo (int) $ev['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo (int) $ev['id']; ?>" data-event-name="<?php echo htmlspecialchars(strtolower((string)($ev['name'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>">
+                                <a href="events.php?id=<?php echo (int) $ev['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo (int) $ev['id']; ?>" data-event-name="<?php echo htmlspecialchars(strtolower((string)($ev['name'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php if (!empty($ev['image'])): ?>
                                         <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars($ev['image']); ?>" alt="<?php echo htmlspecialchars($ev['name']); ?>" class="event-card-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="event-card-image event-image-placeholder card" style="display:none;"><i class="fas fa-calendar-alt"></i></div>

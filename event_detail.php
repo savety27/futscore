@@ -7,7 +7,7 @@ require_once 'includes/header.php';
 $event_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($event_id <= 0) {
-    header("Location: EVENTS.PHP");
+    header("Location: events.php");
     exit;
 }
 
@@ -40,7 +40,7 @@ $result = $stmt->get_result();
 $event = $result->fetch_assoc();
 
 if (!$event) {
-    header("Location: EVENTS.PHP");
+    header("Location: events.php");
     exit;
 }
 
@@ -166,7 +166,7 @@ usort($timeline_events, function($a, $b) {
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="EVENTS.PHP"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="events.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
             <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
             <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
@@ -213,7 +213,7 @@ usort($timeline_events, function($a, $b) {
                     <p class="header-subtitle">Rangkuman lengkap detail pertandingan, status, dan timeline event.</p>
                 </div>
                 <div class="header-actions">
-                    <a href="EVENTS.PHP" class="btn-back">
+                    <a href="events.php" class="btn-back">
                         <i class="fas fa-house"></i> Hub Event
                     </a>
                     <a href="event.php" class="btn-back">
