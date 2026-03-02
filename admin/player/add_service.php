@@ -35,17 +35,32 @@ function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $
 
     try {
         $uploadedFiles = $uploadResolver($files, $uploadDir);
-        $slug = playerAddGenerateSlug($input['name']);
-
         $stmt = $conn->prepare(playerAddInsertSql());
-        $stmt->execute(playerAddBuildInsertParams($input, $uploadedFiles, $slug));
+        $baseSlug = playerAddGenerateSlug($input['name']);
+        $maxInsertAttempts = 4;
 
-        $playerId = (int)$conn->lastInsertId();
-        if ($startedTransaction) {
-            $conn->commit();
+        for ($attempt = 1; $attempt <= $maxInsertAttempts; $attempt++) {
+            $slug = $attempt === 1
+                ? $baseSlug
+                : playerAddBuildCollisionRetrySlug($baseSlug, $attempt);
+
+            try {
+                $stmt->execute(playerAddBuildInsertParams($input, $uploadedFiles, $slug));
+
+                $playerId = (int)$conn->lastInsertId();
+                if ($startedTransaction) {
+                    $conn->commit();
+                }
+
+                return $playerId;
+            } catch (PDOException $e) {
+                if ($attempt < $maxInsertAttempts && playerAddIsDuplicateSlugError($e)) {
+                    continue;
+                }
+
+                throw $e;
+            }
         }
-
-        return $playerId;
     } catch (PDOException $e) {
         if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();

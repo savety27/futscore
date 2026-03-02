@@ -114,6 +114,37 @@ function playerAddGenerateSlug(string $name, ?int $timestamp = null): string
     return $slug . '-' . $timestamp;
 }
 
+function playerAddIsDuplicateSlugError(PDOException $e): bool
+{
+    $driverCode = (int)($e->errorInfo[1] ?? 0);
+    if ($driverCode !== 1062) {
+        return false;
+    }
+
+    $messageLc = strtolower((string)($e->errorInfo[2] ?? '') . ' ' . $e->getMessage());
+
+    return strpos($messageLc, 'slug') !== false;
+}
+
+function playerAddBuildCollisionRetrySlug(string $baseSlug, int $attempt): string
+{
+    $attempt = max(2, $attempt);
+    $retryToken = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $suffix = '-r' . $attempt . '-' . $retryToken;
+    $maxBaseLength = 255 - strlen($suffix);
+
+    if ($maxBaseLength < 1) {
+        return 'player' . $suffix;
+    }
+
+    $trimmedBase = rtrim(substr($baseSlug, 0, $maxBaseLength), '-');
+    if ($trimmedBase === '') {
+        $trimmedBase = 'player';
+    }
+
+    return $trimmedBase . $suffix;
+}
+
 function playerAddInsertSql(): string
 {
     return "INSERT INTO players (
