@@ -140,6 +140,23 @@ try {
     $stmt->execute();
     
     $berita = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($berita as &$row) {
+        $statusRaw = strtolower(trim((string)($row['status'] ?? '')));
+        $viewsCount = (int)($row['views'] ?? 0);
+        $isAllowedStatus = in_array($statusRaw, ['draft', 'archived'], true);
+        $hasRelatedData = $viewsCount > 0;
+
+        $row['can_delete'] = $isAllowedStatus && !$hasRelatedData;
+        if (!$isAllowedStatus) {
+            $row['delete_block_reason'] = 'Delete hanya untuk status draft/archived.';
+        } elseif ($hasRelatedData) {
+            $row['delete_block_reason'] = 'Tidak bisa dihapus karena sudah memiliki data turunan (views/interaksi).';
+        } else {
+            $row['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($row);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
@@ -606,6 +623,15 @@ body {
 .btn-delete:hover {
     background: var(--danger);
     color: white;
+}
+
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Badge Styles */
@@ -1163,6 +1189,12 @@ body {
                             </td>
                             <td class="action-cell">
                                 <div class="action-buttons">
+                                    <?php
+                                    $deleteDisabled = $operator_read_only || empty($b['can_delete']);
+                                    $deleteTitle = $operator_read_only
+                                        ? 'Event non-aktif. Mode hanya lihat data.'
+                                        : (string)($b['delete_block_reason'] ?? 'Delete');
+                                    ?>
                                     <a href="berita_view.php?id=<?php echo $b['id']; ?>" 
                                        class="action-btn btn-view" title="View">
                                         <i class="fas fa-eye"></i>
@@ -1172,10 +1204,14 @@ body {
                                            class="action-btn btn-edit" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button class="action-btn btn-delete" 
+                                        <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>"
+                                                <?php if (!$deleteDisabled): ?>
                                                 data-berita-id="<?php echo (int) $b['id']; ?>"
                                                 data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                                title="Delete">
+                                                <?php else: ?>
+                                                disabled aria-disabled="true"
+                                                <?php endif; ?>
+                                                title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     <?php endif; ?>

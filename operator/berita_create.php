@@ -914,7 +914,7 @@ body {
 
         <!-- CREATE BERITA FORM -->
         <div class="form-container">
-            <form method="POST" action="" enctype="multipart/form-data" id="beritaForm">
+            <form method="POST" action="" enctype="multipart/form-data" id="beritaForm" novalidate>
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-heading"></i>
@@ -1348,9 +1348,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form Validation
     const form = document.getElementById('beritaForm');
+    if (form) {
+        form.setAttribute('novalidate', 'novalidate');
+    }
     form.addEventListener('submit', function(e) {
         const judul = document.getElementById('judul').value.trim();
         const konten = getEditorPlainText();
+        const penulis = document.getElementById('penulis').value.trim();
 
         // Clear previous error highlights
         document.querySelectorAll('.is-invalid').forEach(el => {
@@ -1358,41 +1362,85 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         let hasError = false;
+        let firstInvalidFieldId = null;
 
         if (!judul) {
-            markError('judul', 'Judul berita harus diisi');
+            markError('judul', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'judul';
         } else if (judul.length < 5) {
             markError('judul', 'Judul minimal 5 karakter');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'judul';
         } else if (judul.length > 200) {
-            markError('judul', 'Judul maksimal 200 karakter');
+            markError('judul', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'judul';
         }
 
         if (!konten) {
-            markError('konten', 'Konten berita harus diisi');
+            markError('konten', '');
             hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'konten';
+        }
+
+        if (!penulis) {
+            markError('penulis', '');
+            hasError = true;
+            firstInvalidFieldId = firstInvalidFieldId || 'penulis';
         }
 
         if (hasError) {
             e.preventDefault();
-            toastr.error('Harap perbaiki kesalahan di form');
+            focusInvalidField(firstInvalidFieldId);
         }
     });
 
+    function focusInvalidField(fieldId) {
+        if (!fieldId) return;
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        // Summernote hides textarea; focus editable area instead.
+        if (fieldId === 'konten') {
+            const noteEditor = field.closest('.form-group')?.querySelector('.note-editor')
+                || document.querySelector('#konten + .note-editor')
+                || document.querySelector('.note-editor');
+            if (noteEditor) {
+                noteEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (window.jQuery && typeof window.jQuery.fn.summernote === 'function') {
+                    setTimeout(() => window.jQuery('#konten').summernote('focus'), 120);
+                    return;
+                }
+                const editable = noteEditor.querySelector('.note-editable');
+                if (editable) {
+                    setTimeout(() => editable.focus(), 150);
+                    return;
+                }
+            }
+        }
+
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => field.focus(), 150);
+    }
+
     function markError(fieldId, message) {
         const field = document.getElementById(fieldId);
-        const errorSpan = field.nextElementSibling?.classList.contains('error') 
-            ? field.nextElementSibling 
+        const formGroup = field.closest('.form-group');
+        const existingError = formGroup ? formGroup.querySelector('.error') : null;
+        const errorSpan = existingError
+            ? formGroup.querySelector('.error')
             : document.createElement('span');
         
         field.classList.add('is-invalid');
-        errorSpan.className = 'error';
-        errorSpan.textContent = message;
-        
-        if (!field.nextElementSibling?.classList.contains('error')) {
-            field.parentNode.appendChild(errorSpan);
+        if (message) {
+            errorSpan.className = 'error';
+            errorSpan.textContent = message;
+            if (!existingError) {
+                field.parentNode.appendChild(errorSpan);
+            }
+        } else if (existingError) {
+            existingError.remove();
         }
     }
 

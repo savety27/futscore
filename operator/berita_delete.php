@@ -74,13 +74,25 @@ try {
         $ownership_params[] = $admin_username;
     }
 
-    // Get gambar path before deletion
-    $stmt = $conn->prepare("SELECT gambar FROM berita WHERE id = ?" . $ownership_where_sql);
+    // Get berita data before deletion
+    $stmt = $conn->prepare("SELECT status, views, gambar FROM berita WHERE id = ?" . $ownership_where_sql);
     $stmt->execute(array_merge([$berita_id], $ownership_params));
     $berita = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$berita) {
         echo json_encode(['success' => false, 'message' => 'Berita not found or no permission']);
+        exit;
+    }
+
+    $statusRaw = strtolower(trim((string)($berita['status'] ?? '')));
+    $views = (int)($berita['views'] ?? 0);
+    $allowedStatuses = ['draft', 'archived'];
+    if (!in_array($statusRaw, $allowedStatuses, true)) {
+        echo json_encode(['success' => false, 'message' => 'Delete hanya berlaku untuk berita status draft/archived.']);
+        exit;
+    }
+    if ($views > 0) {
+        echo json_encode(['success' => false, 'message' => 'Berita tidak bisa dihapus karena sudah memiliki data turunan (views/interaksi).']);
         exit;
     }
     
