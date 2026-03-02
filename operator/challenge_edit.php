@@ -100,6 +100,7 @@ $active_event_ids = [];
 $challenge_has_event_id = adminHasColumn($conn, 'challenges', 'event_id');
 $challenge_has_match_official = adminHasColumn($conn, 'challenges', 'match_official');
 $perangkat_official_names = [];
+$perangkat_official_lookup = [];
 
 // Get challenge ID
 $challenge_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -226,11 +227,11 @@ try {
     $venues = $venues_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (adminHasTable($conn, 'perangkat')) {
-        $official_sql = "SELECT name FROM perangkat";
+        $official_sql = "SELECT p.name FROM perangkat p WHERE p.name IS NOT NULL AND p.name <> ''";
         if (adminHasColumn($conn, 'perangkat', 'is_active')) {
-            $official_sql .= " WHERE is_active = 1";
+            $official_sql .= " AND p.is_active = 1";
         }
-        $official_sql .= " ORDER BY name ASC";
+        $official_sql .= " ORDER BY p.name ASC";
         $official_stmt = $conn->query($official_sql);
         if ($official_stmt) {
             $seen_names = [];
@@ -247,6 +248,7 @@ try {
                 }
                 $seen_names[$name_key] = true;
                 $perangkat_official_names[] = $official_name;
+                $perangkat_official_lookup[$name_key] = true;
             }
         }
     }
@@ -332,6 +334,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     if (empty($form_data['sport_type'])) {
         $errors['sport_type'] = "Kategori harus dipilih";
+    }
+
+    if ($form_data['match_official'] !== '') {
+        $official_name_key = function_exists('mb_strtolower')
+            ? mb_strtolower($form_data['match_official'], 'UTF-8')
+            : strtolower($form_data['match_official']);
+        if (!isset($perangkat_official_lookup[$official_name_key])) {
+            $errors['match_official'] = "Wasit/Pengawas harus dipilih dari daftar perangkat aktif";
+        }
     }
 
     if (empty($errors['sport_type']) && !empty($form_data['challenger_id'])) {
@@ -1357,21 +1368,20 @@ body {
                             <label class="form-label" for="match_official">
                                 Wasit/Pengawas
                             </label>
-                            <input type="text"
-                                   id="match_official"
-                                   name="match_official"
-                                   class="form-input"
-                                   value="<?php echo htmlspecialchars($challenge_data['match_official'] ?? ''); ?>"
-                                   placeholder="Pilih/ketik nama wasit"
-                                   list="officials_list">
-                            <?php if (!empty($perangkat_official_names)): ?>
-                                <datalist id="officials_list">
-                                    <?php foreach ($perangkat_official_names as $official_name): ?>
-                                        <option value="<?php echo htmlspecialchars($official_name); ?>"></option>
-                                    <?php endforeach; ?>
-                                </datalist>
-                                <small style="color: #666;">Saran nama diambil dari data Perangkat aktif.</small>
+                            <select id="match_official"
+                                    name="match_official"
+                                    class="form-select <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
+                                <option value="">Pilih Wasit/Pengawas</option>
+                                <?php foreach ($perangkat_official_names as $official_name): ?>
+                                    <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($challenge_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($official_name); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <?php if (isset($errors['match_official'])): ?>
+                                <span class="error"><?php echo $errors['match_official']; ?></span>
                             <?php endif; ?>
+                            <small style="color: #666;">Daftar diambil dari data Perangkat aktif.</small>
                         </div>
                         
                         <div class="form-group">
