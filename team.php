@@ -99,7 +99,8 @@ if ($teamId > 0) {
     $pageTitle = $team['name'];
 } else {
     // TEAM LISTING VIEW
-    $allTeams = getAllTeams();
+    $allTeamsMaster = getAllTeams();
+    $allTeams = $allTeamsMaster;
     $pageTitle = "Teams";
 }
 ?>
@@ -120,6 +121,46 @@ if ($teamId > 0) {
 
 .event-meta-label {
     color: #0f172a !important;
+}
+
+.team-filter-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.team-search-group {
+    flex: 1 1 320px;
+}
+
+.team-selector select {
+    width: 100%;
+    min-height: 44px;
+}
+
+.team-filter-card .team-filter-label {
+    margin-bottom: 8px;
+    display: block;
+}
+
+.team-search-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--white);
+    color: var(--navy);
+    transition: all var(--transition-fast);
+}
+
+.team-search-input:focus {
+    outline: none;
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* Participation Table Styles */
@@ -1018,7 +1059,7 @@ if ($teamId > 0) {
                     <div class="section-header">
                         <h2 class="section-title">TEAM</h2>
                         <div class="section-tabs">
-                            <span class="team-count-pill"><i class="fas fa-users"></i> <?php echo count($allTeams); ?> Team</span>
+                            <span class="team-count-pill"><i class="fas fa-users"></i> <?php echo count($allTeamsMaster); ?> Team</span>
                         </div>
                     </div>
 
@@ -1026,13 +1067,18 @@ if ($teamId > 0) {
                         <label class="team-filter-label" for="teamSelector">Pilih Team</label>
                         <div class="team-selector">
                             <select id="teamSelector" onchange="if(this.value) window.location.href='team.php?id=' + this.value">
-                                <option value="">Pilih team dari dropdown atau daftar di bawah</option>
-                                <?php foreach ($allTeams as $team): ?>
+                                <option value="">Pilih team dari dropdown</option>
+                                <?php foreach ($allTeamsMaster as $team): ?>
                                     <option value="<?php echo $team['id']; ?>">
                                         <?php echo htmlspecialchars($team['name']); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <div class="team-filter-form">
+                            <div class="team-search-group">
+                                <input type="text" id="search" class="team-search-input" placeholder="Cari team...">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1047,7 +1093,7 @@ if ($teamId > 0) {
                     <?php else: ?>
                         <div class="teams-grid team-directory-grid">
                             <?php foreach ($allTeams as $team): ?>
-                                <a href="team.php?id=<?php echo $team['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo $team['id']; ?>">
+                                <a href="team.php?id=<?php echo $team['id']; ?>" class="team-card team-directory-card" data-team-id="<?php echo $team['id']; ?>" data-team-name="<?php echo htmlspecialchars(strtolower((string)($team['name'] ?? ''))); ?>">
                                     <div class="team-logo-frame">
                                         <img src="<?php echo SITE_URL; ?>/images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
                                              alt="<?php echo htmlspecialchars($team['name']); ?>"
@@ -1167,6 +1213,54 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
         }
     });
 }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selector = document.getElementById('teamSelector');
+    const searchInput = document.getElementById('search');
+    const teamCards = Array.from(document.querySelectorAll('.team-directory-card'));
+
+    if (!selector || !searchInput) return;
+
+    const allOptions = Array.from(selector.options)
+        .filter((option) => option.value !== '')
+        .map((option) => ({
+            value: option.value,
+            label: option.textContent.trim()
+        }));
+
+    function renderFilteredOptions(query) {
+        const term = (query || '').trim().toLowerCase();
+        const filtered = term === ''
+            ? allOptions
+            : allOptions.filter((item) => item.label.toLowerCase().includes(term));
+
+        selector.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = filtered.length > 0 ? 'Pilih team dari dropdown' : 'Team tidak ditemukan';
+        selector.appendChild(placeholder);
+
+        filtered.forEach((item) => {
+            const option = document.createElement('option');
+            option.value = item.value;
+            option.textContent = item.label;
+            selector.appendChild(option);
+        });
+
+        teamCards.forEach((card) => {
+            const name = (card.dataset.teamName || '').toLowerCase();
+            card.style.display = (term === '' || name.includes(term)) ? '' : 'none';
+        });
+    }
+
+    renderFilteredOptions(searchInput.value);
+    searchInput.addEventListener('input', function() {
+        renderFilteredOptions(this.value);
+    });
+});
 </script>
 
 <script>
