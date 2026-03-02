@@ -19,6 +19,45 @@ $players = [];
 $total_pages = 1;
 $category_options = [];
 
+function tableExists(PDO $conn, string $table): bool
+{
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+        return false;
+    }
+
+    $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+    return (bool)$stmt->fetchColumn();
+}
+
+function columnExists(PDO $conn, string $table, string $column): bool
+{
+    if (!tableExists($conn, $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+        return false;
+    }
+
+    $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+    return (bool)$stmt->fetchColumn();
+}
+
+function hasPlayerRelatedData(PDO $conn, int $playerId, array $usageMap): bool
+{
+    foreach ($usageMap as $usage) {
+        $table = (string)($usage['table'] ?? '');
+        $column = (string)($usage['column'] ?? '');
+        if (!columnExists($conn, $table, $column)) {
+            continue;
+        }
+
+        $stmt = $conn->prepare("SELECT 1 FROM `{$table}` WHERE `{$column}` = ? LIMIT 1");
+        $stmt->execute([$playerId]);
+        if ((bool)$stmt->fetchColumn()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 if ($team_id) {
     try {
         $stmtCategory = $conn->prepare("SELECT DISTINCT sport_type 
@@ -81,6 +120,18 @@ if ($team_id) {
         $stmt->execute();
         
         $players = $stmt->fetchAll();
+
+        $usage_map = [
+            ['table' => 'lineups', 'column' => 'player_id'],
+            ['table' => 'goals', 'column' => 'player_id'],
+            ['table' => 'transfers', 'column' => 'player_id'],
+            ['table' => 'player_event_cards', 'column' => 'player_id']
+        ];
+
+        foreach ($players as &$player) {
+            $player['has_related_data'] = hasPlayerRelatedData($conn, (int)($player['id'] ?? 0), $usage_map);
+        }
+        unset($player);
     } catch (PDOException $e) {
         $players = [];
         error_log("Database error: " . $e->getMessage());
@@ -509,6 +560,7 @@ $build_page_url = function(int $page) use ($base_query_params): string {
                         </td>
                         <td class="actions-cell">
                             <div class="action-buttons">
+                                <?php $delete_disabled = !empty($player['has_related_data']); ?>
                                 <!-- TAMBAHKAN TOMBOL VIEW DISINI -->
                                 <a href="player_view.php?id=<?php echo $player['id']; ?>" 
                                    class="btn-primary btn-sm btn-view"
@@ -522,14 +574,15 @@ $build_page_url = function(int $page) use ($base_query_params): string {
                                    aria-label="Ubah Pemain">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="player_actions.php" method="POST" class="delete-form">
+                                <form action="player_actions.php" method="POST" class="delete-form<?php echo $delete_disabled ? ' delete-form-disabled' : ''; ?>">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo $player['id']; ?>">
                                     <button type="submit" 
-                                             class="btn-primary btn"
-                                            title="Hapus Pemain"
+                                             class="btn-primary btn<?php echo $delete_disabled ? ' btn-delete-disabled' : ''; ?>"
+                                            title="<?php echo $delete_disabled ? 'Tidak bisa dihapus karena sudah ada data turunan (event/match/dll)' : 'Hapus Pemain'; ?>"
                                             aria-label="Hapus Pemain"
-                                            data-name="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
+                                            data-name="<?php echo htmlspecialchars($player['name'] ?? ''); ?>"
+                                            <?php echo $delete_disabled ? 'disabled aria-disabled="true"' : ''; ?>>
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -855,6 +908,9 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = form.querySelector('.btn');
+            if (!btn || btn.disabled) {
+                return;
+            }
             const playerName = btn.getAttribute('data-name');
             
             confirmDelete(playerName).then(confirmed => {

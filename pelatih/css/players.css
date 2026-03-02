@@ -419,6 +419,23 @@
     font-size: 13px;
 }
 
+.actions-cell .action-buttons .btn-delete-disabled {
+    background: linear-gradient(135deg, #cfd8dc, #b0bec5) !important;
+    color: #607d8b !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.actions-cell .action-buttons .btn-delete-disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.actions-cell .action-buttons .delete-form-disabled {
+    pointer-events: none;
+}
+
 .btn-edit, .btn-delete {
     padding: 8px 16px;
     border-radius: 8px;

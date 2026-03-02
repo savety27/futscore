@@ -371,9 +371,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $statusRaw = strtolower(trim((string)($player['status'] ?? 'inactive')));
-            $isInactive = in_array($statusRaw, ['inactive', 'nonaktif', 'non-aktif', 'non active', '0'], true);
-
             $usage_map = [
                 ['table' => 'lineups', 'column' => 'player_id', 'label' => 'lineup'],
                 ['table' => 'goals', 'column' => 'player_id', 'label' => 'goal'],
@@ -391,20 +388,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $usage_sources = array_values(array_unique($usage_sources));
 
             // Rule:
-            // - Nonaktif => bisa hapus tanpa terkecuali (override)
-            // - Aktif + ada data turunan => tidak bisa hapus
-            // - Aktif + belum ada data turunan => bisa hapus
-            if (!$isInactive && !empty($usage_sources)) {
-                throw new Exception('Player aktif tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.');
+            // - Hanya player tanpa data turunan yang boleh dihapus
+            // - Status aktif/nonaktif tidak menjadi pengecualian
+            if (!empty($usage_sources)) {
+                throw new Exception('Player tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.');
             }
 
             $conn->beginTransaction();
 
-            // Cleanup data turunan agar delete player tidak mentok FK
-            deleteByPlayerRef($conn, 'goals', 'player_id', $id);
-            deleteByPlayerRef($conn, 'lineups', 'player_id', $id);
-            deleteByPlayerRef($conn, 'transfers', 'player_id', $id);
-            deleteByPlayerRef($conn, 'player_event_cards', 'player_id', $id);
+            // Cleanup data turunan non-historikal (jika tabel ada)
             deleteByPlayerRef($conn, 'player_documents', 'player_id', $id);
             deleteByPlayerRef($conn, 'player_skills', 'player_id', $id);
 
