@@ -19,6 +19,38 @@ if (!isset($conn) || !$conn) {
     die("Database connection failed. Please check your configuration.");
 }
 
+if (!function_exists('tableExists')) {
+    function tableExists(PDO $conn, string $table): bool
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+        return (bool) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('getStaffDependencySources')) {
+    function getStaffDependencySources(PDO $conn, int $staffId): array
+    {
+        $sources = [];
+        if ($staffId <= 0) {
+            return $sources;
+        }
+
+        if (tableExists($conn, 'match_staff_assignments')) {
+            $stmt = $conn->prepare("SELECT COUNT(*) FROM match_staff_assignments WHERE staff_id = ?");
+            $stmt->execute([$staffId]);
+            $count = (int) $stmt->fetchColumn();
+            if ($count > 0) {
+                $sources[] = 'match_staff';
+            }
+        }
+
+        return $sources;
+    }
+}
+
 // Menu items sesuai dengan file pertama
 
 // Handle search
@@ -164,6 +196,15 @@ try {
             $staff['age'] = $age;
         } else {
             $staff['age'] = '-';
+        }
+
+        $dependencySources = getStaffDependencySources($conn, (int)($staff['id'] ?? 0));
+        $hasDependency = !empty($dependencySources);
+        $staff['can_delete'] = !$hasDependency;
+        if ($hasDependency) {
+            $staff['delete_block_reason'] = 'Tidak bisa dihapus karena sudah ada data turunan: ' . implode(', ', $dependencySources) . '.';
+        } else {
+            $staff['delete_block_reason'] = 'Delete';
         }
     }
     unset($staff); // Break the reference with the last element
@@ -723,6 +764,14 @@ body {
 .btn-delete:hover {
     background: var(--danger);
     color: white;
+}
+
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .btn-view {
@@ -1313,10 +1362,19 @@ body {
                                        class="action-btn btn-edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="action-btn btn-delete" 
+                                    <?php
+                                    $deleteDisabled = empty($staff['can_delete']);
+                                    $deleteTitle = (string)($staff['delete_block_reason'] ?? 'Delete');
+                                    ?>
+                                    <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>" 
+                                            type="button"
+                                            <?php if (!$deleteDisabled): ?>
                                             data-staff-id="<?php echo (int) $staff['id']; ?>"
                                             data-staff-name="<?php echo htmlspecialchars($staff['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
+                                            <?php endif; ?>
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

@@ -50,14 +50,12 @@ try {
     }
 
     // Rule:
-    // - staff aktif + ada data turunan => tidak bisa hapus
-    // - staff nonaktif => bisa hapus (override)
-    // - staff baru / tanpa data turunan => bisa hapus
-    $is_active = (int) ($staff['is_active'] ?? 0) === 1;
-    if ($is_active && $assignment_count > 0) {
+    // - Status aktif/nonaktif tidak berpengaruh
+    // - Jika sudah ada data turunan, staff tidak bisa dihapus
+    if ($assignment_count > 0) {
         echo json_encode([
             'success' => false,
-            'message' => 'Tidak dapat menghapus staff aktif yang sudah terdaftar pada match. Nonaktifkan staff terlebih dahulu jika tetap ingin menghapus.'
+            'message' => 'Tidak dapat menghapus staff karena sudah terdaftar pada data turunan (match/event/dll).'
         ]);
         exit;
     }
