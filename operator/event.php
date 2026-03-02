@@ -53,6 +53,16 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <style>
+    /* Align with dashboard tone and avoid yellow active menu on this page */
+    .main {
+        background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
+    }
+    .menu-link.active {
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%) !important;
+        color: #f59e0b !important;
+        border-right: 4px solid #f59e0b !important;
+    }
+
     .event-hub {
         max-width: 1100px;
         margin: 0 auto;

@@ -14,7 +14,7 @@ $has_event_logo = ($operator_event_image !== '' && file_exists(__DIR__ . '/../..
             </div>
         </div>
         <div class="academy-info">
-            <div class="academy-name"><?php echo htmlspecialchars($operator_event_name); ?></div>
+            <div class="academy-name" style="color: #f59e0b;"><?php echo htmlspecialchars($operator_event_name); ?></div>
             <div style="font-size: 14px; opacity: 0.8; color: white;">Portal Operator</div>
         </div>
     </div>

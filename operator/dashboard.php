@@ -212,6 +212,12 @@ require_once __DIR__ . '/includes/header.php';
         padding: 30px !important;
     }
 
+    .menu-link.active {
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%) !important;
+        color: #f59e0b !important;
+        border-right: 4px solid #f59e0b !important;
+    }
+
     .dashboard-container {
         max-width: 1400px;
         margin: 0 auto;
