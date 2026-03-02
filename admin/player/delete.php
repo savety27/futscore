@@ -66,9 +66,6 @@ try {
         exit;
     }
 
-    $statusRaw = strtolower(trim((string)($player['status'] ?? 'inactive')));
-    $isInactive = in_array($statusRaw, ['inactive', 'nonaktif', 'non-aktif', 'non active', '0'], true);
-
     // Data turunan utama yang menandakan player sudah dipakai di data pertandingan/event
     $usage_map = [
         ['table' => 'lineups', 'column' => 'player_id', 'label' => 'lineup'],
@@ -87,13 +84,12 @@ try {
     $usage_sources = array_values(array_unique($usage_sources));
 
     // Rule:
-    // - Nonaktif => bisa hapus tanpa terkecuali (override)
-    // - Aktif + ada data turunan => tidak bisa hapus
-    // - Aktif + belum ada data turunan => bisa hapus
-    if (!$isInactive && !empty($usage_sources)) {
+    // - Status aktif/nonaktif tidak berpengaruh
+    // - Jika sudah ada data turunan, player tidak bisa dihapus
+    if (!empty($usage_sources)) {
         echo json_encode([
             'success' => false,
-            'message' => 'Player aktif tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.'
+            'message' => 'Player tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usage_sources) . '.'
         ]);
         exit;
     }

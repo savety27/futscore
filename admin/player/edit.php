@@ -1446,7 +1446,7 @@ select.form-control {
                         <div class="form-group">
                             <label for="jersey_number">No Punggung <span class="required">*</span></label>
                             <input type="number" id="jersey_number" name="jersey_number" class="form-control" 
-                                   value="<?php echo $player['jersey_number']; ?>" min="1" max="99" required>
+                                   value="<?php echo $player['jersey_number']; ?>" required>
                         </div>
 
                         <div class="form-group">

@@ -15,6 +15,62 @@ if (!isset($_SESSION['admin_logged_in'])) {
 }
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
+
+if (!function_exists('tableExists')) {
+    function tableExists(PDO $conn, string $table): bool
+    {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW TABLES LIKE " . $conn->quote($table));
+        return (bool) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('columnExists')) {
+    function columnExists(PDO $conn, string $table, string $column): bool
+    {
+        if (!tableExists($conn, $table) || !preg_match('/^[a-zA-Z0-9_]+$/', $column)) {
+            return false;
+        }
+        $stmt = $conn->query("SHOW COLUMNS FROM `{$table}` LIKE " . $conn->quote($column));
+        return (bool) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('countByPlayerRef')) {
+    function countByPlayerRef(PDO $conn, string $table, string $column, int $playerId): int
+    {
+        if (!columnExists($conn, $table, $column)) {
+            return 0;
+        }
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$column}` = ?");
+        $stmt->execute([$playerId]);
+        return (int) $stmt->fetchColumn();
+    }
+}
+
+if (!function_exists('getPlayerDependencySources')) {
+    function getPlayerDependencySources(PDO $conn, int $playerId): array
+    {
+        $usageMap = [
+            ['table' => 'lineups', 'column' => 'player_id', 'label' => 'lineup'],
+            ['table' => 'goals', 'column' => 'player_id', 'label' => 'goal'],
+            ['table' => 'transfers', 'column' => 'player_id', 'label' => 'transfer'],
+            ['table' => 'player_event_cards', 'column' => 'player_id', 'label' => 'event_card']
+        ];
+
+        $sources = [];
+        foreach ($usageMap as $usage) {
+            $count = countByPlayerRef($conn, $usage['table'], $usage['column'], $playerId);
+            if ($count > 0) {
+                $sources[] = $usage['label'];
+            }
+        }
+
+        return array_values(array_unique($sources));
+    }
+}
 // Handle search
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -135,6 +191,18 @@ try {
         $stmt->execute($params);
         $players = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    foreach ($players as &$playerRow) {
+        $usageSources = getPlayerDependencySources($conn, (int)($playerRow['id'] ?? 0));
+        $hasDependencies = !empty($usageSources);
+        $playerRow['can_delete'] = !$hasDependencies;
+        if ($hasDependencies) {
+            $playerRow['delete_block_reason'] = 'Tidak bisa dihapus karena sudah ada data turunan: ' . implode(', ', $usageSources) . '.';
+        } else {
+            $playerRow['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($playerRow);
 } catch (Exception $e) {
     $error = "Error: " . $e->getMessage();
 }
@@ -751,6 +819,14 @@ body {
     color: white;
 }
 
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 /* Pagination */
 .pagination {
     display: flex;
@@ -1323,10 +1399,19 @@ body {
                                        title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button class="action-btn btn-delete" 
+                                    <?php
+                                    $deleteDisabled = empty($player['can_delete']);
+                                    $deleteTitle = (string)($player['delete_block_reason'] ?? 'Delete');
+                                    ?>
+                                    <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>" 
+                                            type="button"
+                                            <?php if (!$deleteDisabled): ?>
                                             data-player-id="<?php echo (int) $player['id']; ?>"
                                             data-player-name="<?php echo htmlspecialchars($player['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Delete">
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
+                                            <?php endif; ?>
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
