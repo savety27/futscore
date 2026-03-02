@@ -15,6 +15,7 @@ require_once 'includes/header.php';
         letter-spacing: 0.6px;
         line-height: 1.2;
         white-space: nowrap;
+        text-align: center !important;
     }
     .player-table-new td {
         padding: 11px 12px;
@@ -24,10 +25,13 @@ require_once 'includes/header.php';
     .player-table-new td.cell-name .player-link {
         font-size: 14px;
         line-height: 1.35;
+        display: inline-block;
+        text-align: center;
     }
     .player-table-new th.col-name-head,
     .player-table-new td.cell-name {
         min-width: 100px;
+        text-align: center !important;
     }
     .player-table-new th:first-child,
     .player-table-new td:first-child {
@@ -379,7 +383,8 @@ require_once 'includes/header.php';
         -webkit-overflow-scrolling: touch;
     }
     @media (max-width: 768px) {
-        .player-table-container {
+        .player-table-container,
+        .player-table-responsive {
             overflow: visible !important;
         }
         .player-table-new {
@@ -548,13 +553,13 @@ if ($check_event_id_col && $check_event_id_col->num_rows > 0) {
 // Query for Total Records (for pagination)
 $count_query = "SELECT COUNT(*) as total FROM players p WHERE p.status = 'active'";
 if (!empty($search)) {
-    $count_query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ?)";
+    $count_query .= " AND (p.name LIKE ? OR p.nisn LIKE ?)";
 }
 
 $stmt_count = $conn->prepare($count_query);
 if (!empty($search)) {
     $search_param = "%$search%";
-    $stmt_count->bind_param("sss", $search_param, $search_param, $search_param);
+    $stmt_count->bind_param("ss", $search_param, $search_param);
 }
 $stmt_count->execute();
 $total_records = $stmt_count->get_result()->fetch_assoc()['total'];
@@ -566,13 +571,13 @@ $query = "SELECT p.*, t.name as team_name, t.logo as team_logo
           LEFT JOIN teams t ON p.team_id = t.id 
           WHERE p.status = 'active'";
 if (!empty($search)) {
-    $query .= " AND (p.name LIKE ? OR p.nik LIKE ? OR p.nisn LIKE ?)";
+    $query .= " AND (p.name LIKE ? OR p.nisn LIKE ?)";
 }
 $query .= " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($query);
 if (!empty($search)) {
-    $stmt->bind_param("sssii", $search_param, $search_param, $search_param, $limit, $offset);
+    $stmt->bind_param("ssii", $search_param, $search_param, $limit, $offset);
 } else {
     $stmt->bind_param("ii", $limit, $offset);
 }
@@ -939,7 +944,7 @@ function maskNIK($nik) {
                 <form action="" method="GET" class="filter-row">
                     <div class="filter-group">
                         <label for="search">Pencarian</label>
-                        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Cari nama, NIK, atau NISN...">
+                        <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Cari nama atau NISN...">
                     </div>
                     <div class="filter-actions-new">
                         <button type="submit" class="btn-filter-apply">
@@ -954,7 +959,8 @@ function maskNIK($nik) {
 
             <!-- Table -->
             <div class="player-table-container">
-                <table class="player-table-new">
+                <div class="player-table-responsive">
+                    <table class="player-table-new">
                     <thead>
                         <tr>
                             <th class="col-no">No</th>
@@ -1076,6 +1082,7 @@ function maskNIK($nik) {
                     </tbody>
                 </table>
             </div>
+        </div>
 
             <!-- Pagination -->
             <div class="pagination-info">

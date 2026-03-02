@@ -345,7 +345,7 @@
 
 .staff-table-new th {
     padding: 14px 16px;
-    text-align: left;
+    text-align: center;
     font-weight: 700;
     text-transform: uppercase;
     font-size: 12px;
@@ -358,6 +358,11 @@
     vertical-align: middle;
     font-size: 13px;
     color: var(--gray-700);
+    display: table-cell;
+}
+
+.staff-table-new td.col-team {
+    display: table-cell;
 }
 
 .staff-table-new tbody tr:hover {
@@ -489,16 +494,36 @@
     color: var(--blue-primary);
     font-size: 14px;
     margin-bottom: 4px;
+    text-align: center;
 }
 
 .staff-contact {
     font-size: 11px;
     color: var(--gray-500);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    text-align: left;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.staff-contact > div {
+    display: grid;
+    grid-template-columns: 12px auto;
+    column-gap: 6px;
+    align-items: center;
 }
 
 .staff-contact i {
-    margin-right: 6px;
+    margin-right: 0;
     width: 12px;
+}
+
+.staff-table-new td.col-name {
+    text-align: center;
 }
 
 /* Team Display */
