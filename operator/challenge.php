@@ -234,15 +234,11 @@ try {
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($challenges as &$challenge) {
-        $statusRaw = strtolower(trim((string)($challenge['status'] ?? '')));
-        $isOpenStatus = ($statusRaw === 'open');
         $dependencySources = getChallengeDependencySources($conn, (int)($challenge['id'] ?? 0));
         $hasDependency = !empty($dependencySources);
 
-        $challenge['can_delete'] = $isOpenStatus && !$hasDependency;
-        if (!$isOpenStatus) {
-            $challenge['delete_block_reason'] = 'Hanya challenge berstatus open yang bisa dihapus.';
-        } elseif ($hasDependency) {
+        $challenge['can_delete'] = !$hasDependency;
+        if ($hasDependency) {
             $challenge['delete_block_reason'] = 'Tidak bisa dihapus karena sudah ada data turunan: ' . implode(', ', $dependencySources) . '.';
         } else {
             $challenge['delete_block_reason'] = 'Delete';
