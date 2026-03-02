@@ -1285,6 +1285,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form Validation
     const form = document.getElementById('beritaForm');
+    if (form) {
+        form.setAttribute('novalidate', 'novalidate');
+    }
     form.addEventListener('submit', function(e) {
         const judul = document.getElementById('judul').value.trim();
         const konten = getEditorPlainText();
@@ -1295,37 +1298,26 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.remove('is-invalid');
         });
 
-        let hasError = false;
+        // Validate one-by-one: stop at first invalid field
         let firstInvalidFieldId = null;
+        let firstInvalidMessage = '';
 
         if (!judul) {
-            markError('judul', '');
-            hasError = true;
-            firstInvalidFieldId = firstInvalidFieldId || 'judul';
+            firstInvalidFieldId = 'judul';
         } else if (judul.length < 5) {
-            markError('judul', 'Judul minimal 5 karakter');
-            hasError = true;
-            firstInvalidFieldId = firstInvalidFieldId || 'judul';
+            firstInvalidFieldId = 'judul';
+            firstInvalidMessage = 'Judul minimal 5 karakter';
         } else if (judul.length > 200) {
-            markError('judul', '');
-            hasError = true;
-            firstInvalidFieldId = firstInvalidFieldId || 'judul';
+            firstInvalidFieldId = 'judul';
+        } else if (!penulis) {
+            firstInvalidFieldId = 'penulis';
+        } else if (!konten) {
+            firstInvalidFieldId = 'konten';
         }
 
-        if (!konten) {
-            markError('konten', '');
-            hasError = true;
-            firstInvalidFieldId = firstInvalidFieldId || 'konten';
-        }
-
-        if (!penulis) {
-            markError('penulis', '');
-            hasError = true;
-            firstInvalidFieldId = firstInvalidFieldId || 'penulis';
-        }
-
-        if (hasError) {
+        if (firstInvalidFieldId) {
             e.preventDefault();
+            markError(firstInvalidFieldId, firstInvalidMessage);
             focusInvalidField(firstInvalidFieldId);
         }
     });
@@ -1337,9 +1329,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Summernote hides textarea; focus editable area instead.
         if (fieldId === 'konten') {
-            const noteEditor = field.closest('.form-group')?.querySelector('.note-editor');
+            const noteEditor = field.closest('.form-group')?.querySelector('.note-editor')
+                || document.querySelector('#konten + .note-editor')
+                || document.querySelector('.note-editor');
             if (noteEditor) {
                 noteEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (window.jQuery && typeof window.jQuery.fn.summernote === 'function') {
+                    setTimeout(() => window.jQuery('#konten').summernote('focus'), 120);
+                    return;
+                }
                 const editable = noteEditor.querySelector('.note-editable');
                 if (editable) {
                     setTimeout(() => editable.focus(), 150);
