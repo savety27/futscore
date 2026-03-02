@@ -148,9 +148,9 @@ $offset = ($page - 1) * $perPage;
                     </div>
                     
                     <div class="filter-group">
-                        <label for="eventFilter">Event</label>
+                        <label for="eventFilter">Kategori</label>
                         <select id="eventFilter" class="filter-select">
-                            <option value="0">Semua Event</option>
+                            <option value="0">Semua Kategori</option>
                             <?php foreach ($events as $event): ?>
                             <option value="<?php echo htmlspecialchars($event ?? ''); ?>" <?php echo $eventId === $event ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($event ?? ''); ?>
@@ -199,7 +199,7 @@ $offset = ($page - 1) * $perPage;
                                 <th class="col-score">Skor</th>
                                 <th class="col-datetime">Tanggal & Waktu</th>
                                 <th class="col-venue">Lokasi</th>
-                                <th class="col-event">Event</th>
+                                <th class="col-event">Kategori</th>
                                 <th class="col-action">Aksi</th>
                             </tr>
                         </thead>
@@ -256,7 +256,7 @@ $offset = ($page - 1) * $perPage;
                                         <span class="venue-text"><?php echo htmlspecialchars($match['venue_name'] ?? ''); ?></span>
                                     </div>
                                 </td>
-                                <td class="match-event-cell" data-label="Event">
+                                <td class="match-event-cell" data-label="Kategori">
                                     <span class="event-badge"><?php echo htmlspecialchars($match['sport_type'] ?? ''); ?></span>
                                 </td>
                                 <td class="match-actions-cell" data-label="Aksi">
@@ -450,4 +450,5 @@ const SITE_URL = '<?php echo SITE_URL; ?>';
 <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
+
 

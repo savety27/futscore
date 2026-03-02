@@ -417,17 +417,21 @@
 
 /* Event cell */
 .event-badge {
-    display: inline-block;
+    display: -webkit-inline-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     background: var(--white-blue);
     color: var(--navy);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    line-height: 1.25;
     font-weight: 700;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 140px;
+    word-break: break-word;
 }
 
 /* Actions cell */
