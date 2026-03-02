@@ -25,7 +25,7 @@ header('Content-Type: application/json');
 
 try {
     // Get berita data before deletion
-    $stmt = $conn->prepare("SELECT gambar, status FROM berita WHERE id = ?");
+    $stmt = $conn->prepare("SELECT gambar, status, views FROM berita WHERE id = ?");
     $stmt->execute([$berita_id]);
     $berita = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -33,11 +33,22 @@ try {
         die(json_encode(['success' => false, 'message' => 'Berita not found']));
     }
 
-    // Business rule: published berita cannot be deleted
-    if (($berita['status'] ?? '') === 'published') {
+    $statusRaw = strtolower(trim((string)($berita['status'] ?? '')));
+    $views = (int)($berita['views'] ?? 0);
+    $allowedStatuses = ['draft', 'archived'];
+
+    // Business rule: delete allowed only for draft/archived without turunan data
+    if (!in_array($statusRaw, $allowedStatuses, true)) {
         echo json_encode([
             'success' => false,
-            'message' => 'Berita dengan status Published tidak bisa dihapus.'
+            'message' => 'Delete hanya berlaku untuk berita status draft/archived.'
+        ]);
+        exit;
+    }
+    if ($views > 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Berita tidak bisa dihapus karena sudah memiliki data turunan (views/interaksi).'
         ]);
         exit;
     }

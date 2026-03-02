@@ -118,6 +118,22 @@ try {
     }
     
     $berita = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($berita as &$row) {
+        $statusRaw = strtolower(trim((string)($row['status'] ?? '')));
+        $viewsCount = (int)($row['views'] ?? 0);
+        $isAllowedStatus = in_array($statusRaw, ['draft', 'archived'], true);
+        $hasRelatedData = $viewsCount > 0;
+
+        $row['can_delete'] = $isAllowedStatus && !$hasRelatedData;
+        if (!$isAllowedStatus) {
+            $row['delete_block_reason'] = 'Delete hanya untuk status draft/archived.';
+        } elseif ($hasRelatedData) {
+            $row['delete_block_reason'] = 'Tidak bisa dihapus karena sudah memiliki data turunan (views/interaksi).';
+        } else {
+            $row['delete_block_reason'] = 'Delete';
+        }
+    }
+    unset($row);
     
 } catch (PDOException $e) {
     $error = "Database Error: " . $e->getMessage();
@@ -586,11 +602,13 @@ body {
     color: white;
 }
 
-.btn-delete-disabled {
+.btn-delete-disabled,
+.btn-delete-disabled:hover {
     background: rgba(148, 163, 184, 0.2);
     color: #94a3b8;
     cursor: not-allowed;
-    pointer-events: none;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Badge Styles */
@@ -1114,20 +1132,21 @@ body {
                                        class="action-btn btn-edit" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <?php if (($b['status'] ?? '') === 'published'): ?>
-                                        <button class="action-btn btn-delete-disabled"
-                                                type="button"
-                                                title="Berita published tidak bisa dihapus">
-                                            <i class="fas fa-lock"></i>
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="action-btn btn-delete" 
-                                                data-berita-id="<?php echo (int) $b['id']; ?>"
-                                                data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                                title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    <?php endif; ?>
+                                    <?php
+                                    $deleteDisabled = empty($b['can_delete']);
+                                    $deleteTitle = (string)($b['delete_block_reason'] ?? 'Delete');
+                                    ?>
+                                    <button class="action-btn btn-delete<?php echo $deleteDisabled ? ' btn-delete-disabled' : ''; ?>"
+                                            type="button"
+                                            <?php if (!$deleteDisabled): ?>
+                                            data-berita-id="<?php echo (int) $b['id']; ?>"
+                                            data-berita-title="<?php echo htmlspecialchars($b['judul'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            <?php else: ?>
+                                            disabled aria-disabled="true"
+                                            <?php endif; ?>
+                                            title="<?php echo htmlspecialchars($deleteTitle, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
