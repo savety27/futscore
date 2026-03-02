@@ -77,12 +77,11 @@ try {
         $usageSources[] = 'event';
     }
 
-    $isActive = (int) ($perangkat['is_active'] ?? 0) === 1;
-    if ($isActive && !empty($usageSources)) {
+    if (!empty($usageSources)) {
         $usageSources = array_values(array_unique($usageSources));
         echo json_encode([
             'success' => false,
-            'message' => 'Perangkat aktif tidak bisa dihapus karena sudah terdaftar pada data: ' . implode(', ', $usageSources) . '. Nonaktifkan dulu perangkat jika tetap ingin menghapus.'
+            'message' => 'Perangkat tidak bisa dihapus karena sudah terdaftar pada data turunan: ' . implode(', ', $usageSources) . '.'
         ]);
         exit;
     }
