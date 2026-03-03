@@ -636,7 +636,7 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
 <style>
-:root { --primary:#0f2744; --accent:#3b82f6; --gray:#64748b; --ok:#16a34a; --warn:#dc2626; --danger:#ef4444; --card:#ffffff; --card-shadow:0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -2px rgba(0,0,0,.03); }
+:root { --primary:#0f2744; --secondary:#f59e0b; --accent:#3b82f6; --danger:#ef4444; --dark:#1e293b; --gray:#64748b; --sidebar-bg:linear-gradient(180deg, #0a1628 0%, #0f2744 100%); --ok:#16a34a; --warn:#dc2626; --card:#ffffff; --card-shadow:0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -2px rgba(0,0,0,.03); }
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-gradient(180deg,#eaf6ff 0%,#f4fbff 100%); color:#1e293b; }
 .main { margin-left:280px; width:calc(100% - 280px); padding:28px; }
