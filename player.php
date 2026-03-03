@@ -382,6 +382,143 @@ require_once 'includes/header.php';
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
+    .player-detail-actions {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: 10px;
+        width: max-content;
+    }
+    .player-share-section {
+        position: relative;
+        width: 100%;
+    }
+    .player-share-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        padding-right: 42px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #dbeafe;
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .player-share-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+    }
+    .player-share-toggle-icon {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: transform 0.2s ease;
+    }
+    .player-share-section.open .player-share-toggle-icon {
+        transform: translateY(-50%) rotate(180deg);
+    }
+    .player-share-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        z-index: 20;
+        width: min(430px, 90vw);
+        background: #fff;
+        border: 1px solid #dbeafe;
+        border-radius: 14px;
+        padding: 10px;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+    }
+    .player-share-section.open .player-share-menu {
+        display: block;
+    }
+    .player-share-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .player-share-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 36px;
+        padding: 8px 11px;
+        border-radius: 10px;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+    .player-share-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.16);
+    }
+    .player-share-btn.whatsapp {
+        background: #25d366;
+        border-color: #25d366;
+        color: #fff;
+    }
+    .player-share-btn.facebook {
+        background: #1877f2;
+        border-color: #1877f2;
+        color: #fff;
+    }
+    .player-share-btn.telegram {
+        background: #0088cc;
+        border-color: #0088cc;
+        color: #fff;
+    }
+    .player-share-btn.twitter {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #fff;
+    }
+    .player-share-btn.copy {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #fff;
+        font-family: inherit;
+    }
+    .player-share-btn.copy.copied {
+        background: #166534;
+        border-color: #166534;
+    }
+    .player-share-btn.native {
+        display: none;
+        border-color: #1d4ed8;
+    }
+    .player-share-feedback {
+        margin-top: 8px;
+        min-height: 14px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #047857;
+    }
+    .player-share-feedback.error {
+        color: #b91c1c;
+    }
+    .player-share-x-icon {
+        width: 12px;
+        height: 12px;
+        fill: currentColor;
+        flex: 0 0 auto;
+    }
     @media (max-width: 768px) {
         .player-table-container,
         .player-table-responsive {
@@ -515,6 +652,37 @@ require_once 'includes/header.php';
             padding: 8px 9px;
             font-size: 12px;
         }
+        .player-detail-actions {
+            width: 100%;
+        }
+        .player-share-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .player-share-toggle {
+            width: 100%;
+            justify-content: center;
+            min-height: 48px;
+            padding: 16px 24px;
+            font-size: 14px;
+        }
+        .player-share-menu {
+            position: static;
+            width: 100%;
+            max-width: 100%;
+            margin-top: 8px;
+            box-shadow: none;
+        }
+        .player-share-buttons {
+            width: 100%;
+        }
+        .player-share-btn {
+            width: 100%;
+        }
+        .player-share-feedback {
+            text-align: center;
+        }
     }
     @media (max-width: 480px) {
         .player-table-new td {
@@ -530,6 +698,9 @@ require_once 'includes/header.php';
         .match-count-badge,
         .event-count-badge {
             font-size: 9px;
+        }
+        .player-share-buttons {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -679,6 +850,12 @@ if (!empty($players)) {
 // Optional Player Detail (by ID)
 $player_detail = null;
 $player_detail_category_label = '-';
+$player_share_url = '';
+$player_share_text = '';
+$player_share_whatsapp_url = '#';
+$player_share_facebook_url = '#';
+$player_share_telegram_url = '#';
+$player_share_x_url = '#';
 if ($player_id > 0) {
     $detail_query = "SELECT p.*, t.name as team_name, t.logo as team_logo 
                      FROM players p 
@@ -699,6 +876,19 @@ if ($player_id > 0) {
                 $player_detail_category_label = $team_info['events_array'][0];
             }
         }
+
+        $share_player_name = trim((string) ($player_detail['name'] ?? ''));
+        $player_share_url = SITE_URL . '/player.php?' . http_build_query([
+            'id' => (int) ($player_detail['id'] ?? 0),
+            'page' => max(1, (int) $page),
+            'search' => (string) $search
+        ]) . '#player-detail';
+        $player_share_text = 'Lihat profil pemain ' . ($share_player_name !== '' ? $share_player_name : 'ini') . ' di ALVETRIX';
+        $player_share_combined_text = $player_share_text . ' ' . $player_share_url;
+        $player_share_whatsapp_url = 'https://wa.me/?text=' . rawurlencode($player_share_combined_text);
+        $player_share_facebook_url = 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($player_share_url);
+        $player_share_telegram_url = 'https://t.me/share/url?url=' . rawurlencode($player_share_url) . '&text=' . rawurlencode($player_share_text);
+        $player_share_x_url = 'https://twitter.com/intent/tweet?text=' . rawurlencode($player_share_text) . '&url=' . rawurlencode($player_share_url);
     }
 }
 
@@ -840,9 +1030,39 @@ function maskNIK($nik) {
                                 </div>
                             </div>
                             <div class="player-detail-actions">
-                                <a href="player.php?<?php echo http_build_query(['page' => $page ?: 1, 'search' => $search ?: null]); ?>" class="btn-filter-reset">
+                                <a href="player.php?<?php echo http_build_query(['page' => $page ?: 1, 'search' => $search ?: null]); ?>" class="btn-filter-reset" style="margin-top: 25px;">
                                     <i class="fas fa-arrow-left"></i> Kembali ke daftar
                                 </a>
+                                <div class="player-share-section" id="playerSharePanel" data-share-url="<?php echo htmlspecialchars($player_share_url, ENT_QUOTES, 'UTF-8'); ?>" data-share-text="<?php echo htmlspecialchars($player_share_text, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <button type="button" class="player-share-toggle" style="padding-right: 42px;" id="playerShareToggle" aria-expanded="false" aria-controls="playerShareMenu">
+                                        <span><i class="fas fa-share-alt"></i> Share Profil</span>
+                                        <i class="fas fa-chevron-down player-share-toggle-icon" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="player-share-menu" id="playerShareMenu">
+                                        <div class="player-share-buttons">
+                                            <button type="button" class="player-share-btn native" id="playerShareNativeBtn" aria-label="Bagikan profil pemain">
+                                                <i class="fas fa-share-nodes"></i> <span>Share</span>
+                                            </button>
+                                            <a href="<?php echo htmlspecialchars($player_share_whatsapp_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn whatsapp" aria-label="Bagikan ke WhatsApp">
+                                                <i class="fab fa-whatsapp"></i> <span>WhatsApp</span>
+                                            </a>
+                                            <a href="<?php echo htmlspecialchars($player_share_facebook_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn facebook" aria-label="Bagikan ke Facebook">
+                                                <i class="fab fa-facebook-f"></i> <span>Facebook</span>
+                                            </a>
+                                            <a href="<?php echo htmlspecialchars($player_share_telegram_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn telegram" aria-label="Bagikan ke Telegram">
+                                                <i class="fab fa-telegram-plane"></i> <span>Telegram</span>
+                                            </a>
+                                            <a href="<?php echo htmlspecialchars($player_share_x_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn twitter" aria-label="Bagikan ke X">
+                                                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="player-share-x-icon" aria-hidden="true" focusable="false"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg>
+                                                <span>X</span>
+                                            </a>
+                                            <button type="button" class="player-share-btn copy" id="playerShareCopyBtn" aria-label="Salin tautan profil pemain">
+                                                <i class="far fa-copy"></i> <span>Salin Link</span>
+                                            </button>
+                                        </div>
+                                        <div class="player-share-feedback" id="playerShareFeedback" aria-live="polite"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1262,6 +1482,128 @@ if (skillsPanel && skillsToggle && skillsContent) {
 
     window.addEventListener('resize', syncSkillsPanelByViewport);
     syncSkillsPanelByViewport();
+}
+
+const playerSharePanel = document.getElementById('playerSharePanel');
+const playerShareToggle = document.getElementById('playerShareToggle');
+const playerShareMenu = document.getElementById('playerShareMenu');
+const playerShareCopyBtn = document.getElementById('playerShareCopyBtn');
+const playerShareNativeBtn = document.getElementById('playerShareNativeBtn');
+const playerShareFeedback = document.getElementById('playerShareFeedback');
+
+if (playerSharePanel) {
+    const shareUrl = playerSharePanel.dataset.shareUrl || window.location.href;
+    const shareText = playerSharePanel.dataset.shareText || 'Lihat profil pemain ini di ALVETRIX';
+
+    const setShareFeedback = (message, isError = false) => {
+        if (!playerShareFeedback) return;
+        playerShareFeedback.textContent = message;
+        playerShareFeedback.classList.toggle('error', isError);
+    };
+    const openShareMenu = () => {
+        playerSharePanel.classList.add('open');
+        if (playerShareToggle) {
+            playerShareToggle.setAttribute('aria-expanded', 'true');
+        }
+    };
+    const closeShareMenu = () => {
+        playerSharePanel.classList.remove('open');
+        if (playerShareToggle) {
+            playerShareToggle.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    const fallbackCopyLink = (text) => {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        tempInput.setAttribute('readonly', '');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+        document.body.removeChild(tempInput);
+        return copied;
+    };
+
+    if (playerShareToggle && playerShareMenu) {
+        playerShareToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = playerSharePanel.classList.contains('open');
+            if (isOpen) {
+                closeShareMenu();
+            } else {
+                openShareMenu();
+            }
+        });
+
+        playerShareMenu.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!playerSharePanel.contains(event.target)) {
+                closeShareMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeShareMenu();
+            }
+        });
+    }
+
+    if (playerShareCopyBtn) {
+        playerShareCopyBtn.addEventListener('click', () => {
+            const handleCopySuccess = () => {
+                playerShareCopyBtn.classList.add('copied');
+                setShareFeedback('Tautan profil berhasil disalin.');
+                setTimeout(() => {
+                    playerShareCopyBtn.classList.remove('copied');
+                    setShareFeedback('');
+                }, 1600);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl)
+                    .then(handleCopySuccess)
+                    .catch(() => {
+                        if (fallbackCopyLink(shareUrl)) {
+                            handleCopySuccess();
+                        } else {
+                            setShareFeedback('Gagal menyalin tautan profil.', true);
+                        }
+                    });
+            } else if (fallbackCopyLink(shareUrl)) {
+                handleCopySuccess();
+            } else {
+                setShareFeedback('Gagal menyalin tautan profil.', true);
+            }
+        });
+    }
+
+    if (playerShareNativeBtn && navigator.share) {
+        playerShareNativeBtn.style.display = 'inline-flex';
+        playerShareNativeBtn.addEventListener('click', () => {
+            navigator.share({
+                title: 'Profil Pemain ALVETRIX',
+                text: shareText,
+                url: shareUrl
+            }).then(() => {
+                setShareFeedback('Profil berhasil dibagikan.');
+                setTimeout(() => setShareFeedback(''), 1600);
+            }).catch((err) => {
+                if (err && err.name === 'AbortError') return;
+                setShareFeedback('Gagal membuka menu bagikan.', true);
+            });
+        });
+    }
 }
 
 const renderPlayerHistoryRows = (matches) => {
