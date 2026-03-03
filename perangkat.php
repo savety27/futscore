@@ -27,6 +27,7 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 40;
 $offset = ($page - 1) * $limit;
+$perangkat_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Database connection
 $conn = $db->getConnection();
@@ -135,6 +136,111 @@ $stmt->execute();
 $result = $stmt->get_result();
 $perangkatRows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 
+$perangkat_detail = null;
+$perangkat_detail_event_names = [];
+$perangkat_detail_address = '-';
+$perangkat_share_url = '';
+$perangkat_share_text = '';
+$perangkat_share_whatsapp_url = '#';
+$perangkat_share_facebook_url = '#';
+$perangkat_share_telegram_url = '#';
+$perangkat_share_x_url = '#';
+if ($perangkat_id > 0) {
+    $detailMatchCountSelect = "0 AS match_count";
+    $detailEventCountSelect = "0 AS event_count";
+    $detailEventNamesSelect = "'[]' AS event_names";
+
+    if ($has_challenge_match_official) {
+        $detailOfficialNameMatchSql = "(
+            LOWER(TRIM(c.match_official)) = LOWER(TRIM(pd.name))
+            OR FIND_IN_SET(
+                LOWER(TRIM(pd.name)),
+                REPLACE(REPLACE(LOWER(TRIM(c.match_official)), ', ', ','), ' ,', ',')
+            ) > 0
+        )";
+
+        $detailMatchCountSelect = "(SELECT COUNT(DISTINCT c.id)
+            FROM challenges c
+            WHERE c.match_official IS NOT NULL
+              AND TRIM(c.match_official) <> ''
+              AND $detailOfficialNameMatchSql
+        ) AS match_count";
+
+        if ($has_challenge_event_id) {
+            $detailEventCountSelect = "(SELECT COUNT(DISTINCT e.id)
+                FROM challenges c
+                INNER JOIN events e ON c.event_id = e.id
+                WHERE c.match_official IS NOT NULL
+                  AND TRIM(c.match_official) <> ''
+                  AND $detailOfficialNameMatchSql
+                  AND c.event_id IS NOT NULL
+            ) AS event_count";
+
+            $detailEventNamesSelect = "(SELECT COALESCE(
+                CONCAT(
+                    '[',
+                    GROUP_CONCAT(DISTINCT JSON_QUOTE(TRIM(e.name)) ORDER BY TRIM(e.name) SEPARATOR ','),
+                    ']'
+                ),
+                '[]'
+            )
+                FROM challenges c
+                INNER JOIN events e ON c.event_id = e.id
+                WHERE c.match_official IS NOT NULL
+                  AND TRIM(c.match_official) <> ''
+                  AND $detailOfficialNameMatchSql
+                  AND c.event_id IS NOT NULL
+                  AND TRIM(e.name) <> ''
+            ) AS event_names";
+        }
+    }
+
+    $detail_query = "SELECT
+        pd.*,
+        (SELECT COUNT(*) FROM perangkat_licenses pl WHERE pl.perangkat_id = pd.id) AS certificate_count,
+        $detailMatchCountSelect,
+        $detailEventCountSelect,
+        $detailEventNamesSelect
+        FROM perangkat pd
+        WHERE pd.id = ?
+        LIMIT 1";
+    $detail_stmt = $conn->prepare($detail_query);
+    if ($detail_stmt) {
+        $detail_stmt->bind_param("i", $perangkat_id);
+        $detail_stmt->execute();
+        $perangkat_detail = $detail_stmt->get_result()->fetch_assoc();
+        $detail_stmt->close();
+    }
+
+    if ($perangkat_detail) {
+        $perangkat_detail_event_names = parsePerangkatEventNamesPayload($perangkat_detail['event_names'] ?? '');
+
+        $address_parts = [];
+        foreach (['address', 'city', 'province', 'postal_code', 'country'] as $field) {
+            $value = trim((string)($perangkat_detail[$field] ?? ''));
+            if ($value !== '') {
+                $address_parts[] = $value;
+            }
+        }
+        if (!empty($address_parts)) {
+            $perangkat_detail_address = implode(', ', $address_parts);
+        }
+
+        $share_perangkat_name = trim((string)($perangkat_detail['name'] ?? ''));
+        $perangkat_share_url = SITE_URL . '/perangkat.php?' . http_build_query([
+            'id' => (int)($perangkat_detail['id'] ?? 0),
+            'page' => max(1, (int)$page),
+            'search' => (string)$search
+        ]) . '#perangkat-detail';
+        $perangkat_share_text = 'Lihat profil perangkat pertandingan ' . ($share_perangkat_name !== '' ? $share_perangkat_name : 'ini') . ' di ALVETRIX';
+        $perangkat_share_combined_text = $perangkat_share_text . ' ' . $perangkat_share_url;
+        $perangkat_share_whatsapp_url = 'https://wa.me/?text=' . rawurlencode($perangkat_share_combined_text);
+        $perangkat_share_facebook_url = 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode($perangkat_share_url);
+        $perangkat_share_telegram_url = 'https://t.me/share/url?url=' . rawurlencode($perangkat_share_url) . '&text=' . rawurlencode($perangkat_share_text);
+        $perangkat_share_x_url = 'https://twitter.com/intent/tweet?text=' . rawurlencode($perangkat_share_text) . '&url=' . rawurlencode($perangkat_share_url);
+    }
+}
+
 // Helper Functions
 function calculatePerangkatAge($birthDateRaw) {
     if (empty($birthDateRaw) || $birthDateRaw === '0000-00-00') return '-';
@@ -196,6 +302,20 @@ function getFileUrl($filename, $directory, $defaultIcon = 'fa-user') {
         'found' => false,
         'icon' => $defaultIcon
     ];
+}
+
+function maskPerangkatKtp($noKtp) {
+    $raw = trim((string)$noKtp);
+    if ($raw === '') {
+        return '-';
+    }
+
+    $length = strlen($raw);
+    if ($length <= 7) {
+        return substr($raw, 0, 1) . str_repeat('*', max($length - 2, 1)) . substr($raw, -1);
+    }
+
+    return substr($raw, 0, 3) . str_repeat('*', max($length - 7, 1)) . substr($raw, -4);
 }
 
 
@@ -1092,6 +1212,435 @@ $pageTitle = "Perangkat Pertandingan";
 .staff-table-new td.col-name .staff-name {
     color: #111827 !important;
 }
+
+.dashboard-body.has-profile-detail .filter-card {
+    margin-top: 0;
+}
+
+.entity-profile-card {
+    background: var(--white);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-100);
+    margin-top: -36px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.entity-empty-state {
+    padding: 22px 16px;
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.entity-empty-state h3 {
+    margin: 12px 0 6px;
+    font-size: 18px;
+    color: var(--navy);
+}
+
+.entity-profile-header {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.entity-profile-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.entity-profile-photo {
+    width: 130px;
+    height: 130px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.entity-profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.entity-profile-photo-placeholder {
+    color: var(--gray-400);
+    font-size: 30px;
+}
+
+.entity-profile-main h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    color: var(--navy);
+}
+
+.entity-profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.entity-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.entity-meta-pill.outline {
+    background: var(--white-blue);
+    color: var(--navy);
+    border: 1px solid var(--gray-200);
+}
+
+.entity-profile-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: min(520px, 100%);
+    align-content: flex-start;
+}
+
+.entity-profile-actions > .btn-filter-reset,
+.entity-profile-actions > .player-share-section {
+    grid-column: 1 / -1;
+}
+
+.entity-profile-actions .btn-filter-reset,
+.entity-profile-actions .entity-profile-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.entity-profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.entity-profile-btn-accent {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    border-color: #1d4ed8;
+    color: #fff;
+}
+
+.player-share-section {
+    position: relative;
+    width: 100%;
+}
+
+.player-share-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    padding-right: 42px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #dbeafe;
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.player-share-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+}
+
+.player-share-toggle-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.2s ease;
+}
+
+.player-share-section.open .player-share-toggle-icon {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.player-share-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: auto;
+    z-index: 20;
+    width: 100%;
+    max-width: none;
+    background: #fff;
+    border: 1px solid #dbeafe;
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+}
+
+.player-share-section.open .player-share-menu {
+    display: block;
+}
+
+.player-share-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.player-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 8px 11px;
+    border-radius: 10px;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1e3a8a;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.player-share-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.16);
+}
+
+.player-share-btn.whatsapp {
+    background: #25d366;
+    border-color: #25d366;
+    color: #fff;
+}
+
+.player-share-btn.facebook {
+    background: #1877f2;
+    border-color: #1877f2;
+    color: #fff;
+}
+
+.player-share-btn.telegram {
+    background: #0088cc;
+    border-color: #0088cc;
+    color: #fff;
+}
+
+.player-share-btn.twitter {
+    background: #0f172a;
+    border-color: #0f172a;
+    color: #fff;
+}
+
+.player-share-btn.copy {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+    font-family: inherit;
+}
+
+.player-share-btn.copy.copied {
+    background: #166534;
+    border-color: #166534;
+}
+
+.player-share-btn.native {
+    display: none;
+    border-color: #1d4ed8;
+}
+
+.player-share-feedback {
+    margin-top: 8px;
+    min-height: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #047857;
+}
+
+.player-share-feedback.error {
+    color: #b91c1c;
+}
+
+.player-share-x-icon {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+    flex: 0 0 auto;
+}
+
+.entity-profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.entity-detail-item {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.entity-detail-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.entity-detail-value {
+    font-size: 13px;
+    color: var(--navy);
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.entity-detail-sub {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.staff-name-link {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.staff-name-link:hover {
+    text-decoration: underline;
+}
+
+@media (min-width: 992px) {
+    .entity-profile-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .entity-profile-identity {
+        flex-direction: row;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .entity-profile-actions {
+        justify-content: initial;
+    }
+}
+
+@media (min-width: 768px) {
+    .entity-profile-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .entity-profile-card {
+        margin-top: -14px;
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .entity-profile-photo {
+        width: 100px;
+        height: 100px;
+    }
+
+    .entity-profile-actions,
+    .entity-profile-actions .btn-filter-reset,
+    .entity-profile-btn {
+        width: 100%;
+    }
+
+    .entity-profile-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .entity-profile-actions > .btn-filter-reset,
+    .entity-profile-actions > .player-share-section {
+        grid-column: auto;
+    }
+
+    .player-share-section {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .player-share-toggle {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px;
+        padding: 16px 24px;
+        font-size: 14px;
+    }
+
+    .player-share-menu {
+        position: static;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 8px;
+        box-shadow: none;
+    }
+
+    .player-share-buttons {
+        width: 100%;
+    }
+
+    .player-share-btn {
+        width: 100%;
+    }
+
+    .player-share-feedback {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-share-buttons {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 </head>
 <body>
@@ -1197,7 +1746,142 @@ $pageTitle = "Perangkat Pertandingan";
             </div>
         </header>
 
-        <div class="dashboard-body">
+        <div class="dashboard-body <?php echo ($perangkat_id > 0) ? 'has-profile-detail' : ''; ?>">
+            <?php if ($perangkat_id > 0): ?>
+                <section class="entity-profile-card" id="perangkat-detail">
+                    <?php if (!$perangkat_detail): ?>
+                        <div class="entity-empty-state">
+                            <div><i class="fas fa-user-slash"></i></div>
+                            <h3>Profil perangkat tidak ditemukan</h3>
+                            <p>Data perangkat dengan ID tersebut tidak tersedia.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php
+                        $perangkat_detail_photo = getFileUrl($perangkat_detail['photo'] ?? '', 'perangkat', 'fa-user-tie');
+                        $perangkat_back_query = http_build_query([
+                            'page' => max(1, (int)$page),
+                            'search' => $search !== '' ? $search : null
+                        ]);
+                        ?>
+                        <div class="entity-profile-header">
+                            <div class="entity-profile-identity">
+                                <div class="entity-profile-photo">
+                                    <?php if ($perangkat_detail_photo['found']): ?>
+                                        <img src="<?php echo $perangkat_detail_photo['url']; ?>" alt="<?php echo htmlspecialchars((string)($perangkat_detail['name'] ?? '')); ?>">
+                                    <?php else: ?>
+                                        <div class="entity-profile-photo-placeholder"><i class="fas <?php echo htmlspecialchars($perangkat_detail_photo['icon']); ?>"></i></div>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="entity-profile-main">
+                                    <h2><?php echo htmlspecialchars((string)($perangkat_detail['name'] ?? '-')); ?></h2>
+                                    <div class="entity-profile-meta">
+                                        <span class="entity-meta-pill"><i class="fas fa-id-card"></i> <?php echo htmlspecialchars(maskPerangkatKtp($perangkat_detail['no_ktp'] ?? '')); ?></span>
+                                        <span class="entity-meta-pill outline"><i class="fas fa-user-clock"></i> <?php echo htmlspecialchars(calculatePerangkatAge($perangkat_detail['age'] ?? null)); ?></span>
+                                        <span class="entity-meta-pill outline"><i class="fas fa-circle-check"></i> <?php echo ((int)($perangkat_detail['is_active'] ?? 0) === 1) ? 'Aktif' : 'Nonaktif'; ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="entity-profile-actions">
+                                <a href="perangkat.php<?php echo $perangkat_back_query !== '' ? '?' . $perangkat_back_query : ''; ?>" class="btn-filter-reset">
+                                    <i class="fas fa-arrow-left"></i> Kembali ke daftar
+                                </a>
+                                <div class="player-share-section" id="perangkatSharePanel" data-share-url="<?php echo htmlspecialchars($perangkat_share_url, ENT_QUOTES, 'UTF-8'); ?>" data-share-text="<?php echo htmlspecialchars($perangkat_share_text, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <button type="button" class="player-share-toggle" id="perangkatShareToggle" aria-expanded="false" aria-controls="perangkatShareMenu">
+                                        <span><i class="fas fa-share-alt"></i> Share Profil</span>
+                                        <i class="fas fa-chevron-down player-share-toggle-icon" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="player-share-menu" id="perangkatShareMenu">
+                                        <div class="player-share-buttons">
+                                            <button type="button" class="player-share-btn native" id="perangkatShareNativeBtn" aria-label="Bagikan profil perangkat pertandingan">
+                                                <i class="fas fa-share-nodes"></i> <span>Share</span>
+                                            </button>
+                                            <a href="<?php echo htmlspecialchars($perangkat_share_whatsapp_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn whatsapp" aria-label="Bagikan ke WhatsApp">
+                                                <i class="fab fa-whatsapp"></i> <span>WhatsApp</span>
+                                            </a>
+                                            <a href="<?php echo htmlspecialchars($perangkat_share_facebook_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn facebook" aria-label="Bagikan ke Facebook">
+                                                <i class="fab fa-facebook-f"></i> <span>Facebook</span>
+                                            </a>
+                                            <a href="<?php echo htmlspecialchars($perangkat_share_telegram_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn telegram" aria-label="Bagikan ke Telegram">
+                                                <i class="fab fa-telegram-plane"></i> <span>Telegram</span>
+                                            </a>
+                                            <a href="<?php echo htmlspecialchars($perangkat_share_x_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="player-share-btn twitter" aria-label="Bagikan ke X">
+                                                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="player-share-x-icon" aria-hidden="true" focusable="false"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg>
+                                                <span>X</span>
+                                            </a>
+                                            <button type="button" class="player-share-btn copy" id="perangkatShareCopyBtn" aria-label="Salin tautan profil perangkat pertandingan">
+                                                <i class="far fa-copy"></i> <span>Salin Link</span>
+                                            </button>
+                                        </div>
+                                        <div class="player-share-feedback" id="perangkatShareFeedback" aria-live="polite"></div>
+                                    </div>
+                                </div>
+                                <?php if ((int)($perangkat_detail['certificate_count'] ?? 0) > 0): ?>
+                                    <button
+                                        type="button"
+                                        class="entity-profile-btn entity-profile-btn-accent"
+                                        onclick="loadLicenses(<?php echo (int)$perangkat_detail['id']; ?>, '<?php echo htmlspecialchars(addslashes((string)($perangkat_detail['name'] ?? ''))); ?>')"
+                                    >
+                                        <i class="fas fa-certificate"></i> Lihat Lisensi
+                                    </button>
+                                <?php endif; ?>
+                                <button
+                                    type="button"
+                                    class="entity-profile-btn btn-perangkat-history"
+                                    data-perangkat-id="<?php echo (int)$perangkat_detail['id']; ?>"
+                                    data-perangkat-name="<?php echo htmlspecialchars((string)($perangkat_detail['name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                >
+                                    <i class="fas fa-chart-line"></i> Riwayat Match
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="entity-profile-grid">
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">No. KTP</span>
+                                <span class="entity-detail-value"><?php echo htmlspecialchars(maskPerangkatKtp($perangkat_detail['no_ktp'] ?? '')); ?></span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Email</span>
+                                <span class="entity-detail-value"><?php echo !empty($perangkat_detail['email']) ? htmlspecialchars((string)$perangkat_detail['email']) : '-'; ?></span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Telepon</span>
+                                <span class="entity-detail-value"><?php echo !empty($perangkat_detail['phone']) ? htmlspecialchars((string)$perangkat_detail['phone']) : '-'; ?></span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Alamat</span>
+                                <span class="entity-detail-value"><?php echo htmlspecialchars($perangkat_detail_address); ?></span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Lisensi</span>
+                                <span class="entity-detail-value"><?php echo (int)($perangkat_detail['certificate_count'] ?? 0); ?> Dokumen</span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Event</span>
+                                <span class="entity-detail-value"><?php echo (int)($perangkat_detail['event_count'] ?? 0); ?> Event</span>
+                                <?php if (!empty($perangkat_detail_event_names)): ?>
+                                    <span class="entity-detail-sub"><?php echo htmlspecialchars(implode(', ', $perangkat_detail_event_names)); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Match</span>
+                                <span class="entity-detail-value"><?php echo (int)($perangkat_detail['match_count'] ?? 0); ?> Match</span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Status</span>
+                                <span class="entity-detail-value"><?php echo ((int)($perangkat_detail['is_active'] ?? 0) === 1) ? 'Aktif' : 'Nonaktif'; ?></span>
+                            </div>
+                            <div class="entity-detail-item">
+                                <span class="entity-detail-label">Dibuat Pada</span>
+                                <span class="entity-detail-value"><?php echo !empty($perangkat_detail['created_at']) ? htmlspecialchars(date('d M Y, H:i', strtotime((string)$perangkat_detail['created_at']))) : '-'; ?></span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </section>
+            <?php endif; ?>
+
             <div class="filter-card staff-filter-card">
                 <form action="" method="GET" class="filter-row">
                     <div class="filter-group">
@@ -1241,7 +1925,6 @@ $pageTitle = "Perangkat Pertandingan";
                             <th class="col-certificate">Lisensi</th>
                             <th class="col-matches">Match</th>
                             <th class="col-events">Event</th>
-                            <th class="col-center">Riwayat</th>
                             <th>Status</th>
                             <th>Dibuat</th>
                         </tr>
@@ -1249,7 +1932,7 @@ $pageTitle = "Perangkat Pertandingan";
                     <tbody>
                         <?php if (empty($perangkatRows)): ?>
                             <tr>
-                                <td colspan="11" class="no-data">
+                                <td colspan="10" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada perangkat ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1284,7 +1967,9 @@ $pageTitle = "Perangkat Pertandingan";
                                 </td>
                                 
                                 <td class="col-name" data-label="Nama">
-                                    <div class="staff-name"><?php echo htmlspecialchars($p['name'] ?? ''); ?></div>
+                                    <a href="perangkat.php?id=<?php echo (int)$p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#perangkat-detail" class="staff-name staff-name-link">
+                                        <?php echo htmlspecialchars($p['name'] ?? ''); ?>
+                                    </a>
                                     <div class="staff-contact">
                                         <?php if (!empty($p['email'])): ?>
                                             <div><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($p['email'] ?? ''); ?></div>
@@ -1362,16 +2047,6 @@ $pageTitle = "Perangkat Pertandingan";
                                         </div>
                                         <?php endif; ?>
                                     </span>
-                                </td>
-
-                                <td class="col-center" data-label="Riwayat">
-                                    <button class="history-btn btn-perangkat-history"
-                                            type="button"
-                                            data-perangkat-id="<?php echo (int)$p['id']; ?>"
-                                            data-perangkat-name="<?php echo htmlspecialchars($p['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                                            title="Lihat Riwayat Match/Event">
-                                        <i class="fas fa-chart-line"></i>
-                                    </button>
                                 </td>
 
                                 <td data-label="Status">
@@ -1522,6 +2197,128 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
             setSidebarOpen(false);
         }
     });
+}
+
+const perangkatSharePanel = document.getElementById('perangkatSharePanel');
+const perangkatShareToggle = document.getElementById('perangkatShareToggle');
+const perangkatShareMenu = document.getElementById('perangkatShareMenu');
+const perangkatShareCopyBtn = document.getElementById('perangkatShareCopyBtn');
+const perangkatShareNativeBtn = document.getElementById('perangkatShareNativeBtn');
+const perangkatShareFeedback = document.getElementById('perangkatShareFeedback');
+
+if (perangkatSharePanel) {
+    const shareUrl = perangkatSharePanel.dataset.shareUrl || window.location.href;
+    const shareText = perangkatSharePanel.dataset.shareText || 'Lihat profil perangkat pertandingan ini di ALVETRIX';
+
+    const setShareFeedback = (message, isError = false) => {
+        if (!perangkatShareFeedback) return;
+        perangkatShareFeedback.textContent = message;
+        perangkatShareFeedback.classList.toggle('error', isError);
+    };
+    const openShareMenu = () => {
+        perangkatSharePanel.classList.add('open');
+        if (perangkatShareToggle) {
+            perangkatShareToggle.setAttribute('aria-expanded', 'true');
+        }
+    };
+    const closeShareMenu = () => {
+        perangkatSharePanel.classList.remove('open');
+        if (perangkatShareToggle) {
+            perangkatShareToggle.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    const fallbackCopyLink = (text) => {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        tempInput.setAttribute('readonly', '');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        let copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+        document.body.removeChild(tempInput);
+        return copied;
+    };
+
+    if (perangkatShareToggle && perangkatShareMenu) {
+        perangkatShareToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = perangkatSharePanel.classList.contains('open');
+            if (isOpen) {
+                closeShareMenu();
+            } else {
+                openShareMenu();
+            }
+        });
+
+        perangkatShareMenu.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!perangkatSharePanel.contains(event.target)) {
+                closeShareMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeShareMenu();
+            }
+        });
+    }
+
+    if (perangkatShareCopyBtn) {
+        perangkatShareCopyBtn.addEventListener('click', () => {
+            const handleCopySuccess = () => {
+                perangkatShareCopyBtn.classList.add('copied');
+                setShareFeedback('Tautan profil berhasil disalin.');
+                setTimeout(() => {
+                    perangkatShareCopyBtn.classList.remove('copied');
+                    setShareFeedback('');
+                }, 1600);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl)
+                    .then(handleCopySuccess)
+                    .catch(() => {
+                        if (fallbackCopyLink(shareUrl)) {
+                            handleCopySuccess();
+                        } else {
+                            setShareFeedback('Gagal menyalin tautan profil.', true);
+                        }
+                    });
+            } else if (fallbackCopyLink(shareUrl)) {
+                handleCopySuccess();
+            } else {
+                setShareFeedback('Gagal menyalin tautan profil.', true);
+            }
+        });
+    }
+
+    if (perangkatShareNativeBtn && navigator.share) {
+        perangkatShareNativeBtn.style.display = 'inline-flex';
+        perangkatShareNativeBtn.addEventListener('click', () => {
+            navigator.share({
+                title: 'Profil Perangkat Pertandingan ALVETRIX',
+                text: shareText,
+                url: shareUrl
+            }).then(() => {
+                setShareFeedback('Profil berhasil dibagikan.');
+                setTimeout(() => setShareFeedback(''), 1600);
+            }).catch((err) => {
+                if (err && err.name === 'AbortError') return;
+                setShareFeedback('Gagal membuka menu bagikan.', true);
+            });
+        });
+    }
 }
 
 const matchHistoryModal = document.getElementById('matchHistoryModal');
