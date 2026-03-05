@@ -657,6 +657,7 @@ function getCompletedChallenges($limit = 10) {
               LEFT JOIN teams t2 ON c.opponent_id = t2.id
               LEFT JOIN venues v ON c.venue_id = v.id
               WHERE DATE(c.challenge_date) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+                AND LOWER(COALESCE(c.status, '')) <> 'open'
               ORDER BY c.challenge_date DESC 
               LIMIT ?";
     $stmt = $conn->prepare($sql);
