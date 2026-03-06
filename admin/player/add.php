@@ -14,7 +14,14 @@ if (file_exists($event_helper_path)) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $error = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     try {
         playerAddCreatePlayer($conn, $_POST, $_FILES);
         $_SESSION['success_message'] = "Player berhasil ditambahkan!";
@@ -936,6 +943,7 @@ try {
 
             <!-- Form -->
             <form action="" method="POST" enctype="multipart/form-data" id="playerForm">
+                <?php echo admin_csrf_field(); ?>
                 <!-- Profile Section -->
                 <div class="form-container">
                     <div class="form-section">

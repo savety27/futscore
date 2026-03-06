@@ -1,4 +1,6 @@
 <script>
+window.ADMIN_CSRF_TOKEN = <?php echo json_encode(admin_csrf_token()); ?>;
+
 document.addEventListener('DOMContentLoaded', function() {
     const MOBILE_BREAKPOINT = 768;
     const TRANSITION_LOCK_MS = 220;

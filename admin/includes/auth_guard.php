@@ -18,6 +18,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/csrf.php';
+
 /**
  * Returns true if the current session belongs to an admin user.
  * Extracted as a function so it can be unit-tested without side effects.

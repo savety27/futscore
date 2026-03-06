@@ -71,7 +71,14 @@ $form_data = [
     'description' => ''
 ];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf) {
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
         'start_date' => trim($_POST['start_date'] ?? ''),
@@ -395,6 +402,7 @@ body {
 
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="eventForm">
+                <?php echo admin_csrf_field(); ?>
                 <div class="form-section">
                     <div class="section-title"><i class="fas fa-info-circle"></i> Informasi Event</div>
                     <div class="form-grid">
@@ -598,4 +606,3 @@ document.getElementById('eventForm').addEventListener('submit', function (e) {
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>
-

@@ -12,15 +12,28 @@ if (file_exists($config_path)) {
 // Set header for JSON response
 header('Content-Type: application/json');
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+if (!admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+    exit;
+}
+
 if (!isset($conn) || !$conn) {
     echo json_encode(['success' => false, 'message' => 'Koneksi database gagal']);
     exit;
 }
 
-// Get pelatih ID (support GET/POST)
-$pelatih_id = isset($_REQUEST['id']) ? (int) $_REQUEST['id'] : 0;
+// Get pelatih ID
+$pelatih_id = isset($_POST['id']) ? (int) $_POST['id'] : 0;
 
 if ($pelatih_id <= 0) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid pelatih ID']);
     exit;
 }
@@ -74,6 +87,7 @@ try {
     $pelatih = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$pelatih) {
+        http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Pelatih tidak ditemukan']);
         exit;
     }

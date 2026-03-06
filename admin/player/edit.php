@@ -45,7 +45,14 @@ try {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $error = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf) {
     try {
         playerEditUpdatePlayer($conn, $player_id, $_POST, $_FILES, $player);
         $_SESSION['success_message'] = "Player berhasil diperbarui!";
@@ -1095,6 +1102,7 @@ select.form-control {
 
             <!-- Form -->
             <form method="POST" action="" enctype="multipart/form-data" class="form-container" id="playerForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="player_id" value="<?php echo $player['id']; ?>">
                 
                 <!-- Tabs -->
@@ -2347,4 +2355,3 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php include __DIR__ . '/../includes/sidebar_js.php'; ?>
 </body>
 </html>
-

@@ -22,8 +22,15 @@ $form_data = [
     'is_active' => 1
 ];
 
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
@@ -726,6 +733,7 @@ body {
         <!-- ADD VENUE FORM -->
         <div class="form-container">
             <form method="POST" action="" id="venueForm">
+                <?php echo admin_csrf_field(); ?>
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-info-circle"></i>

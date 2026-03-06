@@ -12,10 +12,23 @@ if (file_exists($config_path)) {
 // Set header for JSON response
 header('Content-Type: application/json');
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+if (!admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+    exit;
+}
+
 // Get challenge ID
-$challenge_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$challenge_id = isset($_POST['id']) ? intval($_POST['id']) : 0;
 
 if ($challenge_id <= 0) {
+    http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid challenge ID']);
     exit;
 }
@@ -105,6 +118,7 @@ try {
     $challenge = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$challenge) {
+        http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Challenge tidak ditemukan']);
         exit;
     }

@@ -34,7 +34,14 @@ $form_data = [
     'is_active' => 1
 ];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
         'no_ktp' => trim($_POST['no_ktp'] ?? ''),
@@ -809,6 +816,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
             <div class="form-container">
                 <form method="POST" enctype="multipart/form-data" id="perangkatForm">
+                    <?php echo admin_csrf_field(); ?>
                     <div class="form-section">
                         <div class="section-title"><i class="fas fa-id-card"></i>Informasi Utama</div>
                         <div class="form-grid">

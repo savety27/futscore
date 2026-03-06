@@ -43,7 +43,14 @@ $form_data = [
     'is_active' => (int) ($staff['is_active'] ?? 1)
 ];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
         'no_ktp' => trim($_POST['no_ktp'] ?? ''),
@@ -341,7 +348,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $stmt = $conn->prepare("SELECT * FROM perangkat_licenses WHERE perangkat_id = ? ORDER BY id DESC");
 $stmt->execute([$staff_id]);
 $existing_licenses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($errors)) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf && !empty($errors)) {
     $existing_license_names = $_POST['existing_license_name'] ?? [];
     $existing_license_authorities = $_POST['existing_license_authority'] ?? [];
     $existing_license_dates = $_POST['existing_license_date'] ?? [];
@@ -904,6 +911,7 @@ if (!empty($removed_license_ids)) {
 
             <div class="form-container">
                 <form method="POST" enctype="multipart/form-data" id="perangkatForm">
+                    <?php echo admin_csrf_field(); ?>
                     <div class="form-section">
                         <div class="section-title"><i class="fas fa-id-card"></i>Informasi Utama</div>
                         <div class="form-grid">

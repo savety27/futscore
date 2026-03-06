@@ -12,9 +12,16 @@ if (file_exists($config_path)) {
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
 $errors = [];
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors[] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 
 // Handle transfer submit
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf) {
     $player_id = isset($_POST['player_id']) ? (int)$_POST['player_id'] : 0;
     $to_team_id = isset($_POST['to_team_id']) ? (int)$_POST['to_team_id'] : 0;
     $transfer_date = isset($_POST['transfer_date']) && $_POST['transfer_date'] !== ''
@@ -657,6 +664,7 @@ body {
                     <i class="fas fa-user-switch"></i> Form Transfer
                 </h2>
                 <form method="POST" class="transfer-form" id="transferForm">
+                    <?php echo admin_csrf_field(); ?>
                     <div class="form-row">
                         <label for="player_id">Pilih Pemain</label>
                         <div class="player-search">

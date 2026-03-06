@@ -29,6 +29,13 @@ if ($team_id <= 0) {
 // Initialize variables
 $errors = [];
 $team_data = null;
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 
 // Fetch team data
 try {
@@ -56,7 +63,7 @@ if (!empty($team_data['established_year']) && preg_match('/^\d{4}$/', $team_data
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $selected_events = $_POST['sport_types'] ?? [];
     if (!is_array($selected_events)) {
@@ -223,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 $selected_events_for_form = $team_events ?? [];
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     $selected_events_for_form = $form_data['sport_types'] ?? [];
 }
 ?>
@@ -917,6 +924,7 @@ body {
         <!-- EDIT TEAM FORM -->
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="teamForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $team_id; ?>">
                 
                 <div class="form-section">

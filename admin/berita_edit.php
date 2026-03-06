@@ -26,6 +26,13 @@ $admin_email = $_SESSION['admin_email'] ?? '';
 // Initialize variables
 $errors = [];
 $berita_data = null;
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 
 // Fetch berita data
 try {
@@ -58,7 +65,7 @@ function generateSlug($text) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $form_data = [
         'judul' => trim($_POST['judul'] ?? ''),
@@ -961,6 +968,7 @@ body {
         <!-- EDIT BERITA FORM -->
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="beritaForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $berita_id; ?>">
                 
                 <div class="form-section">

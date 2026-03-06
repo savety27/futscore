@@ -72,6 +72,13 @@ $form_data = [
     'match_official' => '',
     'notes' => ''
 ];
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    http_response_code(403);
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 $perangkat_official_names = [];
 $perangkat_official_lookup = [];
 
@@ -160,7 +167,7 @@ try {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     $posted_event_id = (int) trim($_POST['event_id'] ?? '0');
 
     // Get and sanitize form data
@@ -975,6 +982,7 @@ body {
         <!-- CREATE CHALLENGE FORM -->
         <div class="form-container">
             <form method="POST" action="" id="challengeForm">
+                <?php echo admin_csrf_field(); ?>
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-users"></i>
