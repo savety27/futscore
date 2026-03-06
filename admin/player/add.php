@@ -1607,7 +1607,7 @@ try {
         formData.append('type', 'nik');
         formData.append('value', value);
 
-        fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch('../../api/verify_identity.php', { method: 'POST', body: formData })
             .then(r => r.json())
             .then(data => {
                 nikFeedback.style.animation = '';
@@ -1641,6 +1641,14 @@ try {
             })
             .catch(err => {
                 nikFeedback.style.animation = '';
+                if (err && err.status === 401) {
+                    nikFeedback.textContent = '⚠ Sesi telah habis. Silakan login kembali.';
+                    nikFeedback.className = 'verify-feedback error';
+                    nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nikVerifyBtn.classList.remove('loading');
+                    nikVerifyBtn.disabled = false;
+                    return;
+                }
                 nikFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
                 nikFeedback.className = 'verify-feedback error';
                 nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
@@ -1706,7 +1714,7 @@ try {
         formData.append('type', 'nisn');
         formData.append('value', value);
 
-        fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        fetch('../../api/verify_identity.php', { method: 'POST', body: formData })
             .then(r => r.json())
             .then(data => {
                 nisnFeedback.style.animation = '';
@@ -1746,6 +1754,14 @@ try {
             })
             .catch(err => {
                 nisnFeedback.style.animation = '';
+                if (err && err.status === 401) {
+                    nisnFeedback.textContent = '⚠ Sesi telah habis. Silakan login kembali.';
+                    nisnFeedback.className = 'verify-feedback error';
+                    nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nisnVerifyBtn.classList.remove('loading');
+                    nisnVerifyBtn.disabled = false;
+                    return;
+                }
                 nisnFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
                 nisnFeedback.className = 'verify-feedback error';
                 nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
