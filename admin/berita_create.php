@@ -86,7 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
                 $form_data['slug'] .= '-' . time();
             }
         } catch (PDOException $e) {
-            $errors['database'] = "Gagal memeriksa slug: " . $e->getMessage();
+            error_log('berita_create slug check DB error: ' . $e->getMessage());
+            $errors['database'] = 'Gagal memeriksa ketersediaan slug. Silakan coba lagi.';
         }
     }
     
@@ -159,7 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
             exit;
             
         } catch (PDOException $e) {
-            $errors['database'] = "Gagal menyimpan data: " . $e->getMessage();
+            error_log('berita_create insert DB error: ' . $e->getMessage());
+            $errors['database'] = 'Berita tidak dapat disimpan saat ini. Silakan coba lagi.';
         }
     }
 }
@@ -850,7 +852,7 @@ body {
         <?php if (isset($errors['database'])): ?>
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-circle"></i>
-            <?php echo $errors['database']; ?>
+            <?php echo htmlspecialchars($errors['database'], ENT_QUOTES, 'UTF-8'); ?>
         </div>
         <?php endif; ?>
 
