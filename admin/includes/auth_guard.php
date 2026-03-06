@@ -33,7 +33,7 @@ function adminAuthIsValid(array $session): bool
         && in_array($role, ['admin', 'superadmin'], true);
 }
 
-if (!adminAuthIsValid($_SESSION)) {
+if (!adminAuthIsValid($_SESSION) && PHP_SAPI !== 'cli') {
     // __DIR__ is always admin/includes/.
     // The executing script is either in admin/ (one level up) or admin/player/
     // (a sibling subdirectory). Detect which case we're in and use the same
