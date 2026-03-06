@@ -1515,6 +1515,7 @@ function deleteStaff(staffId) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
     })
     .then(async response => {

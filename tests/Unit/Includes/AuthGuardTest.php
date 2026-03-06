@@ -122,4 +122,35 @@ final class AuthGuardTest extends TestCase
 
         $this->assertFalse(adminAuthIsValid($session));
     }
+
+    // ─── isAjaxRequest() unit tests ───────────────────────────────────────────
+
+    public function testXRequestedWithXmlHttpRequestIsAjax(): void
+    {
+        $server = ['HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest'];
+        $this->assertTrue(adminIsAjaxRequest($server));
+    }
+
+    public function testXRequestedWithCaseInsensitive(): void
+    {
+        $server = ['HTTP_X_REQUESTED_WITH' => 'XMLHTTPREQUEST'];
+        $this->assertTrue(adminIsAjaxRequest($server));
+    }
+
+    public function testAcceptJsonIsAjax(): void
+    {
+        $server = ['HTTP_ACCEPT' => 'application/json'];
+        $this->assertTrue(adminIsAjaxRequest($server));
+    }
+
+    public function testAcceptHtmlIsNotAjax(): void
+    {
+        $server = ['HTTP_ACCEPT' => 'text/html,application/xhtml+xml,*/*'];
+        $this->assertFalse(adminIsAjaxRequest($server));
+    }
+
+    public function testEmptyServerIsNotAjax(): void
+    {
+        $this->assertFalse(adminIsAjaxRequest([]));
+    }
 }

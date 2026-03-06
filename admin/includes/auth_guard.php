@@ -33,7 +33,40 @@ function adminAuthIsValid(array $session): bool
         && in_array($role, ['admin', 'superadmin'], true);
 }
 
+/**
+ * Returns true when the current HTTP request was made via AJAX/fetch and
+ * therefore expects a JSON response rather than an HTML redirect.
+ *
+ * Detection covers two standard signals:
+ *   1. X-Requested-With: XMLHttpRequest  (jQuery / Axios)
+ *   2. Accept header containing application/json  (native fetch with explicit header)
+ *
+ * @param array $server  Typically $_SERVER
+ */
+function adminIsAjaxRequest(array $server): bool
+{
+    $xrw = strtolower($server['HTTP_X_REQUESTED_WITH'] ?? '');
+    if ($xrw === 'xmlhttprequest') {
+        return true;
+    }
+    $accept = $server['HTTP_ACCEPT'] ?? '';
+    return str_contains($accept, 'application/json');
+}
+
 if (!adminAuthIsValid($_SESSION) && PHP_SAPI !== 'cli') {
+    // AJAX / fetch requests expect JSON — return 401 instead of redirecting.
+    // A redirect would cause response.json() to throw a SyntaxError on the
+    // HTML login page that the browser silently follows the redirect to.
+    if (adminIsAjaxRequest($_SERVER)) {
+        http_response_code(401);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Sesi telah habis. Silakan login kembali.',
+        ]);
+        exit;
+    }
+
     // __DIR__ is always admin/includes/.
     // The executing script is either in admin/ (one level up) or admin/player/
     // (a sibling subdirectory). Detect which case we're in and use the same
