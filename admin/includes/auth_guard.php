@@ -10,8 +10,8 @@
  * If either condition fails, the user is redirected to login.php and
  * execution stops immediately via exit.
  *
- * Works correctly whether the file is in /admin/ or /admin/player/ (one
- * extra directory level deep) by computing the redirect path at runtime.
+ * Works correctly at any nesting depth inside /admin/ by computing an
+ * absolute root-relative redirect URL from DOCUMENT_ROOT at runtime.
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -53,6 +53,41 @@ function adminIsAjaxRequest(array $server): bool
     return str_contains($accept, 'application/json');
 }
 
+/**
+ * Returns a root-relative URL to login.php that works at any nesting depth.
+ *
+ * Strategy: __DIR__ is always .../admin/includes/, so two dirname() calls
+ * give the site root on the filesystem. We subtract DOCUMENT_ROOT to get
+ * the web-root prefix (e.g. "/futscore") and append "/login.php".
+ *
+ * Falls back to a dynamic relative path if DOCUMENT_ROOT is unavailable (e.g. CLI).
+ *
+ * @param array $server  Typically $_SERVER
+ */
+function adminLoginUrl(array $server): string
+{
+    $siteRoot = dirname(dirname(__DIR__));   // two levels up from admin/includes/
+    $docRoot  = realpath($server['DOCUMENT_ROOT'] ?? '');
+
+    if ($docRoot !== false && str_starts_with($siteRoot, $docRoot)) {
+        // Produces "" for a root install or "/futscore" for a sub-folder install.
+        $webPrefix = substr($siteRoot, strlen($docRoot));
+        return $webPrefix . '/login.php';
+    }
+
+    // Fallback: walk up from the executing script's directory to the site root,
+    // counting levels, so the relative prefix is always correct regardless of depth.
+    $rawScript = $server['SCRIPT_FILENAME'] ?? __FILE__;
+    $scriptDir = dirname(realpath($rawScript) ?: $rawScript);
+    $rel = '';
+    $dir = $scriptDir;
+    while ($dir !== $siteRoot && $dir !== dirname($dir)) {
+        $rel .= '../';
+        $dir  = dirname($dir);
+    }
+    return $rel . 'login.php';
+}
+
 if (!adminAuthIsValid($_SESSION) && PHP_SAPI !== 'cli') {
     // AJAX / fetch requests expect JSON — return 401 instead of redirecting.
     // A redirect would cause response.json() to throw a SyntaxError on the
@@ -67,20 +102,6 @@ if (!adminAuthIsValid($_SESSION) && PHP_SAPI !== 'cli') {
         exit;
     }
 
-    // __DIR__ is always admin/includes/.
-    // The executing script is either in admin/ (one level up) or admin/player/
-    // (a sibling subdirectory). Detect which case we're in and use the same
-    // simple relative-path approach that pelatih/operator headers already use.
-    //
-    // admin/berita.php         → ../login.php   (browser: /futscore/login.php) ✓
-    // admin/player/add.php     → ../../login.php (browser: /futscore/login.php) ✓
-    $adminRoot  = dirname(__DIR__);                                    // .../admin/
-    $scriptDir  = dirname(realpath($_SERVER['SCRIPT_FILENAME'] ?? __FILE__));
-    $isInSubdir = (strpos($scriptDir . DIRECTORY_SEPARATOR, $adminRoot . DIRECTORY_SEPARATOR) === 0)
-                  && ($scriptDir !== $adminRoot);
-
-    $prefix = $isInSubdir ? '../../' : '../';
-
-    header('Location: ' . $prefix . 'login.php');
+    header('Location: ' . adminLoginUrl($_SERVER));
     exit;
 }
