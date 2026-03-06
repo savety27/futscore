@@ -1002,7 +1002,8 @@ try {
             fetch(`perangkat_delete.php?id=${encodeURIComponent(staffId)}`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     }
                 })
                 .then(async response => {
@@ -1048,7 +1049,9 @@ try {
             content.innerHTML = '<p style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</p>';
             modal.style.display = 'flex';
 
-            fetch(`perangkat_licenses.php?id=${staffId}`)
+            fetch(`perangkat_licenses.php?id=${staffId}`, {
+                    headers: { 'Accept': 'application/json' }
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.licenses.length > 0) {

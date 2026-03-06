@@ -1568,7 +1568,9 @@ function viewCertificates(staffId, staffName) {
     modal.style.display = 'flex';
     
     // Fetch data sertifikat
-    fetch(`team_staff_certificates.php?id=${staffId}`)
+    fetch(`team_staff_certificates.php?id=${staffId}`, {
+        headers: { 'Accept': 'application/json' }
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success && data.certificates.length > 0) {

@@ -718,7 +718,10 @@ function deleteEvent(eventId) {
 
     fetch('event_delete.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        },
         body: formData.toString()
     })
     .then(function (response) { return response.json(); })

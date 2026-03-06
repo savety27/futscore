@@ -1468,6 +1468,7 @@ function deleteTeam(teamId) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
     })
     .then(async response => {
