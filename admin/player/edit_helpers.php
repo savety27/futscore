@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../includes/auth_guard.php';
 function playerEditCollectInput(array $post): array
 {
     return [

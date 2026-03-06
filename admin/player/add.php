@@ -1,10 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth_guard.php';
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
-}
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
 // Include database connection

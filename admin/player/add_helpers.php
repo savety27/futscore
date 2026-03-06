@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../includes/auth_guard.php';
 function playerAddCollectInput(array $post): array
 {
     $birthPlace = $post['birth_place'] ?? $post['place_of_birth'] ?? '';

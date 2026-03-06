@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -9,13 +9,6 @@ if (file_exists($config_path)) {
     // Jika file config tidak ada, script akan berhenti (bisa dikomment jika hanya testing UI)
     // die("Database configuration file not found at: $config_path");
 }
-
-// Cek session login (Aktifkan kembali jika sudah siap live)
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../login.php");
-    exit;
-}
-
 // Placeholder connection jika file config belum ada (untuk testing tampilan)
 if (!isset($conn)) {
     // Mock connection logic (Hapus blok ini jika config/database.php sudah benar)

@@ -1,13 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth_guard.php';
 // TAMBAHKIN INI - Deklarasi variabel sebelum digunakan
 $photo_displayed = false;
 require_once '../config/database.php';
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
-}
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
 if (!isset($_GET['id']) || empty($_GET['id'])) {

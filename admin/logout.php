@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 // Hapus semua session
 session_unset();

@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../includes/auth_guard.php';
 function playerFileHasSuccessfulUpload(array $files, string $fieldName): bool
 {
     return isset($files[$fieldName]) && (($files[$fieldName]['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK);
