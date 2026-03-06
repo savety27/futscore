@@ -12,7 +12,7 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: POST');
 
-require_once __DIR__ . '/../admin/includes/auth_guard.php';
+require_once __DIR__ . '/api_auth_guard.php';
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
