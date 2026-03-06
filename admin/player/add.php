@@ -1607,7 +1607,7 @@ try {
         formData.append('type', 'nik');
         formData.append('value', value);
 
-        fetch('../../api/verify_identity.php', { method: 'POST', body: formData })
+        fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
             .then(data => {
                 nikFeedback.style.animation = '';
@@ -1706,7 +1706,7 @@ try {
         formData.append('type', 'nisn');
         formData.append('value', value);
 
-        fetch('../../api/verify_identity.php', { method: 'POST', body: formData })
+        fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
             .then(data => {
                 nisnFeedback.style.animation = '';

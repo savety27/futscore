@@ -1235,7 +1235,8 @@ if (!empty($removed_license_ids)) {
 
                 fetch('../api/verify_identity.php', {
                         method: 'POST',
-                        body: payload
+                        body: payload,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     })
                     .then(response => response.json())
                     .then(data => {

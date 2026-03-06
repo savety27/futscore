@@ -1088,7 +1088,8 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
                 fetch('../api/verify_identity.php', {
                         method: 'POST',
-                        body: payload
+                        body: payload,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     })
                     .then(response => response.json())
                     .then(data => {
