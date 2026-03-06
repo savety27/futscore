@@ -1,10 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/auth_guard.php';
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
-}
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
 // Include database connection
@@ -1645,6 +1641,14 @@ try {
             })
             .catch(err => {
                 nikFeedback.style.animation = '';
+                if (err && err.status === 401) {
+                    nikFeedback.textContent = '⚠ Sesi telah habis. Silakan login kembali.';
+                    nikFeedback.className = 'verify-feedback error';
+                    nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nikVerifyBtn.classList.remove('loading');
+                    nikVerifyBtn.disabled = false;
+                    return;
+                }
                 nikFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
                 nikFeedback.className = 'verify-feedback error';
                 nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
@@ -1750,6 +1754,14 @@ try {
             })
             .catch(err => {
                 nisnFeedback.style.animation = '';
+                if (err && err.status === 401) {
+                    nisnFeedback.textContent = '⚠ Sesi telah habis. Silakan login kembali.';
+                    nisnFeedback.className = 'verify-feedback error';
+                    nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nisnVerifyBtn.classList.remove('loading');
+                    nisnVerifyBtn.disabled = false;
+                    return;
+                }
                 nisnFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
                 nisnFeedback.className = 'verify-feedback error';
                 nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';

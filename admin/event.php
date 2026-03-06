@@ -1,16 +1,11 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 $config_path = __DIR__ . '/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
-}
-
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
 }
 
 if (!isset($conn) || !$conn) {
@@ -723,7 +718,10 @@ function deleteEvent(eventId) {
 
     fetch('event_delete.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        },
         body: formData.toString()
     })
     .then(function (response) { return response.json(); })

@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -12,11 +12,6 @@ if (file_exists($config_path)) {
 $event_helper_path = __DIR__ . '/includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
     require_once $event_helper_path;
-}
-
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
 }
 
 // Menu items sesuai dengan file pertama

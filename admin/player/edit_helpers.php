@@ -1,5 +1,4 @@
 <?php
-
 function playerEditCollectInput(array $post): array
 {
     return [

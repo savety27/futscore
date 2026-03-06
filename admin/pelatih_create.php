@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -8,12 +8,6 @@ if (file_exists($config_path)) {
 } else {
     die("Database configuration file not found at: $config_path");
 }
-
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
-}
-
 
 // Ambil data tim dari database untuk dropdown
 $teams = [];

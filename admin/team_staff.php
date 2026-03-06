@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -7,11 +7,6 @@ if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
-}
-
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
 }
 
 // Check database connection
@@ -1520,6 +1515,7 @@ function deleteStaff(staffId) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
     })
     .then(async response => {
@@ -1572,8 +1568,19 @@ function viewCertificates(staffId, staffName) {
     modal.style.display = 'flex';
     
     // Fetch data sertifikat
-    fetch(`team_staff_certificates.php?id=${staffId}`)
-        .then(response => response.json())
+    fetch(`team_staff_certificates.php?id=${staffId}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+        .then(response => {
+            if (response.status === 401) {
+                window.location.href = 'login.php';
+                return Promise.reject('session_expired');
+            }
+            if (!response.ok) {
+                return Promise.reject(`HTTP error ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success && data.certificates.length > 0) {
                 let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">';
@@ -1608,6 +1615,7 @@ function viewCertificates(staffId, staffName) {
             }
         })
         .catch(error => {
+            if (error === 'session_expired') return;
             console.error('Error:', error);
             content.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--danger);">Error memuat data</p>';
         });

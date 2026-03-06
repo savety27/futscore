@@ -1,16 +1,11 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth_guard.php';
 
 $config_path = __DIR__ . '/config/database.php';
 if (file_exists($config_path)) {
     require_once $config_path;
 } else {
     die("Database configuration file not found at: $config_path");
-}
-
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
 }
 
 if (!isset($conn) || !$conn) {
@@ -1007,7 +1002,8 @@ try {
             fetch(`perangkat_delete.php?id=${encodeURIComponent(staffId)}`, {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     }
                 })
                 .then(async response => {
@@ -1053,7 +1049,9 @@ try {
             content.innerHTML = '<p style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</p>';
             modal.style.display = 'flex';
 
-            fetch(`perangkat_licenses.php?id=${staffId}`)
+            fetch(`perangkat_licenses.php?id=${staffId}`, {
+                    headers: { 'Accept': 'application/json' }
+                })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.licenses.length > 0) {

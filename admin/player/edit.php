@@ -1,5 +1,5 @@
 ﻿<?php
-session_start();
+require_once __DIR__ . '/../includes/auth_guard.php';
 require_once '../config/database.php';
 require_once __DIR__ . '/edit_helpers.php';
 require_once __DIR__ . '/edit_service.php';
@@ -7,11 +7,6 @@ require_once __DIR__ . '/edit_service.php';
 $event_helper_path = __DIR__ . '/../includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
     require_once $event_helper_path;
-}
-
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: ../index.php");
-    exit;
 }
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
 $admin_email = $_SESSION['admin_email'] ?? '';
@@ -1790,7 +1785,7 @@ function verifyNIK() {
     formData.append('type', 'nik');
     formData.append('value', value);
 
-    fetch('../../api/verify_identity.php', { method: 'POST', body: formData })
+    fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(r => r.json())
         .then(data => {
             nikFeedback.style.animation = '';
@@ -1911,7 +1906,7 @@ function verifyNISN() {
     formData.append('type', 'nisn');
     formData.append('value', value);
 
-    fetch('../../api/verify_identity.php', { method: 'POST', body: formData })
+    fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(r => r.json())
         .then(data => {
             nisnFeedback.style.animation = '';

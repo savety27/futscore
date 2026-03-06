@@ -1,5 +1,5 @@
 <?php
-
+require_once __DIR__ . '/../includes/auth_guard.php';
 require_once __DIR__ . '/add_helpers.php';
 require_once __DIR__ . '/file_upload_helpers.php';
 
