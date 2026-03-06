@@ -1345,7 +1345,6 @@ function deleteBerita(beritaId) {
     fetch(`berita_delete.php?id=${beritaId}`, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
         }
     })
