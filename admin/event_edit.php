@@ -31,6 +31,31 @@ function ensure_events_active_column(PDO $conn) {
 
 ensure_events_active_column($conn);
 
+function get_active_venues(PDO $conn): array
+{
+    try {
+        $stmt = $conn->query(
+            "SELECT id, name, location
+             FROM venues
+             WHERE is_active = 1
+             ORDER BY name ASC, location ASC"
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
+$venues = get_active_venues($conn);
+$venue_name_options = [];
+foreach ($venues as $venue) {
+    $venue_name = trim((string) ($venue['name'] ?? ''));
+    if ($venue_name !== '') {
+        $venue_name_options[$venue_name] = true;
+    }
+}
+
 function make_slug($text) {
     $text = strtolower(trim($text));
     $text = preg_replace('/[^a-z0-9]+/', '-', $text);
@@ -137,6 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf && empty($errors['d
     }
     if ($form_data['location'] === '') {
         $errors['location'] = 'Lokasi harus diisi';
+    } elseif (!isset($venue_name_options[$form_data['location']])) {
+        $errors['location'] = 'Lokasi yang dipilih tidak valid';
     }
     if (!in_array($form_data['registration_status'], ['open', 'closed'], true)) {
         $errors['registration_status'] = 'Status pendaftaran tidak valid';
@@ -451,7 +478,27 @@ body {
 
                         <div class="form-group">
                             <label class="form-label" for="location">Lokasi <span class="required">*</span></label>
-                            <input class="form-input" type="text" id="location" name="location" required value="<?php echo htmlspecialchars($form_data['location']); ?>" placeholder="Contoh: GOR FUTSAL DISPORA KOTIM">
+                            <select class="form-input" id="location" name="location" required>
+                                <option value="">Pilih venue</option>
+                                <?php foreach ($venues as $venue): ?>
+                                    <?php
+                                    $venue_name = trim((string) ($venue['name'] ?? ''));
+                                    $venue_location = trim((string) ($venue['location'] ?? ''));
+                                    if ($venue_name === '') {
+                                        continue;
+                                    }
+                                    $is_selected = $form_data['location'] === $venue_name;
+                                    $option_label = $venue_name;
+                                    if ($venue_location !== '') {
+                                        $option_label .= ' - ' . $venue_location;
+                                    }
+                                    ?>
+                                    <option value="<?php echo htmlspecialchars($venue_name); ?>" <?php echo $is_selected ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($option_label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <?php if (empty($venues)): ?><span class="error">Belum ada venue aktif. Tambahkan venue dulu di halaman venue.</span><?php endif; ?>
                             <?php if (isset($errors['location'])): ?><span class="error"><?php echo $errors['location']; ?></span><?php endif; ?>
                         </div>
 
