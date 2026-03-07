@@ -47,6 +47,12 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    error_log(sprintf(
+        'team_staff_certificates DB error for staff_id %d: %s',
+        $staff_id,
+        $e->getMessage()
+    ));
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Terjadi kesalahan saat memuat sertifikat.']);
 }
 ?>

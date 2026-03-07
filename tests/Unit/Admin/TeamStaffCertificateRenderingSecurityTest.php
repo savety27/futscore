@@ -35,6 +35,16 @@ final class TeamStaffCertificateRenderingSecurityTest extends TestCase
         $this->assertStringContainsString('SELECT certificate_name, certificate_file, issuing_authority, issue_date', $source);
     }
 
+    public function testCertificateEndpointLogsDatabaseErrorsWithoutLeakingThemToClients(): void
+    {
+        $source = $this->readSource('admin/team_staff_certificates.php');
+
+        $this->assertStringContainsString('error_log(sprintf(', $source);
+        $this->assertStringContainsString('http_response_code(500);', $source);
+        $this->assertStringContainsString("'message' => 'Terjadi kesalahan saat memuat sertifikat.'", $source);
+        $this->assertStringNotContainsString("'message' => 'Database error: ' . \$e->getMessage()", $source);
+    }
+
     private function readSource(string $relativePath): string
     {
         $source = file_get_contents(__DIR__ . '/../../../' . $relativePath);
