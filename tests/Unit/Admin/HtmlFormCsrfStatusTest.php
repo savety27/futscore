@@ -68,6 +68,19 @@ final class HtmlFormCsrfStatusTest extends TestCase
         }
     }
 
+    public function testJsonDeleteEndpointsUseSharedCsrfHelper(): void
+    {
+        foreach (self::JSON_CSRF_ENDPOINTS as $relativePath) {
+            $source = $this->readSource($relativePath);
+
+            $this->assertStringContainsString(
+                "admin_csrf_is_valid(\$_POST['csrf_token'] ?? '')",
+                $source,
+                $relativePath
+            );
+        }
+    }
+
     private function readSource(string $relativePath): string
     {
         $source = file_get_contents(__DIR__ . '/../../../' . $relativePath);
