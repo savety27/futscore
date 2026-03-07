@@ -17,7 +17,6 @@ if (file_exists($event_helper_path)) {
 $has_valid_csrf = true;
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
     $has_valid_csrf = false;
-    http_response_code(403);
     $error = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
 }
 
