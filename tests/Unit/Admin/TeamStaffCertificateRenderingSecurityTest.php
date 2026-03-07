@@ -22,9 +22,19 @@ final class TeamStaffCertificateRenderingSecurityTest extends TestCase
 
         $this->assertStringNotContainsString("onclick=\"viewCertificateImage(", $source);
         $this->assertStringNotContainsString('modal.innerHTML = `', $source);
+        $this->assertStringNotContainsString('SELECT * FROM staff_certificates', $source);
+        $this->assertStringContainsString('SELECT certificate_name, certificate_file, issuing_authority, issue_date', $source);
         $this->assertStringContainsString('certificate-preview-trigger', $source);
         $this->assertStringContainsString('data-certificate-file=', $source);
         $this->assertStringContainsString('encodeURIComponent(filename)', $source);
+    }
+
+    public function testTeamStaffEditSelectsExplicitCertificateFieldsOnly(): void
+    {
+        $source = $this->readSource('admin/team_staff_edit.php');
+
+        $this->assertStringNotContainsString('SELECT * FROM staff_certificates', $source);
+        $this->assertStringContainsString('SELECT id, certificate_name, certificate_file, issuing_authority, issue_date', $source);
     }
 
     public function testCertificateEndpointSelectsExplicitFieldsOnly(): void

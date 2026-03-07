@@ -48,7 +48,12 @@ try {
     }
     
     // Fetch certificates
-    $stmt = $conn->prepare("SELECT * FROM staff_certificates WHERE staff_id = ? ORDER BY created_at DESC");
+    $stmt = $conn->prepare("
+        SELECT id, certificate_name, certificate_file, issuing_authority, issue_date
+        FROM staff_certificates
+        WHERE staff_id = ?
+        ORDER BY created_at DESC
+    ");
     $stmt->execute([$staff_id]);
     $certificates = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
