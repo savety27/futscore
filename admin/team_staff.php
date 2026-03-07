@@ -1329,7 +1329,11 @@ body {
                             </td>
                             <td class="certificate-cell">
                                 <?php if ($staff['certificate_count'] > 0): ?>
-                                    <span class="certificate-count" onclick="viewCertificates(<?php echo $staff['id']; ?>, '<?php echo htmlspecialchars(addslashes($staff['name'] ?? '')); ?>')">
+                                    <span class="certificate-count"
+                                          role="button"
+                                          tabindex="0"
+                                          data-staff-id="<?php echo (int) $staff['id']; ?>"
+                                          data-staff-name="<?php echo htmlspecialchars((string) ($staff['name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
                                         <i class="fas fa-certificate"></i> <?php echo $staff['certificate_count']; ?>
                                     </span>
                                 <?php else: ?>
@@ -1468,11 +1472,13 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 let currentStaffId = null;
+const CERTIFICATE_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif']);
 
 document.addEventListener('DOMContentLoaded', function() {
     const deleteStaffName = document.getElementById('deleteStaffName');
     const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const certificatesModal = document.getElementById('certificatesModal');
 
     document.querySelectorAll('.btn-delete[data-staff-id]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -1482,6 +1488,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (deleteModal) {
                 deleteModal.style.display = 'flex';
+            }
+        });
+    });
+
+    document.querySelectorAll('.certificate-count[data-staff-id]').forEach(function (trigger) {
+        trigger.addEventListener('click', handleCertificateTriggerActivation);
+        trigger.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleCertificateTriggerActivation.call(this);
             }
         });
     });
@@ -1497,6 +1513,14 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteModal.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeDeleteModal();
+            }
+        });
+    }
+
+    if (certificatesModal) {
+        certificatesModal.addEventListener('click', function (event) {
+            if (event.target === this) {
+                closeModal();
             }
         });
     }
@@ -1561,19 +1585,153 @@ function exportStaff() {
     window.location.href = 'team_staff_export.php' + (window.location.search ? window.location.search + '&export=excel' : '?export=excel');
 }
 
+function handleCertificateTriggerActivation() {
+    const staffId = this.getAttribute('data-staff-id');
+    const staffName = this.getAttribute('data-staff-name') || '';
+
+    if (!staffId) {
+        return;
+    }
+
+    viewCertificates(staffId, staffName);
+}
+
+function createCertificatesStatusMessage(message, color, iconClass) {
+    const paragraph = document.createElement('p');
+    paragraph.style.textAlign = 'center';
+    paragraph.style.padding = '40px';
+
+    if (color) {
+        paragraph.style.color = color;
+    }
+
+    if (iconClass) {
+        const icon = document.createElement('i');
+        icon.className = iconClass;
+        icon.setAttribute('aria-hidden', 'true');
+        paragraph.appendChild(icon);
+        paragraph.appendChild(document.createTextNode(' '));
+    }
+
+    paragraph.appendChild(document.createTextNode(message));
+
+    return paragraph;
+}
+
+function createCertificateDetail(label, value) {
+    const paragraph = document.createElement('p');
+    const strong = document.createElement('strong');
+
+    strong.textContent = label;
+    paragraph.appendChild(strong);
+    paragraph.appendChild(document.createTextNode(' ' + value));
+
+    return paragraph;
+}
+
+function getCertificateFileUrl(filename) {
+    return `../uploads/certificates/${encodeURIComponent(filename)}`;
+}
+
+function normalizeCertificate(certificate) {
+    const source = certificate && typeof certificate === 'object' ? certificate : {};
+
+    return {
+        certificate_name: source.certificate_name == null ? '' : String(source.certificate_name),
+        issuing_authority: source.issuing_authority == null ? '' : String(source.issuing_authority),
+        issue_date: source.issue_date == null ? '' : String(source.issue_date),
+        certificate_file: source.certificate_file == null ? '' : String(source.certificate_file)
+    };
+}
+
+function createCertificateCard(certificate) {
+    const card = document.createElement('div');
+    const titleText = certificate.certificate_name || 'Sertifikat';
+    const fileExt = certificate.certificate_file.includes('.')
+        ? certificate.certificate_file.split('.').pop().toLowerCase()
+        : '';
+
+    card.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #f8f9fa;';
+
+    const title = document.createElement('h4');
+    title.style.cssText = 'margin-bottom: 10px; color: var(--primary);';
+    title.textContent = titleText;
+    card.appendChild(title);
+
+    if (certificate.issuing_authority) {
+        card.appendChild(createCertificateDetail('Penerbit:', certificate.issuing_authority));
+    }
+
+    if (certificate.issue_date) {
+        card.appendChild(createCertificateDetail('Tanggal Terbit:', certificate.issue_date));
+    }
+
+    const previewContainer = document.createElement('div');
+    previewContainer.style.marginTop = '15px';
+
+    if (CERTIFICATE_IMAGE_EXTENSIONS.has(fileExt) && certificate.certificate_file) {
+        const image = document.createElement('img');
+        image.src = getCertificateFileUrl(certificate.certificate_file);
+        image.alt = titleText;
+        image.style.cssText = 'width: 100%; height: 150px; object-fit: cover; border-radius: 5px; cursor: pointer;';
+        image.addEventListener('click', function () {
+            viewCertificateImage(certificate.certificate_file, titleText);
+        });
+        previewContainer.appendChild(image);
+    } else {
+        const fileCard = document.createElement('div');
+        fileCard.style.cssText = 'background: #e0e0e0; padding: 20px; text-align: center; border-radius: 5px;';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-file-alt';
+        icon.style.cssText = 'font-size: 48px; color: #666;';
+        icon.setAttribute('aria-hidden', 'true');
+
+        const fileName = document.createElement('p');
+        fileName.style.cssText = 'margin-top: 10px; word-break: break-word;';
+        fileName.textContent = certificate.certificate_file || '-';
+
+        fileCard.appendChild(icon);
+        fileCard.appendChild(fileName);
+        previewContainer.appendChild(fileCard);
+    }
+
+    card.appendChild(previewContainer);
+
+    return card;
+}
+
+function createCertificateGrid(certificates) {
+    const grid = document.createElement('div');
+
+    grid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;';
+
+    certificates.forEach(function (certificate) {
+        grid.appendChild(createCertificateCard(normalizeCertificate(certificate)));
+    });
+
+    return grid;
+}
+
 function viewCertificates(staffId, staffName) {
     // Tampilkan modal loading
     const modal = document.getElementById('certificatesModal');
     const modalTitle = document.getElementById('modalTitle');
     const content = document.getElementById('certificatesContent');
-    
+
+    if (!modal || !modalTitle || !content) {
+        return;
+    }
+
     modalTitle.textContent = `Sertifikat: ${staffName}`;
-    content.innerHTML = '<p style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</p>';
-    
+    content.replaceChildren(createCertificatesStatusMessage('Memuat data...', '', 'fas fa-spinner fa-spin'));
+
     modal.style.display = 'flex';
-    
+
     // Fetch data sertifikat
-    fetch(`team_staff_certificates.php?id=${staffId}`, {
+    const searchParams = new URLSearchParams({ id: String(staffId) });
+
+    fetch(`team_staff_certificates.php?${searchParams.toString()}`, {
         headers: { 'Accept': 'application/json' }
     })
         .then(response => {
@@ -1587,72 +1745,74 @@ function viewCertificates(staffId, staffName) {
             return response.json();
         })
         .then(data => {
-            if (data.success && data.certificates.length > 0) {
-                let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">';
-                data.certificates.forEach(cert => {
-                    const fileExt = cert.certificate_file.split('.').pop().toLowerCase();
-                    const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
-                    
-                    html += `
-                    <div style="border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; background: #f8f9fa;">
-                        <h4 style="margin-bottom: 10px; color: var(--primary);">${cert.certificate_name}</h4>
-                        ${cert.issuing_authority ? `<p><strong>Penerbit:</strong> ${cert.issuing_authority}</p>` : ''}
-                        ${cert.issue_date ? `<p><strong>Tanggal Terbit:</strong> ${cert.issue_date}</p>` : ''}
-                        <div style="margin-top: 15px;">
-                            ${isImage ? 
-                                `<img src="../uploads/certificates/${cert.certificate_file}" 
-                                      alt="${cert.certificate_name}" 
-                                      style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; cursor: pointer;"
-                                      onclick="viewCertificateImage('${cert.certificate_file}', '${cert.certificate_name}')">` :
-                                `<div style="background: #e0e0e0; padding: 20px; text-align: center; border-radius: 5px;">
-                                    <i class="fas fa-file-alt" style="font-size: 48px; color: #666;"></i>
-                                    <p style="margin-top: 10px;">${cert.certificate_file}</p>
-                                </div>`
-                            }
-                        </div>
-                    </div>
-                    `;
-                });
-                html += '</div>';
-                content.innerHTML = html;
+            const certificates = data && data.success && Array.isArray(data.certificates)
+                ? data.certificates
+                : [];
+
+            if (certificates.length > 0) {
+                content.replaceChildren(createCertificateGrid(certificates));
             } else {
-                content.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--gray);">Belum ada sertifikat</p>';
+                content.replaceChildren(createCertificatesStatusMessage('Belum ada sertifikat', 'var(--gray)'));
             }
         })
         .catch(error => {
             if (error === 'session_expired') return;
             console.error('Error:', error);
-            content.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--danger);">Error memuat data</p>';
+            content.replaceChildren(createCertificatesStatusMessage('Error memuat data', 'var(--danger)'));
         });
 }
 
 function viewCertificateImage(filename, title) {
-    // Tampilkan gambar di modal baru
+    const safeFilename = filename == null ? '' : String(filename);
+    const safeTitle = title == null ? 'Sertifikat' : String(title);
+
+    if (!safeFilename) {
+        return;
+    }
+
     const modal = document.createElement('div');
     modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center;';
-    modal.innerHTML = `
-        <div style="position: relative;">
-            <button onclick="this.parentElement.parentElement.remove()" 
-                    style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-            <img src="../uploads/certificates/${filename}" 
-                 alt="${title}" 
-                 style="max-width: 90vw; max-height: 90vh; border-radius: 5px;">
-            <p style="text-align: center; color: white; margin-top: 10px;">${title}</p>
-        </div>
-    `;
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            modal.remove();
+        }
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.style.cssText = 'position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;';
+    closeButton.textContent = '\u00D7';
+    closeButton.setAttribute('aria-label', 'Tutup preview sertifikat');
+    closeButton.addEventListener('click', function () {
+        modal.remove();
+    });
+
+    const image = document.createElement('img');
+    image.src = getCertificateFileUrl(safeFilename);
+    image.alt = safeTitle;
+    image.style.cssText = 'max-width: 90vw; max-height: 90vh; border-radius: 5px;';
+
+    const caption = document.createElement('p');
+    caption.style.cssText = 'text-align: center; color: white; margin-top: 10px;';
+    caption.textContent = safeTitle;
+
+    wrapper.appendChild(closeButton);
+    wrapper.appendChild(image);
+    wrapper.appendChild(caption);
+    modal.appendChild(wrapper);
     document.body.appendChild(modal);
 }
 
 function closeModal() {
-    document.getElementById('certificatesModal').style.display = 'none';
-}
+    const modal = document.getElementById('certificatesModal');
 
-// Close modal when clicking outside
-document.getElementById('certificatesModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
+    if (modal) {
+        modal.style.display = 'none';
     }
-});
+}
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>

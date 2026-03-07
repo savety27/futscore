@@ -942,12 +942,16 @@ tbody tr:hover {
                                 $file_ext = pathinfo($cert['certificate_file'], PATHINFO_EXTENSION);
                                 if (in_array(strtolower($file_ext), ['jpg', 'jpeg', 'png', 'gif'])): 
                                 ?>
-                                    <img src="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file']); ?>" 
-                                         alt="<?php echo htmlspecialchars($cert['certificate_name']); ?>" 
+                                    <img src="../uploads/certificates/<?php echo htmlspecialchars(rawurlencode((string) $cert['certificate_file']), ENT_QUOTES, 'UTF-8'); ?>" 
+                                         alt="<?php echo htmlspecialchars((string) $cert['certificate_name'], ENT_QUOTES, 'UTF-8'); ?>" 
+                                         class="certificate-preview-trigger"
+                                         data-certificate-file="<?php echo htmlspecialchars((string) $cert['certificate_file'], ENT_QUOTES, 'UTF-8'); ?>"
+                                         data-certificate-title="<?php echo htmlspecialchars((string) $cert['certificate_name'], ENT_QUOTES, 'UTF-8'); ?>"
                                          style="width: 100%; max-height: 200px; object-fit: contain; border-radius: 5px; cursor: pointer;"
-                                         onclick="viewCertificateImage('<?php echo htmlspecialchars($cert['certificate_file']); ?>', '<?php echo htmlspecialchars($cert['certificate_name']); ?>')">
+                                         role="button"
+                                         tabindex="0">
                                     <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                                        <a href="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file']); ?>" 
+                                        <a href="../uploads/certificates/<?php echo htmlspecialchars(rawurlencode((string) $cert['certificate_file']), ENT_QUOTES, 'UTF-8'); ?>" 
                                            target="_blank" 
                                            style="color: var(--primary); text-decoration: none;">
                                             <i class="fas fa-external-link-alt"></i> Lihat Full Size
@@ -957,7 +961,7 @@ tbody tr:hover {
                                     <div style="background: #f0f0f0; padding: 30px; border-radius: 5px;">
                                         <i class="fas fa-file-alt" style="font-size: 64px; color: #666; margin-bottom: 15px;"></i>
                                         <p style="color: #666; margin-bottom: 15px;"><?php echo htmlspecialchars($cert['certificate_file']); ?></p>
-                                        <a href="../uploads/certificates/<?php echo htmlspecialchars($cert['certificate_file']); ?>" 
+                                        <a href="../uploads/certificates/<?php echo htmlspecialchars(rawurlencode((string) $cert['certificate_file']), ENT_QUOTES, 'UTF-8'); ?>" 
                                            target="_blank" 
                                            class="btn btn-primary" 
                                            style="padding: 8px 16px; font-size: 14px;">
@@ -983,20 +987,64 @@ tbody tr:hover {
 </div>
 
 <script>
+function getCertificateFileUrl(filename) {
+    return `../uploads/certificates/${encodeURIComponent(filename)}`;
+}
+
+document.querySelectorAll('.certificate-preview-trigger').forEach(function (trigger) {
+    trigger.addEventListener('click', function () {
+        viewCertificateImage(this.dataset.certificateFile || '', this.dataset.certificateTitle || '');
+    });
+
+    trigger.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            viewCertificateImage(this.dataset.certificateFile || '', this.dataset.certificateTitle || '');
+        }
+    });
+});
+
 function viewCertificateImage(filename, title) {
-    // Tampilkan gambar di modal baru
+    const safeFilename = filename == null ? '' : String(filename);
+    const safeTitle = title == null ? 'Preview Sertifikat' : String(title);
+
+    if (!safeFilename) {
+        return;
+    }
+
     const modal = document.createElement('div');
     modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center;';
-    modal.innerHTML = `
-        <div style="position: relative;">
-            <button onclick="this.parentElement.parentElement.remove()" 
-                    style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
-            <img src="../uploads/certificates/${filename}" 
-                 alt="${title}" 
-                 style="max-width: 90vw; max-height: 90vh; border-radius: 5px;">
-            <p style="text-align: center; color: white; margin-top: 10px;">${title}</p>
-        </div>
-    `;
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            modal.remove();
+        }
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.style.cssText = 'position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 24px; cursor: pointer;';
+    closeButton.textContent = '\u00D7';
+    closeButton.setAttribute('aria-label', 'Tutup preview sertifikat');
+    closeButton.addEventListener('click', function () {
+        modal.remove();
+    });
+
+    const image = document.createElement('img');
+    image.src = getCertificateFileUrl(safeFilename);
+    image.alt = safeTitle;
+    image.style.cssText = 'max-width: 90vw; max-height: 90vh; border-radius: 5px;';
+
+    const caption = document.createElement('p');
+    caption.style.cssText = 'text-align: center; color: white; margin-top: 10px;';
+    caption.textContent = safeTitle;
+
+    wrapper.appendChild(closeButton);
+    wrapper.appendChild(image);
+    wrapper.appendChild(caption);
+    modal.appendChild(wrapper);
     document.body.appendChild(modal);
 }
 </script>
