@@ -779,7 +779,7 @@ body {
                             -
                         <?php endif; ?>
                     </div>
-                    <div class="stat-label">Event</div>
+                    <div class="stat-label">Kategori</div>
                 </div>
             </div>
         </div>
@@ -869,7 +869,7 @@ body {
                 </div>
                 
                 <div class="info-item">
-                    <span class="info-label">Event</span>
+                    <span class="info-label">Kategori</span>
                     <div class="info-value">
                         <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
                             <?php if (!empty($team_events)): ?>

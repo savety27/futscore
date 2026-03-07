@@ -1173,7 +1173,7 @@ body {
                             type="text"
                             name="search"
                             class="team-search-input"
-                            placeholder="Cari team (nama, alias, manager, event)..."
+                            placeholder="Cari team (nama, alias, manager, kategori)..."
                             value="<?php echo htmlspecialchars($search ?? ''); ?>"
                         >
                     </div>
