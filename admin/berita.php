@@ -1342,10 +1342,16 @@ if (deleteModalElement) {
 }
 
 function deleteBerita(beritaId) {
-    fetch(`berita_delete.php?id=${beritaId}`, {
-        method: 'GET',
+    const formData = new FormData();
+    formData.append('id', beritaId);
+    formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+    fetch('berita_delete.php', {
+        method: 'POST',
+        body: formData,
         headers: {
             'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         }
     })
     .then(response => response.json())

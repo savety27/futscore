@@ -23,6 +23,12 @@ if ($staff_id <= 0) {
 $errors = [];
 $staff_data = null;
 $certificates = [];
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 
 // Fetch staff data with certificates
 try {
@@ -60,7 +66,7 @@ try {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $form_data = [
         'team_id' => trim($_POST['team_id'] ?? ''),
@@ -1079,6 +1085,7 @@ body {
         <!-- EDIT STAFF FORM -->
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="staffForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $staff_id; ?>">
                 
                 <div class="form-section">

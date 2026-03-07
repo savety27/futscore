@@ -1547,11 +1547,16 @@ if (modal) {
 }
 
 function deletePlayer(playerId) {
-    fetch(`player/delete.php?id=${playerId}`, {
-        method: 'GET',
+    const formData = new FormData();
+    formData.append('id', playerId);
+    formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+    fetch('player/delete.php', {
+        method: 'POST',
+        body: formData,
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         }
     })
     .then(response => response.json())

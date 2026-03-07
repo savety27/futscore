@@ -34,7 +34,13 @@ $form_data = [
     'is_active' => 1
 ];
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
         'no_ktp' => trim($_POST['no_ktp'] ?? ''),
@@ -809,6 +815,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
             <div class="form-container">
                 <form method="POST" enctype="multipart/form-data" id="perangkatForm">
+                    <?php echo admin_csrf_field(); ?>
                     <div class="form-section">
                         <div class="section-title"><i class="fas fa-id-card"></i>Informasi Utama</div>
                         <div class="form-grid">
@@ -1067,6 +1074,30 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 }
             }
 
+            function requestIdentityVerification(payload) {
+                payload.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+                return fetch('../api/verify_identity.php', {
+                        method: 'POST',
+                        body: payload,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response =>
+                        response.json().catch(() => null).then(data => {
+                            if (response.ok) {
+                                return data || {};
+                            }
+
+                            const error = new Error((data && data.message) ? data.message : 'Gagal memverifikasi identitas');
+                            error.status = response.status;
+                            throw error;
+                        })
+                    );
+            }
+
             function verifyNoKtp() {
                 if (!noKtpInput || !noKtpVerifyBtn || !noKtpFeedback || !noKtpVerified) {
                     return;
@@ -1086,12 +1117,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 payload.append('type', 'nik');
                 payload.append('value', value);
 
-                fetch('../api/verify_identity.php', {
-                        method: 'POST',
-                        body: payload,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    })
-                    .then(response => response.json())
+                requestIdentityVerification(payload)
                     .then(data => {
                         if (data && data.verified) {
                             noKtpVerified.value = '1';
@@ -1119,10 +1145,15 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                             noKtpVerifyBtn.textContent = 'Verifikasi';
                         }
                     })
-                    .catch(() => {
+                    .catch(err => {
                         noKtpVerified.value = '0';
-                        noKtpFeedback.textContent = 'Gagal menghubungi server verifikasi';
+                        noKtpFeedback.textContent = (err && (err.status === 401 || err.status === 403))
+                            ? (err.message || 'Permintaan verifikasi ditolak.')
+                            : 'Gagal menghubungi server verifikasi';
                         noKtpFeedback.className = 'verify-feedback error';
+                        if (noKtpDetails) {
+                            noKtpDetails.style.display = 'none';
+                        }
                         noKtpVerifyBtn.classList.remove('verified');
                         noKtpVerifyBtn.disabled = false;
                         noKtpVerifyBtn.textContent = 'Verifikasi';

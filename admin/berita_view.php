@@ -917,11 +917,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function deleteBerita(beritaId, judul) {
     if (confirm(`Apakah Anda yakin ingin menghapus berita "${judul}"?`)) {
-        fetch(`berita_delete.php?id=${beritaId}`, {
-            method: 'GET',
+        const formData = new FormData();
+        formData.append('id', beritaId);
+        formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+        fetch('berita_delete.php', {
+            method: 'POST',
+            body: formData,
             headers: {
-                'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             }
         })
         .then(response => response.json())

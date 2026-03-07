@@ -1,8 +1,12 @@
+<?php require_once __DIR__ . '/../../admin/includes/csrf.php'; ?>
+
     </div> <!-- End Main -->
 </div> <!-- End Wrapper -->
 
 
 <script>
+window.ADMIN_CSRF_TOKEN = <?php echo json_encode(admin_csrf_token()); ?>;
+
 // Mobile Menu Toggle Functionality
 document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.mobile-menu-toggle');

@@ -18,6 +18,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/csrf.php';
+
 /**
  * Returns true if the current session belongs to an admin user.
  * Extracted as a function so it can be unit-tested without side effects.
@@ -51,6 +53,27 @@ function adminIsAjaxRequest(array $server): bool
     }
     $accept = $server['HTTP_ACCEPT'] ?? '';
     return str_contains($accept, 'application/json');
+}
+
+/**
+ * Require the current request to carry AJAX/JSON semantics expected by
+ * JSON-only admin endpoints.
+ *
+ * @param array $server  Typically $_SERVER
+ */
+function adminRequireAjaxJsonRequest(array $server): void
+{
+    if (adminIsAjaxRequest($server)) {
+        return;
+    }
+
+    http_response_code(400);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => 'AJAX/JSON request required',
+    ]);
+    exit;
 }
 
 /**

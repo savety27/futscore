@@ -29,6 +29,12 @@ $form_data = [
     'is_active' => 1
 ];
 
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
 // Fetch teams for dropdown
 $teams = [];
 try {
@@ -40,7 +46,7 @@ try {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $form_data = [
         'team_id' => trim($_POST['team_id'] ?? ''),
@@ -1002,6 +1008,7 @@ body {
         <!-- ADD STAFF FORM -->
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="staffForm">
+                <?php echo admin_csrf_field(); ?>
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-info-circle"></i>

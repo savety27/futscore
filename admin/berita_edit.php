@@ -26,6 +26,12 @@ $admin_email = $_SESSION['admin_email'] ?? '';
 // Initialize variables
 $errors = [];
 $berita_data = null;
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 
 // Fetch berita data
 try {
@@ -58,7 +64,7 @@ function generateSlug($text) {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $form_data = [
         'judul' => trim($_POST['judul'] ?? ''),
@@ -96,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $form_data['slug'] .= '-' . time();
             }
         } catch (PDOException $e) {
-            $errors['database'] = "Gagal memeriksa slug: " . $e->getMessage();
+            error_log('berita_edit slug check DB error: ' . $e->getMessage());
+            $errors['database'] = 'Gagal memeriksa ketersediaan slug. Silakan coba lagi.';
         }
     }
     
@@ -192,7 +199,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             exit;
             
         } catch (PDOException $e) {
-            $errors['database'] = "Gagal memperbarui data: " . $e->getMessage();
+            error_log('berita_edit update DB error: ' . $e->getMessage());
+            $errors['database'] = 'Perubahan berita tidak dapat disimpan saat ini. Silakan coba lagi.';
         }
     } else {
         // Update berita_data with new form data for display
@@ -954,13 +962,14 @@ body {
         <?php if (isset($errors['database'])): ?>
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-circle"></i>
-            <?php echo $errors['database']; ?>
+            <?php echo htmlspecialchars($errors['database'], ENT_QUOTES, 'UTF-8'); ?>
         </div>
         <?php endif; ?>
 
         <!-- EDIT BERITA FORM -->
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="beritaForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $berita_id; ?>">
                 
                 <div class="form-section">

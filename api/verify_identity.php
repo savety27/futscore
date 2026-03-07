@@ -13,10 +13,19 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Methods: POST');
 
 require_once __DIR__ . '/api_auth_guard.php';
+require_once __DIR__ . '/../admin/includes/csrf.php';
 
 // Only allow POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['verified' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+// This shared endpoint is used by multiple authenticated areas, so every caller
+// must supply the session CSRF token rather than relying on role-specific bypasses.
+if (!admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['verified' => false, 'message' => 'Invalid CSRF token']);
     exit;
 }
 

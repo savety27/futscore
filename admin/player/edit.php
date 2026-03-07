@@ -45,7 +45,13 @@ try {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$has_valid_csrf = true;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $error = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf) {
     try {
         playerEditUpdatePlayer($conn, $player_id, $_POST, $_FILES, $player);
         $_SESSION['success_message'] = "Player berhasil diperbarui!";
@@ -1095,6 +1101,7 @@ select.form-control {
 
             <!-- Form -->
             <form method="POST" action="" enctype="multipart/form-data" class="form-container" id="playerForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="player_id" value="<?php echo $player['id']; ?>">
                 
                 <!-- Tabs -->
@@ -1758,6 +1765,30 @@ function validateNIK(value) {
     }
 }
 
+function submitIdentityVerification(formData) {
+    formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+    return fetch('../../api/verify_identity.php', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).then(response =>
+        response.json().catch(() => null).then(data => {
+            if (response.ok) {
+                return data || {};
+            }
+
+            const error = new Error((data && data.message) ? data.message : 'Gagal memverifikasi identitas');
+            error.status = response.status;
+            error.data = data;
+            throw error;
+        })
+    );
+}
+
 function verifyNIK() {
     const nikInput = document.getElementById('nikInput');
     const nikFeedback = document.getElementById('nikFeedback');
@@ -1785,8 +1816,7 @@ function verifyNIK() {
     formData.append('type', 'nik');
     formData.append('value', value);
 
-    fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(r => r.json())
+    submitIdentityVerification(formData)
         .then(data => {
             nikFeedback.style.animation = '';
             if (data.verified) {
@@ -1818,14 +1848,18 @@ function verifyNIK() {
                 if (nikDetails) nikDetails.style.display = 'none';
             }
         })
-        .catch(() => {
+        .catch(err => {
             nikFeedback.style.animation = '';
             nikVerified.value = '0';
-            nikFeedback.textContent = 'Gagal menghubungi server verifikasi';
+            nikFeedback.textContent = (err && (err.status === 401 || err.status === 403))
+                ? (err.message || 'Permintaan verifikasi ditolak.')
+                : 'Gagal menghubungi server verifikasi';
             nikFeedback.className = 'verify-feedback error';
+            nikInput.style.borderColor = 'var(--danger)';
             nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-            nikVerifyBtn.classList.remove('loading');
+            nikVerifyBtn.classList.remove('loading', 'verified');
             nikVerifyBtn.disabled = false;
+            if (nikDetails) nikDetails.style.display = 'none';
         });
 }
 
@@ -1906,8 +1940,7 @@ function verifyNISN() {
     formData.append('type', 'nisn');
     formData.append('value', value);
 
-    fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(r => r.json())
+    submitIdentityVerification(formData)
         .then(data => {
             nisnFeedback.style.animation = '';
             if (data.verified) {
@@ -1941,14 +1974,18 @@ function verifyNISN() {
                 if (nisnDetails) nisnDetails.style.display = 'none';
             }
         })
-        .catch(() => {
+        .catch(err => {
             nisnFeedback.style.animation = '';
             nisnVerified.value = '0';
-            nisnFeedback.textContent = 'Gagal menghubungi server verifikasi';
+            nisnFeedback.textContent = (err && (err.status === 401 || err.status === 403))
+                ? (err.message || 'Permintaan verifikasi ditolak.')
+                : 'Gagal menghubungi server verifikasi';
             nisnFeedback.className = 'verify-feedback error';
+            nisnInput.style.borderColor = 'var(--danger)';
             nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-            nisnVerifyBtn.classList.remove('loading');
+            nisnVerifyBtn.classList.remove('loading', 'verified');
             nisnVerifyBtn.disabled = false;
+            if (nisnDetails) nisnDetails.style.display = 'none';
         });
 }
 
@@ -2347,4 +2384,3 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php include __DIR__ . '/../includes/sidebar_js.php'; ?>
 </body>
 </html>
-

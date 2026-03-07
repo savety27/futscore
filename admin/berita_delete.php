@@ -9,15 +9,30 @@ if (file_exists($config_path)) {
     die(json_encode(['success' => false, 'message' => 'Database configuration not found']));
 }
 
-// Get berita ID
-$berita_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-
-if ($berita_id <= 0) {
-    die(json_encode(['success' => false, 'message' => 'Invalid berita ID']));
-}
-
 // Set header untuk JSON
 header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+adminRequireAjaxJsonRequest($_SERVER);
+
+if (!admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+    exit;
+}
+
+// Get berita ID
+$berita_id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+if ($berita_id <= 0) {
+    http_response_code(400);
+    die(json_encode(['success' => false, 'message' => 'Invalid berita ID']));
+}
 
 try {
     // Get berita data before deletion
@@ -26,6 +41,7 @@ try {
     $berita = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$berita) {
+        http_response_code(404);
         die(json_encode(['success' => false, 'message' => 'Berita not found']));
     }
 

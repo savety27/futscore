@@ -15,6 +15,15 @@ if (!function_exists('admin_csrf_token')) {
     }
 }
 
+if (!function_exists('admin_csrf_field')) {
+    function admin_csrf_field(): string
+    {
+        return '<input type="hidden" name="csrf_token" value="'
+            . htmlspecialchars(admin_csrf_token(), ENT_QUOTES, 'UTF-8')
+            . '">';
+    }
+}
+
 if (!function_exists('admin_csrf_is_valid')) {
     function admin_csrf_is_valid($token): bool
     {
@@ -29,4 +38,3 @@ if (!function_exists('admin_csrf_is_valid')) {
         return hash_equals($_SESSION['csrf_token'], $token);
     }
 }
-

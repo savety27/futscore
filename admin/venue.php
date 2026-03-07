@@ -1498,11 +1498,16 @@ if (deleteModalElement) {
 }
 
 function deleteVenue(venueId) {
-    fetch(`venue_delete.php?id=${venueId}`, {
-        method: 'GET',
+    const formData = new FormData();
+    formData.append('id', venueId);
+    formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+    fetch('venue_delete.php', {
+        method: 'POST',
+        body: formData,
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         }
     })
     .then(response => response.json())

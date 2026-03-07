@@ -109,8 +109,14 @@ $form_data = [
     'description' => $event['description'] ?? ''
 ];
 $current_image = $event['image'] ?? null;
+$has_valid_csrf = true;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors['database'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $has_valid_csrf && empty($errors['database'])) {
     $form_data = [
         'name' => trim($_POST['name'] ?? ''),
         'start_date' => trim($_POST['start_date'] ?? ''),
@@ -413,6 +419,7 @@ body {
 
         <div class="form-container">
             <form method="POST" action="" enctype="multipart/form-data" id="eventForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo (int) $event_id; ?>">
 
                 <div class="form-section">

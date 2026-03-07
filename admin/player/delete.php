@@ -4,14 +4,27 @@ require_once '../config/database.php';
 
 header('Content-Type: application/json');
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+    exit;
+}
 
-if (!isset($_GET['id']) || empty($_GET['id'])) {
+adminRequireAjaxJsonRequest($_SERVER);
+
+if (!admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+    exit;
+}
+
+if (!isset($_POST['id']) || empty($_POST['id'])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid request']);
     exit;
 }
 
-$player_id = (int)$_GET['id'];
+$player_id = (int)$_POST['id'];
 
 function tableExists(PDO $conn, string $table): bool
 {
@@ -57,6 +70,7 @@ try {
     $player = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$player) {
+        http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Player tidak ditemukan']);
         exit;
     }

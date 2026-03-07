@@ -1464,11 +1464,16 @@ function closeDeleteModal() {
 }
 
 function deleteTeam(teamId) {
-    fetch(`team_delete.php?id=${encodeURIComponent(teamId)}`, {
-        method: 'GET',
+    const formData = new FormData();
+    formData.append('id', teamId);
+    formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+    fetch('team_delete.php', {
+        method: 'POST',
+        body: formData,
         headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         }
     })
     .then(async response => {

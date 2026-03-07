@@ -41,6 +41,12 @@ try {
 // Initialize variables
 $errors = [];
 $pelatih_data = null;
+$has_valid_csrf = true;
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
+    $has_valid_csrf = false;
+    $errors['database'] = 'Token keamanan tidak valid. Silakan muat ulang halaman lalu coba lagi.';
+}
 
 // Fetch pelatih data
 try {
@@ -57,7 +63,7 @@ try {
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     // Get and sanitize form data
     $form_data = [
         'username' => trim($_POST['username'] ?? ''),
@@ -817,6 +823,7 @@ body {
         <!-- EDIT PELATIH FORM -->
         <div class="form-container">
             <form method="POST" action="" id="pelatihForm">
+                <?php echo admin_csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $pelatih_id; ?>">
                 
                 <div class="form-section">
