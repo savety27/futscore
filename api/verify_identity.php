@@ -21,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// This shared endpoint is used by multiple authenticated areas, so every caller
+// must supply the session CSRF token rather than relying on role-specific bypasses.
 if (!admin_csrf_is_valid($_POST['csrf_token'] ?? '')) {
     http_response_code(403);
     echo json_encode(['verified' => false, 'message' => 'Invalid CSRF token']);

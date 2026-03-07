@@ -1261,6 +1261,30 @@ document.addEventListener('DOMContentLoaded', function() {
         nikInput.dispatchEvent(new Event('input'));
     }
 
+    function submitIdentityVerification(formData) {
+        formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+        return fetch('../api/verify_identity.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(response =>
+            response.json().catch(() => null).then(data => {
+                if (response.ok) {
+                    return data || {};
+                }
+
+                const error = new Error((data && data.message) ? data.message : 'Gagal memverifikasi identitas');
+                error.status = response.status;
+                error.data = data;
+                throw error;
+            })
+        );
+    }
+
     // NIK Verify via AJAX
     window.verifyNIK = function() {
         const value = nikInput.value.trim();
@@ -1278,8 +1302,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('value', value);
         if (playerId > 0) formData.append('exclude_player_id', playerId);
 
-        fetch('../api/verify_identity.php', { method: 'POST', body: formData })
-            .then(r => r.json())
+        submitIdentityVerification(formData)
             .then(data => {
                 nikFeedback.style.animation = '';
                 if (data.verified) {
@@ -1312,12 +1335,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(err => {
+                const message = err && (err.status || err.data) && err.message
+                    ? err.message
+                    : 'Gagal menghubungi server verifikasi';
                 nikFeedback.style.animation = '';
-                nikFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
+                nikFeedback.textContent = '⚠ ' + message;
                 nikFeedback.className = 'verify-feedback error';
                 nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
                 nikVerifyBtn.classList.remove('loading');
                 nikVerifyBtn.disabled = false;
+                nikDetails.style.display = 'none';
             });
     };
 
@@ -1401,8 +1428,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('value', value);
         if (playerId > 0) formData.append('exclude_player_id', playerId);
 
-        fetch('../api/verify_identity.php', { method: 'POST', body: formData })
-            .then(r => r.json())
+        submitIdentityVerification(formData)
             .then(data => {
                 nisnFeedback.style.animation = '';
                 if (data.verified) {
@@ -1437,12 +1463,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(err => {
+                const message = err && (err.status || err.data) && err.message
+                    ? err.message
+                    : 'Gagal menghubungi server verifikasi';
                 nisnFeedback.style.animation = '';
-                nisnFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
+                nisnFeedback.textContent = '⚠ ' + message;
                 nisnFeedback.className = 'verify-feedback error';
                 nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
                 nisnVerifyBtn.classList.remove('loading');
                 nisnVerifyBtn.disabled = false;
+                const nisnDetailsEl = document.getElementById('nisnDetails');
+                if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
             });
     };
 
@@ -1535,4 +1566,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
-
