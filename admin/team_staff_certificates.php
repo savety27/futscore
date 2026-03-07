@@ -22,9 +22,23 @@ if ($staff_id <= 0) {
 
 try {
     // Fetch certificates
-    $stmt = $conn->prepare("SELECT * FROM staff_certificates WHERE staff_id = ? ORDER BY created_at DESC");
+    $stmt = $conn->prepare("
+        SELECT certificate_name, certificate_file, issuing_authority, issue_date
+        FROM staff_certificates
+        WHERE staff_id = ?
+        ORDER BY created_at DESC
+    ");
     $stmt->execute([$staff_id]);
-    $certificates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $certificates = array_map(static function (array $certificate): array {
+        return [
+            'certificate_name' => (string) ($certificate['certificate_name'] ?? ''),
+            'certificate_file' => (string) ($certificate['certificate_file'] ?? ''),
+            'issuing_authority' => (string) ($certificate['issuing_authority'] ?? ''),
+            'issue_date' => isset($certificate['issue_date']) && $certificate['issue_date'] !== ''
+                ? (string) $certificate['issue_date']
+                : null,
+        ];
+    }, $stmt->fetchAll(PDO::FETCH_ASSOC));
     
     echo json_encode([
         'success' => true,
@@ -33,6 +47,12 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    error_log(sprintf(
+        'team_staff_certificates DB error for staff_id %d: %s',
+        $staff_id,
+        $e->getMessage()
+    ));
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Terjadi kesalahan saat memuat sertifikat.']);
 }
 ?>
