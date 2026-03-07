@@ -1054,6 +1054,82 @@ body {
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('teamForm');
     if (!form) return;
+    const logoInput = document.getElementById('logo');
+    const logoUpload = document.getElementById('logoUpload');
+    const logoPreview = document.getElementById('logoPreview');
+    const logoPreviewImg = document.getElementById('logoPreviewImg');
+    const logoFileInfo = document.getElementById('logoFileInfo');
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' Bytes';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function resetLogoPreview() {
+        if (!logoPreview || !logoPreviewImg || !logoFileInfo) return;
+        logoPreview.style.display = 'none';
+        logoPreviewImg.src = '';
+        logoFileInfo.textContent = '';
+    }
+
+    function showLogoPreview(file) {
+        if (!file || !logoInput || !logoPreview || !logoPreviewImg || !logoFileInfo) return;
+
+        if (!file.type.startsWith('image/')) {
+            if (typeof toastr !== 'undefined') {
+                toastr.error('File harus berupa gambar (JPG, PNG, GIF)');
+            }
+            logoInput.value = '';
+            resetLogoPreview();
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Ukuran file maksimal 5MB');
+            }
+            logoInput.value = '';
+            resetLogoPreview();
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            logoPreviewImg.src = e.target.result;
+            logoFileInfo.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+            logoPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (logoUpload && logoInput) {
+        logoUpload.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            logoUpload.classList.add('drag-over');
+        });
+
+        logoUpload.addEventListener('dragleave', function () {
+            logoUpload.classList.remove('drag-over');
+        });
+
+        logoUpload.addEventListener('drop', function (e) {
+            e.preventDefault();
+            logoUpload.classList.remove('drag-over');
+            if (!e.dataTransfer.files.length) return;
+            logoInput.files = e.dataTransfer.files;
+            showLogoPreview(e.dataTransfer.files[0]);
+        });
+
+        logoInput.addEventListener('change', function (e) {
+            if (!e.target.files.length) {
+                resetLogoPreview();
+                return;
+            }
+            showLogoPreview(e.target.files[0]);
+        });
+    }
 
     form.addEventListener('submit', function (e) {
         const requiredFields = [
