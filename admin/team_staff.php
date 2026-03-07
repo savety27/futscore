@@ -915,6 +915,11 @@ body {
     color: var(--warning);
 }
 
+.badge-info {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--accent);
+}
+
 
 /* =========================================
    MOBILE RESPONSIVE DESIGN

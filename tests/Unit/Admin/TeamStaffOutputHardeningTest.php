@@ -25,7 +25,9 @@ final class TeamStaffOutputHardeningTest extends TestCase
         $this->assertStringContainsString('teamStaffPositionBadgeClass(', $listSource);
         $this->assertStringContainsString('teamStaffPositionLabel(', $listSource);
         $this->assertStringNotContainsString("ucfirst(\$staff['position'] ?? '')", $listSource);
+        $this->assertStringContainsString('teamStaffPositionBadgeClass(', $viewSource);
         $this->assertStringContainsString('teamStaffPositionLabel(', $viewSource);
+        $this->assertStringNotContainsString('background: #FFD700', $viewSource);
         $this->assertStringNotContainsString("ucfirst(\$staff_data['position'] ?? '')", $viewSource);
     }
 

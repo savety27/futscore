@@ -374,6 +374,54 @@ body {
     font-weight: 600;
 }
 
+/* Position Badge */
+.position-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #f0f7ff;
+    color: var(--primary);
+    border: 1px solid rgba(10, 36, 99, 0.2);
+}
+
+.position-badge.badge-primary {
+    background: rgba(10, 36, 99, 0.1);
+    color: var(--primary);
+    border-color: rgba(10, 36, 99, 0.2);
+}
+
+.position-badge.badge-secondary {
+    background: rgba(108, 117, 125, 0.1);
+    color: var(--gray);
+    border-color: rgba(108, 117, 125, 0.2);
+}
+
+.position-badge.badge-success {
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success);
+    border-color: rgba(46, 125, 50, 0.2);
+}
+
+.position-badge.badge-danger {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--danger);
+    border-color: rgba(211, 47, 47, 0.2);
+}
+
+.position-badge.badge-warning {
+    background: rgba(249, 168, 38, 0.1);
+    color: var(--warning);
+    border-color: rgba(249, 168, 38, 0.2);
+}
+
+.position-badge.badge-info {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--accent);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
 /* Badges */
 .badge {
     display: inline-block;
@@ -812,7 +860,7 @@ tbody tr:hover {
                 <div class="info-item">
                     <span class="info-label">Jabatan</span>
                     <div class="info-value">
-                        <span class="badge" style="background: #FFD700; color: #333; padding: 5px 12px;">
+                        <span class="position-badge <?php echo teamStaffPositionBadgeClass($staff_data['position'] ?? ''); ?>">
                             <?php echo htmlspecialchars(teamStaffPositionLabel($staff_data['position'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                         </span>
                     </div>
