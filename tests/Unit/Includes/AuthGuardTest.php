@@ -143,6 +143,12 @@ final class AuthGuardTest extends TestCase
         $this->assertTrue(adminIsAjaxRequest($server));
     }
 
+    public function testAcceptHeaderContainingJsonIsAjax(): void
+    {
+        $server = ['HTTP_ACCEPT' => 'text/html,application/json;q=0.9'];
+        $this->assertTrue(adminIsAjaxRequest($server));
+    }
+
     public function testAcceptHtmlIsNotAjax(): void
     {
         $server = ['HTTP_ACCEPT' => 'text/html,application/xhtml+xml,*/*'];
@@ -152,6 +158,33 @@ final class AuthGuardTest extends TestCase
     public function testEmptyServerIsNotAjax(): void
     {
         $this->assertFalse(adminIsAjaxRequest([]));
+    }
+
+    public function testAdminRequireAjaxJsonRequestAllowsXRequestedWith(): void
+    {
+        $result = $this->runAjaxGuardHarness('xrw');
+
+        $this->assertSame(200, $result['status']);
+        $this->assertSame('', $result['body']);
+    }
+
+    public function testAdminRequireAjaxJsonRequestAllowsAcceptJson(): void
+    {
+        $result = $this->runAjaxGuardHarness('accept');
+
+        $this->assertSame(200, $result['status']);
+        $this->assertSame('', $result['body']);
+    }
+
+    public function testAdminRequireAjaxJsonRequestRejectsNonAjaxRequest(): void
+    {
+        $result = $this->runAjaxGuardHarness('html');
+
+        $this->assertSame(400, $result['status']);
+        $this->assertSame([
+            'success' => false,
+            'message' => 'AJAX/JSON request required',
+        ], $result['body']);
     }
 
     // ─── adminLoginUrl() unit tests ───────────────────────────────────────────
@@ -238,5 +271,25 @@ final class AuthGuardTest extends TestCase
 
         // Three levels deep → should produce "../../../login.php"
         $this->assertSame('../../../login.php', $url);
+    }
+
+    private function runAjaxGuardHarness(string $mode): array
+    {
+        $command = escapeshellarg(PHP_BINARY)
+            . ' '
+            . escapeshellarg(__DIR__ . '/../../Fixtures/Admin/admin_ajax_guard_harness.php')
+            . ' '
+            . escapeshellarg($mode);
+
+        $output = [];
+        $exitCode = 0;
+        exec($command, $output, $exitCode);
+
+        $this->assertSame(0, $exitCode, implode("\n", $output));
+
+        $decoded = json_decode(implode("\n", $output), true);
+        $this->assertIsArray($decoded, implode("\n", $output));
+
+        return $decoded;
     }
 }

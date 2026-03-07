@@ -59,6 +59,15 @@ final class HtmlFormCsrfStatusTest extends TestCase
         }
     }
 
+    public function testJsonDeleteEndpointsRequireAjaxJsonRequest(): void
+    {
+        foreach (self::JSON_CSRF_ENDPOINTS as $relativePath) {
+            $source = $this->readSource($relativePath);
+
+            $this->assertStringContainsString('adminRequireAjaxJsonRequest($_SERVER);', $source, $relativePath);
+        }
+    }
+
     private function readSource(string $relativePath): string
     {
         $source = file_get_contents(__DIR__ . '/../../../' . $relativePath);

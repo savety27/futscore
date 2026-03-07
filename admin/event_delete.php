@@ -11,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+adminRequireAjaxJsonRequest($_SERVER);
+
 if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);

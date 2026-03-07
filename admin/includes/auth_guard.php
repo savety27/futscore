@@ -56,6 +56,27 @@ function adminIsAjaxRequest(array $server): bool
 }
 
 /**
+ * Require the current request to carry AJAX/JSON semantics expected by
+ * JSON-only admin endpoints.
+ *
+ * @param array $server  Typically $_SERVER
+ */
+function adminRequireAjaxJsonRequest(array $server): void
+{
+    if (adminIsAjaxRequest($server)) {
+        return;
+    }
+
+    http_response_code(400);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => 'AJAX/JSON request required',
+    ]);
+    exit;
+}
+
+/**
  * Returns a root-relative URL to login.php that works at any nesting depth.
  *
  * Strategy: __DIR__ is always .../admin/includes/, so two dirname() calls
