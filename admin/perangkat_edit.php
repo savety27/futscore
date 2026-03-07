@@ -1222,6 +1222,30 @@ if (!empty($removed_license_ids)) {
                 }
             }
 
+            function requestIdentityVerification(payload) {
+                payload.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+                return fetch('../api/verify_identity.php', {
+                        method: 'POST',
+                        body: payload,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response =>
+                        response.json().catch(() => null).then(data => {
+                            if (response.ok) {
+                                return data || {};
+                            }
+
+                            const error = new Error((data && data.message) ? data.message : 'Gagal memverifikasi identitas');
+                            error.status = response.status;
+                            throw error;
+                        })
+                    );
+            }
+
             function verifyNoKtp() {
                 if (!noKtpInput || !noKtpVerifyBtn || !noKtpFeedback || !noKtpVerified) {
                     return;
@@ -1241,12 +1265,7 @@ if (!empty($removed_license_ids)) {
                 payload.append('type', 'nik');
                 payload.append('value', value);
 
-                fetch('../api/verify_identity.php', {
-                        method: 'POST',
-                        body: payload,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    })
-                    .then(response => response.json())
+                requestIdentityVerification(payload)
                     .then(data => {
                         if (data && data.verified) {
                             noKtpVerified.value = '1';
@@ -1274,10 +1293,15 @@ if (!empty($removed_license_ids)) {
                             noKtpVerifyBtn.textContent = 'Verifikasi';
                         }
                     })
-                    .catch(() => {
+                    .catch(err => {
                         noKtpVerified.value = '0';
-                        noKtpFeedback.textContent = 'Gagal menghubungi server verifikasi';
+                        noKtpFeedback.textContent = (err && (err.status === 401 || err.status === 403))
+                            ? (err.message || 'Permintaan verifikasi ditolak.')
+                            : 'Gagal menghubungi server verifikasi';
                         noKtpFeedback.className = 'verify-feedback error';
+                        if (noKtpDetails) {
+                            noKtpDetails.style.display = 'none';
+                        }
                         noKtpVerifyBtn.classList.remove('verified');
                         noKtpVerifyBtn.disabled = false;
                         noKtpVerifyBtn.textContent = 'Verifikasi';

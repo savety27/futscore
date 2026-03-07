@@ -1599,6 +1599,30 @@ try {
         });
     }
 
+    function submitIdentityVerification(formData) {
+        formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
+
+        return fetch('../../api/verify_identity.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(response =>
+            response.json().catch(() => null).then(data => {
+                if (response.ok) {
+                    return data || {};
+                }
+
+                const error = new Error((data && data.message) ? data.message : 'Gagal memverifikasi identitas');
+                error.status = response.status;
+                error.data = data;
+                throw error;
+            })
+        );
+    }
+
     // NIK Verify via AJAX
     function verifyNIK() {
         const value = nikInput.value.trim();
@@ -1615,8 +1639,7 @@ try {
         formData.append('type', 'nik');
         formData.append('value', value);
 
-        fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(r => r.json())
+        submitIdentityVerification(formData)
             .then(data => {
                 nikFeedback.style.animation = '';
                 if (data.verified) {
@@ -1649,19 +1672,16 @@ try {
             })
             .catch(err => {
                 nikFeedback.style.animation = '';
-                if (err && err.status === 401) {
-                    nikFeedback.textContent = '⚠ Sesi telah habis. Silakan login kembali.';
-                    nikFeedback.className = 'verify-feedback error';
-                    nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-                    nikVerifyBtn.classList.remove('loading');
-                    nikVerifyBtn.disabled = false;
-                    return;
-                }
-                nikFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
+                nikVerified.value = '0';
+                nikFeedback.textContent = (err && (err.status === 401 || err.status === 403))
+                    ? '⚠ ' + (err.message || 'Permintaan verifikasi ditolak.')
+                    : '⚠ Gagal menghubungi server verifikasi';
                 nikFeedback.className = 'verify-feedback error';
+                nikInput.style.borderColor = 'var(--danger)';
                 nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-                nikVerifyBtn.classList.remove('loading');
+                nikVerifyBtn.classList.remove('loading', 'verified');
                 nikVerifyBtn.disabled = false;
+                nikDetails.style.display = 'none';
             });
     }
 
@@ -1722,8 +1742,7 @@ try {
         formData.append('type', 'nisn');
         formData.append('value', value);
 
-        fetch('../../api/verify_identity.php', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(r => r.json())
+        submitIdentityVerification(formData)
             .then(data => {
                 nisnFeedback.style.animation = '';
                 if (data.verified) {
@@ -1762,19 +1781,17 @@ try {
             })
             .catch(err => {
                 nisnFeedback.style.animation = '';
-                if (err && err.status === 401) {
-                    nisnFeedback.textContent = '⚠ Sesi telah habis. Silakan login kembali.';
-                    nisnFeedback.className = 'verify-feedback error';
-                    nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-                    nisnVerifyBtn.classList.remove('loading');
-                    nisnVerifyBtn.disabled = false;
-                    return;
-                }
-                nisnFeedback.textContent = '⚠ Gagal menghubungi server verifikasi';
+                nisnVerified.value = '0';
+                nisnFeedback.textContent = (err && (err.status === 401 || err.status === 403))
+                    ? '⚠ ' + (err.message || 'Permintaan verifikasi ditolak.')
+                    : '⚠ Gagal menghubungi server verifikasi';
                 nisnFeedback.className = 'verify-feedback error';
+                nisnInput.style.borderColor = 'var(--danger)';
                 nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-                nisnVerifyBtn.classList.remove('loading');
+                nisnVerifyBtn.classList.remove('loading', 'verified');
                 nisnVerifyBtn.disabled = false;
+                const nisnDetails = document.getElementById('nisnDetails');
+                if (nisnDetails) nisnDetails.style.display = 'none';
             });
     }
 
