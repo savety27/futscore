@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/team_staff_helpers.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -1302,26 +1303,8 @@ body {
                                 <?php endif; ?>
                             </td>
                             <td class="position-cell">
-                                <?php 
-                                $position_labels = [
-                                    'manager' => 'Manager',
-                                    'headcoach' => 'Head Coach',
-                                    'coach' => 'Coach',
-                                    'goalkeeper_coach' => 'GK Coach',
-                                    'medic' => 'Medic',
-                                    'official' => 'Official'
-                                ];
-                                $position_class = [
-                                    'manager' => 'badge-primary',
-                                    'headcoach' => 'badge-success',
-                                    'coach' => 'badge-secondary',
-                                    'goalkeeper_coach' => 'badge-warning',
-                                    'medic' => 'badge-danger',
-                                    'official' => 'badge-info'
-                                ];
-                                ?>
-                                <span class="position-badge <?php echo $position_class[$staff['position']] ?? 'badge-secondary'; ?>">
-                                    <?php echo $position_labels[$staff['position'] ?? ''] ?? ucfirst($staff['position'] ?? ''); ?>
+                                <span class="position-badge <?php echo teamStaffPositionBadgeClass($staff['position'] ?? ''); ?>">
+                                    <?php echo htmlspecialchars(teamStaffPositionLabel($staff['position'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
                                 </span>
                             </td>
                             <td class="age-cell">

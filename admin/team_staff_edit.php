@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/team_staff_helpers.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -94,8 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         $errors['name'] = "Nama staff harus diisi";
     }
     
-    if (empty($form_data['position'])) {
-        $errors['position'] = "Jabatan harus dipilih";
+    $positionError = teamStaffPositionValidationError($form_data['position']);
+    if ($positionError !== null) {
+        $errors['position'] = $positionError;
     }
     
     if (!empty($form_data['email']) && !filter_var($form_data['email'], FILTER_VALIDATE_EMAIL)) {
@@ -1133,12 +1135,11 @@ body {
                             </label>
                             <select id="position" name="position" class="form-select <?php echo isset($errors['position']) ? 'is-invalid' : ''; ?>" required>
                                 <option value="">Pilih Jabatan</option>
-                                <option value="manager" <?php echo $staff_data['position'] == 'manager' ? 'selected' : ''; ?>>Manager</option>
-                                <option value="headcoach" <?php echo $staff_data['position'] == 'headcoach' ? 'selected' : ''; ?>>Head Coach</option>
-                                <option value="coach" <?php echo $staff_data['position'] == 'coach' ? 'selected' : ''; ?>>Coach</option>
-                                <option value="goalkeeper_coach" <?php echo $staff_data['position'] == 'goalkeeper_coach' ? 'selected' : ''; ?>>Goalkeeper Coach</option>
-                                <option value="medic" <?php echo $staff_data['position'] == 'medic' ? 'selected' : ''; ?>>Medic</option>
-                                <option value="official" <?php echo $staff_data['position'] == 'official' ? 'selected' : ''; ?>>Official</option>
+                                <?php foreach (teamStaffPositionOptions() as $positionValue => $positionLabel): ?>
+                                    <option value="<?php echo htmlspecialchars($positionValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($staff_data['position'] ?? '') === $positionValue ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($positionLabel, ENT_QUOTES, 'UTF-8'); ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                             <?php if (isset($errors['position'])): ?>
                                 <span class="error"><?php echo $errors['position']; ?></span>
