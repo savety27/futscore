@@ -44,6 +44,7 @@ If you are updating an existing installation:
 
 ### Feature: Staff & Match Officials (Perangkat)
 - `migration_create_perangkat_tables.sql`: Creates tables for match officials (referees, etc.) and their licenses.
+- `migration_add_gender_to_perangkat.sql`: Adds `gender` column to `perangkat` for storing KTP-derived gender.
 - `migration_create_match_staff_assignments.sql`: Enables assigning staff/officials to specific matches.
 - `migration_add_half_to_match_staff_assignments.sql`: Support for per-half staff assignment.
 

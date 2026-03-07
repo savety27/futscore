@@ -32,6 +32,7 @@ $form_data = [
     'no_ktp' => $staff['no_ktp'] ?? '',
     'birth_place' => $staff['birth_place'] ?? '',
     'date_of_birth' => $staff['age'] ?? '',
+    'gender' => $staff['gender'] ?? '',
     'email' => $staff['email'] ?? '',
     'phone' => $staff['phone'] ?? '',
     'address' => $staff['address'] ?? '',
@@ -55,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         'no_ktp' => trim($_POST['no_ktp'] ?? ''),
         'birth_place' => trim($_POST['birth_place'] ?? ''),
         'date_of_birth' => trim($_POST['date_of_birth'] ?? ''),
+        'gender' => trim($_POST['gender'] ?? ''),
         'email' => trim($_POST['email'] ?? ''),
         'phone' => trim($_POST['phone'] ?? ''),
         'address' => trim($_POST['address'] ?? ''),
@@ -83,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         if ($stmt->fetch(PDO::FETCH_ASSOC)) {
             $errors['no_ktp'] = "No. KTP sudah terdaftar";
         }
+    }
+
+    if ($form_data['gender'] !== '' && !in_array($form_data['gender'], ['Laki-laki', 'Perempuan'], true)) {
+        $errors['gender'] = "Jenis kelamin tidak valid";
     }
 
     if ($form_data['email'] !== '' && !filter_var($form_data['email'], FILTER_VALIDATE_EMAIL)) {
@@ -230,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         try {
             $conn->beginTransaction();
             $stmt = $conn->prepare("UPDATE perangkat SET
-                                    name=?, no_ktp=?, birth_place=?, age=?, email=?, phone=?,
+                                    name=?, no_ktp=?, birth_place=?, age=?, gender=?, email=?, phone=?,
                                     address=?, city=?, province=?, postal_code=?, country=?, photo=?, ktp_photo=?, is_active=?, updated_at=NOW()
                                     WHERE id=?");
             $stmt->execute([
@@ -238,6 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
                 $form_data['no_ktp'],
                 $form_data['birth_place'] !== '' ? $form_data['birth_place'] : null,
                 $form_data['date_of_birth'],
+                $form_data['gender'] !== '' ? $form_data['gender'] : null,
                 $form_data['email'] !== '' ? $form_data['email'] : null,
                 $form_data['phone'] !== '' ? $form_data['phone'] : null,
                 $form_data['address'] !== '' ? $form_data['address'] : null,
@@ -331,6 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         'no_ktp' => $form_data['no_ktp'],
         'birth_place' => $form_data['birth_place'],
         'age' => $form_data['date_of_birth'],
+        'gender' => $form_data['gender'],
         'email' => $form_data['email'],
         'phone' => $form_data['phone'],
         'address' => $form_data['address'],
@@ -941,6 +949,15 @@ if (!empty($removed_license_ids)) {
                                 <?php if (isset($errors['date_of_birth'])): ?><span class="error"><?php echo htmlspecialchars($errors['date_of_birth']); ?></span><?php endif; ?>
                             </div>
                             <div class="form-group">
+                                <label class="form-label" for="gender">Jenis Kelamin</label>
+                                <select id="gender" name="gender" class="form-input">
+                                    <option value="">Pilih jenis kelamin</option>
+                                    <option value="Laki-laki" <?php echo ($form_data['gender'] ?? '') === 'Laki-laki' ? 'selected' : ''; ?>>Laki-laki</option>
+                                    <option value="Perempuan" <?php echo ($form_data['gender'] ?? '') === 'Perempuan' ? 'selected' : ''; ?>>Perempuan</option>
+                                </select>
+                                <?php if (isset($errors['gender'])): ?><span class="error"><?php echo htmlspecialchars($errors['gender']); ?></span><?php endif; ?>
+                            </div>
+                            <div class="form-group">
                                 <label class="form-label">Foto Profil</label>
                                 <div class="file-upload-container">
                                     <input type="file" id="photo" name="photo" class="file-upload-input" accept="image/jpeg,image/png,image/gif">
@@ -1154,10 +1171,57 @@ if (!empty($removed_license_ids)) {
             const noKtpVerifyBtn = document.getElementById('noKtpVerifyBtn');
             const noKtpVerified = document.getElementById('noKtpVerified');
             const noKtpDetails = document.getElementById('noKtpDetails');
+            const provinceInput = document.getElementById('province');
+            const dateOfBirthInput = document.getElementById('date_of_birth');
+            const genderInput = document.getElementById('gender');
             const isNoKtpPreVerified = <?php echo ($form_data['no_ktp_verified'] ?? '0') === '1' ? 'true' : 'false'; ?>;
             const originalNoKtp = (document.getElementById('original_no_ktp') || {
                 value: ''
             }).value;
+
+            function convertNikDateToInputValue(nikDateValue) {
+                if (!nikDateValue || typeof nikDateValue !== 'string') {
+                    return '';
+                }
+
+                const dateParts = nikDateValue.split('-');
+                if (dateParts.length !== 3) {
+                    return '';
+                }
+
+                const day = dateParts[0];
+                const month = dateParts[1];
+                const year = dateParts[2];
+
+                if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) {
+                    return '';
+                }
+
+                return `${year}-${month}-${day}`;
+            }
+
+            function autofillFieldsFromNikDetails(details) {
+                if (!details || typeof details !== 'object') {
+                    return;
+                }
+
+                if (provinceInput && details.provinsi) {
+                    provinceInput.value = details.provinsi;
+                }
+
+                if (dateOfBirthInput && details.tanggal_lahir) {
+                    const formattedDate = convertNikDateToInputValue(details.tanggal_lahir);
+                    if (formattedDate) {
+                        dateOfBirthInput.value = formattedDate;
+                    }
+                }
+
+                if (genderInput && details.jenis_kelamin) {
+                    if (details.jenis_kelamin === 'Laki-laki' || details.jenis_kelamin === 'Perempuan') {
+                        genderInput.value = details.jenis_kelamin;
+                    }
+                }
+            }
             if (noKtpInput) {
                 noKtpInput.addEventListener('input', function(e) {
                     e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 16);
@@ -1272,6 +1336,7 @@ if (!empty($removed_license_ids)) {
                             noKtpFeedback.className = 'verify-feedback success';
                             noKtpVerifyBtn.classList.add('verified');
                             noKtpVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                            autofillFieldsFromNikDetails(data.details || {});
 
                             if (noKtpDetails && data.details) {
                                 const details = [];

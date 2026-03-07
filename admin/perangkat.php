@@ -96,9 +96,9 @@ $params = [];
 // Handle search condition (same pattern as team.php)
 if ($search !== '') {
     $search_term = "%{$search}%";
-    $base_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
-    $count_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
-    $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
+    $base_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.gender LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
+    $count_query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.gender LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
+    $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
 }
 
 if ($filter_active !== '') {
@@ -790,7 +790,7 @@ try {
                                 type="text"
                                 name="search"
                                 class="perangkat-search-input"
-                                placeholder="Cari perangkat (nama, no.KTP, email, telepon, kota, provinsi)..."
+                                placeholder="Cari perangkat (nama, no.KTP, jenis kelamin, email, telepon, kota, provinsi)..."
                                 value="<?php echo htmlspecialchars($search); ?>">
                         </div>
                         <select name="active" class="perangkat-filter-select">
@@ -821,6 +821,7 @@ try {
                             <th>Nama</th>
                             <th>No. KTP</th>
                             <th>Usia</th>
+                            <th>Jenis Kelamin</th>
                             <th>Lisensi</th>
                             <th>Status</th>
                             <th>Tanggal Dibuat</th>
@@ -856,6 +857,7 @@ try {
                                         ?>
                                     </td>
                                     <td><?php echo htmlspecialchars(formatUsiaFromDateOfBirth($row['age'] ?? '')); ?></td>
+                                    <td><?php echo !empty($row['gender']) ? htmlspecialchars((string) $row['gender']) : '-'; ?></td>
                                     <td>
                                         <?php if ((int) $row['license_count'] > 0): ?>
                                             <span class="certificate-count" onclick="viewLicenses(<?php echo (int) $row['id']; ?>, '<?php echo htmlspecialchars(addslashes($row['name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>')">
@@ -890,7 +892,7 @@ try {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" style="text-align:center;padding:40px;">
+                                <td colspan="10" style="text-align:center;padding:40px;">
                                     <div class="empty-state">
                                         <i class="fas fa-user-tie"></i>
                                         <h3>Belum Ada Data Perangkat</h3>

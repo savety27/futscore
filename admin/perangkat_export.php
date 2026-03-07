@@ -49,8 +49,8 @@ $params = [];
 
 if ($search !== '') {
     $search_term = "%{$search}%";
-    $query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
-    $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
+    $query .= " AND (p.name LIKE ? OR p.no_ktp LIKE ? OR p.gender LIKE ? OR p.email LIKE ? OR p.phone LIKE ? OR p.city LIKE ? OR p.province LIKE ?)";
+    $params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
 }
 
 if ($filter_active !== '') {
@@ -104,6 +104,7 @@ echo '<th>Nama</th>';
 echo '<th>No. KTP</th>';
 echo '<th>Tempat Lahir</th>';
 echo '<th>Tanggal Lahir</th>';
+echo '<th>Jenis Kelamin</th>';
 echo '<th>Usia</th>';
 echo '<th>Email</th>';
 echo '<th>Telepon</th>';
@@ -133,6 +134,7 @@ foreach ($perangkat_list as $row) {
     echo '<td>' . htmlspecialchars((string) ($row['no_ktp'] ?? '')) . '</td>';
     echo '<td>' . (!empty($row['birth_place']) ? htmlspecialchars((string) $row['birth_place']) : '-') . '</td>';
     echo '<td>' . $birthDateFormatted . '</td>';
+    echo '<td>' . (!empty($row['gender']) ? htmlspecialchars((string) $row['gender']) : '-') . '</td>';
     echo '<td>' . htmlspecialchars(formatPerangkatAge($row['age'] ?? '')) . '</td>';
     echo '<td>' . (!empty($row['email']) ? htmlspecialchars((string) $row['email']) : '-') . '</td>';
     echo '<td>' . (!empty($row['phone']) ? htmlspecialchars((string) $row['phone']) : '-') . '</td>';

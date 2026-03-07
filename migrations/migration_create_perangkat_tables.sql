@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS perangkat (
     no_ktp VARCHAR(50) NOT NULL,
     birth_place VARCHAR(100) NULL,
     age DATE NOT NULL,
+    gender VARCHAR(20) NULL,
     email VARCHAR(150) NULL,
     phone VARCHAR(30) NULL,
     address TEXT NULL,

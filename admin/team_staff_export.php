@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/team_staff_helpers.php';
 
 // Load database config
 $config_path = __DIR__ . '/config/database.php';
@@ -68,16 +69,6 @@ try {
             $staff['age'] = '-';
         }
         
-        // Format position
-        $position_labels = [
-            'manager' => 'Manager',
-            'headcoach' => 'Head Coach',
-            'coach' => 'Coach',
-            'goalkeeper_coach' => 'GK Coach',
-            'medic' => 'Medic',
-            'official' => 'Official'
-        ];
-        $staff['position_formatted'] = $position_labels[$staff['position'] ?? ''] ?? ucfirst($staff['position'] ?? '');
     }
     unset($staff); // Break the reference with the last element
     
@@ -143,21 +134,21 @@ $no = 1;
 foreach ($staff_list as $staff) {
     echo '<tr>';
     echo '<td>' . $no++ . '</td>';
-    echo '<td>' . htmlspecialchars($staff['name'] ?? '') . '</td>';
-    echo '<td>' . $staff['position_formatted'] . '</td>';
-    echo '<td>' . htmlspecialchars($staff['team_name'] ?? '') . '</td>';
-    echo '<td>' . (!empty($staff['email']) ? htmlspecialchars($staff['email']) : '-') . '</td>';
-    echo '<td>' . (!empty($staff['phone']) ? htmlspecialchars($staff['phone']) : '-') . '</td>';
-    echo '<td>' . (!empty($staff['birth_place']) ? htmlspecialchars($staff['birth_place']) : '-') . '</td>';
+    echo teamStaffExportTextCell($staff['name'] ?? '', '');
+    echo teamStaffExportTextCell(teamStaffPositionLabel($staff['position'] ?? ''));
+    echo teamStaffExportTextCell($staff['team_name'] ?? '', '');
+    echo teamStaffExportTextCell($staff['email'] ?? '');
+    echo teamStaffExportTextCell($staff['phone'] ?? '');
+    echo teamStaffExportTextCell($staff['birth_place'] ?? '');
     echo '<td>' . (!empty($staff['birth_date']) ? date('d/m/Y', strtotime($staff['birth_date'])) : '-') . '</td>';
     echo '<td>' . $staff['age'] . '</td>';
-    echo '<td>' . (!empty($staff['address']) ? htmlspecialchars($staff['address']) : '-') . '</td>';
-    echo '<td>' . (!empty($staff['city']) ? htmlspecialchars($staff['city']) : '-') . '</td>';
-    echo '<td>' . (!empty($staff['province']) ? htmlspecialchars($staff['province']) : '-') . '</td>';
-    echo '<td>' . (!empty($staff['postal_code']) ? htmlspecialchars($staff['postal_code']) : '-') . '</td>';
-    echo '<td>' . (!empty($staff['country']) ? htmlspecialchars($staff['country']) : 'Indonesia') . '</td>';
+    echo teamStaffExportTextCell($staff['address'] ?? '');
+    echo teamStaffExportTextCell($staff['city'] ?? '');
+    echo teamStaffExportTextCell($staff['province'] ?? '');
+    echo teamStaffExportTextCell($staff['postal_code'] ?? '');
+    echo teamStaffExportTextCell(!empty($staff['country']) ? $staff['country'] : 'Indonesia');
     echo '<td>' . $staff['certificate_count'] . '</td>';
-    echo '<td>' . ($staff['is_active'] ? 'Aktif' : 'Non-Aktif') . '</td>';
+    echo teamStaffExportTextCell($staff['is_active'] ? 'Aktif' : 'Non-Aktif');
     echo '<td>' . date('d/m/Y H:i', strtotime($staff['created_at'])) . '</td>';
     echo '</tr>';
 }
