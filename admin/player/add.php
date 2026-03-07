@@ -1563,6 +1563,53 @@ try {
     const nikVerifyBtn = document.getElementById('nikVerifyBtn');
     const nikVerified = document.getElementById('nikVerified');
     const nikDetails = document.getElementById('nikDetails');
+    const provinceInput = document.querySelector('input[name="province"]');
+    const dateOfBirthInput = document.querySelector('input[name="date_of_birth"]');
+    const genderRadios = document.querySelectorAll('input[name="gender"]');
+
+    function convertNikDateToInputValue(nikDateValue) {
+        if (!nikDateValue || typeof nikDateValue !== 'string') {
+            return '';
+        }
+
+        const dateParts = nikDateValue.split('-');
+        if (dateParts.length !== 3) {
+            return '';
+        }
+
+        const day = dateParts[0];
+        const month = dateParts[1];
+        const year = dateParts[2];
+
+        if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) {
+            return '';
+        }
+
+        return `${year}-${month}-${day}`;
+    }
+
+    function autofillFieldsFromNikDetails(details) {
+        if (!details || typeof details !== 'object') {
+            return;
+        }
+
+        if (provinceInput && details.provinsi) {
+            provinceInput.value = details.provinsi;
+        }
+
+        if (dateOfBirthInput && details.tanggal_lahir) {
+            const formattedDate = convertNikDateToInputValue(details.tanggal_lahir);
+            if (formattedDate) {
+                dateOfBirthInput.value = formattedDate;
+            }
+        }
+
+        if (genderRadios && details.jenis_kelamin) {
+            genderRadios.forEach((radio) => {
+                radio.checked = radio.value === details.jenis_kelamin;
+            });
+        }
+    }
 
     if (nikInput) {
         nikInput.addEventListener('input', function(e) {
@@ -1651,6 +1698,7 @@ try {
                     nikVerifyBtn.classList.add('verified');
 
                     if (data.details) {
+                        autofillFieldsFromNikDetails(data.details);
                         let html = '<strong>📋 Data NIK:</strong><br>';
                         if (data.details.provinsi) html += `<div class="detail-row"><span class="detail-label">Provinsi</span><span class="detail-value">${data.details.provinsi}</span></div>`;
                         if (data.details.tanggal_lahir) html += `<div class="detail-row"><span class="detail-label">Tgl Lahir</span><span class="detail-value">${data.details.tanggal_lahir}</span></div>`;
