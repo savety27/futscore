@@ -54,3 +54,21 @@ SET @create_unique_player_team_name_sql = IF(
 PREPARE create_unique_player_team_name_stmt FROM @create_unique_player_team_name_sql;
 EXECUTE create_unique_player_team_name_stmt;
 DEALLOCATE PREPARE create_unique_player_team_name_stmt;
+
+SET @has_perangkat_gender_column = (
+    SELECT COUNT(*)
+    FROM information_schema.columns
+    WHERE table_schema = @schema_name
+      AND table_name = 'perangkat'
+      AND column_name = 'gender'
+);
+
+SET @add_perangkat_gender_sql = IF(
+    @has_perangkat_gender_column = 0,
+    'ALTER TABLE perangkat ADD COLUMN gender VARCHAR(20) NULL AFTER age',
+    'DO 1'
+);
+
+PREPARE add_perangkat_gender_stmt FROM @add_perangkat_gender_sql;
+EXECUTE add_perangkat_gender_stmt;
+DEALLOCATE PREPARE add_perangkat_gender_stmt;

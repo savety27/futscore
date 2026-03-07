@@ -590,6 +590,7 @@ $full_address = !empty($address_parts) ? implode(', ', $address_parts) : '-';
                     <div class="profile-meta" style="flex:1;min-width:260px;">
                         <h2><?php echo htmlspecialchars((string) $perangkat['name']); ?></h2>
                         <p><i class="fas fa-id-card"></i> No. KTP: <strong><?php echo htmlspecialchars((string) ($perangkat['no_ktp'] ?? '-')); ?></strong></p>
+                        <p><i class="fas fa-venus-mars"></i> Jenis Kelamin: <?php echo !empty($perangkat['gender']) ? htmlspecialchars((string) $perangkat['gender']) : '-'; ?></p>
                         <p><i class="fas fa-envelope"></i> Email: <?php echo !empty($perangkat['email']) ? htmlspecialchars((string) $perangkat['email']) : '-'; ?></p>
                         <p><i class="fas fa-phone"></i> Telepon: <?php echo !empty($perangkat['phone']) ? htmlspecialchars((string) $perangkat['phone']) : '-'; ?></p>
                     </div>
@@ -621,6 +622,10 @@ $full_address = !empty($address_parts) ? implode(', ', $address_parts) : '-';
                             }
                             ?>
                         </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Jenis Kelamin</span>
+                        <div class="info-value"><?php echo !empty($perangkat['gender']) ? htmlspecialchars((string) $perangkat['gender']) : '-'; ?></div>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Usia</span>
