@@ -7,6 +7,7 @@ if (file_exists($config_path)) {
 } else {
     die("Database configuration file not found at: $config_path");
 }
+require_once __DIR__ . '/perangkat_save_service.php';
 
 $temp_upload_session_key = 'perangkat_create_temp_uploads';
 $temp_uploads = $_SESSION[$temp_upload_session_key] ?? [
@@ -69,12 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         $errors['no_ktp'] = "No. KTP harus 16 digit angka";
     } elseif ($form_data['no_ktp_verified'] !== '1') {
         $errors['no_ktp'] = "No. KTP harus diverifikasi terlebih dahulu";
-    } else {
-        $stmt = $conn->prepare("SELECT id FROM perangkat WHERE no_ktp = ? LIMIT 1");
-        $stmt->execute([$form_data['no_ktp']]);
-        if ($stmt->fetch(PDO::FETCH_ASSOC)) {
-            $errors['no_ktp'] = "No. KTP sudah terdaftar";
-        }
     }
 
     if ($form_data['gender'] !== '' && !in_array($form_data['gender'], ['Laki-laki', 'Perempuan'], true)) {
@@ -226,58 +221,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
 
     if (empty($errors)) {
         try {
-            $conn->beginTransaction();
-
-            $stmt = $conn->prepare("INSERT INTO perangkat (
-                                        name, no_ktp, birth_place, age, gender, email, phone,
-                                        address, city, province, postal_code, country, photo, ktp_photo, is_active, created_at, updated_at
-                                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-            $stmt->execute([
-                $form_data['name'],
-                $form_data['no_ktp'],
-                $form_data['birth_place'] !== '' ? $form_data['birth_place'] : null,
-                $form_data['date_of_birth'],
-                $form_data['gender'] !== '' ? $form_data['gender'] : null,
-                $form_data['email'] !== '' ? $form_data['email'] : null,
-                $form_data['phone'] !== '' ? $form_data['phone'] : null,
-                $form_data['address'] !== '' ? $form_data['address'] : null,
-                $form_data['city'] !== '' ? $form_data['city'] : null,
-                $form_data['province'] !== '' ? $form_data['province'] : null,
-                $form_data['postal_code'] !== '' ? $form_data['postal_code'] : null,
-                $form_data['country'] !== '' ? $form_data['country'] : null,
-                $photo_path,
-                $ktp_photo_path,
-                $form_data['is_active']
-            ]);
-
-            $perangkat_id = $conn->lastInsertId();
-            if (!empty($licenses)) {
-                $stmt = $conn->prepare("INSERT INTO perangkat_licenses (perangkat_id, license_name, license_file, issuing_authority, issue_date, created_at)
-                                        VALUES (?, ?, ?, ?, ?, NOW())");
-                foreach ($licenses as $license) {
-                    $stmt->execute([
-                        $perangkat_id,
-                        $license['name'] !== '' ? $license['name'] : 'Lisensi',
-                        $license['file'],
-                        $license['authority'],
-                        $license['date'] !== '' ? $license['date'] : null
-                    ]);
-                }
-            }
-
-            $conn->commit();
+            perangkatCreateSave($conn, $form_data, $photo_path, (string)$ktp_photo_path, $licenses);
             unset($_SESSION[$temp_upload_session_key]);
             $_SESSION['success_message'] = "Perangkat berhasil ditambahkan!";
             header("Location: perangkat.php");
             exit;
-        } catch (PDOException $e) {
-            $conn->rollBack();
+        } catch (Exception $e) {
             $_SESSION[$temp_upload_session_key] = $temp_uploads;
-            error_log('perangkat_create DB error: ' . $e->getMessage());
-            if ($e->getCode() === '23000') {
-                $errors['no_ktp'] = "No. KTP sudah terdaftar";
+            perangkatDeleteUploadedLicenseFiles($licenses, __DIR__ . '/../uploads/perangkat/licenses/');
+
+            $previous = $e->getPrevious();
+            error_log('perangkat_create DB error: ' . ($previous instanceof PDOException ? $previous->getMessage() : $e->getMessage()));
+
+            if (str_starts_with($e->getMessage(), 'No. KTP')) {
+                $errors['no_ktp'] = $e->getMessage();
             } else {
-                $errors['database'] = "Data gagal disimpan. Silakan periksa input lalu coba lagi.";
+                $errors['database'] = $e->getMessage();
             }
         }
     } else {

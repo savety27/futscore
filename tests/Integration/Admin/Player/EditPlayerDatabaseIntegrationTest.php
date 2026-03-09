@@ -121,6 +121,35 @@ final class EditPlayerDatabaseIntegrationTest extends TestCase
         }
     }
 
+    public function testNikAlreadyRegisteredAsPerangkatMapsToFriendlyUpdateError(): void
+    {
+        $playerId = $this->insertPlayer('ITEST NIK Edit', $this->randomNik(), 1700000000);
+        $nik = $this->randomNik();
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO perangkat (name, no_ktp, age, ktp_photo, created_at, updated_at)
+             VALUES (:name, :no_ktp, :age, :ktp_photo, NOW(), NOW())'
+        );
+        $stmt->execute([
+            ':name' => 'ITEST Perangkat Edit',
+            ':no_ktp' => $nik,
+            ':age' => '1990-01-01',
+            ':ktp_photo' => 'ktp-perangkat-edit.jpg',
+        ]);
+
+        $editInput = $this->validEditInput('ITEST NIK Edit', $nik);
+        $params = playerEditBuildUpdateParams($editInput, [], $playerId);
+
+        try {
+            $stmt = $this->pdo->prepare(playerEditUpdateSql());
+            $stmt->execute($params);
+            $this->fail('Expected player update with perangkat NIK to fail.');
+        } catch (PDOException $e) {
+            $mapped = playerEditMapUpdateError($e);
+            $this->assertSame('Error: NIK sudah terdaftar sebagai perangkat.', $mapped);
+        }
+    }
+
     private function insertPlayer(string $name, string $nik, int $timestamp, string $teamId = '1'): int
     {
         $input = $this->validAddInput($name, $nik, $teamId);

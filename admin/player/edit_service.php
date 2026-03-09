@@ -18,17 +18,6 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
             throw new Exception($validationError);
         }
 
-        if (($input['team_id'] ?? null) === null || $input['team_id'] === '') {
-            $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id IS NULL AND TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
-            $stmtCheckName->execute([$input['name'], $playerId]);
-        } else {
-            $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id = ? AND TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
-            $stmtCheckName->execute([$input['team_id'], $input['name'], $playerId]);
-        }
-        if ($stmtCheckName->fetchColumn()) {
-            throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
-        }
-
         $kkHasExistingFile = !empty($existingPlayer['kk_image']);
         $kkNewFileUploaded = isset($files['kk_image']) && $files['kk_image']['error'] === UPLOAD_ERR_OK;
         $kkDeleteChecked = isset($post['delete_kk_image']) && $post['delete_kk_image'] == '1';
@@ -47,6 +36,7 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
             'birth_cert_image' => playerEditHandleDocumentUpload($post, $files, 'birth_cert_image', 'akte', $existingPlayer['birth_cert_image'] ?? null, $uploadDir),
             'diploma_image' => playerEditHandleDocumentUpload($post, $files, 'diploma_image', 'ijazah', $existingPlayer['diploma_image'] ?? null, $uploadDir),
         ];
+        $filesToDeleteAfterCommit = playerEditCollectObsoleteFiles($existingPlayer, $resolvedFiles);
 
         $stmt = $conn->prepare(playerEditUpdateSql());
         $stmt->execute(playerEditBuildUpdateParams($input, $resolvedFiles, $playerId));
@@ -54,19 +44,57 @@ function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $fi
         if ($startedTransaction) {
             $conn->commit();
         }
+
+        playerFileDeleteManyIfExists($uploadDir, $filesToDeleteAfterCommit);
     } catch (PDOException $e) {
         if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
+        playerFileDeleteManyIfExists($uploadDir ?? (__DIR__ . '/../../images/players/'), playerEditCollectNewUploads($existingPlayer, $resolvedFiles ?? []));
         throw new Exception(playerEditMapUpdateError($e), 0, $e);
     } catch (Exception $e) {
         if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
+        playerFileDeleteManyIfExists($uploadDir ?? (__DIR__ . '/../../images/players/'), playerEditCollectNewUploads($existingPlayer, $resolvedFiles ?? []));
         throw $e;
     }
+}
+
+function playerEditCollectObsoleteFiles(array $existingPlayer, array $resolvedFiles): array
+{
+    $fields = ['photo', 'ktp_image', 'kk_image', 'birth_cert_image', 'diploma_image'];
+    $obsoleteFiles = [];
+
+    foreach ($fields as $field) {
+        $existingValue = trim((string)($existingPlayer[$field] ?? ''));
+        $resolvedValue = trim((string)($resolvedFiles[$field] ?? ''));
+
+        if ($existingValue !== '' && $resolvedValue !== $existingValue) {
+            $obsoleteFiles[] = $existingValue;
+        }
+    }
+
+    return array_values(array_unique($obsoleteFiles));
+}
+
+function playerEditCollectNewUploads(array $existingPlayer, array $resolvedFiles): array
+{
+    $fields = ['photo', 'ktp_image', 'kk_image', 'birth_cert_image', 'diploma_image'];
+    $newUploads = [];
+
+    foreach ($fields as $field) {
+        $existingValue = trim((string)($existingPlayer[$field] ?? ''));
+        $resolvedValue = trim((string)($resolvedFiles[$field] ?? ''));
+
+        if ($resolvedValue !== '' && $resolvedValue !== $existingValue) {
+            $newUploads[] = $resolvedValue;
+        }
+    }
+
+    return array_values(array_unique($newUploads));
 }
 
 function playerEditEnsureUploadDirectory(string $uploadDir): void
@@ -77,17 +105,10 @@ function playerEditEnsureUploadDirectory(string $uploadDir): void
 function playerEditHandlePhotoUpload(array $post, array $files, ?string $existingPhoto, string $uploadDir): ?string
 {
     if (isset($files['photo']) && $files['photo']['error'] === UPLOAD_ERR_OK) {
-        playerFileDeleteIfExists($uploadDir, $existingPhoto);
-        $newFilename = playerFileMoveUploaded($files['photo'], $uploadDir, 'player_');
-        if ($newFilename !== null) {
-            return $newFilename;
-        }
-
-        return $existingPhoto;
+        return playerFileValidateAndMoveUploadedOrFail($files['photo'], $uploadDir, 'player_');
     }
 
     if (isset($post['delete_photo']) && $post['delete_photo'] === '1') {
-        playerFileDeleteIfExists($uploadDir, $existingPhoto);
         return null;
     }
 
@@ -103,16 +124,10 @@ function playerEditHandleDocumentUpload(
     string $uploadDir
 ): ?string {
     if (isset($files[$fieldName]) && $files[$fieldName]['error'] === UPLOAD_ERR_OK) {
-        playerFileDeleteIfExists($uploadDir, $existingFile);
-        $newFilename = playerFileMoveUploaded($files[$fieldName], $uploadDir, $type . '_');
-        if ($newFilename !== null) {
-            return $newFilename;
-        }
+        return playerFileValidateAndMoveUploadedOrFail($files[$fieldName], $uploadDir, $type . '_');
     }
 
     if (isset($post['delete_' . $fieldName])) {
-        playerFileDeleteIfExists($uploadDir, $existingFile);
-
         return null;
     }
 

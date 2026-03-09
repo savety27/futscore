@@ -58,4 +58,21 @@ final class AddServiceTest extends TestCase
             'tmp_name' => 'php-temp-file',
         ], __DIR__ . '/fixtures/', 'player_');
     }
+
+    public function testCleanupUploadedFilesDeletesResolvedFiles(): void
+    {
+        $uploadDir = sys_get_temp_dir() . '/player-add-cleanup-' . uniqid('', true) . '/';
+        mkdir($uploadDir, 0777, true);
+        file_put_contents($uploadDir . 'photo.jpg', 'photo');
+        file_put_contents($uploadDir . 'kk.jpg', 'kk');
+
+        playerAddCleanupUploadedFiles([
+            'photo' => 'photo.jpg',
+            'kk_image' => 'kk.jpg',
+        ], $uploadDir);
+
+        $this->assertFileDoesNotExist($uploadDir . 'photo.jpg');
+        $this->assertFileDoesNotExist($uploadDir . 'kk.jpg');
+        @rmdir($uploadDir);
+    }
 }

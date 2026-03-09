@@ -24,6 +24,18 @@ function playerFileDeleteIfExists(string $uploadDir, ?string $filename): void
     }
 }
 
+function playerFileDeleteManyIfExists(string $uploadDir, array $filenames): void
+{
+    foreach (array_values(array_unique($filenames)) as $filename) {
+        $normalizedFilename = trim((string)$filename);
+        if ($normalizedFilename === '') {
+            continue;
+        }
+
+        playerFileDeleteIfExists($uploadDir, $normalizedFilename);
+    }
+}
+
 function playerFileValidateImageUpload(array $file): ?string
 {
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
@@ -41,6 +53,16 @@ function playerFileValidateImageUpload(array $file): ?string
     }
 
     return null;
+}
+
+function playerFileValidateAndMoveUploadedOrFail(array $file, string $uploadDir, string $prefix): string
+{
+    $validationError = playerFileValidateImageUpload($file);
+    if ($validationError !== null) {
+        throw new Exception($validationError);
+    }
+
+    return playerFileMoveUploadedOrFail($file, $uploadDir, $prefix);
 }
 
 function playerFileMoveUploaded(array $file, string $uploadDir, string $prefix): ?string

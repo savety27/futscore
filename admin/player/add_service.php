@@ -1,120 +1,133 @@
 <?php
 require_once __DIR__ . '/../includes/auth_guard.php';
-require_once __DIR__ . '/edit_helpers.php';
+require_once __DIR__ . '/add_helpers.php';
 require_once __DIR__ . '/file_upload_helpers.php';
 
-function playerEditUpdatePlayer(PDO $conn, int $playerId, array $post, array $files, array $existingPlayer): void
+function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $uploadResolver = null): int
 {
+    $input = playerAddCollectInput($post);
+    $validationError = playerAddValidateInput($input);
+    if ($validationError !== null) {
+        throw new Exception($validationError);
+    }
+
+    $kkError = playerAddValidateKkUpload($files);
+    if ($kkError !== null) {
+        throw new Exception($kkError);
+    }
+
+    $uploadDir = __DIR__ . '/../../images/players/';
+    if ($uploadResolver === null) {
+        $uploadResolver = 'playerAddResolveUploadedFiles';
+    }
+
     $startedTransaction = false;
+    $uploadedFiles = [];
     if (!$conn->inTransaction()) {
         $conn->beginTransaction();
         $startedTransaction = true;
     }
 
     try {
-        $input = playerEditCollectInput($post);
-        $validationError = playerEditValidateInput($input);
-        if ($validationError !== null) {
-            throw new Exception($validationError);
-        }
+        $uploadedFiles = $uploadResolver($files, $uploadDir);
+        $stmt = $conn->prepare(playerAddInsertSql());
+        $baseSlug = playerAddGenerateSlug($input['name']);
+        $maxInsertAttempts = 4;
 
-        if (($input['team_id'] ?? null) === null || $input['team_id'] === '') {
-            $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id IS NULL AND TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
-            $stmtCheckName->execute([$input['name'], $playerId]);
-        } else {
-            $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id = ? AND TRIM(name) = TRIM(?) AND id <> ? LIMIT 1');
-            $stmtCheckName->execute([$input['team_id'], $input['name'], $playerId]);
-        }
-        if ($stmtCheckName->fetchColumn()) {
-            throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
-        }
+        for ($attempt = 1; $attempt <= $maxInsertAttempts; $attempt++) {
+            $slug = $attempt === 1
+                ? $baseSlug
+                : playerAddBuildCollisionRetrySlug($baseSlug, $attempt);
 
-        $kkHasExistingFile = !empty($existingPlayer['kk_image']);
-        $kkNewFileUploaded = isset($files['kk_image']) && $files['kk_image']['error'] === UPLOAD_ERR_OK;
-        $kkDeleteChecked = isset($post['delete_kk_image']) && $post['delete_kk_image'] == '1';
-        $kkError = playerEditValidateKkImage($kkHasExistingFile, $kkNewFileUploaded, $kkDeleteChecked);
-        if ($kkError !== null) {
-            throw new Exception($kkError);
-        }
+            try {
+                $stmt->execute(playerAddBuildInsertParams($input, $uploadedFiles, $slug));
 
-        $uploadDir = __DIR__ . '/../../images/players/';
-        playerEditEnsureUploadDirectory($uploadDir);
+                $playerId = (int)$conn->lastInsertId();
+                if ($startedTransaction) {
+                    $conn->commit();
+                }
 
-        $resolvedFiles = [
-            'photo' => playerEditHandlePhotoUpload($post, $files, $existingPlayer['photo'] ?? null, $uploadDir),
-            'ktp_image' => playerEditHandleDocumentUpload($post, $files, 'ktp_image', 'ktp', $existingPlayer['ktp_image'] ?? null, $uploadDir),
-            'kk_image' => playerEditHandleDocumentUpload($post, $files, 'kk_image', 'kk', $existingPlayer['kk_image'] ?? null, $uploadDir),
-            'birth_cert_image' => playerEditHandleDocumentUpload($post, $files, 'birth_cert_image', 'akte', $existingPlayer['birth_cert_image'] ?? null, $uploadDir),
-            'diploma_image' => playerEditHandleDocumentUpload($post, $files, 'diploma_image', 'ijazah', $existingPlayer['diploma_image'] ?? null, $uploadDir),
-        ];
+                return $playerId;
+            } catch (PDOException $e) {
+                if ($attempt < $maxInsertAttempts && playerAddIsDuplicateSlugError($e)) {
+                    continue;
+                }
 
-        $stmt = $conn->prepare(playerEditUpdateSql());
-        $stmt->execute(playerEditBuildUpdateParams($input, $resolvedFiles, $playerId));
-
-        if ($startedTransaction) {
-            $conn->commit();
+                throw $e;
+            }
         }
     } catch (PDOException $e) {
         if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
-        throw new Exception(playerEditMapUpdateError($e), 0, $e);
+        playerAddCleanupUploadedFiles($uploadedFiles, $uploadDir);
+        throw new Exception(playerAddMapInsertError($e), 0, $e);
     } catch (Exception $e) {
         if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
+        playerAddCleanupUploadedFiles($uploadedFiles, $uploadDir);
         throw $e;
     }
 }
 
-function playerEditEnsureUploadDirectory(string $uploadDir): void
+function playerAddCleanupUploadedFiles(array $uploadedFiles, string $uploadDir): void
+{
+    $filenames = [];
+    foreach ($uploadedFiles as $uploadedFile) {
+        if (!is_string($uploadedFile) || $uploadedFile === '') {
+            continue;
+        }
+
+        $filenames[] = $uploadedFile;
+    }
+
+    playerFileDeleteManyIfExists($uploadDir, $filenames);
+}
+
+function playerAddValidateKkUpload(array $files): ?string
+{
+    if (!playerFileHasSuccessfulUpload($files, 'kk_file')) {
+        return 'File Kartu Keluarga (KK) wajib diupload!';
+    }
+
+    return null;
+}
+
+function playerAddResolveUploadedFiles(array $files, string $uploadDir): array
 {
     playerFileEnsureUploadDirectory($uploadDir);
+
+    return [
+        'photo' => playerAddUploadOptionalImage($files, 'photo_file', 'player_', $uploadDir),
+        'ktp_image' => playerAddUploadOptionalImage($files, 'ktp_file', 'ktp_', $uploadDir),
+        'kk_image' => playerAddUploadRequiredImage($files, 'kk_file', 'kk_', $uploadDir),
+        'birth_cert_image' => playerAddUploadOptionalImage($files, 'akte_file', 'akte_', $uploadDir),
+        'diploma_image' => playerAddUploadOptionalImage($files, 'ijazah_file', 'ijazah_', $uploadDir),
+    ];
 }
 
-function playerEditHandlePhotoUpload(array $post, array $files, ?string $existingPhoto, string $uploadDir): ?string
+function playerAddUploadOptionalImage(array $files, string $fieldName, string $prefix, string $uploadDir): string
 {
-    if (isset($files['photo']) && $files['photo']['error'] === UPLOAD_ERR_OK) {
-        playerFileDeleteIfExists($uploadDir, $existingPhoto);
-        $newFilename = playerFileMoveUploaded($files['photo'], $uploadDir, 'player_');
-        if ($newFilename !== null) {
-            return $newFilename;
-        }
-
-        return $existingPhoto;
+    if (!playerFileHasSuccessfulUpload($files, $fieldName)) {
+        return '';
     }
 
-    if (isset($post['delete_photo']) && $post['delete_photo'] === '1') {
-        playerFileDeleteIfExists($uploadDir, $existingPhoto);
-        return null;
-    }
-
-    return $existingPhoto;
+    return playerAddUploadImage($files[$fieldName], $uploadDir, $prefix);
 }
 
-function playerEditHandleDocumentUpload(
-    array $post,
-    array $files,
-    string $fieldName,
-    string $type,
-    ?string $existingFile,
-    string $uploadDir
-): ?string {
-    if (isset($files[$fieldName]) && $files[$fieldName]['error'] === UPLOAD_ERR_OK) {
-        playerFileDeleteIfExists($uploadDir, $existingFile);
-        $newFilename = playerFileMoveUploaded($files[$fieldName], $uploadDir, $type . '_');
-        if ($newFilename !== null) {
-            return $newFilename;
-        }
+function playerAddUploadRequiredImage(array $files, string $fieldName, string $prefix, string $uploadDir): string
+{
+    if (!playerFileHasSuccessfulUpload($files, $fieldName)) {
+        throw new Exception('File Kartu Keluarga (KK) wajib diupload!');
     }
 
-    if (isset($post['delete_' . $fieldName])) {
-        playerFileDeleteIfExists($uploadDir, $existingFile);
+    return playerAddUploadImage($files[$fieldName], $uploadDir, $prefix);
+}
 
-        return null;
-    }
-
-    return $existingFile;
+function playerAddUploadImage(array $file, string $uploadDir, string $prefix): string
+{
+    return playerFileValidateAndMoveUploadedOrFail($file, $uploadDir, $prefix);
 }

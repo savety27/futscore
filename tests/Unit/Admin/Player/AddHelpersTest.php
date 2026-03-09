@@ -410,9 +410,19 @@ final class AddHelpersTest extends TestCase
     {
         return [
             [
+                ['23000', 1062, "Duplicate entry for key 'uq_players_team_scope_name'"],
+                "Duplicate entry for key 'uq_players_team_scope_name'",
+                'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.',
+            ],
+            [
                 ['23000', 1062, "Duplicate entry for key 'uq_players_team_name'"],
                 "Duplicate entry for key 'uq_players_team_name'",
                 'Nama pemain sudah terdaftar. Gunakan nama yang berbeda.',
+            ],
+            [
+                ['23000', 1062, "Duplicate entry for key 'uq_nik_registry_nik'"],
+                "Duplicate entry for key 'uq_nik_registry_nik'",
+                'NIK sudah terdaftar sebagai perangkat.',
             ],
             [
                 ['23000', 1062, "Duplicate entry for key 'players_nik_unique'"],

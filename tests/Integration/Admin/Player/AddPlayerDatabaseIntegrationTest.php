@@ -124,6 +124,32 @@ final class AddPlayerDatabaseIntegrationTest extends TestCase
         );
     }
 
+    public function testNikAlreadyRegisteredAsPerangkatIsRejected(): void
+    {
+        $nik = $this->randomNik();
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO perangkat (name, no_ktp, age, ktp_photo, created_at, updated_at)
+             VALUES (:name, :no_ktp, :age, :ktp_photo, NOW(), NOW())'
+        );
+        $stmt->execute([
+            ':name' => 'ITEST Perangkat Satu',
+            ':no_ktp' => $nik,
+            ':age' => '1990-01-01',
+            ':ktp_photo' => 'ktp-perangkat.jpg',
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('NIK sudah terdaftar sebagai perangkat.');
+
+        playerAddCreatePlayer(
+            $this->pdo,
+            $this->validPostInput('ITEST Nama Tabrakan Perangkat', $nik),
+            ['kk_file' => ['error' => UPLOAD_ERR_OK]],
+            $this->fakeUploadResolver('photo-3.jpg', 'ktp-3.jpg', 'kk-3.jpg', 'akte-3.jpg', 'ijazah-3.jpg')
+        );
+    }
+
     private function validPostInput(string $name, string $nik, string $teamId = '1'): array
     {
         return [

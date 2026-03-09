@@ -24,13 +24,27 @@ final class VerifyIdentityHelpersTest extends TestCase
 
     public function testVerifyNikRejectsDuplicateFromDatabase(): void
     {
-        $conn = new FakeVerifyConnection(['id' => 9, 'name' => 'Rina']);
+        $conn = new FakeVerifyConnection(['owner_type' => 'player', 'owner_id' => 9, 'owner_name' => 'Rina']);
 
         $result = verifyNIK($this->validNikMale(), $this->provinsiCodes(), $conn, 0);
 
         $this->assertFalse($result['verified']);
         $this->assertSame('duplicate', $result['details']['step']);
         $this->assertSame('Rina', $result['details']['existing_player']);
+        $this->assertSame('player', $result['details']['existing_type']);
+    }
+
+    public function testVerifyNikRejectsDuplicatePerangkatFromRegistry(): void
+    {
+        $conn = new FakeVerifyConnection(['owner_type' => 'perangkat', 'owner_id' => 12, 'owner_name' => 'Wasit Rudi']);
+
+        $result = verifyNIK($this->validNikMale(), $this->provinsiCodes(), $conn, 0);
+
+        $this->assertFalse($result['verified']);
+        $this->assertSame('duplicate', $result['details']['step']);
+        $this->assertSame('perangkat', $result['details']['existing_type']);
+        $this->assertSame('Wasit Rudi', $result['details']['existing_name']);
+        $this->assertStringContainsString('perangkat', $result['message']);
     }
 
     public function testVerifyNikUsesExcludePlayerIdInDuplicateQuery(): void
@@ -41,7 +55,7 @@ final class VerifyIdentityHelpersTest extends TestCase
         $result = verifyNIK($nik, $this->provinsiCodes(), $conn, 77);
 
         $this->assertTrue($result['verified']);
-        $this->assertStringContainsString('AND id != ?', (string)$conn->preparedSql);
+        $this->assertStringContainsString("NOT (nr.owner_type = 'player' AND nr.owner_id = ?)", (string)$conn->preparedSql);
         $this->assertSame([$nik, 77], $conn->executedParams);
     }
 
