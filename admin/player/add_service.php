@@ -17,6 +17,12 @@ function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $
         throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
     }
 
+    $stmtCheckPerangkatNik = $conn->prepare('SELECT id FROM perangkat WHERE no_ktp = ? LIMIT 1');
+    $stmtCheckPerangkatNik->execute([$input['nik']]);
+    if ($stmtCheckPerangkatNik->fetchColumn()) {
+        throw new Exception('NIK sudah terdaftar sebagai perangkat.');
+    }
+
     $kkError = playerAddValidateKkUpload($files);
     if ($kkError !== null) {
         throw new Exception($kkError);

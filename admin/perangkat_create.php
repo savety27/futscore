@@ -74,6 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         $stmt->execute([$form_data['no_ktp']]);
         if ($stmt->fetch(PDO::FETCH_ASSOC)) {
             $errors['no_ktp'] = "No. KTP sudah terdaftar";
+        } else {
+            $stmt = $conn->prepare("SELECT id FROM players WHERE nik = ? LIMIT 1");
+            $stmt->execute([$form_data['no_ktp']]);
+            if ($stmt->fetch(PDO::FETCH_ASSOC)) {
+                $errors['no_ktp'] = "No. KTP sudah terdaftar sebagai pemain.";
+            }
         }
     }
 
