@@ -479,7 +479,7 @@ body {
 
 .data-table th {
     padding: 12px 8px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     white-space: nowrap;
@@ -506,6 +506,7 @@ body {
 
 .data-table td {
     padding: 8px;
+    text-align: center;
     vertical-align: middle;
     font-size: 12px;
 }
