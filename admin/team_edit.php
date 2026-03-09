@@ -1006,7 +1006,7 @@ body {
                                 Logo Team
                             </label>
                             <?php if (!empty($team_data['logo'])): ?>
-                                <div style="margin-bottom: 15px;">
+                                <div id="currentLogoContainer" style="margin-bottom: 15px;">
                                     <img src="../images/teams/<?php echo htmlspecialchars($team_data['logo']); ?>" 
                                          alt="Current Logo" 
                                          style="max-width: 200px; max-height: 200px; border-radius: 10px; border: 2px solid #ddd;">
@@ -1135,6 +1135,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const logoPreviewImg = document.getElementById('logoPreviewImg');
     const logoFileInfo = document.getElementById('logoFileInfo');
     const deleteLogoCheckbox = form.querySelector('input[name="delete_logo"]');
+    const currentLogoContainer = document.getElementById('currentLogoContainer');
 
     function formatFileSize(bytes) {
         if (bytes < 1024) return bytes + ' Bytes';
@@ -1147,7 +1148,11 @@ document.addEventListener('DOMContentLoaded', function () {
         logoPreview.style.display = 'none';
         logoPreviewImg.src = '';
         logoFileInfo.textContent = '';
+        if (currentLogoContainer) {
+            currentLogoContainer.style.display = '';
+        }
         if (deleteLogoCheckbox) {
+            deleteLogoCheckbox.checked = false;
             deleteLogoCheckbox.disabled = false;
         }
     }
@@ -1179,6 +1184,9 @@ document.addEventListener('DOMContentLoaded', function () {
             logoPreviewImg.src = e.target.result;
             logoFileInfo.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
             logoPreview.style.display = 'block';
+            if (currentLogoContainer) {
+                currentLogoContainer.style.display = 'none';
+            }
             if (deleteLogoCheckbox) {
                 deleteLogoCheckbox.checked = true;
                 deleteLogoCheckbox.disabled = true;
@@ -1213,6 +1221,21 @@ document.addEventListener('DOMContentLoaded', function () {
             showLogoPreview(e.target.files[0]);
         });
     }
+
+    if (deleteLogoCheckbox && currentLogoContainer) {
+        deleteLogoCheckbox.addEventListener('change', function () {
+            currentLogoContainer.style.display = deleteLogoCheckbox.checked ? 'none' : '';
+        });
+    }
+
+    form.addEventListener('reset', function () {
+        window.setTimeout(function () {
+            if (logoInput) {
+                logoInput.value = '';
+            }
+            resetLogoPreview();
+        }, 0);
+    });
 
     form.addEventListener('submit', function (e) {
         const requiredFields = [

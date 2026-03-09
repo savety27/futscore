@@ -1131,6 +1131,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    form.addEventListener('reset', function () {
+        window.setTimeout(function () {
+            if (logoInput) {
+                logoInput.value = '';
+            }
+            resetLogoPreview();
+        }, 0);
+    });
+
     form.addEventListener('submit', function (e) {
         const requiredFields = [
             { id: 'name', message: 'Nama team harus diisi' },
