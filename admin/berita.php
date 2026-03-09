@@ -862,7 +862,19 @@ body {
     
     /* Statistics Responsive */
     .statistics-container {
-        flex-direction: column;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+    .statistics-container > div {
+        min-width: 0 !important;
+        padding: 12px !important;
+    }
+    .statistics-container > div > div:first-child {
+        font-size: 24px !important;
+    }
+    .statistics-container > div > div:last-child {
+        font-size: 12px !important;
     }
 }
 
@@ -1008,7 +1020,7 @@ body {
         <!-- STATISTIK -->
         <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--card-shadow); margin-bottom: 30px;">
             <h3 style="color: var(--primary); margin-bottom: 15px;">Statistik Berita</h3>
-            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <div class="statistics-container" style="display: flex; gap: 20px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
                     <div style="font-size: 32px; color: var(--primary); font-weight: 700;"><?php echo $total_data; ?></div>
                     <div style="color: var(--gray); font-size: 14px;">Total Berita</div>
