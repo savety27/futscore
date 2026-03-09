@@ -150,6 +150,7 @@ $build_page_url = function(int $page) use ($base_query_params): string {
     $params['page'] = $page;
     return '?' . http_build_query($params);
 };
+$players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' . http_build_query($base_query_params) : '');
 ?>
 
 <style>
@@ -354,9 +355,14 @@ $build_page_url = function(int $page) use ($base_query_params): string {
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Daftar Pemain</h2>
-        <a href="player_form.php" class="btn-primary">
-            <i class="fas fa-plus"></i> Tambah Pemain
-        </a>
+        <div class="section-actions">
+            <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-export">
+                <i class="fas fa-download"></i> Export Excel
+            </a>
+            <a href="player_form.php" class="btn-primary">
+                <i class="fas fa-plus"></i> Tambah Pemain
+            </a>
+        </div>
     </div>
 
 <?php if (isset($_GET['msg'])): ?>

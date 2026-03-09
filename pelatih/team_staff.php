@@ -4,8 +4,12 @@ $current_page = 'team_staff';
 require_once 'config/database.php';
 require_once 'includes/header.php';
 
-// Handle search
+// Handle filters
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_active = trim((string)($_GET['active'] ?? ''));
+if (!in_array($filter_active, ['', '1', '0'], true)) {
+    $filter_active = '';
+}
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -15,7 +19,7 @@ $team_id = $_SESSION['team_id'] ?? 0;
 
 // Base Query (Filtered by team_id)
 $base_query = "
-    SELECT ts.id, ts.name, ts.photo, ts.position, ts.birth_date, ts.is_active,
+    SELECT ts.id, ts.name, ts.photo, ts.position, ts.email, ts.phone, ts.birth_date, ts.is_active,
            t.name as team_name, t.alias as team_alias,
            (SELECT COUNT(*) FROM staff_certificates sc WHERE sc.staff_id = ts.id) as certificate_count
     FROM team_staff ts
@@ -33,6 +37,11 @@ if (!empty($search)) {
     $count_query .= " AND (ts.name LIKE ? OR ts.email LIKE ? OR ts.phone LIKE ? OR ts.position LIKE ? OR t.name LIKE ?)";
 }
 
+if ($filter_active !== '') {
+    $base_query .= " AND ts.is_active = ?";
+    $count_query .= " AND ts.is_active = ?";
+}
+
 $base_query .= " GROUP BY ts.id ORDER BY ts.created_at DESC";
 
 $total_data = 0;
@@ -42,15 +51,23 @@ $staff_list = [];
 try {
     if (!empty($search)) {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute([$team_id, $search_term, $search_term, $search_term, $search_term, $search_term]);
+        $count_params = [$team_id, $search_term, $search_term, $search_term, $search_term, $search_term];
+        if ($filter_active !== '') {
+            $count_params[] = (int)$filter_active;
+        }
+        $stmt->execute($count_params);
     } else {
         $stmt = $conn->prepare($count_query);
-        $stmt->execute([$team_id]);
+        $count_params = [$team_id];
+        if ($filter_active !== '') {
+            $count_params[] = (int)$filter_active;
+        }
+        $stmt->execute($count_params);
     }
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $total_data = $result['total'];
     
-    $total_pages = ceil($total_data / $limit);
+    $total_pages = max(1, (int)ceil($total_data / $limit));
     
     $query = $base_query . " LIMIT ? OFFSET ?";
     $stmt = $conn->prepare($query);
@@ -62,12 +79,20 @@ try {
         $stmt->bindValue(4, $search_term);
         $stmt->bindValue(5, $search_term);
         $stmt->bindValue(6, $search_term);
-        $stmt->bindValue(7, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(8, $offset, PDO::PARAM_INT);
+        $next_index = 7;
+        if ($filter_active !== '') {
+            $stmt->bindValue($next_index++, (int)$filter_active, PDO::PARAM_INT);
+        }
+        $stmt->bindValue($next_index++, $limit, PDO::PARAM_INT);
+        $stmt->bindValue($next_index, $offset, PDO::PARAM_INT);
     } else {
         $stmt->bindValue(1, $team_id, PDO::PARAM_INT);
-        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+        $next_index = 2;
+        if ($filter_active !== '') {
+            $stmt->bindValue($next_index++, (int)$filter_active, PDO::PARAM_INT);
+        }
+        $stmt->bindValue($next_index++, $limit, PDO::PARAM_INT);
+        $stmt->bindValue($next_index, $offset, PDO::PARAM_INT);
     }
     
     $stmt->execute();
@@ -89,6 +114,21 @@ try {
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
 }
+
+$filter_query_params = [];
+if ($search !== '') {
+    $filter_query_params['search'] = $search;
+}
+if ($filter_active !== '') {
+    $filter_query_params['active'] = $filter_active;
+}
+
+$team_staff_export_url = 'team_staff_export.php' . (!empty($filter_query_params) ? '?' . http_build_query($filter_query_params) : '');
+$build_page_url = function(int $page) use ($filter_query_params): string {
+    $params = $filter_query_params;
+    $params['page'] = $page;
+    return '?' . http_build_query($params);
+};
 ?>
 
 <div class="page-header">
@@ -129,16 +169,48 @@ try {
     
     <div class="section-header">
         <h2 class="section-title">Daftar Staf Team</h2>
-        <a href="staff_form.php" class="btn-add">
-            <i class="fas fa-plus"></i> Tambah Staf Baru
-        </a>
+        <div class="section-actions">
+            <a href="<?php echo htmlspecialchars($team_staff_export_url); ?>" class="btn-export">
+                <i class="fas fa-download"></i> Export Excel
+            </a>
+            <a href="staff_form.php" class="btn-add">
+                <i class="fas fa-plus"></i> Tambah Staf Baru
+            </a>
+        </div>
     </div>
 
-    <div class="search-bar" style="margin-bottom: 20px;">
-        <form action="" method="GET">
-            <input type="text" name="search" placeholder="Cari staf..." value="<?php echo htmlspecialchars($search); ?>">
-            <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
+    <div class="filter-container">
+        <div class="staff-filter-card">
+            <form action="" method="GET" class="staff-filter-form">
+                <div class="staff-search-group">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        name="search"
+                        class="staff-search-input"
+                        placeholder="Cari nama, email, telepon, jabatan, atau team..."
+                        value="<?php echo htmlspecialchars($search); ?>"
+                    >
+                </div>
+
+                <select name="active" class="staff-filter-select">
+                    <option value="">Semua Status</option>
+                    <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
+                    <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Non-Aktif</option>
+                </select>
+
+                <div class="staff-filter-actions">
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-filter"></i> Terapkan
+                    </button>
+                    <?php if ($search !== '' || $filter_active !== ''): ?>
+                        <a href="team_staff.php" class="clear-filter-btn">
+                            <i class="fas fa-times"></i> Reset
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
     </div>
 
     <?php if (empty($staff_list)): ?>
@@ -242,15 +314,15 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
+                <a href="<?php echo htmlspecialchars($build_page_url($page - 1)); ?>" class="page-link">&laquo; Seb</a>
             <?php endif; ?>
             
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <a href="<?php echo htmlspecialchars($build_page_url($i)); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
             <?php endfor; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
+                <a href="<?php echo htmlspecialchars($build_page_url($page + 1)); ?>" class="page-link">Sel &raquo;</a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -389,6 +461,110 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 16px;
 }
 
+.filter-container {
+    margin-bottom: 24px;
+}
+
+.staff-filter-card {
+    padding: 16px;
+    border: 1px solid #dbe5f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
+}
+
+.staff-filter-form {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.6fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.staff-search-group {
+    position: relative;
+}
+
+.staff-search-group i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.staff-search-input,
+.staff-filter-select {
+    width: 100%;
+    min-height: 46px;
+    border: 1px solid #d1d9e6;
+    border-radius: 12px;
+    background: #ffffff;
+    color: var(--dark);
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.staff-search-input {
+    padding: 12px 14px 12px 44px;
+}
+
+.staff-filter-select {
+    padding: 12px 14px;
+}
+
+.staff-search-input:focus,
+.staff-filter-select:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
+}
+
+.staff-filter-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-filter,
+.clear-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-filter {
+    border: none;
+    background: linear-gradient(135deg, var(--primary), #2563eb);
+    color: #ffffff;
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+}
+
+.btn-filter:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+}
+
+.clear-filter-btn {
+    border: 1px solid #d1d9e6;
+    background: #ffffff;
+    color: var(--gray);
+}
+
+.clear-filter-btn:hover {
+    border-color: #93c5fd;
+    color: var(--primary);
+    background: #eff6ff;
+}
+
 /* Styling untuk modal */
 .modal-content {
     animation: fadeIn 0.3s ease-out;
@@ -486,6 +662,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .page-title {
         font-size: 23px;
+    }
+
+    .staff-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .staff-filter-actions {
+        width: 100%;
+    }
+
+    .staff-filter-actions .btn-filter,
+    .staff-filter-actions .clear-filter-btn {
+        width: 100%;
     }
 }
 
