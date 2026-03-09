@@ -814,7 +814,7 @@ body {
                 </a>
                 <?php endif; ?>
                 <?php if ($challenge_data['status'] == 'accepted' && empty($challenge_data['challenger_score'])): ?>
-                <a href="../admin/challenge_result.php?id=<?php echo $challenge_id; ?>" class="btn btn-success">
+                <a href="challenge_result.php?id=<?php echo $challenge_id; ?>" class="btn btn-success">
                     <i class="fas fa-futbol"></i>
                     Input Hasil
                 </a>

@@ -45,6 +45,8 @@ $current_page = 'event';
 $operator_event_name = $event_name !== '' ? $event_name : 'Event Operator';
 $operator_event_image = $event_image;
 $operator_read_only = ($event_id > 0 && !$event_is_active);
+$topbar_title = 'Event Management 🗓️';
+$topbar_subtitle = 'Kelola data event dengan konsep tampilan seragam';
 
 $event_value_url = $event_id > 0 ? 'event_value.php?event_id=' . $event_id : '#';
 $event_bracket_url = $event_id > 0 ? 'event_bracket.php?event_id=' . $event_id : '#';
