@@ -356,11 +356,11 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
     <div class="section-header">
         <h2 class="section-title">Daftar Pemain</h2>
         <div class="section-actions">
-            <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-export">
-                <i class="fas fa-download"></i> Export Excel
-            </a>
             <a href="player_form.php" class="btn-primary">
                 <i class="fas fa-plus"></i> Tambah Pemain
+            </a>
+            <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-export">
+                <i class="fas fa-download"></i> Export Excel
             </a>
         </div>
     </div>

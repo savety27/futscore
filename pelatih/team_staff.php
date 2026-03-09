@@ -170,11 +170,11 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
     <div class="section-header">
         <h2 class="section-title">Daftar Staf Team</h2>
         <div class="section-actions">
+            <a href="staff_form.php" class="btn-primary">
+                <i class="fas fa-plus"></i> Tambah Staf Baru
+            </a>
             <a href="<?php echo htmlspecialchars($team_staff_export_url); ?>" class="btn-export">
                 <i class="fas fa-download"></i> Export Excel
-            </a>
-            <a href="staff_form.php" class="btn-add">
-                <i class="fas fa-plus"></i> Tambah Staf Baru
             </a>
         </div>
     </div>
@@ -634,25 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateY(-2px);
 }
 
-
-.btn-add {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    background: linear-gradient(135deg, var(--success), #4CAF50);
-    color: white;
-    text-decoration: none;
-    border-radius: 10px;
-    font-weight: 600;
-    transition: all 0.3s;
-    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
-}
-
-.btn-add:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
-}
 
 @media (max-width: 768px) {
     .page-header {
