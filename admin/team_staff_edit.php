@@ -738,10 +738,12 @@ body {
 }
 
 .file-preview img {
+    width: min(100%, 200px);
     max-width: 200px;
     max-height: 200px;
     border-radius: 12px;
     border: 2px solid #e0e0e0;
+    object-fit: cover;
 }
 
 .file-preview .file-info {
@@ -798,6 +800,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
 }
 
 .certificate-file-info i {
@@ -812,6 +815,29 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
+}
+
+.current-photo-wrapper {
+    margin-bottom: 15px;
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.current-photo-image {
+    width: min(100%, 200px);
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+    object-fit: cover;
+}
+
+.existing-certificates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
 }
 
 /* Action Buttons */
@@ -1002,6 +1028,40 @@ body {
         flex-direction: column-reverse;
         gap: 10px;
     }
+
+    .file-upload-container {
+        padding: 20px 16px;
+    }
+
+    .file-upload-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .file-upload-text {
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .file-upload-subtext {
+        font-size: 13px;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .certificate-file-info {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .certificate-file-name {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .existing-certificates-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
@@ -1041,6 +1101,39 @@ body {
         font-size: 14px;
         gap: 10px;
         box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    }
+
+    .file-upload-container {
+        padding: 18px 14px;
+        border-radius: 14px;
+    }
+
+    .file-selected-indicator,
+    .remove-certificate {
+        width: 28px;
+        height: 28px;
+        top: 8px;
+        right: 8px;
+    }
+
+    .current-photo-wrapper {
+        display: block;
+    }
+
+    .current-photo-image,
+    .file-preview img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        max-height: 220px;
+    }
+
+    .certificate-upload-section {
+        padding: 16px;
+    }
+
+    .certificate-file-info {
+        padding: 10px 12px;
     }
 
 }
@@ -1156,10 +1249,10 @@ body {
                                 Foto Profil
                             </label>
                             <?php if (!empty($staff_data['photo'])): ?>
-                                <div style="margin-bottom: 15px; position: relative; display: inline-block;">
+                                <div class="current-photo-wrapper">
                                     <img src="../<?php echo htmlspecialchars($staff_data['photo'] ?? ''); ?>" 
                                          alt="Current Photo" 
-                                         style="max-width: 200px; max-height: 200px; border-radius: 10px; border: 2px solid #ddd; object-fit: cover;">
+                                         class="current-photo-image">
                                     <div style="margin-top: 10px;">
                                         <label class="checkbox-group">
                                             <input type="checkbox" name="delete_photo" value="1">
@@ -1334,7 +1427,7 @@ body {
                     <?php if (!empty($certificates)): ?>
                     <div style="margin-bottom: 30px;">
                         <h4 style="margin-bottom: 15px; color: var(--primary);">Sertifikat yang Sudah Ada</h4>
-                        <div id="existingCertificates" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                        <div id="existingCertificates" class="existing-certificates-grid">
                             <?php foreach ($certificates as $cert): ?>
                             <div class="certificate-item">
                                 <div class="certificate-delete-checkbox">
@@ -1514,6 +1607,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function resetPhotoUploadState() {
+        photoUpload.classList.remove('has-file', 'drag-over');
+        photoPreview.style.display = 'none';
+        photoPreviewImg.src = '';
+        photoFileInfo.textContent = '';
+        photoInput.value = '';
+
+        if (photoFileIndicator) {
+            photoFileIndicator.remove();
+            photoFileIndicator = null;
+        }
+
+        const uploadText = photoUpload.querySelector('.file-upload-text');
+        if (uploadText) {
+            uploadText.textContent = 'Klik atau drag & drop foto baru di sini';
+        }
+    }
+
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -1548,7 +1659,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">File Sertifikat <span style="color: var(--danger);">*</span></label>
+                    <label class="form-label">File Sertifikat</label>
                     <div class="file-upload-container new-certificate-upload" style="padding: 15px; position: relative;">
                         <input type="file" name="new_certificates[]" class="file-upload-input new-certificate-file" 
                                accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" data-index="${newCertificateCounter}">
@@ -1692,8 +1803,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function resetNewCertificateUploads() {
+        const container = document.getElementById('newCertificatesContainer');
+        container.innerHTML = '<h4 style="margin-bottom: 15px; color: var(--primary);">Tambah Sertifikat Baru</h4>';
+        newCertificateCounter = 0;
+        addNewCertificate();
+    }
+
     // Form Validation
     const form = document.getElementById('staffForm');
+    form.addEventListener('reset', function() {
+        window.requestAnimationFrame(function() {
+            resetPhotoUploadState();
+            resetNewCertificateUploads();
+        });
+    });
+
     form.addEventListener('submit', function(e) {
         const teamId = document.getElementById('team_id').value;
         const name = document.getElementById('name').value.trim();

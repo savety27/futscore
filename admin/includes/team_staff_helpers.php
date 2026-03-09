@@ -58,6 +58,55 @@ function teamStaffPositionLabel(?string $position): string
     return $positionOptions[$position] ?? 'Unknown';
 }
 
+function teamStaffNormalizePositionSearch(?string $value): string
+{
+    $value = strtolower(trim((string)$value));
+
+    return preg_replace('/[^a-z0-9]+/', '', $value) ?? '';
+}
+
+function teamStaffSearchablePositions(?string $search): array
+{
+    $normalizedSearch = teamStaffNormalizePositionSearch($search);
+    if ($normalizedSearch === '') {
+        return [];
+    }
+
+    $matches = [];
+    $exactMatches = [];
+    foreach (teamStaffPositionOptions() as $positionKey => $positionLabel) {
+        $variants = [
+            $positionKey,
+            $positionLabel,
+            str_replace('_', ' ', $positionKey),
+            str_replace('_', '', $positionKey),
+        ];
+
+        foreach ($variants as $variant) {
+            $normalizedVariant = teamStaffNormalizePositionSearch($variant);
+            if ($normalizedVariant === '') {
+                continue;
+            }
+
+            if ($normalizedVariant === $normalizedSearch) {
+                $exactMatches[] = $positionKey;
+                break;
+            }
+
+            if (str_contains($normalizedVariant, $normalizedSearch)) {
+                $matches[] = $positionKey;
+                break;
+            }
+        }
+    }
+
+    if (!empty($exactMatches)) {
+        return array_values(array_unique($exactMatches));
+    }
+
+    return array_values(array_unique($matches));
+}
+
 function teamStaffExportShouldNeutralizeFormula(string $value): bool
 {
     return preg_match('/^[\x00-\x20]*[=+\-@]/u', $value) === 1;

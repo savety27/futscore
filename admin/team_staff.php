@@ -51,6 +51,7 @@ if (!function_exists('getStaffDependencySources')) {
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$position_search_matches = !empty($search) ? teamStaffSearchablePositions($search) : [];
 $filter_active = isset($_GET['active']) ? trim((string) $_GET['active']) : '';
 if (!in_array($filter_active, ['', '1', '0'], true)) {
     $filter_active = '';
@@ -89,12 +90,36 @@ $count_query = "SELECT COUNT(DISTINCT ts.id) as total FROM team_staff ts
                 WHERE 1=1";
 
 // Handle search condition
-$search_condition = "";
+$search_params = [];
 if (!empty($search)) {
     $search_term = "%{$search}%";
-    $base_query .= " AND (ts.name LIKE :search1 OR ts.email LIKE :search2 OR ts.phone LIKE :search3 OR ts.position LIKE :search4 OR t.name LIKE :search5 OR t.alias LIKE :search6)";
-    $count_query .= " AND (ts.name LIKE :search1 OR ts.email LIKE :search2 OR ts.phone LIKE :search3 OR ts.position LIKE :search4 OR t.name LIKE :search5 OR t.alias LIKE :search6)";
-    $search_condition = $search_term;
+    $search_clauses = [
+        "ts.name LIKE :search_name",
+        "ts.email LIKE :search_email",
+        "ts.phone LIKE :search_phone",
+        "ts.position LIKE :search_position",
+        "t.name LIKE :search_team_name",
+        "t.alias LIKE :search_team_alias",
+    ];
+
+    $search_params = [
+        ':search_name' => $search_term,
+        ':search_email' => $search_term,
+        ':search_phone' => $search_term,
+        ':search_position' => $search_term,
+        ':search_team_name' => $search_term,
+        ':search_team_alias' => $search_term,
+    ];
+
+    foreach ($position_search_matches as $index => $position_key) {
+        $placeholder = ":search_position_key_{$index}";
+        $search_clauses[] = "ts.position = {$placeholder}";
+        $search_params[$placeholder] = $position_key;
+    }
+
+    $search_sql = " AND (" . implode(' OR ', $search_clauses) . ")";
+    $base_query .= $search_sql;
+    $count_query .= $search_sql;
 }
 
 if ($filter_active !== '') {
@@ -130,23 +155,17 @@ $staff_list = [];
 try {
     // Count total records
     $stmt = $conn->prepare($count_query);
-    
-    if (!empty($search)) {
-        $search_term = "%{$search}%";
-        $stmt->bindParam(':search1', $search_term);
-        $stmt->bindParam(':search2', $search_term);
-        $stmt->bindParam(':search3', $search_term);
-        $stmt->bindParam(':search4', $search_term);
-        $stmt->bindParam(':search5', $search_term);
-        $stmt->bindParam(':search6', $search_term);
+
+    foreach ($search_params as $param => $value) {
+        $stmt->bindValue($param, $value);
     }
     
     if ($team_id > 0) {
-        $stmt->bindParam(':team_id_count', $team_id, PDO::PARAM_INT);
+        $stmt->bindValue(':team_id_count', $team_id, PDO::PARAM_INT);
     }
     if ($filter_active !== '') {
         $active_filter_int = (int) $filter_active;
-        $stmt->bindParam(':active_count', $active_filter_int, PDO::PARAM_INT);
+        $stmt->bindValue(':active_count', $active_filter_int, PDO::PARAM_INT);
     }
     
     $stmt->execute();
@@ -158,23 +177,17 @@ try {
     // Get data with pagination
     $query = $base_query . " LIMIT :limit OFFSET :offset";
     $stmt = $conn->prepare($query);
-    
-    if (!empty($search)) {
-        $search_term = "%{$search}%";
-        $stmt->bindParam(':search1', $search_term);
-        $stmt->bindParam(':search2', $search_term);
-        $stmt->bindParam(':search3', $search_term);
-        $stmt->bindParam(':search4', $search_term);
-        $stmt->bindParam(':search5', $search_term);
-        $stmt->bindParam(':search6', $search_term);
+
+    foreach ($search_params as $param => $value) {
+        $stmt->bindValue($param, $value);
     }
     
     if ($team_id > 0) {
-        $stmt->bindParam(':team_id', $team_id, PDO::PARAM_INT);
+        $stmt->bindValue(':team_id', $team_id, PDO::PARAM_INT);
     }
     if ($filter_active !== '') {
         $active_filter_int = (int) $filter_active;
-        $stmt->bindParam(':active', $active_filter_int, PDO::PARAM_INT);
+        $stmt->bindValue(':active', $active_filter_int, PDO::PARAM_INT);
     }
     
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -608,11 +621,12 @@ body {
 
 .data-table th {
     padding: 12px 8px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     white-space: nowrap;
     font-size: 12px;
+    vertical-align: middle;
 }
 
 .data-table tbody tr {
@@ -637,6 +651,7 @@ body {
     padding: 8px;
     vertical-align: middle;
     font-size: 12px;
+    text-align: center;
 }
 
 .photo-cell {
@@ -725,6 +740,7 @@ body {
 .action-buttons {
     display: flex;
     gap: 8px;
+    justify-content: center;
 }
 
 .action-btn {
@@ -1218,7 +1234,7 @@ body {
                             type="text"
                             name="search"
                             class="staff-search-input"
-                            placeholder="Cari staff (nama, email, posisi, team)..."
+                            placeholder="Cari staff (nama, email, jabatan, team)..."
                             value="<?php echo htmlspecialchars($search ?? ''); ?>"
                         >
                     </div>

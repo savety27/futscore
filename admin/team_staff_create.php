@@ -695,10 +695,12 @@ body {
 }
 
 .file-preview img {
+    width: min(100%, 200px);
     max-width: 200px;
     max-height: 200px;
     border-radius: 12px;
     border: 2px solid #e0e0e0;
+    object-fit: cover;
 }
 
 .file-preview .file-info {
@@ -755,6 +757,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
 }
 
 .certificate-file-info i {
@@ -769,6 +772,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
 }
 
 /* Action Buttons */
@@ -920,6 +924,36 @@ body {
         width: 100%;
         justify-content: center;
     }
+
+    .file-upload-container {
+        padding: 20px 16px;
+    }
+
+    .file-upload-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+    }
+
+    .file-upload-text {
+        font-size: 15px;
+        line-height: 1.4;
+    }
+
+    .file-upload-subtext {
+        font-size: 13px;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+
+    .certificate-file-info {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .certificate-file-name {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
 }
 
 /* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
@@ -959,6 +993,34 @@ body {
         font-size: 14px;
         gap: 10px;
         box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+    }
+
+    .file-upload-container {
+        padding: 18px 14px;
+        border-radius: 14px;
+    }
+
+    .file-selected-indicator,
+    .remove-certificate {
+        width: 28px;
+        height: 28px;
+        top: 8px;
+        right: 8px;
+    }
+
+    .file-preview img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        max-height: 220px;
+    }
+
+    .certificate-upload-section {
+        padding: 16px;
+    }
+
+    .certificate-file-info {
+        padding: 10px 12px;
     }
 
 }
@@ -1081,7 +1143,7 @@ body {
                                 <div class="file-upload-text">Klik atau drag & drop foto di sini</div>
                                 <div class="file-upload-subtext">Format: JPEG, PNG, GIF | Maks: 5MB</div>
                                 <div class="file-preview" id="photoPreview" style="display: none;">
-                                    <img id="photoPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px;">
+                                    <img id="photoPreviewImg" src="" alt="Preview">
                                     <div class="file-info" id="photoFileInfo"></div>
                                 </div>
                             </div>
@@ -1368,6 +1430,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function resetPhotoUploadState() {
+        photoUpload.classList.remove('has-file', 'drag-over');
+        photoPreview.style.display = 'none';
+        photoPreviewImg.src = '';
+        photoFileInfo.textContent = '';
+        photoInput.value = '';
+
+        if (photoFileIndicator) {
+            photoFileIndicator.remove();
+            photoFileIndicator = null;
+        }
+
+        const uploadText = photoUpload.querySelector('.file-upload-text');
+        if (uploadText) {
+            uploadText.textContent = 'Klik atau drag & drop foto di sini';
+        }
+    }
+
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -1402,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">File Sertifikat <span style="color: var(--danger);">*</span></label>
+                    <label class="form-label">File Sertifikat</label>
                     <div class="file-upload-container certificate-upload" style="padding: 15px; position: relative;">
                         <input type="file" name="certificates[]" class="file-upload-input certificate-file" 
                                accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx" data-index="${certificateCounter}">
@@ -1547,8 +1627,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function resetCertificateUploads() {
+        const container = document.getElementById('certificatesContainer');
+        container.innerHTML = '';
+        certificateCounter = 0;
+        addCertificate();
+    }
+
     // Form Validation
     const form = document.getElementById('staffForm');
+    form.addEventListener('reset', function() {
+        window.requestAnimationFrame(function() {
+            resetPhotoUploadState();
+            resetCertificateUploads();
+        });
+    });
+
     form.addEventListener('submit', function(e) {
         const teamId = document.getElementById('team_id').value;
         const name = document.getElementById('name').value.trim();
