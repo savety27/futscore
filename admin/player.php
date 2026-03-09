@@ -579,11 +579,12 @@ body {
 
 .data-table th {
     padding: 12px 8px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     font-size: 12px;
     white-space: nowrap;
+    vertical-align: middle;
 }
 
 .data-table tbody tr {
