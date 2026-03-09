@@ -11,18 +11,6 @@ function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $
         throw new Exception($validationError);
     }
 
-    $stmtCheckName = $conn->prepare('SELECT id FROM players WHERE team_id = ? AND TRIM(name) = TRIM(?) LIMIT 1');
-    $stmtCheckName->execute([$input['team_id'], $input['name']]);
-    if ($stmtCheckName->fetchColumn()) {
-        throw new Exception('Nama pemain sudah terdaftar. Gunakan nama yang berbeda.');
-    }
-
-    $stmtCheckPerangkatNik = $conn->prepare('SELECT id FROM perangkat WHERE no_ktp = ? LIMIT 1');
-    $stmtCheckPerangkatNik->execute([$input['nik']]);
-    if ($stmtCheckPerangkatNik->fetchColumn()) {
-        throw new Exception('NIK sudah terdaftar sebagai perangkat.');
-    }
-
     $kkError = playerAddValidateKkUpload($files);
     if ($kkError !== null) {
         throw new Exception($kkError);
@@ -34,6 +22,7 @@ function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $
     }
 
     $startedTransaction = false;
+    $uploadedFiles = [];
     if (!$conn->inTransaction()) {
         $conn->beginTransaction();
         $startedTransaction = true;
@@ -72,14 +61,30 @@ function playerAddCreatePlayer(PDO $conn, array $post, array $files, ?callable $
             $conn->rollBack();
         }
 
+        playerAddCleanupUploadedFiles($uploadedFiles, $uploadDir);
         throw new Exception(playerAddMapInsertError($e), 0, $e);
     } catch (Exception $e) {
         if ($startedTransaction && $conn->inTransaction()) {
             $conn->rollBack();
         }
 
+        playerAddCleanupUploadedFiles($uploadedFiles, $uploadDir);
         throw $e;
     }
+}
+
+function playerAddCleanupUploadedFiles(array $uploadedFiles, string $uploadDir): void
+{
+    $filenames = [];
+    foreach ($uploadedFiles as $uploadedFile) {
+        if (!is_string($uploadedFile) || $uploadedFile === '') {
+            continue;
+        }
+
+        $filenames[] = $uploadedFile;
+    }
+
+    playerFileDeleteManyIfExists($uploadDir, $filenames);
 }
 
 function playerAddValidateKkUpload(array $files): ?string

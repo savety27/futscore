@@ -184,15 +184,21 @@ function playerEditMapGenderForDb(string $gender): string
 function playerEditMapUpdateError(PDOException $e): string
 {
     $driverCode = (int)($e->errorInfo[1] ?? 0);
-    $messageLc = strtolower($e->getMessage());
+    $messageLc = strtolower((string)($e->errorInfo[2] ?? '') . ' ' . $e->getMessage());
 
     if ($driverCode === 1062) {
         if (
+            strpos($messageLc, 'uq_players_team_scope_name') !== false ||
             strpos($messageLc, 'uq_players_team_name') !== false ||
             strpos($messageLc, 'uq_players_name') !== false ||
+            strpos($messageLc, 'name_normalized') !== false ||
             strpos($messageLc, 'name') !== false
         ) {
             return 'Error: Nama pemain sudah terdaftar. Gunakan nama yang berbeda.';
+        }
+
+        if (strpos($messageLc, 'uq_nik_registry_nik') !== false) {
+            return 'Error: NIK sudah terdaftar sebagai perangkat.';
         }
 
         if (strpos($messageLc, 'nik') !== false) {

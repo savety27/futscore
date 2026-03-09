@@ -7,6 +7,7 @@ if (file_exists($config_path)) {
 } else {
     die("Database configuration file not found at: $config_path");
 }
+require_once __DIR__ . '/perangkat_save_service.php';
 
 $staff_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($staff_id <= 0) {
@@ -79,12 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
         $errors['no_ktp'] = "No. KTP harus 16 digit angka";
     } elseif ($no_ktp_changed && $form_data['no_ktp_verified'] !== '1') {
         $errors['no_ktp'] = "No. KTP harus diverifikasi terlebih dahulu";
-    } else {
-        $stmt = $conn->prepare("SELECT id FROM perangkat WHERE no_ktp = ? AND id <> ? LIMIT 1");
-        $stmt->execute([$form_data['no_ktp'], $staff_id]);
-        if ($stmt->fetch(PDO::FETCH_ASSOC)) {
-            $errors['no_ktp'] = "No. KTP sudah terdaftar";
-        }
     }
 
     if ($form_data['gender'] !== '' && !in_array($form_data['gender'], ['Laki-laki', 'Perempuan'], true)) {
@@ -234,85 +229,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
 
     if (empty($errors)) {
         try {
-            $conn->beginTransaction();
-            $stmt = $conn->prepare("UPDATE perangkat SET
-                                    name=?, no_ktp=?, birth_place=?, age=?, gender=?, email=?, phone=?,
-                                    address=?, city=?, province=?, postal_code=?, country=?, photo=?, ktp_photo=?, is_active=?, updated_at=NOW()
-                                    WHERE id=?");
-            $stmt->execute([
-                $form_data['name'],
-                $form_data['no_ktp'],
-                $form_data['birth_place'] !== '' ? $form_data['birth_place'] : null,
-                $form_data['date_of_birth'],
-                $form_data['gender'] !== '' ? $form_data['gender'] : null,
-                $form_data['email'] !== '' ? $form_data['email'] : null,
-                $form_data['phone'] !== '' ? $form_data['phone'] : null,
-                $form_data['address'] !== '' ? $form_data['address'] : null,
-                $form_data['city'] !== '' ? $form_data['city'] : null,
-                $form_data['province'] !== '' ? $form_data['province'] : null,
-                $form_data['postal_code'] !== '' ? $form_data['postal_code'] : null,
-                $form_data['country'] !== '' ? $form_data['country'] : null,
+            $saveResult = perangkatUpdateSave(
+                $conn,
+                $staff_id,
+                $form_data,
                 $photo_path,
-                $ktp_photo_path,
-                $form_data['is_active'],
-                $staff_id
-            ]);
-
-            $license_files_to_delete = [];
-            if (!empty($removed_license_ids)) {
-                $placeholders = implode(',', array_fill(0, count($removed_license_ids), '?'));
-                $params = array_merge([$staff_id], $removed_license_ids);
-
-                $stmt = $conn->prepare("SELECT id, license_file FROM perangkat_licenses WHERE perangkat_id = ? AND id IN ($placeholders)");
-                $stmt->execute($params);
-                $licenses_to_delete = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                if (!empty($licenses_to_delete)) {
-                    foreach ($licenses_to_delete as $license_row) {
-                        $file_name = basename((string) ($license_row['license_file'] ?? ''));
-                        if ($file_name !== '') {
-                            $license_files_to_delete[] = $file_name;
-                        }
-                    }
-
-                    $stmt = $conn->prepare("DELETE FROM perangkat_licenses WHERE perangkat_id = ? AND id IN ($placeholders)");
-                    $stmt->execute($params);
-                }
-            }
-
-            if (!empty($updated_existing_licenses)) {
-                $stmt = $conn->prepare("UPDATE perangkat_licenses
-                                        SET license_name = ?, issuing_authority = ?, issue_date = ?
-                                        WHERE perangkat_id = ? AND id = ?");
-                foreach ($updated_existing_licenses as $license_id => $license_data) {
-                    $stmt->execute([
-                        $license_data['name'] !== '' ? $license_data['name'] : 'Lisensi',
-                        $license_data['authority'] !== '' ? $license_data['authority'] : null,
-                        $license_data['date'] !== '' ? $license_data['date'] : null,
-                        $staff_id,
-                        $license_id
-                    ]);
-                }
-            }
-
-            if (!empty($new_licenses)) {
-                $stmt = $conn->prepare("INSERT INTO perangkat_licenses (perangkat_id, license_name, license_file, issuing_authority, issue_date, created_at)
-                                        VALUES (?, ?, ?, ?, ?, NOW())");
-                foreach ($new_licenses as $license) {
-                    $stmt->execute([
-                        $staff_id,
-                        $license['name'] !== '' ? $license['name'] : 'Lisensi',
-                        $license['file'],
-                        $license['authority'] !== '' ? $license['authority'] : null,
-                        $license['date'] !== '' ? $license['date'] : null
-                    ]);
-                }
-            }
-
-            $conn->commit();
+                (string)$ktp_photo_path,
+                $updated_existing_licenses,
+                $new_licenses,
+                $removed_license_ids
+            );
             if ($old_photo_to_delete && $old_photo_to_delete !== $photo_path && file_exists('../' . $old_photo_to_delete)) @unlink('../' . $old_photo_to_delete);
             if ($old_ktp_to_delete && $old_ktp_to_delete !== $ktp_photo_path && file_exists('../' . $old_ktp_to_delete)) @unlink('../' . $old_ktp_to_delete);
-            foreach ($license_files_to_delete as $license_file_name) {
+            foreach (($saveResult['license_files_to_delete'] ?? []) as $license_file_name) {
                 $license_file_path = '../uploads/perangkat/licenses/' . $license_file_name;
                 if (file_exists($license_file_path)) {
                     @unlink($license_file_path);
@@ -322,13 +251,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
             $_SESSION['success_message'] = "Perangkat berhasil diperbarui!";
             header("Location: perangkat.php");
             exit;
-        } catch (PDOException $e) {
-            if ($conn->inTransaction()) $conn->rollBack();
-            error_log('perangkat_edit DB error: ' . $e->getMessage());
-            if ($e->getCode() === '23000') {
-                $errors['no_ktp'] = "No. KTP sudah terdaftar";
+        } catch (Exception $e) {
+            perangkatDeleteUploadedLicenseFiles($new_licenses, __DIR__ . '/../uploads/perangkat/licenses/');
+            if ($photo_path !== ($staff['photo'] ?? null) && !empty($photo_path) && file_exists('../' . $photo_path)) {
+                @unlink('../' . $photo_path);
+                $photo_path = $staff['photo'] ?? null;
+            }
+            if ($ktp_photo_path !== ($staff['ktp_photo'] ?? null) && !empty($ktp_photo_path) && file_exists('../' . $ktp_photo_path)) {
+                @unlink('../' . $ktp_photo_path);
+                $ktp_photo_path = $staff['ktp_photo'] ?? null;
+            }
+
+            $previous = $e->getPrevious();
+            error_log('perangkat_edit DB error: ' . ($previous instanceof PDOException ? $previous->getMessage() : $e->getMessage()));
+            if (str_starts_with($e->getMessage(), 'No. KTP')) {
+                $errors['no_ktp'] = $e->getMessage();
             } else {
-                $errors['database'] = "Data gagal disimpan. Silakan periksa input lalu coba lagi.";
+                $errors['database'] = $e->getMessage();
             }
         }
     }

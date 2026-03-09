@@ -1,4 +1,6 @@
--- Ensure integration-test schema stays aligned with required identity constraints.
+-- Migration: add registry-backed cross-table NIK uniqueness and normalized player-name uniqueness
+-- Date: 2026-03-10
+
 UPDATE players
 SET name = TRIM(name)
 WHERE name IS NOT NULL;
@@ -46,7 +48,7 @@ BEGIN
         ) AS duplicate_player_names
     ) THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Cannot apply schema patch: duplicate player names exist within the same team scope after TRIM().';
+            SET MESSAGE_TEXT = 'Cannot apply migration: duplicate player names exist within the same team scope after TRIM().';
     END IF;
 
     IF EXISTS (
@@ -67,7 +69,7 @@ BEGIN
         ) AS duplicate_nik_values
     ) THEN
         SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Cannot apply schema patch: duplicate NIK/KTP values exist across players and perangkat.';
+            SET MESSAGE_TEXT = 'Cannot apply migration: duplicate NIK/KTP values exist across players and perangkat.';
     END IF;
 END $$
 

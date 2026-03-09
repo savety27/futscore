@@ -61,50 +61,78 @@ function applySqlFile(PDO $pdo, string $path): bool
         exit(1);
     }
 
-    // Parse SQL manually to handle quotes and comments correctly
+    // Parse SQL manually to handle quotes, comments, and DELIMITER blocks.
     $statements = [];
     $buffer = '';
+    $delimiter = ';';
     $inString = false;
     $quoteChar = '';
     $escaped = false;
+    $lines = preg_split("/\r\n|\n|\r/", $sql);
 
-    $length = strlen($sql);
+    foreach ($lines as $line) {
+        $trimmedLine = ltrim($line);
 
-    for ($i = 0; $i < $length; $i++) {
-        $char = $sql[$i];
-
-        if ($inString) {
-            if ($escaped) {
-                $escaped = false;
-            } elseif ($char === '\\') {
-                $escaped = true;
-            } elseif ($char === $quoteChar) {
-                $inString = false;
+        if (!$inString) {
+            if (preg_match('/^DELIMITER\s+(\S+)\s*$/i', $trimmedLine, $matches) === 1) {
+                $delimiter = $matches[1];
+                continue;
             }
-        } else {
+
+            if (
+                str_starts_with($trimmedLine, '#')
+                || preg_match('/^--(\s|$)/', $trimmedLine) === 1
+            ) {
+                continue;
+            }
+        }
+
+        $lineWithBreak = $line . "\n";
+        $lineLength = strlen($lineWithBreak);
+
+        for ($i = 0; $i < $lineLength; $i++) {
+            $char = $lineWithBreak[$i];
+
+            if ($inString) {
+                $buffer .= $char;
+
+                if ($escaped) {
+                    $escaped = false;
+                    continue;
+                }
+
+                if ($char === '\\') {
+                    $escaped = true;
+                    continue;
+                }
+
+                if ($char === $quoteChar) {
+                    $inString = false;
+                }
+
+                continue;
+            }
+
             if ($char === "'" || $char === '"') {
                 $inString = true;
                 $quoteChar = $char;
-            } elseif ($char === ';') {
+                $buffer .= $char;
+                continue;
+            }
+
+            $delimiterLength = strlen($delimiter);
+            if ($delimiterLength > 0 && substr($lineWithBreak, $i, $delimiterLength) === $delimiter) {
                 $statement = trim($buffer);
                 if ($statement !== '') {
                     $statements[] = $statement;
                 }
                 $buffer = '';
-                continue;
-            } elseif ($char === '#' || ($char === '-' && ($i + 1 < $length && $sql[$i + 1] === '-'))) {
-                // Skip comments until end of line
-                while ($i < $length && $sql[$i] !== "\n") {
-                    $i++;
-                }
-                // Skip appending the comment characters or newline to buffer
-                // The loop puts $i at \n or end of string.
-                // We 'continue' to next iteration of for loop, which increments $i.
-                // Effectively skipping the entire comment line including the newline.
+                $i += $delimiterLength - 1;
                 continue;
             }
+
+            $buffer .= $char;
         }
-        $buffer .= $char;
     }
 
     if (trim($buffer) !== '') {

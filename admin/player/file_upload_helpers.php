@@ -24,6 +24,18 @@ function playerFileDeleteIfExists(string $uploadDir, ?string $filename): void
     }
 }
 
+function playerFileDeleteManyIfExists(string $uploadDir, array $filenames): void
+{
+    foreach (array_values(array_unique($filenames)) as $filename) {
+        $normalizedFilename = trim((string)$filename);
+        if ($normalizedFilename === '') {
+            continue;
+        }
+
+        playerFileDeleteIfExists($uploadDir, $normalizedFilename);
+    }
+}
+
 function playerFileValidateImageUpload(array $file): ?string
 {
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];

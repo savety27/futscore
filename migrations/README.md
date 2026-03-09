@@ -60,6 +60,7 @@ If you are updating an existing installation:
 - `migration_add_unique_nik.sql`: Enforces unique NIK for players, officials, and registration.
 - `migration_add_unique_player_name_per_team.sql`: Enforces player-name uniqueness within each team (`team_id`, `name`).
 - `migration_fix_player_name_unique_per_team.sql`: Corrective migration for environments that still have global `UNIQUE(name)`.
+- `migration_add_identity_registry_and_normalized_player_uniques.sql`: Adds normalized player-name uniqueness (`COALESCE(team_id, 0)`, `TRIM(name)`) plus a shared NIK registry and triggers to prevent player/perangkat identity collisions.
 - `migration_cleanup_team_staff_bpjs.sql`: Removes legacy BPJS and user-link columns from team staff.
 - `migration_drop_staff_events_matches.sql`: Drops unused/non-functional staff relation tables.
 

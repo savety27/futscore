@@ -1,5 +1,75 @@
 <?php
 
+function verifyNikLookupExistingPlayerFallback($nik, $conn, $exclude_player_id)
+{
+    try {
+        $sql = "SELECT id, name FROM players WHERE nik = ?";
+        $params = [$nik];
+        if ($exclude_player_id > 0) {
+            $sql .= " AND id != ?";
+            $params[] = $exclude_player_id;
+        }
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$existing) {
+            return null;
+        }
+
+        return [
+            'owner_type' => 'player',
+            'owner_id' => (int)($existing['id'] ?? 0),
+            'owner_name' => trim((string)($existing['name'] ?? '')),
+        ];
+    } catch (PDOException $e) {
+        error_log("DB Error in fallback NIK verification: " . $e->getMessage());
+    }
+
+    return null;
+}
+
+function verifyNikLookupExistingOwner($nik, $conn, $exclude_player_id)
+{
+    try {
+        $sql = "SELECT
+                    nr.owner_type,
+                    nr.owner_id,
+                    COALESCE(p.name, pr.name) AS owner_name
+                FROM nik_registry nr
+                LEFT JOIN players p
+                    ON nr.owner_type = 'player' AND p.id = nr.owner_id
+                LEFT JOIN perangkat pr
+                    ON nr.owner_type = 'perangkat' AND pr.id = nr.owner_id
+                WHERE nr.nik = ?";
+        $params = [$nik];
+        if ($exclude_player_id > 0) {
+            $sql .= " AND NOT (nr.owner_type = 'player' AND nr.owner_id = ?)";
+            $params[] = $exclude_player_id;
+        }
+        $sql .= " LIMIT 1";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existing) {
+            $ownerType = trim((string)($existing['owner_type'] ?? 'player'));
+            $ownerName = trim((string)($existing['owner_name'] ?? $existing['name'] ?? ''));
+
+            return [
+                'owner_type' => $ownerType !== '' ? $ownerType : 'player',
+                'owner_id' => (int)($existing['owner_id'] ?? $existing['id'] ?? 0),
+                'owner_name' => $ownerName,
+            ];
+        }
+    } catch (PDOException $e) {
+        error_log("DB Error in NIK verification: " . $e->getMessage());
+        return verifyNikLookupExistingPlayerFallback($nik, $conn, $exclude_player_id);
+    }
+
+    return null;
+}
+
 function verifyNIK($nik, $provinsi_codes, $conn, $exclude_player_id)
 {
     if (!preg_match('/^[0-9]{16}$/', $nik)) {
@@ -92,26 +162,28 @@ function verifyNIK($nik, $provinsi_codes, $conn, $exclude_player_id)
         ];
     }
 
-    try {
-        $sql = "SELECT id, name FROM players WHERE nik = ?";
-        $params = [$nik];
-        if ($exclude_player_id > 0) {
-            $sql .= " AND id != ?";
-            $params[] = $exclude_player_id;
+    $existing = verifyNikLookupExistingOwner($nik, $conn, $exclude_player_id);
+    if ($existing) {
+        $existingType = trim((string)($existing['owner_type'] ?? 'player'));
+        $existingName = trim((string)($existing['owner_name'] ?? ''));
+        if ($existingName === '') {
+            $existingName = $existingType === 'perangkat' ? 'Perangkat' : 'Player';
         }
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($params);
-        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($existing) {
-            return [
-                'verified' => false,
-                'message' => 'NIK sudah terdaftar atas nama "' . $existing['name'] . '"',
-                'details' => ['step' => 'duplicate', 'existing_player' => $existing['name']]
-            ];
-        }
-    } catch (PDOException $e) {
-        error_log("DB Error in NIK verification: " . $e->getMessage());
+        $message = $existingType === 'perangkat'
+            ? 'NIK sudah terdaftar sebagai perangkat "' . $existingName . '"'
+            : 'NIK sudah terdaftar atas nama "' . $existingName . '"';
+
+        return [
+            'verified' => false,
+            'message' => $message,
+            'details' => [
+                'step' => 'duplicate',
+                'existing_player' => $existingName,
+                'existing_type' => $existingType,
+                'existing_name' => $existingName,
+            ]
+        ];
     }
 
     $gender_str = $is_female ? 'Perempuan' : 'Laki-laki';

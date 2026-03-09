@@ -50,4 +50,37 @@ final class EditServiceTest extends TestCase
         $resolved = playerEditHandleDocumentUpload(['delete_kk_image' => '1'], [], 'kk_image', 'kk', 'existing-kk.jpg', __DIR__ . '/fixtures/');
         $this->assertNull($resolved);
     }
+
+    public function testCollectObsoleteFilesReturnsExistingFilesThatShouldBeRemovedAfterCommit(): void
+    {
+        $obsolete = playerEditCollectObsoleteFiles(
+            [
+                'photo' => 'old-photo.jpg',
+                'kk_image' => 'old-kk.jpg',
+            ],
+            [
+                'photo' => 'new-photo.jpg',
+                'kk_image' => null,
+            ]
+        );
+
+        $this->assertSame(['old-photo.jpg', 'old-kk.jpg'], $obsolete);
+    }
+
+    public function testCollectNewUploadsReturnsOnlyFilesCreatedDuringFailedUpdate(): void
+    {
+        $newUploads = playerEditCollectNewUploads(
+            [
+                'photo' => 'old-photo.jpg',
+                'kk_image' => 'old-kk.jpg',
+            ],
+            [
+                'photo' => 'new-photo.jpg',
+                'kk_image' => 'old-kk.jpg',
+                'ktp_image' => 'new-ktp.jpg',
+            ]
+        );
+
+        $this->assertSame(['new-photo.jpg', 'new-ktp.jpg'], $newUploads);
+    }
 }
