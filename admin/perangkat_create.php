@@ -304,10 +304,12 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
             --secondary: #f59e0b;
             --accent: #3b82f6;
             --success: #10b981;
+            --warning: #f59e0b;
             --danger: #ef4444;
             --dark: #1e293b;
             --gray: #64748b;
             --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, .05), 0 4px 6px -2px rgba(0, 0, 0, .03);
+            --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
         }
 
         * {
@@ -507,41 +509,70 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
         }
 
         .verify-btn {
+            padding: 10px 18px;
             border: none;
-            padding: 0 14px;
             border-radius: 12px;
-            background: var(--primary);
-            color: #fff;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
+            transition: var(--transition);
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, var(--primary) 0%, #1a365d 100%);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(10, 36, 99, 0.2);
+        }
+
+        .verify-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(10, 36, 99, 0.3);
         }
 
         .verify-btn:disabled {
-            opacity: .5;
+            background: #ccc;
+            color: #888;
             cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .verify-btn.loading {
+            background: linear-gradient(135deg, #6C757D 0%, #495057 100%);
+            pointer-events: none;
         }
 
         .verify-btn.verified {
-            background: var(--success);
+            background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+            color: #ffffff;
+        }
+
+        .verify-btn.verified:disabled {
+            background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
+            color: #ffffff;
+            opacity: 1;
+            cursor: default;
         }
 
         .verify-feedback {
+            margin-top: 8px;
             font-size: 12px;
-            margin-top: 6px;
             color: var(--gray);
+            min-height: 18px;
         }
 
         .verify-feedback.warning {
-            color: #b45309;
-        }
-
-        .verify-feedback.success {
-            color: #047857;
+            color: var(--warning);
         }
 
         .verify-feedback.error {
-            color: #b91c1c;
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .verify-feedback.success {
+            color: var(--success);
+            font-weight: 600;
         }
 
         .verify-details {
@@ -768,6 +799,13 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
             .verify-input-wrapper {
                 flex-direction: column;
+                gap: 8px;
+            }
+
+            .verify-btn {
+                width: 100%;
+                justify-content: center;
+                min-height: 44px;
             }
 
             .form-actions {
@@ -792,6 +830,15 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
             .btn {
                 font-size: 14px;
+            }
+
+            .verify-feedback {
+                font-size: 11px;
+            }
+
+            .verify-details {
+                padding: 10px 12px;
+                font-size: 12px;
             }
         }
     </style>
@@ -835,7 +882,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                                 <label class="form-label" for="no_ktp">No. KTP <span class="required">*</span></label>
                                 <div class="verify-input-wrapper">
                                     <input type="text" id="no_ktp" name="no_ktp" class="form-input" value="<?php echo htmlspecialchars($form_data['no_ktp']); ?>" placeholder="Masukkan nomor KTP (16 digit)" maxlength="16" pattern="[0-9]{16}" inputmode="numeric" title="No. KTP harus 16 digit angka">
-                                    <button type="button" class="verify-btn" id="noKtpVerifyBtn" disabled>Verifikasi</button>
+                                    <button type="button" class="verify-btn" id="noKtpVerifyBtn" disabled><i class="fas fa-shield-alt"></i> Verifikasi</button>
                                 </div>
                                 <input type="hidden" name="no_ktp_verified" id="noKtpVerified" value="<?php echo htmlspecialchars($form_data['no_ktp_verified']); ?>">
                                 <div class="verify-feedback" id="noKtpFeedback">No. KTP harus 16 digit angka</div>
@@ -985,9 +1032,34 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 const preview = document.getElementById(previewId);
                 const img = document.getElementById(imgId);
                 const info = document.getElementById(infoId);
+                if (!input || !preview || !img || !info) {
+                    return {
+                        syncToInitialState: function() {}
+                    };
+                }
+
+                const initialState = {
+                    display: preview.style.display,
+                    src: img.getAttribute('src') || '',
+                    info: info.textContent || ''
+                };
+
+                function syncToInitialState() {
+                    const hasInitialFile = initialState.src && initialState.src !== '#' && initialState.info.trim() !== '';
+                    preview.style.display = hasInitialFile ? (initialState.display || 'block') : 'none';
+                    img.src = hasInitialFile ? initialState.src : '#';
+                    info.textContent = hasInitialFile ? initialState.info : '';
+                }
+
+                function clearPreview() {
+                    preview.style.display = 'none';
+                    img.src = '#';
+                    info.textContent = '';
+                }
 
                 input.addEventListener('change', function() {
                     if (!this.files.length) {
+                        syncToInitialState();
                         return;
                     }
                     const file = this.files[0];
@@ -995,11 +1067,13 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                     if (!allowedTypes.includes(file.type)) {
                         toastr.error('Format file harus berupa gambar (JPEG, PNG, atau GIF)');
                         this.value = '';
+                        clearPreview();
                         return;
                     }
                     if (file.size > 5 * 1024 * 1024) {
                         toastr.error('Ukuran file maksimal 5MB');
                         this.value = '';
+                        clearPreview();
                         return;
                     }
                     const reader = new FileReader();
@@ -1010,10 +1084,14 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                     };
                     reader.readAsDataURL(file);
                 });
+
+                return {
+                    syncToInitialState: syncToInitialState
+                };
             }
 
-            bindPreview('photo', 'photoPreview', 'photoPreviewImg', 'photoFileInfo');
-            bindPreview('ktp_photo', 'ktpPreview', 'ktpPreviewImg', 'ktpFileInfo');
+            const photoPreviewController = bindPreview('photo', 'photoPreview', 'photoPreviewImg', 'photoFileInfo');
+            const ktpPreviewController = bindPreview('ktp_photo', 'ktpPreview', 'ktpPreviewImg', 'ktpFileInfo');
 
             const ktpPhotoInput = document.getElementById('ktp_photo');
             const ktpUploadContainer = document.getElementById('ktpUploadContainer');
@@ -1040,6 +1118,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
             const dateOfBirthInput = document.getElementById('date_of_birth');
             const genderInput = document.getElementById('gender');
             const isNoKtpPreVerified = <?php echo ($form_data['no_ktp_verified'] ?? '0') === '1' ? 'true' : 'false'; ?>;
+            const defaultVerifyButtonHtml = '<i class="fas fa-shield-alt"></i> Verifikasi';
 
             function convertNikDateToInputValue(nikDateValue) {
                 if (!nikDateValue || typeof nikDateValue !== 'string') {
@@ -1094,7 +1173,9 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                     }
 
                     noKtpVerified.value = '0';
+                    noKtpVerifyBtn.classList.remove('loading');
                     noKtpVerifyBtn.classList.remove('verified');
+                    noKtpVerifyBtn.innerHTML = defaultVerifyButtonHtml;
                     if (noKtpDetails) {
                         noKtpDetails.style.display = 'none';
                         noKtpDetails.innerHTML = '';
@@ -1172,6 +1253,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 }
 
                 noKtpVerifyBtn.disabled = true;
+                noKtpVerifyBtn.classList.add('loading');
                 noKtpVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
                 noKtpFeedback.textContent = 'Sedang memverifikasi No. KTP...';
                 noKtpFeedback.className = 'verify-feedback';
@@ -1186,6 +1268,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                             noKtpVerified.value = '1';
                             noKtpFeedback.textContent = 'No. KTP terverifikasi';
                             noKtpFeedback.className = 'verify-feedback success';
+                            noKtpVerifyBtn.classList.remove('loading');
                             noKtpVerifyBtn.classList.add('verified');
                             noKtpVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
                             autofillFieldsFromNikDetails(data.details || {});
@@ -1204,9 +1287,10 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                             noKtpVerified.value = '0';
                             noKtpFeedback.textContent = (data && data.message) ? data.message : 'No. KTP tidak valid';
                             noKtpFeedback.className = 'verify-feedback error';
+                            noKtpVerifyBtn.classList.remove('loading');
                             noKtpVerifyBtn.classList.remove('verified');
                             noKtpVerifyBtn.disabled = false;
-                            noKtpVerifyBtn.textContent = 'Verifikasi';
+                            noKtpVerifyBtn.innerHTML = defaultVerifyButtonHtml;
                         }
                     })
                     .catch(err => {
@@ -1218,9 +1302,10 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                         if (noKtpDetails) {
                             noKtpDetails.style.display = 'none';
                         }
+                        noKtpVerifyBtn.classList.remove('loading');
                         noKtpVerifyBtn.classList.remove('verified');
                         noKtpVerifyBtn.disabled = false;
-                        noKtpVerifyBtn.textContent = 'Verifikasi';
+                        noKtpVerifyBtn.innerHTML = defaultVerifyButtonHtml;
                     });
             }
 
@@ -1230,6 +1315,7 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
             const licensesContainer = document.getElementById('licensesContainer');
             const addLicenseBtn = document.getElementById('addLicenseBtn');
+            const perangkatForm = document.getElementById('perangkatForm');
 
             function bindLicenseUpload(block) {
                 const container = block.querySelector('.license-upload-container');
@@ -1361,6 +1447,32 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
 
             addLicenseBtn.addEventListener('click', addLicenseBlock);
             addLicenseBlock();
+
+            if (perangkatForm) {
+                perangkatForm.addEventListener('reset', function() {
+                    window.setTimeout(function() {
+                        photoPreviewController.syncToInitialState();
+                        ktpPreviewController.syncToInitialState();
+
+                        if (ktpUploadContainer && ktpPhotoAlert) {
+                            if (hasPersistedKtpPhoto) {
+                                ktpUploadContainer.classList.add('uploaded');
+                            } else {
+                                ktpUploadContainer.classList.remove('uploaded');
+                            }
+                            ktpUploadContainer.classList.remove('required-missing');
+                            ktpPhotoAlert.classList.remove('show');
+                        }
+
+                        document.querySelectorAll('.license-block').forEach(function(block) {
+                            const input = block.querySelector('.license-file-input');
+                            if (input) {
+                                input.dispatchEvent(new Event('change'));
+                            }
+                        });
+                    }, 0);
+                });
+            }
 
             document.getElementById('perangkatForm').addEventListener('submit', function(e) {
                 let valid = true;
