@@ -459,11 +459,12 @@ try {
 
         .data-table th {
             padding: 12px 8px;
-            text-align: left;
+            text-align: center;
             font-weight: 600;
             border-bottom: 2px solid var(--secondary);
             font-size: 12px;
-            white-space: nowrap
+            white-space: nowrap;
+            vertical-align: middle
         }
 
         .data-table tbody tr {
@@ -486,7 +487,9 @@ try {
         .data-table td {
             padding: 8px;
             border-bottom: 1px solid #f0f0f0;
-            font-size: 12px
+            font-size: 12px;
+            text-align: center;
+            vertical-align: middle
         }
 
         .staff-photo {
@@ -533,7 +536,8 @@ try {
 
         .action-buttons {
             display: flex;
-            gap: 8px
+            gap: 8px;
+            justify-content: center
         }
 
         .action-cell {
@@ -547,7 +551,8 @@ try {
         .action-cell .action-buttons {
             display: flex;
             gap: 8px;
-            flex-wrap: nowrap
+            flex-wrap: nowrap;
+            justify-content: center
         }
 
         .action-cell .action-btn {
