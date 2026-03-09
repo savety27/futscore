@@ -166,10 +166,13 @@ try {
             --secondary: #f59e0b;
             --accent: #3b82f6;
             --success: #10b981;
+            --warning: #f59e0b;
             --danger: #ef4444;
             --gray: #64748b;
             --dark: #1e293b;
             --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, .05), 0 4px 6px -2px rgba(0, 0, 0, .03);
+            --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, .08), 0 10px 10px -5px rgba(0, 0, 0, .04);
+            --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
         }
 
         * {
@@ -407,12 +410,19 @@ try {
             align-items: center;
             gap: 10px;
             text-decoration: none;
-            font-size: 15px
+            font-size: 15px;
+            transition: var(--transition)
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #fff
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(10, 36, 99, .2)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(10, 36, 99, .3)
         }
 
         .btn-success {
@@ -428,7 +438,13 @@ try {
 
         .btn-secondary {
             background: #6c757d;
-            color: #fff
+            color: #fff;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, .2)
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, .3)
         }
 
         .btn-danger {
