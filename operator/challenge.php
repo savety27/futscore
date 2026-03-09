@@ -522,7 +522,7 @@ body {
 
 .data-table th {
     padding: 12px 8px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     white-space: nowrap;
@@ -551,6 +551,7 @@ body {
     padding: 8px;
     vertical-align: middle;
     font-size: 12px;
+    text-align: center;
 }
 
 /* Status Badge */
@@ -674,6 +675,7 @@ body {
 .action-buttons-inline {
     display: flex;
     gap: 8px;
+    justify-content: center;
 }
 
 .action-btn {

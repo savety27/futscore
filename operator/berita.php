@@ -453,7 +453,7 @@ body {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1400px;
+    min-width: 1320px;
     table-layout: auto;
 }
 
@@ -463,8 +463,8 @@ body {
 }
 
 .data-table th {
-    padding: 12px 8px;
-    text-align: left;
+    padding: 14px 10px;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     white-space: nowrap;
@@ -479,9 +479,9 @@ body {
 
 .data-table tbody tr:hover {
     background: #eef5ff;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
+    transform: none;
+    box-shadow: inset 0 0 0 1px rgba(76, 138, 255, 0.18);
+    z-index: 1;
 }
 
 /* Prevent first row hover from overlapping the yellow header border */
@@ -490,9 +490,10 @@ body {
 }
 
 .data-table td {
-    padding: 8px;
+    padding: 12px 10px;
     vertical-align: middle;
     font-size: 12px;
+    text-align: center;
 }
 
 /* Table Cell Styles */
@@ -504,7 +505,7 @@ body {
 }
 
 .image-cell {
-    width: 120px;
+    width: 130px;
 }
 
 .news-image {
@@ -538,19 +539,29 @@ body {
 .judul-cell {
     font-weight: 600;
     color: var(--dark);
-    min-width: 250px;
+    min-width: 240px;
+    width: 240px;
 }
 
 .excerpt-cell {
     color: var(--gray);
     font-size: 14px;
     line-height: 1.4;
-    max-width: 300px;
+    min-width: 250px;
+    max-width: 250px;
+    width: 250px;
 }
 
 .penulis-cell {
     color: var(--dark);
     font-weight: 500;
+    min-width: 130px;
+    width: 130px;
+}
+
+.tag-cell {
+    min-width: 140px;
+    width: 140px;
 }
 
 .status-cell {
@@ -562,22 +573,26 @@ body {
     color: var(--gray);
     font-size: 14px;
     width: 150px;
+    text-align: center;
 }
 
 .views-cell {
     text-align: center;
     font-weight: 600;
     color: var(--primary);
-    width: 80px;
+    width: 95px;
 }
 
 .action-cell {
-    min-width: 180px;
+    width: 132px;
+    min-width: 132px;
+    text-align: center;
 }
 
 .action-cell .action-buttons {
     display: flex;
     gap: 8px;
+    justify-content: center;
 }
 
 .action-btn {
@@ -863,6 +878,22 @@ body {
     /* Table Responsive */
     .table-container {
         border-radius: 12px;
+    }
+
+    .action-cell {
+        min-width: 126px;
+    }
+
+    .action-cell .action-buttons {
+        gap: 6px;
+        justify-content: center;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        font-size: 16px;
     }
     
     /* Statistics Responsive */
@@ -1158,7 +1189,7 @@ body {
                             <td class="penulis-cell">
                                 <?php echo !empty($b['penulis']) ? htmlspecialchars($b['penulis'] ?? '') : '-'; ?>
                             </td>
-                            <td>
+                            <td class="tag-cell">
                                 <?php if (!empty($b['tag'])): ?>
                                     <?php 
                                     $tags = explode(',', $b['tag']);

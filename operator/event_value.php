@@ -1329,7 +1329,12 @@ if ($eventId > 0) {
             }
             .page-header {
                 flex-direction: column;
-                align-items: flex-start
+                align-items: center
+            }
+            .page-title {
+                width: 100%;
+                justify-content: center;
+                text-align: center
             }
             .page-header .btn {
                 width: 100%;
