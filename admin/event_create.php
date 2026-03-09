@@ -375,7 +375,8 @@ body {
     .greeting h1 { font-size: 22px; }
     .page-title { font-size: 22px; }
     .form-grid { grid-template-columns: 1fr; }
-    .page-header { flex-direction: column; align-items: flex-start; }
+    .page-header { flex-direction: column; align-items: center; }
+    .page-title { width: 100%; justify-content: center; text-align: center; }
     .page-header .action-buttons { width: 100%; flex-direction: column; }
     .page-header .action-buttons .btn { width: 100%; justify-content: center; }
     .form-actions { flex-direction: column; }

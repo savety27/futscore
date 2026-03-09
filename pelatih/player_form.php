@@ -1207,6 +1207,68 @@ document.addEventListener('DOMContentLoaded', function() {
     const nikVerified = document.getElementById('nikVerified');
     const nikDetails = document.getElementById('nikDetails');
     const playerId = <?php echo (int)$player_id; ?>;
+    const provinceInput = document.querySelector('input[name="province"]');
+    const birthDateInput = document.querySelector('input[name="birth_date"]');
+    const genderRadios = document.querySelectorAll('input[name="gender"]');
+
+    function convertNikDateToInputValue(nikDateValue) {
+        if (!nikDateValue || typeof nikDateValue !== 'string') {
+            return '';
+        }
+
+        const dateParts = nikDateValue.split('-');
+        if (dateParts.length !== 3) {
+            return '';
+        }
+
+        const day = dateParts[0];
+        const month = dateParts[1];
+        const year = dateParts[2];
+
+        if (!/^\d{2}$/.test(day) || !/^\d{2}$/.test(month) || !/^\d{4}$/.test(year)) {
+            return '';
+        }
+
+        return `${year}-${month}-${day}`;
+    }
+
+    function mapNikGenderToPlayerGender(nikGenderValue) {
+        if (nikGenderValue === 'Laki-laki') {
+            return 'L';
+        }
+
+        if (nikGenderValue === 'Perempuan') {
+            return 'P';
+        }
+
+        return '';
+    }
+
+    function autofillFieldsFromNikDetails(details) {
+        if (!details || typeof details !== 'object') {
+            return;
+        }
+
+        if (provinceInput && details.provinsi) {
+            provinceInput.value = details.provinsi;
+        }
+
+        if (birthDateInput && details.tanggal_lahir) {
+            const formattedDate = convertNikDateToInputValue(details.tanggal_lahir);
+            if (formattedDate) {
+                birthDateInput.value = formattedDate;
+            }
+        }
+
+        if (genderRadios && details.jenis_kelamin) {
+            const mappedGender = mapNikGenderToPlayerGender(details.jenis_kelamin);
+            if (mappedGender) {
+                genderRadios.forEach((radio) => {
+                    radio.checked = radio.value === mappedGender;
+                });
+            }
+        }
+    }
 
     if (nikInput) {
         nikInput.addEventListener('input', function(e) {
@@ -1316,6 +1378,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Show details
                     if (data.details) {
+                        autofillFieldsFromNikDetails(data.details);
                         let html = '<strong>📋 Data NIK:</strong><br>';
                         if (data.details.provinsi) html += `<div class="detail-row"><span class="detail-label">Provinsi</span><span class="detail-value">${data.details.provinsi}</span></div>`;
                         if (data.details.tanggal_lahir) html += `<div class="detail-row"><span class="detail-label">Tgl Lahir</span><span class="detail-value">${data.details.tanggal_lahir}</span></div>`;

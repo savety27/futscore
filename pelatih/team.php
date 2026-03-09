@@ -66,6 +66,8 @@ try {
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
 }
+
+$team_export_url = 'team_export.php' . ($search !== '' ? '?' . http_build_query(['search' => $search]) : '');
 ?>
 
 <div class="page-header">
@@ -81,7 +83,11 @@ try {
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Daftar Team</h2>
-        <!-- Read Only: No Add Button -->
+        <div class="section-actions">
+            <a href="<?php echo htmlspecialchars($team_export_url); ?>" class="btn-export">
+                <i class="fas fa-download"></i> Export Excel
+            </a>
+        </div>
     </div>
 
     <div class="search-bar" style="margin-bottom: 20px;">

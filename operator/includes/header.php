@@ -13,6 +13,8 @@ $current_page = $current_page ?? '';
 $operator_name = $_SESSION['admin_fullname'] ?? 'Operator';
 $operator_event_name = $operator_event_name ?? 'Event Operator';
 $operator_event_image = $operator_event_image ?? '';
+$topbar_title = $topbar_title ?? ('Halo, ' . $operator_name . '!');
+$topbar_subtitle = $topbar_subtitle ?? $page_title;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -35,8 +37,8 @@ $operator_event_image = $operator_event_image ?? '';
     <div class="main">
         <div class="topbar">
             <div class="greeting">
-                <h1>Halo, <?php echo htmlspecialchars($operator_name); ?>!</h1>
-                <p><?php echo htmlspecialchars($page_title); ?></p>
+                <h1><?php echo htmlspecialchars($topbar_title); ?></h1>
+                <p><?php echo htmlspecialchars($topbar_subtitle); ?></p>
             </div>
 
             <div class="user-actions">

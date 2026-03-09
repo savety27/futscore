@@ -796,7 +796,13 @@ body {
     .page-header {
         flex-direction: column;
         gap: 20px;
-        align-items: flex-start;
+        align-items: center;
+    }
+
+    .page-title {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
     }
 
     .btn {

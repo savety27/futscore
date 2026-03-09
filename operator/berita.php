@@ -396,6 +396,8 @@ body {
 /* Filter Controls */
 .filter-controls {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 15px;
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(8px);
@@ -405,6 +407,13 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
     border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .filter-group {
@@ -453,7 +462,7 @@ body {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1400px;
+    min-width: 1320px;
     table-layout: auto;
 }
 
@@ -463,8 +472,8 @@ body {
 }
 
 .data-table th {
-    padding: 12px 8px;
-    text-align: left;
+    padding: 14px 10px;
+    text-align: center;
     font-weight: 600;
     border-bottom: 2px solid var(--secondary);
     white-space: nowrap;
@@ -479,9 +488,9 @@ body {
 
 .data-table tbody tr:hover {
     background: #eef5ff;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.2), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
+    transform: none;
+    box-shadow: inset 0 0 0 1px rgba(76, 138, 255, 0.18);
+    z-index: 1;
 }
 
 /* Prevent first row hover from overlapping the yellow header border */
@@ -490,9 +499,10 @@ body {
 }
 
 .data-table td {
-    padding: 8px;
+    padding: 12px 10px;
     vertical-align: middle;
     font-size: 12px;
+    text-align: center;
 }
 
 /* Table Cell Styles */
@@ -504,7 +514,7 @@ body {
 }
 
 .image-cell {
-    width: 120px;
+    width: 130px;
 }
 
 .news-image {
@@ -538,19 +548,29 @@ body {
 .judul-cell {
     font-weight: 600;
     color: var(--dark);
-    min-width: 250px;
+    min-width: 240px;
+    width: 240px;
 }
 
 .excerpt-cell {
     color: var(--gray);
     font-size: 14px;
     line-height: 1.4;
-    max-width: 300px;
+    min-width: 250px;
+    max-width: 250px;
+    width: 250px;
 }
 
 .penulis-cell {
     color: var(--dark);
     font-weight: 500;
+    min-width: 130px;
+    width: 130px;
+}
+
+.tag-cell {
+    min-width: 140px;
+    width: 140px;
 }
 
 .status-cell {
@@ -562,22 +582,26 @@ body {
     color: var(--gray);
     font-size: 14px;
     width: 150px;
+    text-align: center;
 }
 
 .views-cell {
     text-align: center;
     font-weight: 600;
     color: var(--primary);
-    width: 80px;
+    width: 95px;
 }
 
 .action-cell {
-    min-width: 180px;
+    width: 132px;
+    min-width: 132px;
+    text-align: center;
 }
 
 .action-cell .action-buttons {
     display: flex;
     gap: 8px;
+    justify-content: center;
 }
 
 .action-btn {
@@ -829,7 +853,7 @@ body {
     .search-bar {
         width: 100%;
         max-width: 100%;
-        order: 2;
+        order: -1;
     }
     
     .page-header .action-buttons {
@@ -847,27 +871,72 @@ body {
     /* Filter Controls vertically stacked */
     .filter-controls {
         flex-direction: column;
+        align-items: stretch;
         gap: 15px;
+    }
+
+    .filter-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
     }
     
     .filter-group {
         width: 100%;
         flex-direction: column;
         align-items: flex-start;
+        gap: 8px;
     }
     
     .filter-select {
         width: 100%;
+    }
+
+    .filter-actions .btn {
+        width: 100%;
+        justify-content: center;
     }
     
     /* Table Responsive */
     .table-container {
         border-radius: 12px;
     }
+
+    .action-cell {
+        min-width: 126px;
+    }
+
+    .action-cell .action-buttons {
+        gap: 6px;
+        justify-content: center;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        font-size: 16px;
+    }
     
     /* Statistics Responsive */
     .statistics-container {
-        flex-direction: column;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .statistics-container > div {
+        min-width: 0 !important;
+        padding: 12px !important;
+    }
+
+    .statistics-container > div > div:first-child {
+        font-size: 24px !important;
+    }
+
+    .statistics-container > div > div:last-child {
+        font-size: 12px !important;
     }
 }
 
@@ -1034,21 +1103,65 @@ body {
             </div>
         </div>
 
+        <!-- STATISTIK -->
+        <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--card-shadow); margin-bottom: 30px;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">Statistik Berita</h3>
+            <div class="statistics-container" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <div style="font-size: 32px; color: var(--primary); font-weight: 700;"><?php echo $total_data; ?></div>
+                    <div style="color: var(--gray); font-size: 14px;">Total Berita</div>
+                </div>
+                
+                <?php 
+                try {
+                    // Count published
+                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM berita WHERE status = 'published'" . $ownership_where_sql);
+                    $stmt->execute($ownership_params);
+                    $published = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+                    
+                    // Count draft
+                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM berita WHERE status = 'draft'" . $ownership_where_sql);
+                    $stmt->execute($ownership_params);
+                    $draft = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+                    
+                    // Count archived
+                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM berita WHERE status = 'archived'" . $ownership_where_sql);
+                    $stmt->execute($ownership_params);
+                    $archived = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+                    
+                    // Total views
+                    $stmt = $conn->prepare("SELECT COALESCE(SUM(views), 0) as total_views FROM berita WHERE 1=1" . $ownership_where_sql);
+                    $stmt->execute($ownership_params);
+                    $total_views = $stmt->fetch(PDO::FETCH_ASSOC)['total_views'] ?? 0;
+                } catch (PDOException $e) {
+                    $published = $draft = $archived = $total_views = 0;
+                }
+                ?>
+                
+                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <div style="font-size: 32px; color: var(--success); font-weight: 700;"><?php echo $published; ?></div>
+                    <div style="color: var(--gray); font-size: 14px;">Published</div>
+                </div>
+                
+                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <div style="font-size: 32px; color: var(--gray); font-weight: 700;"><?php echo $draft; ?></div>
+                    <div style="color: var(--gray); font-size: 14px;">Draft</div>
+                </div>
+                
+                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <div style="font-size: 32px; color: var(--accent); font-weight: 700;"><?php echo $total_views; ?></div>
+                    <div style="color: var(--gray); font-size: 14px;">Total Views</div>
+                </div>
+            </div>
+        </div>
+
         <!-- PAGE HEADER -->
         <div class="page-header">
             <div class="page-title">
                 <i class="fas fa-newspaper"></i>
                 <span>Daftar Berita</span>
             </div>
-            
-            <form method="GET" action="" class="search-bar" id="searchForm">
-                <input type="text" name="search" placeholder="Cari berita (judul, konten, penulis)..." 
-                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
-                <button type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
-            
+
             <div class="action-buttons">
                 <?php if (!$operator_read_only): ?>
                     <a href="berita_create.php" class="btn btn-primary">
@@ -1074,21 +1187,31 @@ body {
 
         <!-- FILTER CONTROLS -->
         <div class="filter-controls">
-            <div class="filter-group">
-                <span class="filter-label">Filter Status:</span>
-                <select class="filter-select" onchange="window.location.href='?status=' + this.value + '&search=<?php echo urlencode($search); ?>'">
-                    <option value="">Semua Status</option>
-                    <option value="published" <?php echo $status_filter === 'published' ? 'selected' : ''; ?>>Published</option>
-                    <option value="draft" <?php echo $status_filter === 'draft' ? 'selected' : ''; ?>>Draft</option>
-                    <option value="archived" <?php echo $status_filter === 'archived' ? 'selected' : ''; ?>>Archived</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <a href="berita.php" class="btn btn-secondary">
-                    <i class="fas fa-redo"></i>
-                    Reset Filter
-                </a>
+            <form method="GET" action="" class="search-bar" id="searchForm" style="margin-bottom: 0;">
+                <input type="text" name="search" placeholder="Cari berita (judul, konten, penulis)..." 
+                       value="<?php echo htmlspecialchars($search ?? ''); ?>">
+                <button type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+
+            <div class="filter-actions">
+                <div class="filter-group">
+                    <span class="filter-label">Filter Status:</span>
+                    <select class="filter-select" onchange="window.location.href='?status=' + this.value + '&search=<?php echo urlencode($search); ?>'">
+                        <option value="">Semua Status</option>
+                        <option value="published" <?php echo $status_filter === 'published' ? 'selected' : ''; ?>>Published</option>
+                        <option value="draft" <?php echo $status_filter === 'draft' ? 'selected' : ''; ?>>Draft</option>
+                        <option value="archived" <?php echo $status_filter === 'archived' ? 'selected' : ''; ?>>Archived</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <a href="berita.php" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i>
+                        Reset Filter
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -1158,7 +1281,7 @@ body {
                             <td class="penulis-cell">
                                 <?php echo !empty($b['penulis']) ? htmlspecialchars($b['penulis'] ?? '') : '-'; ?>
                             </td>
-                            <td>
+                            <td class="tag-cell">
                                 <?php if (!empty($b['tag'])): ?>
                                     <?php 
                                     $tags = explode(',', $b['tag']);
@@ -1280,58 +1403,6 @@ body {
             <?php endif; ?>
         </div>
         <?php endif; ?>
-        
-        <!-- STATISTIK -->
-        <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: var(--card-shadow); margin-top: 30px;">
-            <h3 style="color: var(--primary); margin-bottom: 15px;">Statistik Berita</h3>
-            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                    <div style="font-size: 32px; color: var(--primary); font-weight: 700;"><?php echo $total_data; ?></div>
-                    <div style="color: var(--gray); font-size: 14px;">Total Berita</div>
-                </div>
-                
-                <?php 
-                try {
-                    // Count published
-                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM berita WHERE status = 'published'" . $ownership_where_sql);
-                    $stmt->execute($ownership_params);
-                    $published = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                    
-                    // Count draft
-                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM berita WHERE status = 'draft'" . $ownership_where_sql);
-                    $stmt->execute($ownership_params);
-                    $draft = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                    
-                    // Count archived
-                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM berita WHERE status = 'archived'" . $ownership_where_sql);
-                    $stmt->execute($ownership_params);
-                    $archived = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-                    
-                    // Total views
-                    $stmt = $conn->prepare("SELECT COALESCE(SUM(views), 0) as total_views FROM berita WHERE 1=1" . $ownership_where_sql);
-                    $stmt->execute($ownership_params);
-                    $total_views = $stmt->fetch(PDO::FETCH_ASSOC)['total_views'] ?? 0;
-                } catch (PDOException $e) {
-                    $published = $draft = $archived = $total_views = 0;
-                }
-                ?>
-                
-                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                    <div style="font-size: 32px; color: var(--success); font-weight: 700;"><?php echo $published; ?></div>
-                    <div style="color: var(--gray); font-size: 14px;">Published</div>
-                </div>
-                
-                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                    <div style="font-size: 32px; color: var(--gray); font-weight: 700;"><?php echo $draft; ?></div>
-                    <div style="color: var(--gray); font-size: 14px;">Draft</div>
-                </div>
-                
-                <div style="flex: 1; min-width: 200px; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 10px;">
-                    <div style="font-size: 32px; color: var(--accent); font-weight: 700;"><?php echo $total_views; ?></div>
-                    <div style="color: var(--gray); font-size: 14px;">Total Views</div>
-                </div>
-            </div>
-        </div>
     </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

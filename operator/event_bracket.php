@@ -918,7 +918,8 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
   .grid-2,.grid-4,.bracket-grid,.rank-list { grid-template-columns:1fr; }
   .topbar { flex-direction:column; align-items:flex-start; gap:12px; }
   .user-actions { width:100%; display:flex; justify-content:flex-end; }
-  .page-header { flex-direction:column; align-items:flex-start; }
+  .page-header { flex-direction:column; align-items:center; }
+  .page-title { width:100%; justify-content:center; text-align:center; }
   .page-header .action-buttons { width:100%; flex-direction:column; }
   .page-header .action-buttons .btn { width:100%; justify-content:center; }
 }

@@ -220,6 +220,15 @@ try {
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
 }
+
+$schedule_export_params = [];
+if ($search !== '') {
+    $schedule_export_params['search'] = $search;
+}
+if ($sport_filter !== '') {
+    $schedule_export_params['sport'] = $sport_filter;
+}
+$schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) ? '?' . http_build_query($schedule_export_params) : '');
 ?>
 
 <style>
@@ -607,7 +616,11 @@ try {
 <div class="card">
     <div class="section-header">
         <h2 class="section-title">Daftar Jadwal Pertandingan</h2>
-        <!-- Read Only: No Add Button -->
+        <div class="section-actions">
+            <a href="<?php echo htmlspecialchars($schedule_export_url); ?>" class="btn-export">
+                <i class="fas fa-download"></i> Export Excel
+            </a>
+        </div>
     </div>
 
     <div class="filter-container">
