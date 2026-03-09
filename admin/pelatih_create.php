@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tambah Pelatih</title>
+<title>Tambah User</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -652,7 +652,13 @@ body {
     .page-header {
         flex-direction: column;
         gap: 20px;
-        align-items: flex-start;
+        align-items: center;
+    }
+
+    .page-title {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
     }
 
     .action-buttons {
@@ -790,8 +796,8 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Tambah Pelatih Baru 👤</h1>
-                <p>Tambah data pelatih/administrator baru ke sistem</p>
+                <h1>Tambah User Baru 👤</h1>
+                <p>Tambah data user/administrator baru ke sistem</p>
             </div>
             
             <div class="user-actions">
@@ -806,7 +812,7 @@ body {
         <div class="page-header">
             <div class="page-title">
                 <i class="fas fa-user-plus"></i>
-                <span>Tambah Pelatih Baru</span>
+                <span>Tambah User Baru</span>
             </div>
             <div class="action-buttons">
                 <a href="pelatih.php" class="btn btn-secondary">
@@ -1034,7 +1040,7 @@ body {
                     </button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
-                        Simpan Data Pelatih
+                        Simpan Data User
                     </button>
                 </div>
             </form>

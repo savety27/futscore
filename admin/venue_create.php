@@ -541,7 +541,7 @@ body {
 
     .page-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
         gap: 12px;
         padding: 16px;
         border-radius: 16px;
@@ -552,6 +552,8 @@ body {
         width: 100%;
         font-size: 22px;
         gap: 10px;
+        justify-content: center;
+        text-align: center;
     }
 
     .page-title i {

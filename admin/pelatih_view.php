@@ -522,7 +522,13 @@ body {
     .page-header {
         flex-direction: column;
         gap: 20px;
-        align-items: flex-start;
+        align-items: center;
+    }
+
+    .page-title {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
     }
 
     .page-header .action-buttons {
@@ -681,8 +687,8 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1>Pelatih Profile 👤</h1>
-                <p>Detail informasi pelatih: <?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></p>
+                <h1>Pelatih User 👤</h1>
+                <p>Detail informasi user: <?php echo htmlspecialchars($pelatih_data['full_name'] ?? ''); ?></p>
             </div>
             
             <div class="user-actions">
@@ -697,7 +703,7 @@ body {
         <div class="page-header">
             <div class="page-title">
                 <i class="fas fa-user-circle"></i>
-                <span>Detail Pelatih</span>
+                <span>Detail User</span>
             </div>
             <div class="action-buttons">
                 <a href="pelatih.php" class="btn btn-secondary">
