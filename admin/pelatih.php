@@ -909,8 +909,156 @@ body {
     }
 
     /* Table Optimization */
+    .table-container {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+        overflow: visible;
+        margin-bottom: 20px;
+    }
+
     .data-table {
-        min-width: 1200px;
+        min-width: 0;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+    .data-table thead {
+        display: none;
+    }
+
+    .data-table tbody {
+        display: block;
+    }
+
+    .data-table tbody tr {
+        display: block;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(221, 231, 244, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(15, 39, 68, 0.08);
+        padding: 12px 14px;
+        margin-bottom: 10px;
+    }
+
+    .data-table tbody tr:hover {
+        transform: none;
+        box-shadow: 0 8px 20px rgba(15, 39, 68, 0.12);
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .data-table tbody tr:first-child:hover {
+        transform: none;
+    }
+
+    .data-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+        padding: 8px 0;
+        border-bottom: 1px dashed rgba(15, 39, 68, 0.15);
+        background: transparent;
+        border-radius: 0;
+        text-align: right;
+        font-size: 13px;
+        min-width: 0;
+    }
+
+    .data-table td::before {
+        content: attr(data-label);
+        color: var(--primary);
+        font-weight: 700;
+        text-align: left;
+        min-width: 120px;
+        flex: 0 0 120px;
+    }
+
+    .data-table td:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .data-table td[colspan] {
+        display: block;
+        text-align: center !important;
+        border-bottom: none;
+        padding: 0 !important;
+    }
+
+    .data-table td[colspan]::before {
+        content: none;
+    }
+
+    .data-table td[colspan] .empty-state {
+        padding: 26px 16px !important;
+        border-radius: 16px;
+    }
+
+    .data-table .username-cell,
+    .data-table .email-cell,
+    .data-table .name-cell,
+    .data-table .role-cell,
+    .data-table .team-cell,
+    .data-table .status-cell,
+    .data-table .lastlogin-cell,
+    .data-table .date-cell {
+        text-align: right;
+        font-size: 13px;
+    }
+
+    .data-table .action-cell {
+        min-width: 0;
+    }
+
+    .data-table .action-cell .action-buttons {
+        justify-content: flex-end;
+    }
+
+    .data-table .action-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    .pagination {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+    }
+
+    .page-link {
+        padding: 10px 14px;
+        font-size: 14px;
+        min-width: 42px;
+        text-align: center;
+    }
+
+    .alert {
+        align-items: flex-start;
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+    }
+
+    .modal-content {
+        width: calc(100% - 24px);
+        border-radius: 16px;
+        padding: 22px 18px;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -952,6 +1100,41 @@ body {
         width: 28px;
     }
 
+
+    .data-table tbody tr {
+        padding: 10px 12px;
+    }
+
+    .data-table td {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        gap: 4px;
+    }
+
+    .data-table td::before {
+        min-width: 0;
+        flex: 0 0 auto;
+    }
+
+    .data-table .username-cell,
+    .data-table .email-cell,
+    .data-table .name-cell,
+    .data-table .role-cell,
+    .data-table .team-cell,
+    .data-table .status-cell,
+    .data-table .lastlogin-cell,
+    .data-table .date-cell {
+        text-align: left;
+    }
+
+    .data-table .action-cell .action-buttons {
+        justify-content: flex-start;
+    }
+
+    .pagination {
+        justify-content: center;
+    }
 
     /* Compact buttons */
     .btn {
@@ -1043,8 +1226,8 @@ body {
         <!-- TOPBAR -->
         <div class="topbar">
             <div class="greeting">
-                <h1> Pelatih Management 👤</h1>
-                <p>Kelola data pelatih dan administrator dengan mudah</p>
+                <h1> User Management 👤</h1>
+                <p>Kelola data pelatih, operator, dan administrator dengan mudah</p>
             </div>
             
             <div class="user-actions">
@@ -1059,7 +1242,7 @@ body {
         <div class="page-header">
             <div class="page-title">
                 <i class="fas fa-users-cog"></i>
-                <span>Daftar Pelatih</span>
+                <span>Daftar User</span>
             </div>
 
             <div class="action-buttons">
@@ -1084,7 +1267,7 @@ body {
                             type="text"
                             name="search"
                             class="pelatih-search-input"
-                            placeholder="Cari pelatih (username, email, nama, role, tim, event)..."
+                            placeholder="Cari User (username, email, nama, role, tim, event)..."
                             value="<?php echo htmlspecialchars($search); ?>"
                         >
                     </div>
@@ -1145,17 +1328,17 @@ body {
                         <?php $no = $offset + 1; ?>
                         <?php foreach($pelatih as $p): ?>
                         <tr>
-                            <td class="count-cell"><?php echo $no++; ?></td>
-                            <td class="username-cell">
+                            <td class="count-cell" data-label="No"><?php echo $no++; ?></td>
+                            <td class="username-cell" data-label="Username">
                                 <strong><?php echo htmlspecialchars($p['username'] ?? ''); ?></strong>
                             </td>
-                            <td class="email-cell">
+                            <td class="email-cell" data-label="Email">
                                 <?php echo htmlspecialchars($p['email'] ?? ''); ?>
                             </td>
-                            <td class="name-cell">
+                            <td class="name-cell" data-label="Nama Lengkap">
                                 <?php echo !empty($p['full_name']) ? htmlspecialchars($p['full_name']) : '-'; ?>
                             </td>
-                            <td class="role-cell">
+                            <td class="role-cell" data-label="Role">
                                 <?php if ($p['role'] === 'superadmin'): ?>
                                     <span class="role-badge role-superadmin">Super Admin</span>
                                 <?php elseif ($p['role'] === 'admin'): ?>
@@ -1166,7 +1349,7 @@ body {
                                     <span class="role-badge role-pelatih">Pelatih</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="team-cell">
+                            <td class="team-cell" data-label="Tim">
                                 <?php if (!empty($p['team_name'])): ?>
                                     <span class="team-badge" title="<?php echo htmlspecialchars($p['team_alias'] ?? ''); ?>">
                                         <i class="fas fa-users"></i>
@@ -1176,7 +1359,7 @@ body {
                                     <span class="no-team">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="team-cell">
+                            <td class="team-cell" data-label="Event">
                                 <?php if (!empty($p['event_name'])): ?>
                                     <span class="team-badge">
                                         <i class="fas fa-calendar-alt"></i>
@@ -1186,23 +1369,23 @@ body {
                                     <span class="no-team">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="status-cell">
+                            <td class="status-cell" data-label="Status">
                                 <?php if ($p['is_active']): ?>
                                     <span class="badge badge-success">Aktif</span>
                                 <?php else: ?>
                                     <span class="badge badge-danger">Non-Aktif</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="lastlogin-cell">
+                            <td class="lastlogin-cell" data-label="Login Terakhir">
                                 <?php echo !empty($p['last_login']) ? date('d M Y H:i', strtotime($p['last_login'])) : '-'; ?>
                             </td>
-                            <td class="date-cell">
+                            <td class="date-cell" data-label="Tanggal Dibuat">
                                 <?php echo date('d M Y', strtotime($p['created_at'])); ?>
                             </td>
-                            <td class="date-cell">
+                            <td class="date-cell" data-label="Terakhir Update">
                                 <?php echo date('d M Y', strtotime($p['updated_at'])); ?>
                             </td>
-                            <td class="action-cell">
+                            <td class="action-cell" data-label="Aksi">
                                 <div class="action-buttons">
                                     <a href="pelatih_view.php?id=<?php echo $p['id']; ?>" 
                                        class="action-btn btn-view">
