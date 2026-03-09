@@ -55,6 +55,16 @@ function playerFileValidateImageUpload(array $file): ?string
     return null;
 }
 
+function playerFileValidateAndMoveUploadedOrFail(array $file, string $uploadDir, string $prefix): string
+{
+    $validationError = playerFileValidateImageUpload($file);
+    if ($validationError !== null) {
+        throw new Exception($validationError);
+    }
+
+    return playerFileMoveUploadedOrFail($file, $uploadDir, $prefix);
+}
+
 function playerFileMoveUploaded(array $file, string $uploadDir, string $prefix): ?string
 {
     $fileExtension = pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION);

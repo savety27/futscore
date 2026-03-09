@@ -129,10 +129,5 @@ function playerAddUploadRequiredImage(array $files, string $fieldName, string $p
 
 function playerAddUploadImage(array $file, string $uploadDir, string $prefix): string
 {
-    $validationError = playerFileValidateImageUpload($file);
-    if ($validationError !== null) {
-        throw new Exception($validationError);
-    }
-
-    return playerFileMoveUploadedOrFail($file, $uploadDir, $prefix);
+    return playerFileValidateAndMoveUploadedOrFail($file, $uploadDir, $prefix);
 }

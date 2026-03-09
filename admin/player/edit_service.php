@@ -105,12 +105,7 @@ function playerEditEnsureUploadDirectory(string $uploadDir): void
 function playerEditHandlePhotoUpload(array $post, array $files, ?string $existingPhoto, string $uploadDir): ?string
 {
     if (isset($files['photo']) && $files['photo']['error'] === UPLOAD_ERR_OK) {
-        $newFilename = playerFileMoveUploaded($files['photo'], $uploadDir, 'player_');
-        if ($newFilename !== null) {
-            return $newFilename;
-        }
-
-        return $existingPhoto;
+        return playerFileValidateAndMoveUploadedOrFail($files['photo'], $uploadDir, 'player_');
     }
 
     if (isset($post['delete_photo']) && $post['delete_photo'] === '1') {
@@ -129,10 +124,7 @@ function playerEditHandleDocumentUpload(
     string $uploadDir
 ): ?string {
     if (isset($files[$fieldName]) && $files[$fieldName]['error'] === UPLOAD_ERR_OK) {
-        $newFilename = playerFileMoveUploaded($files[$fieldName], $uploadDir, $type . '_');
-        if ($newFilename !== null) {
-            return $newFilename;
-        }
+        return playerFileValidateAndMoveUploadedOrFail($files[$fieldName], $uploadDir, $type . '_');
     }
 
     if (isset($post['delete_' . $fieldName])) {
