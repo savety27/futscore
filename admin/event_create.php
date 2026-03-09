@@ -648,6 +648,24 @@ document.getElementById('eventForm').addEventListener('submit', function (e) {
         }
     }
 });
+
+// Handle form reset
+document.getElementById('eventForm').addEventListener('reset', function () {
+    // Reset image preview
+    imagePreviewImg.src = '';
+    imageFileInfo.textContent = '';
+    imagePreview.style.display = 'none';
+    
+    // Reset status chips UI (needs slight delay to allow radio buttons to reset first)
+    setTimeout(() => {
+        document.querySelectorAll('.status-chip').forEach(function (chip) {
+            chip.classList.remove('active-open', 'active-close');
+            if (chip.querySelector('input').checked) {
+                chip.classList.add(chip.querySelector('input').value === 'open' ? 'active-open' : 'active-close');
+            }
+        });
+    }, 10);
+});
 </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
