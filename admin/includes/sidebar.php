@@ -44,9 +44,9 @@ $menu_items = [
         'url' => 'venue.php',
         'submenu' => false
     ],
-    'Pelatih' => [
+    'User' => [
         'icon' => 'fas fa-chalkboard-teacher',
-        'name' => 'Pelatih',
+        'name' => 'User',
         'url' => 'pelatih.php',
         'submenu' => false
     ],
