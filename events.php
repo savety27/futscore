@@ -1554,7 +1554,7 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             <?php else: ?>
-                <div class="container section-container section-elevated">
+                <div class="container section-container section-elevated all-section-card">
                     <div class="section-header">
                         <h2 class="section-title">EVENT</h2>
                         <div class="section-tabs">
@@ -1562,7 +1562,7 @@ include 'includes/sidebar.php';
                         </div>
                     </div>
 
-                    <div class="team-filter-card">
+                    <div class="team-filter-card blue-wrapper all-filter-card">
                         <label class="team-filter-label" for="eventSelector">Pilih Event</label>
                         <div class="team-selector">
                             <select id="eventSelector" class="event-selector-select" onchange="if(this.value) window.location.href='events.php?id=' + this.value">

@@ -401,7 +401,7 @@ include 'includes/sidebar.php';
                     </div>
                     <?php endif; ?>
                 <?php else: ?>
-                    <div class="news-controls-section section-container section-elevated">
+                    <div class="news-controls-section section-container section-elevated all-section-card">
                         <div class="search-container">
                             <form method="GET" action="news.php" class="search-form">
                                 <div class="search-wrapper">

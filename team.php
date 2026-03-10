@@ -1001,7 +1001,7 @@ include 'includes/sidebar.php';
 
             <?php else: ?>
                 <!-- TEAM LISTING VIEW -->
-                <div class="container section-container section-elevated">
+                <div class="container section-container section-elevated all-section-card">
                     <div class="section-header">
                         <h2 class="section-title">TEAM</h2>
                         <div class="section-tabs">
@@ -1009,7 +1009,7 @@ include 'includes/sidebar.php';
                         </div>
                     </div>
 
-                    <div class="team-filter-card">
+                    <div class="team-filter-card all-filter-card">
                         <label class="team-filter-label" for="teamSelector">Pilih Team</label>
                         <div class="team-selector">
                             <select id="teamSelector" onchange="if(this.value) window.location.href='team.php?id=' + this.value">

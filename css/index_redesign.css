@@ -2259,6 +2259,76 @@
     gap: 10px;
 }
 
+.team-filter-card.all-filter-card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-top: 0;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    position: relative;
+    isolation: isolate;
+}
+
+.team-filter-card.all-filter-card:hover {
+    transform: translateY(-3px);
+    border-color: #9fcbff;
+    box-shadow: 0 16px 34px rgba(30, 64, 175, 0.14);
+}
+
+.team-filter-card.all-filter-card::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(147, 197, 253, 0.22));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: -1;
+}
+
+.team-filter-card.all-filter-card:hover::after {
+    opacity: 1;
+}
+
+.section-container.all-section-card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    position: relative;
+    isolation: isolate;
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.section-container.all-section-card:hover {
+    transform: translateY(-3px);
+    border-color: #9fcbff;
+    box-shadow: 0 16px 34px rgba(30, 64, 175, 0.14);
+}
+
+.section-container.all-section-card::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.55), rgba(147, 197, 253, 0.22));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+    z-index: -1;
+}
+
+.section-container.all-section-card:hover::after {
+    opacity: 1;
+}
+
 .team-filter-label {
     font-size: 11px;
     text-transform: uppercase;
