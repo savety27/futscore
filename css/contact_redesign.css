@@ -123,6 +123,24 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+.dashboard-header.contact-header .contact-action.primary,
+.dashboard-header.contact-header .contact-action.ghost {
+    background: rgba(10, 22, 40, 0.38);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: none;
+    backdrop-filter: blur(2px);
+}
+
+.dashboard-header.contact-header .contact-action.primary:hover,
+.dashboard-header.contact-header .contact-action.ghost:hover {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy-dark);
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.4);
+    transform: translateY(-2px);
+}
+
 .dashboard-body {
     padding: 0 50px 60px;
 }

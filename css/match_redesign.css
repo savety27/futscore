@@ -59,6 +59,24 @@
     text-shadow: 0 3px 14px rgba(10, 22, 40, 0.5);
 }
 
+.dashboard-header-match .btn-primary,
+.dashboard-header-match .btn-secondary {
+    background: rgba(10, 22, 40, 0.38);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: none;
+    backdrop-filter: blur(2px);
+}
+
+.dashboard-header-match .btn-primary:hover,
+.dashboard-header-match .btn-secondary:hover {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--navy-dark);
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(245, 158, 11, 0.4);
+    transform: translateY(-2px);
+}
+
 .header-meta {
     position: relative;
     z-index: 1;
