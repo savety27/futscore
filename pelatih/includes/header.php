@@ -128,7 +128,7 @@ if ($team_id && isset($conn)) {
             </div>
             
             <div class="user-actions">
-                <a href="../admin/logout.php" class="logout-btn">
+                <a href="../pelatih/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Keluar
                 </a>
             </div>
