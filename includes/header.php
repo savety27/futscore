@@ -24,7 +24,11 @@ $latestNews = getLatestNews(3);
     }
     ?>
 </head>
-<body>
+<?php 
+    $pageName = basename($_SERVER['PHP_SELF'], '.php');
+    $bodyClass = "page-" . $pageName;
+?>
+<body class="<?php echo htmlspecialchars($bodyClass); ?>">
     <!-- Top Navbar -->
     <?php if (!isset($hideNavbars) || !$hideNavbars): ?>
     <div class="top-navbar">

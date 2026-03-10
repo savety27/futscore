@@ -237,49 +237,7 @@ include 'includes/sidebar.php';
 </div>
 
 <script>
-// Image Modal Functionality
-function openModal(imageSrc, caption) {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    const modalCaption = document.getElementById('modalCaption');
-
-    modal.style.display = "block";
-    modal.setAttribute('aria-hidden', 'false');
-    modalImg.src = imageSrc;
-    modalCaption.textContent = caption || '';
-
-    // Disable scroll on body when modal is open
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-    const modal = document.getElementById('imageModal');
-    modal.style.display = "none";
-    modal.setAttribute('aria-hidden', 'true');
-
-    // Re-enable scroll
-    document.body.style.overflow = 'auto';
-}
-
-// Close modal when clicking outside the image
-const modalEl = document.getElementById('imageModal');
-if (modalEl) {
-    modalEl.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-}
-
-// Keyboard navigation
-document.addEventListener('keydown', function(e) {
-    const modal = document.getElementById('imageModal');
-    if (modal && modal.style.display === "block") {
-        if (e.key === "Escape") {
-            closeModal();
-        }
-    }
-});
+// Image Modal Functionality handled by js/script.js
 </script>
 
 <script>

@@ -785,10 +785,118 @@ function initAllPageFunctionality() {
         });
     });
 
-    // Reset filter pada page load
+    // Auto-apply filter on status change
     document.getElementById('statusFilter')?.addEventListener('change', function () {
-        document.getElementById('applyFilter').click();
+        document.getElementById('applyFilter')?.click();
     });
+
+    // Auto-apply filter on entries per page change
+    document.getElementById('entriesPerPage')?.addEventListener('change', function () {
+        document.getElementById('applyFilter')?.click();
+    });
+
+    // Apply Filter Button Logic
+    const applyBtn = document.getElementById('applyFilter');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+            const status = document.getElementById('statusFilter')?.value || 'result';
+            const eventId = document.getElementById('eventFilter')?.value || '0';
+            const teamId = document.getElementById('teamFilter')?.value || '0';
+            const perPage = document.getElementById('entriesPerPage')?.value || '40';
+
+            let url = '?status=' + status;
+            if (eventId && eventId !== '0') url += '&event=' + encodeURIComponent(eventId);
+            if (teamId && teamId !== '0') url += '&team=' + teamId;
+            if (perPage) url += '&per_page=' + perPage;
+
+            window.location.href = url;
+        });
+    }
+
+    // Reset Filter Button Logic
+    const resetBtn = document.getElementById('resetFilter');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            window.location.href = '?status=result';
+        });
+    }
+}
+
+// Function khusus untuk halaman team.php
+function initTeamPageFunctionality() {
+    console.log('Initializing team.php functionality');
+    const searchInput = document.getElementById('search');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const teamCards = document.querySelectorAll('.team-directory-card');
+            
+            teamCards.forEach(card => {
+                const teamName = card.dataset.teamName || '';
+                if (teamName.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+}
+
+// Function khusus untuk halaman bpjs.php
+function initBpjsPageFunctionality() {
+    console.log('Initializing bpjs.php functionality');
+    
+    window.openModal = function(imageSrc, caption) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const modalCaption = document.getElementById('modalCaption');
+
+        if(modal && modalImg && modalCaption) {
+            modal.style.display = "block";
+            modal.setAttribute('aria-hidden', 'false');
+            modalImg.src = imageSrc;
+            modalCaption.textContent = caption || '';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeModal = function() {
+        const modal = document.getElementById('imageModal');
+        if(modal) {
+            modal.style.display = "none";
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    const modalEl = document.getElementById('imageModal');
+    if (modalEl) {
+        modalEl.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.closeModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('imageModal');
+        if (modal && modal.style.display === "block" && e.key === "Escape") {
+            window.closeModal();
+        }
+    });
+}
+
+// Function khusus untuk halaman contact.php
+function initContactPageFunctionality() {
+    console.log('Initializing contact.php functionality');
+    
+    window.openWhatsApp = function(phone, name, context) {
+        const message = `Halo ${name}, saya tertarik dengan ${context} dari Alvetrix.`;
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    };
 }
 
 // Main JavaScript Initialization
@@ -805,6 +913,17 @@ document.addEventListener('DOMContentLoaded', function () {
     initMobileNavigation();
     initAllPageFunctionality(); // Initialize all page functionality
     initSidebarToggle(); // Initialize sidebar toggle
+
+    // Initialize page-specific scripts based on body class
+    if (document.body.classList.contains('page-team')) {
+        initTeamPageFunctionality();
+    }
+    if (document.body.classList.contains('page-bpjs')) {
+        initBpjsPageFunctionality();
+    }
+    if (document.body.classList.contains('page-contact')) {
+        initContactPageFunctionality();
+    }
 
     // Match card click handlers
     document.querySelectorAll('.match-card').forEach(card => {
