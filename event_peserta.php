@@ -2,8 +2,8 @@
 $hideNavbars = true;
 require_once 'includes/header.php';
 ?>
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/event_peserta.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/event_peserta.css?v=<?php echo getAssetVersion('/css/event_peserta.css'); ?>">
 <?php
 
 $pageTitle = 'Peserta Event';
@@ -442,6 +442,6 @@ include 'includes/sidebar.php';
 <script>
 </script>
 
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 </body>
 </html>

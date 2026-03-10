@@ -140,8 +140,8 @@ usort($timeline_events, function($a, $b) {
 });
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/event_detail_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/event_detail_redesign.css?v=<?php echo getAssetVersion('/css/event_detail_redesign.css'); ?>">
 
 <div class="dashboard-wrapper">
     <!-- Mobile Header -->
@@ -205,7 +205,7 @@ include 'includes/sidebar.php';
                             <div class="score-display">
                                 <?php echo $event['challenger_score']; ?><span class="score-separator">:</span><?php echo $event['opponent_score']; ?>
                             </div>
-                        <?php else: ?>
+                        <? else: ?>
                             <div class="score-pending">
                                 Belum dimainkan
                             </div>
@@ -417,7 +417,6 @@ include 'includes/sidebar.php';
 <script>
 const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 </body>
 </html>
-

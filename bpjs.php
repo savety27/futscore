@@ -6,8 +6,8 @@ require_once 'includes/header.php';
 $pageTitle = "BPJS Ketenagakerjaan";
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/bpjs_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/bpjs_redesign.css?v=<?php echo getAssetVersion('/css/bpjs_redesign.css'); ?>">
 
 <div class="dashboard-wrapper">
 <?php

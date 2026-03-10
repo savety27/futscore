@@ -3,6 +3,29 @@ if (!isset($db) || !is_object($db) || !method_exists($db, 'getConnection')) {
     require_once __DIR__ . '/db.php';
 }
 
+/**
+ * Get asset version based on file modification time for cache busting.
+ * @param string $path Path to the asset relative to the project root or absolute path.
+ * @return int|string Timestamp of last modification or current time as fallback.
+ */
+function getAssetVersion($path) {
+    // If it's a SITE_URL based path, try to convert it to local path
+    if (defined('SITE_URL') && strpos($path, SITE_URL) === 0) {
+        $localPath = str_replace(SITE_URL, '', $path);
+        $fullPath = __DIR__ . '/../' . ltrim($localPath, '/');
+    } else {
+        // Assume it's a relative path from project root or absolute path
+        $fullPath = (strpos($path, '/') === 0) ? $path : __DIR__ . '/../' . $path;
+    }
+    
+    if (file_exists($fullPath)) {
+        return filemtime($fullPath);
+    }
+    
+    // Fallback to constant if available, otherwise current time (to avoid cache forever on missing files)
+    return defined('ASSET_VERSION') ? ASSET_VERSION : time();
+}
+
 // ========== FUNGSI UTAMA ==========
 
 /**

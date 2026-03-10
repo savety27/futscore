@@ -1199,14 +1199,10 @@ $pageTitle = "Staff List";
         gap: 10px;
         text-align: center;
     }
-    
-    .certificates-grid {
-        grid-template-columns: 1fr;
-    }
 }
 </style>
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo getAssetVersion('/css/staff_redesign.css'); ?>">
 <style>
 .dashboard-body.has-profile-detail .filter-card {
     margin-top: 0;
@@ -2674,8 +2670,7 @@ if (staffHistoryModal) {
 }
 </script>
 
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 
 </body>
 </html>
-

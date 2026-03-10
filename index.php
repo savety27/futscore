@@ -3,8 +3,8 @@ require_once 'includes/config.php';
 
 $hideNavbars = true;
 $extraStyles = [
-    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . time() . '">',
-    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . time() . '">'
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . getAssetVersion('/css/redesign_core.css') . '">',
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . getAssetVersion('/css/index_redesign.css') . '">'
 ];
 require_once 'includes/header.php';
 
@@ -912,6 +912,6 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
 // Define SITE_URL for JavaScript
 const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 </body>
 </html>

@@ -25,8 +25,8 @@ if ($status !== 'schedule' && $status !== 'result') {
 require_once 'includes/header.php';
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/all_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/all_redesign.css?v=<?php echo getAssetVersion('/css/all_redesign.css'); ?>">
 
 <?php
 $conn = $db->getConnection();
@@ -347,8 +347,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 </body>
 </html>
-
-

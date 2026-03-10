@@ -1206,8 +1206,8 @@ $pageTitle = "Perangkat Pertandingan";
     }
 }
 </style>
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo getAssetVersion('/css/staff_redesign.css'); ?>">
 <style>
 .staff-table-new td.col-name .staff-name {
     color: #111827 !important;
@@ -1713,7 +1713,9 @@ include 'includes/sidebar.php';
                             <div class="entity-profile-identity">
                                 <div class="entity-profile-photo">
                                     <?php if ($perangkat_detail_photo['found']): ?>
-                                        <img src="<?php echo $perangkat_detail_photo['url']; ?>" alt="<?php echo htmlspecialchars((string)($perangkat_detail['name'] ?? '')); ?>">
+                                        <img src="<?php echo $perangkat_detail_photo['url']; ?>" 
+                                                 class="staff-img-sm" 
+                                                 alt="<?php echo htmlspecialchars((string)($perangkat_detail['name'] ?? '')); ?>">
                                     <?php else: ?>
                                         <div class="entity-profile-photo-placeholder"><i class="fas <?php echo htmlspecialchars($perangkat_detail_photo['icon']); ?>"></i></div>
                                     <?php endif; ?>
@@ -1850,7 +1852,7 @@ include 'includes/sidebar.php';
                 <div class="filter-summary">
                     <div class="summary-item">
                         <span class="summary-label">Menampilkan</span>
-                        <span class="summary-value"><?php echo min($offset + 1, $total_records); ?> - <?php echo min($offset + $limit, $total_records); ?></span>
+                        <span class="summary-value"><?php echo min($offset + 1, $total_records); ?> - <?php echo min($offset + $limit, $total_records); ?> dari <?php echo number_format($total_records); ?> data</span>
                     </div>
                     <div class="summary-item">
                         <span class="summary-label">Total Perangkat</span>
@@ -2598,7 +2600,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 <script>
 // Tap-to-expand popover for event count badges (mobile-friendly)
 (function () {

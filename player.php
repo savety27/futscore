@@ -3,8 +3,8 @@ $hideNavbars = true;
 $pageTitle = "Player Directory";
 require_once 'includes/header.php';
 ?>
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/player_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/player_redesign.css?v=<?php echo getAssetVersion('/css/player_redesign.css'); ?>">
 <style>
     .player-table-new {
         min-width: 1120px;
@@ -1517,7 +1517,7 @@ const renderPlayerHistoryRows = (matches) => {
             if (!Number.isNaN(myScore) && !Number.isNaN(oppScore)) {
                 if (myScore > oppScore) resultHtml = `<span class="h-result-win">M ${myScore}-${oppScore}</span>`;
                 else if (myScore < oppScore) resultHtml = `<span class="h-result-lose">K ${myScore}-${oppScore}</span>`;
-                else resultHtml = `<span class="h-result-draw">S ${myScore}-${oppScore}</span>`;
+                else if (myScore === oppScore) resultHtml = `<span class="h-result-draw">S ${myScore}-${oppScore}</span>`;
             }
         }
 
@@ -1662,7 +1662,7 @@ if (historyPanel && historyToggle && historyContent) {
 // Define SITE_URL for JavaScript
 const SITE_URL = '<?php echo SITE_URL; ?>';
 </script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 <script>
 // Tap-to-expand popover for event count badges (mobile-friendly)
 (function () {

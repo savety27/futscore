@@ -4,8 +4,8 @@ require_once 'includes/config.php';
 $hideNavbars = true;
 $pageTitle = "404 - Halaman Tidak Ditemukan";
 $extraStyles = [
-    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . time() . '">',
-    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . time() . '">'
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . getAssetVersion('/css/redesign_core.css') . '">',
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . getAssetVersion('/css/index_redesign.css') . '">'
 ];
 require_once 'includes/header.php';
 ?>
