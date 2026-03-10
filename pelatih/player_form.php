@@ -1,5 +1,7 @@
 <?php
 require_once 'config/database.php';
+$page_title = 'Pemain Saya';
+$current_page = 'players';
 require_once 'includes/header.php';
 
 $event_helper_path = __DIR__ . '/../admin/includes/event_helpers.php';
