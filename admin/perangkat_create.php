@@ -806,6 +806,76 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 font-size: 12px;
             }
         }
+
+        /* Image Modal Styles */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-modal.show {
+            display: flex;
+            opacity: 1;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .image-modal.show .image-modal-content {
+            transform: scale(1);
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+            z-index: 10000;
+        }
+
+        .image-modal-close:hover,
+        .image-modal-close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Make preview images look clickable */
+        .file-preview img,
+        .license-file-preview img {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .file-preview img:hover,
+        .license-file-preview img:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 
@@ -986,6 +1056,12 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close" id="imageModalClose">&times;</span>
+        <img class="image-modal-content" id="imageModalContent">
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -1537,6 +1613,59 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                             focusableTarget.focus({ preventScroll: true });
                         }
                     }
+                }
+            });
+
+            // --- Image Modal Logic ---
+            const modal = document.getElementById("imageModal");
+            const modalImg = document.getElementById("imageModalContent");
+            const spanClose = document.getElementById("imageModalClose");
+
+            function openModal(imgSrc) {
+                if (imgSrc && imgSrc !== '#' && imgSrc !== window.location.href + '#') {
+                    modal.classList.add('show');
+                    modalImg.src = imgSrc;
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+                }
+            }
+
+            function closeModal() {
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    modalImg.src = "";
+                }, 300); // Wait for transition
+                document.body.style.overflow = '';
+            }
+
+            // Close on 'x' click
+            spanClose.onclick = closeModal;
+
+            // Close on background click
+            modal.onclick = function(e) {
+                if (e.target !== modalImg) {
+                    closeModal();
+                }
+            };
+            
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    closeModal();
+                }
+            });
+
+            // Bind click events to existing static preview images
+            document.getElementById('photoPreviewImg').addEventListener('click', function() {
+                openModal(this.src);
+            });
+            document.getElementById('ktpPreviewImg').addEventListener('click', function() {
+                openModal(this.src);
+            });
+
+            // Use event delegation for dynamically added license preview images
+            document.getElementById('licensesContainer').addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('license-preview-image')) {
+                    openModal(e.target.src);
                 }
             });
         });
