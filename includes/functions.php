@@ -756,6 +756,17 @@ function getCompletedChallenges($limit = 10) {
       // Calculate pagination
       $offset = ($params['page'] - 1) * $params['per_page'];
       
+      $allowedOrderColumns = [
+          'challenge_date' => 'c.challenge_date',
+          'created_at' => 'c.created_at',
+          'updated_at' => 'c.updated_at',
+          'status' => 'c.status',
+          'sport_type' => 'c.sport_type'
+      ];
+      $orderByParam = strtolower(trim((string)($params['order_by'] ?? 'challenge_date')));
+      $orderBy = $allowedOrderColumns[$orderByParam] ?? 'c.challenge_date';
+      $orderDir = strtoupper(trim((string)($params['order_dir'] ?? 'DESC'))) === 'ASC' ? 'ASC' : 'DESC';
+
       // Build main query
       $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
                      t2.name as opponent_name, t2.logo as opponent_logo, 
@@ -765,7 +776,7 @@ function getCompletedChallenges($limit = 10) {
               LEFT JOIN teams t2 ON c.opponent_id = t2.id
               LEFT JOIN venues v ON c.venue_id = v.id
               $whereClause
-              ORDER BY c.{$params['order_by']} {$params['order_dir']}
+              ORDER BY {$orderBy} {$orderDir}
               LIMIT ? OFFSET ?";
       
       $bindParams[] = $params['per_page'];
