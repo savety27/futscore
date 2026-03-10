@@ -1,7 +1,7 @@
-# FutScore Project Overview
+# Alvetrix Project Overview
 
 ## Purpose
-FutScore is a management system for football or futsal scoring and player management.
+Alvetrix is a management system for football or futsal scoring and player management.
 
 ## Tech Stack
 - **Backend**: PHP (using both mysqli and PDO)

@@ -1,4 +1,4 @@
-# Suggested Commands for FutScore
+# Suggested Commands for Alvetrix
 
 ## Development
 - **Install Dependencies**: `composer install`
