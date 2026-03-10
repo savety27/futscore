@@ -793,7 +793,7 @@ body {
             </div>
             
             <div class="user-actions">
-                <a href="../admin/logout.php" class="logout-btn">
+                <a href="../operator/logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     Keluar
                 </a>

@@ -951,7 +951,7 @@ body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-
                 <p>Mode 4 tim: Semifinal, Final, dan perebutan juara 3.</p>
             </div>
             <div class="user-actions">
-                <a href="../admin/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+                <a href="../operator/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
             </div>
         </div>
 
