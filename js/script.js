@@ -6,6 +6,61 @@ let currentMatchId = null;
 let matchDetailsCache = {};
 let scheduleModalData = {};
 
+/**
+ * SIDEBAR LOGIC
+ */
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    element.classList.toggle('open');
+}
+
+const setSidebarOpen = (open) => {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
+function initSidebarToggle() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (sidebarToggle && sidebar && sidebarOverlay) {
+        sidebarToggle.addEventListener('click', () => {
+            const isOpen = sidebar.classList.contains('active');
+            setSidebarOpen(!isOpen);
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            setSidebarOpen(false);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setSidebarOpen(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                setSidebarOpen(false);
+            }
+        });
+    }
+}
+
 // Match Modal Functions
 function openMatchModal(matchId) {
     console.log('Opening match modal for ID:', matchId);
@@ -749,6 +804,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initChatModal();
     initMobileNavigation();
     initAllPageFunctionality(); // Initialize all page functionality
+    initSidebarToggle(); // Initialize sidebar toggle
 
     // Match card click handlers
     document.querySelectorAll('.match-card').forEach(card => {
