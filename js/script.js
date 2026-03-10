@@ -6,6 +6,61 @@ let currentMatchId = null;
 let matchDetailsCache = {};
 let scheduleModalData = {};
 
+/**
+ * SIDEBAR LOGIC
+ */
+function toggleDropdown(element, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle('show');
+    element.classList.toggle('open');
+}
+
+const setSidebarOpen = (open) => {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+    
+    sidebar.classList.toggle('active', open);
+    sidebarOverlay.classList.toggle('active', open);
+    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('sidebar-open', open);
+};
+
+function initSidebarToggle() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (sidebarToggle && sidebar && sidebarOverlay) {
+        sidebarToggle.addEventListener('click', () => {
+            const isOpen = sidebar.classList.contains('active');
+            setSidebarOpen(!isOpen);
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            setSidebarOpen(false);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setSidebarOpen(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                setSidebarOpen(false);
+            }
+        });
+    }
+}
+
 // Match Modal Functions
 function openMatchModal(matchId) {
     console.log('Opening match modal for ID:', matchId);
@@ -722,7 +777,8 @@ function initAllPageFunctionality() {
                 e.stopPropagation();
             }
 
-            const matchId = this.dataset.matchId || this.closest('.match-row')?.dataset.matchId;
+            const closestRow = this.closest('.match-row');
+            const matchId = this.dataset.matchId || (closestRow ? closestRow.dataset.matchId : null);
             if (matchId) {
                 // Always redirect to match detail page
                 window.location.href = `${SITE_URL}/match.php?id=${matchId}`;
@@ -730,10 +786,130 @@ function initAllPageFunctionality() {
         });
     });
 
-    // Reset filter pada page load
-    document.getElementById('statusFilter')?.addEventListener('change', function () {
-        document.getElementById('applyFilter').click();
+    // Auto-apply filter on status change
+    const statusFilterEl = document.getElementById('statusFilter');
+    if (statusFilterEl) {
+        statusFilterEl.addEventListener('change', function () {
+            const applyBtnEl = document.getElementById('applyFilter');
+            if (applyBtnEl) applyBtnEl.click();
+        });
+    }
+
+    // Auto-apply filter on entries per page change
+    const entriesPerPageEl = document.getElementById('entriesPerPage');
+    if (entriesPerPageEl) {
+        entriesPerPageEl.addEventListener('change', function () {
+            const applyBtnEl = document.getElementById('applyFilter');
+            if (applyBtnEl) applyBtnEl.click();
+        });
+    }
+
+    // Apply Filter Button Logic
+    const applyBtn = document.getElementById('applyFilter');
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+            const statusFilter = document.getElementById('statusFilter');
+            const status = statusFilter ? statusFilter.value : 'result';
+            const eventFilter = document.getElementById('eventFilter');
+            const eventId = eventFilter ? eventFilter.value : '0';
+            const teamFilter = document.getElementById('teamFilter');
+            const teamId = teamFilter ? teamFilter.value : '0';
+            const entriesPerPageInput = document.getElementById('entriesPerPage');
+            const perPage = entriesPerPageInput ? entriesPerPageInput.value : '40';
+
+            let url = '?status=' + status;
+            if (eventId && eventId !== '0') url += '&event=' + encodeURIComponent(eventId);
+            if (teamId && teamId !== '0') url += '&team=' + teamId;
+            if (perPage) url += '&per_page=' + perPage;
+
+            window.location.href = url;
+        });
+    }
+
+    // Reset Filter Button Logic
+    const resetBtn = document.getElementById('resetFilter');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            window.location.href = '?status=result';
+        });
+    }
+}
+
+// Function khusus untuk halaman team.php
+function initTeamPageFunctionality() {
+    console.log('Initializing team.php functionality');
+    const searchInput = document.getElementById('search');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const teamCards = document.querySelectorAll('.team-directory-card');
+            
+            teamCards.forEach(card => {
+                const teamName = card.dataset.teamName || '';
+                if (teamName.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+}
+
+// Function khusus untuk halaman bpjs.php
+function initBpjsPageFunctionality() {
+    console.log('Initializing bpjs.php functionality');
+    
+    window.openModal = function(imageSrc, caption) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const modalCaption = document.getElementById('modalCaption');
+
+        if(modal && modalImg && modalCaption) {
+            modal.style.display = "block";
+            modal.setAttribute('aria-hidden', 'false');
+            modalImg.src = imageSrc;
+            modalCaption.textContent = caption || '';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeModal = function() {
+        const modal = document.getElementById('imageModal');
+        if(modal) {
+            modal.style.display = "none";
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        }
+    };
+
+    const modalEl = document.getElementById('imageModal');
+    if (modalEl) {
+        modalEl.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.closeModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('imageModal');
+        if (modal && modal.style.display === "block" && e.key === "Escape") {
+            window.closeModal();
+        }
     });
+}
+
+// Function khusus untuk halaman contact.php
+function initContactPageFunctionality() {
+    console.log('Initializing contact.php functionality');
+    
+    window.openWhatsApp = function(phone, name, context) {
+        const message = `Halo ${name}, saya tertarik dengan ${context} dari Alvetrix.`;
+        const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    };
 }
 
 // Main JavaScript Initialization
@@ -749,6 +925,18 @@ document.addEventListener('DOMContentLoaded', function () {
     initChatModal();
     initMobileNavigation();
     initAllPageFunctionality(); // Initialize all page functionality
+    initSidebarToggle(); // Initialize sidebar toggle
+
+    // Initialize page-specific scripts based on body class
+    if (document.body.classList.contains('page-team')) {
+        initTeamPageFunctionality();
+    }
+    if (document.body.classList.contains('page-bpjs')) {
+        initBpjsPageFunctionality();
+    }
+    if (document.body.classList.contains('page-contact')) {
+        initContactPageFunctionality();
+    }
 
     // Match card click handlers
     document.querySelectorAll('.match-card').forEach(card => {

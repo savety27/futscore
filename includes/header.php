@@ -8,12 +8,27 @@ $latestNews = getLatestNews(3);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($pageTitle) ? $pageTitle . ' | ' : ''; ?><?php echo SITE_NAME; ?></title>
-    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/style.css?v=<?php echo getAssetVersion('/css/style.css'); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <?php 
+    if (isset($extraStyles)) {
+        if (is_array($extraStyles)) {
+            foreach ($extraStyles as $style) {
+                echo $style . "\n";
+            }
+        } else {
+            echo $extraStyles . "\n";
+        }
+    }
+    ?>
 </head>
-<body>
+<?php 
+    $pageName = basename($_SERVER['PHP_SELF'], '.php');
+    $bodyClass = "page-" . $pageName;
+?>
+<body class="<?php echo htmlspecialchars($bodyClass); ?>">
     <!-- Top Navbar -->
     <?php if (!isset($hideNavbars) || !$hideNavbars): ?>
     <div class="top-navbar">

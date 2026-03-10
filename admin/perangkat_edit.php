@@ -814,10 +814,16 @@ if (!empty($removed_license_ids)) {
                 grid-template-columns: 1fr;
             }
 
-            .topbar,
-            .page-header {
+            .topbar {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 12px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
                 gap: 12px;
             }
 

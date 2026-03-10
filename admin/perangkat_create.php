@@ -738,10 +738,16 @@ $persisted_ktp_photo = $temp_uploads['ktp_photo'] ?? null;
                 grid-template-columns: 1fr;
             }
 
-            .topbar,
-            .page-header {
+            .topbar {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 12px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
                 gap: 12px;
             }
 

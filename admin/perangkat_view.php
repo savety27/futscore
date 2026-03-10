@@ -483,10 +483,16 @@ $full_address = !empty($address_parts) ? implode(', ', $address_parts) : '-';
                 padding: 20px 15px;
             }
 
-            .topbar,
-            .page-header {
+            .topbar {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 12px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
                 gap: 12px;
             }
 

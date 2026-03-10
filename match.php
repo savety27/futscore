@@ -1,4 +1,6 @@
 <?php
+require_once 'includes/functions.php';
+
 // ============================================
 // SEMUA LOGIC DAN REDIRECT HARUS SEBELUM OUTPUT
 // ============================================
@@ -17,6 +19,12 @@ if ($matchId <= 0) {
 $requestedSource = strtolower(trim((string) ($_GET['source'] ?? '')));
 $source = $requestedSource === 'match' ? 'match' : 'challenge';
 $requestedEventId = isset($_GET['event_id']) ? (int)$_GET['event_id'] : 0;
+
+$extraStyles = [
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . getAssetVersion('/css/redesign_core.css') . '">',
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . getAssetVersion('/css/index_redesign.css') . '">',
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/match_redesign.css?v=' . getAssetVersion('/css/match_redesign.css') . '">'
+];
 
 // Sekarang baru require header
 require_once 'includes/header.php'; 
@@ -404,9 +412,6 @@ if (!$matchNotFound) {
 
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/match_redesign.css?v=<?php echo time(); ?>">
 
 <style>
 /* Custom Tabs for Match Lineup */
@@ -533,64 +538,10 @@ if (!$matchNotFound) {
 </style>
 
 <div class="dashboard-wrapper">
-    <!-- Mobile Header -->
-    <header class="mobile-dashboard-header">
-        <div class="mobile-logo">
-            <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
-        </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
-            <i class="fas fa-bars"></i>
-        </button>
-    </header>
-
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
-
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar" aria-hidden="true">
-        <div class="sidebar-logo">
-            <a href="<?php echo SITE_URL; ?>">
-                <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
-            </a>
-        </div>
-        <nav class="sidebar-nav">
-            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="events.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="all.php" class="active"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
-            <div class="nav-item-dropdown">
-                <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
-                    <div class="nav-link-content">
-                        <i class="fas fa-users"></i> <span>PEMAIN</span>
-                    </div>
-                    <i class="fas fa-chevron-down dropdown-icon"></i>
-                </a>
-                <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Team</a>
-                    <a href="perangkat.php">Perangkat Pertandingan</a>
-                </div>
-            </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
-            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
-            
-            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
-
-            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
-                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL.'/pelatih/dashboard.php' : SITE_URL.'/admin/dashboard.php'); ?>">
-                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
-                </a>
-                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
-                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
-                </a>
-            <?php else: ?>
-                <a href="login.php" class="btn-login-sidebar">
-                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
-                </a>
-            <?php endif; ?>
-        </nav>
-    </aside>
+<?php 
+$currentPage = 'challenge';
+include 'includes/sidebar.php'; 
+?>
 
     <!-- Main Content -->
     <main class="main-content-dashboard">
@@ -1219,94 +1170,4 @@ if (!$matchNotFound) {
             <?php endif; ?>
         </div>
 
-         <footer class="dashboard-footer">
-            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
-            <p>
-                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
-                <a href="contact.php">Kontak</a> |
-                <a href="bpjs.php">BPJSTK</a>
-            </p>
-        </footer>
-    </main>
-</div>
-
-<script>
-// Sidebar Dropdown Toggle
-function toggleDropdown(element, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-    
-    dropdown.classList.toggle('show');
-    element.classList.toggle('open');
-}
-
-// Sidebar Toggle Strategy for Mobile
-const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebarToggle');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-const setSidebarOpen = (open) => {
-    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
-    sidebar.classList.toggle('active', open);
-    sidebarOverlay.classList.toggle('active', open);
-    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
-    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-    document.body.classList.toggle('sidebar-open', open);
-};
-
-if (sidebarToggle && sidebar && sidebarOverlay) {
-    sidebarToggle.addEventListener('click', () => {
-        const isOpen = sidebar.classList.contains('active');
-        setSidebarOpen(!isOpen);
-    });
-
-    sidebarOverlay.addEventListener('click', () => {
-        setSidebarOpen(false);
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            setSidebarOpen(false);
-        }
-    });
-
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 992) {
-            setSidebarOpen(false);
-        }
-    });
-}
-
-// Lineup Tab Switching
-function switchLineupTab(half) {
-    // Hide all contents
-    document.querySelectorAll('.player-content-half').forEach(el => el.classList.remove('active'));
-    // Show selected
-    document.getElementById('lineup-half-' + half).classList.add('active');
-    
-    // Update buttons
-    const btns = document.querySelectorAll('.player-tab-btn');
-    btns.forEach(btn => btn.classList.remove('active'));
-    btns[half-1].classList.add('active');
-}
-
-function switchStaffTab(half) {
-    document.querySelectorAll('.staff-content-half').forEach(el => el.classList.remove('active'));
-    document.getElementById('staff-half-' + half).classList.add('active');
-
-    const btns = document.querySelectorAll('.staff-tab-btn');
-    btns.forEach(btn => btn.classList.remove('active'));
-    btns[half-1].classList.add('active');
-}
-</script>
-
-<script>
-const SITE_URL = '<?php echo SITE_URL; ?>';
-</script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
-</body>
-</html>
-
-
-
+<?php include 'includes/footer.php'; ?>

@@ -14,7 +14,12 @@ if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
 }
 
 $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
-$path = str_replace(basename($_SERVER['PHP_SELF']), '', $_SERVER['PHP_SELF']);
+
+// Robust calculation of site root path relative to DOCUMENT_ROOT
+$project_root = str_replace('\\', '/', dirname(__DIR__));
+$doc_root = str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']));
+$path = str_replace($doc_root, '', $project_root);
+
 define('SITE_URL', rtrim($protocol . '://' . $host . $path, '/'));
 define('SITE_NAME', 'Alvetrix');
 define('SITE_DESC', 'Aplikasi berbasis web untuk pembinaan atlet futsal');

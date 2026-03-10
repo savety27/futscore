@@ -296,6 +296,34 @@ final class FunctionsHelpersTest extends TestCase
         $this->assertStringContainsString('<meta name="twitter:image" content="/img.png">', $metaTags);
     }
 
+    public function testGetAssetVersionResolvesPathsCorrectly(): void
+    {
+        // Test with a leading slash (the problematic case)
+        $path = '/css/style.css';
+        $fullPath = __DIR__ . '/../../../css/style.css';
+        
+        if (file_exists($fullPath)) {
+            $expected = filemtime($fullPath);
+            $this->assertSame($expected, getAssetVersion($path));
+        }
+
+        // Test with a relative path
+        $pathRelative = 'css/style.css';
+        if (file_exists($fullPath)) {
+            $expected = filemtime($fullPath);
+            $this->assertSame($expected, getAssetVersion($pathRelative));
+        }
+
+        // Test with SITE_URL based path
+        if (defined('SITE_URL')) {
+            $pathUrl = SITE_URL . '/css/style.css';
+            if (file_exists($fullPath)) {
+                $expected = filemtime($fullPath);
+                $this->assertSame($expected, getAssetVersion($pathUrl));
+            }
+        }
+    }
+
     public static function monthProvider(): array
     {
         return [

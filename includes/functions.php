@@ -3,6 +3,29 @@ if (!isset($db) || !is_object($db) || !method_exists($db, 'getConnection')) {
     require_once __DIR__ . '/db.php';
 }
 
+/**
+ * Get asset version based on file modification time for cache busting.
+ * @param string $path Path to the asset relative to the project root or absolute path.
+ * @return int|string Timestamp of last modification or current time as fallback.
+ */
+function getAssetVersion($path) {
+    // If it's a SITE_URL based path, try to convert it to local path
+    if (defined('SITE_URL') && strpos($path, SITE_URL) === 0) {
+        $localPath = str_replace(SITE_URL, '', $path);
+        $fullPath = __DIR__ . '/../' . ltrim($localPath, '/');
+    } else {
+        // Assume it's a relative path from project root or absolute path
+        $fullPath = __DIR__ . '/../' . ltrim($path, '/');
+    }
+    
+    if (file_exists($fullPath)) {
+        return filemtime($fullPath);
+    }
+    
+    // Fallback to constant if available, otherwise current time (to avoid cache forever on missing files)
+    return defined('ASSET_VERSION') ? ASSET_VERSION : time();
+}
+
 // ========== FUNGSI UTAMA ==========
 
 /**
@@ -733,6 +756,17 @@ function getCompletedChallenges($limit = 10) {
       // Calculate pagination
       $offset = ($params['page'] - 1) * $params['per_page'];
       
+      $allowedOrderColumns = [
+          'challenge_date' => 'c.challenge_date',
+          'created_at' => 'c.created_at',
+          'updated_at' => 'c.updated_at',
+          'status' => 'c.status',
+          'sport_type' => 'c.sport_type'
+      ];
+      $orderByParam = strtolower(trim((string)($params['order_by'] ?? 'challenge_date')));
+      $orderBy = $allowedOrderColumns[$orderByParam] ?? 'c.challenge_date';
+      $orderDir = strtoupper(trim((string)($params['order_dir'] ?? 'DESC'))) === 'ASC' ? 'ASC' : 'DESC';
+
       // Build main query
       $sql = "SELECT c.*, t1.name as challenger_name, t1.logo as challenger_logo, 
                      t2.name as opponent_name, t2.logo as opponent_logo, 
@@ -742,7 +776,7 @@ function getCompletedChallenges($limit = 10) {
               LEFT JOIN teams t2 ON c.opponent_id = t2.id
               LEFT JOIN venues v ON c.venue_id = v.id
               $whereClause
-              ORDER BY c.{$params['order_by']} {$params['order_dir']}
+              ORDER BY {$orderBy} {$orderDir}
               LIMIT ? OFFSET ?";
       
       $bindParams[] = $params['per_page'];
