@@ -205,7 +205,7 @@ include 'includes/sidebar.php';
                             <div class="score-display">
                                 <?php echo $event['challenger_score']; ?><span class="score-separator">:</span><?php echo $event['opponent_score']; ?>
                             </div>
-                        <? else: ?>
+                        <?php else: ?>
                             <div class="score-pending">
                                 Belum dimainkan
                             </div>
