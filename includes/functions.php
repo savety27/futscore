@@ -15,7 +15,7 @@ function getAssetVersion($path) {
         $fullPath = __DIR__ . '/../' . ltrim($localPath, '/');
     } else {
         // Assume it's a relative path from project root or absolute path
-        $fullPath = (strpos($path, '/') === 0) ? $path : __DIR__ . '/../' . $path;
+        $fullPath = __DIR__ . '/../' . ltrim($path, '/');
     }
     
     if (file_exists($fullPath)) {
