@@ -777,7 +777,8 @@ function initAllPageFunctionality() {
                 e.stopPropagation();
             }
 
-            const matchId = this.dataset.matchId || this.closest('.match-row')?.dataset.matchId;
+            const closestRow = this.closest('.match-row');
+            const matchId = this.dataset.matchId || (closestRow ? closestRow.dataset.matchId : null);
             if (matchId) {
                 // Always redirect to match detail page
                 window.location.href = `${SITE_URL}/match.php?id=${matchId}`;
@@ -786,23 +787,35 @@ function initAllPageFunctionality() {
     });
 
     // Auto-apply filter on status change
-    document.getElementById('statusFilter')?.addEventListener('change', function () {
-        document.getElementById('applyFilter')?.click();
-    });
+    const statusFilterEl = document.getElementById('statusFilter');
+    if (statusFilterEl) {
+        statusFilterEl.addEventListener('change', function () {
+            const applyBtnEl = document.getElementById('applyFilter');
+            if (applyBtnEl) applyBtnEl.click();
+        });
+    }
 
     // Auto-apply filter on entries per page change
-    document.getElementById('entriesPerPage')?.addEventListener('change', function () {
-        document.getElementById('applyFilter')?.click();
-    });
+    const entriesPerPageEl = document.getElementById('entriesPerPage');
+    if (entriesPerPageEl) {
+        entriesPerPageEl.addEventListener('change', function () {
+            const applyBtnEl = document.getElementById('applyFilter');
+            if (applyBtnEl) applyBtnEl.click();
+        });
+    }
 
     // Apply Filter Button Logic
     const applyBtn = document.getElementById('applyFilter');
     if (applyBtn) {
         applyBtn.addEventListener('click', function() {
-            const status = document.getElementById('statusFilter')?.value || 'result';
-            const eventId = document.getElementById('eventFilter')?.value || '0';
-            const teamId = document.getElementById('teamFilter')?.value || '0';
-            const perPage = document.getElementById('entriesPerPage')?.value || '40';
+            const statusFilter = document.getElementById('statusFilter');
+            const status = statusFilter ? statusFilter.value : 'result';
+            const eventFilter = document.getElementById('eventFilter');
+            const eventId = eventFilter ? eventFilter.value : '0';
+            const teamFilter = document.getElementById('teamFilter');
+            const teamId = teamFilter ? teamFilter.value : '0';
+            const entriesPerPageInput = document.getElementById('entriesPerPage');
+            const perPage = entriesPerPageInput ? entriesPerPageInput.value : '40';
 
             let url = '?status=' + status;
             if (eventId && eventId !== '0') url += '&event=' + encodeURIComponent(eventId);
