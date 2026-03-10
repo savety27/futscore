@@ -349,36 +349,4 @@ include 'includes/sidebar.php';
                 </div>
             <?php endif; ?>
         </div>
-         <footer class="dashboard-footer">
-            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
-            <p>
-                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
-                <a href="contact.php">Kontak</a> |
-                <a href="bpjs.php">BPJSTK</a>
-            </p>
-        </footer>
-    </main>
-</div>
-
-<script>
-// Auto-submit filter on change
-document.getElementById('status')?.addEventListener('change', function() {
-    this.form.submit();
-});
-
-document.getElementById('sport')?.addEventListener('change', function() {
-    this.form.submit();
-});
-
-// Auto-submit search on enter
-document.getElementById('search')?.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        this.form.submit();
-    }
-});
-
-</script>
-
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

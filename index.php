@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/config.php';
+require_once 'includes/functions.php';
 
 $hideNavbars = true;
 $extraStyles = [
@@ -848,70 +848,4 @@ include 'includes/sidebar.php';
 </div>
         </div>
 
-        <footer class="dashboard-footer">
-            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
-            <p>
-                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
-                <a href="contact.php">Kontak</a> |
-                <a href="bpjs.php">BPJSTK</a>
-            </p>
-        </footer>
-    </div>
-</div>
-
-<script>
-// Sidebar Dropdown Toggle
-function toggleDropdown(element, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-    
-    dropdown.classList.toggle('show');
-    element.classList.toggle('open');
-}
-
-// Sidebar Toggle Strategy for Mobile
-const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebarToggle');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-const setSidebarOpen = (open) => {
-    if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
-    sidebar.classList.toggle('active', open);
-    sidebarOverlay.classList.toggle('active', open);
-    sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
-    sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-    document.body.classList.toggle('sidebar-open', open);
-};
-
-if (sidebarToggle && sidebar && sidebarOverlay) {
-    sidebarToggle.addEventListener('click', () => {
-        const isOpen = sidebar.classList.contains('active');
-        setSidebarOpen(!isOpen);
-    });
-
-    sidebarOverlay.addEventListener('click', () => {
-        setSidebarOpen(false);
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            setSidebarOpen(false);
-        }
-    });
-
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 992) {
-            setSidebarOpen(false);
-        }
-    });
-}
-</script>
-
-<script>
-// Define SITE_URL for JavaScript
-const SITE_URL = '<?php echo SITE_URL; ?>';
-</script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

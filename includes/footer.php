@@ -56,10 +56,12 @@
     <?php endif; ?>
 
     <!-- JavaScript -->
+    <?php if (!isset($skipScriptJs) || !$skipScriptJs): ?>
     <script>
         // Define SITE_URL for JavaScript
         const SITE_URL = '<?php echo SITE_URL; ?>';
     </script>
     <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
+    <?php endif; ?>
 </body>
 </html>

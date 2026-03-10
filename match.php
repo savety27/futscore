@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/config.php';
+require_once 'includes/functions.php';
 
 // ============================================
 // SEMUA LOGIC DAN REDIRECT HARUS SEBELUM OUTPUT
@@ -1170,54 +1170,4 @@ include 'includes/sidebar.php';
             <?php endif; ?>
         </div>
 
-         <footer class="dashboard-footer">
-            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
-            <p>
-                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
-                <a href="contact.php">Kontak</a> |
-                <a href="bpjs.php">BPJSTK</a>
-            </p>
-        </footer>
-    </main>
-</div>
-
-<script>
-// Sidebar Dropdown Toggle
-function toggleDropdown(element, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-    
-    dropdown.classList.toggle('show');
-    element.classList.toggle('open');
-}
-
-
-// Lineup Tab Switching
-function switchLineupTab(half) {
-    // Hide all contents
-    document.querySelectorAll('.player-content-half').forEach(el => el.classList.remove('active'));
-    // Show selected
-    document.getElementById('lineup-half-' + half).classList.add('active');
-    
-    // Update buttons
-    const btns = document.querySelectorAll('.player-tab-btn');
-    btns.forEach(btn => btn.classList.remove('active'));
-    btns[half-1].classList.add('active');
-}
-
-function switchStaffTab(half) {
-    document.querySelectorAll('.staff-content-half').forEach(el => el.classList.remove('active'));
-    document.getElementById('staff-half-' + half).classList.add('active');
-
-    const btns = document.querySelectorAll('.staff-tab-btn');
-    btns.forEach(btn => btn.classList.remove('active'));
-    btns[half-1].classList.add('active');
-}
-</script>
-
-<script>
-const SITE_URL = '<?php echo SITE_URL; ?>';
-</script>
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

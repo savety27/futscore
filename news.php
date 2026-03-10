@@ -720,20 +720,4 @@ include 'includes/sidebar.php';
                 <?php endif; ?>
             </div>
         </div>
-         <footer class="dashboard-footer">
-            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
-            <p>
-                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
-                <a href="contact.php">Kontak</a> |
-                <a href="bpjs.php">BPJSTK</a>
-            </p>
-        </footer>
-    </main>
-</div>
-
-<script>
-</script>
-
-<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>
