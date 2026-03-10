@@ -1,4 +1,6 @@
 <?php
+require_once 'includes/config.php';
+
 $hideNavbars = true;
 $pageTitle = "404 - Halaman Tidak Ditemukan";
 $extraStyles = [

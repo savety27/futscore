@@ -1,4 +1,6 @@
 <?php
+require_once 'includes/config.php';
+
 $hideNavbars = true;
 $extraStyles = [
     '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . time() . '">',

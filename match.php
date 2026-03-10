@@ -1,4 +1,6 @@
 <?php
+require_once 'includes/config.php';
+
 // ============================================
 // SEMUA LOGIC DAN REDIRECT HARUS SEBELUM OUTPUT
 // ============================================
