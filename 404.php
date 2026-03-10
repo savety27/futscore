@@ -299,9 +299,9 @@ require_once 'includes/header.php';
         </div>
         <nav class="sidebar-nav">
             <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
-            <a href="events.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
-            <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
-            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <a href="<?php echo SITE_URL; ?>/events.php"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="<?php echo SITE_URL; ?>/all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
+            <a href="<?php echo SITE_URL; ?>/team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
             <div class="nav-item-dropdown">
                 <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
                     <div class="nav-link-content">
@@ -310,14 +310,14 @@ require_once 'includes/header.php';
                     <i class="fas fa-chevron-down dropdown-icon"></i>
                 </a>
                 <div id="playerDropdown" class="sidebar-dropdown">
-                    <a href="player.php">Pemain</a>
-                    <a href="staff.php">Staf Team</a>
-                    <a href="perangkat.php">Perangkat Pertandingan</a>
+                    <a href="<?php echo SITE_URL; ?>/player.php">Pemain</a>
+                    <a href="<?php echo SITE_URL; ?>/staff.php">Staf Team</a>
+                    <a href="<?php echo SITE_URL; ?>/perangkat.php">Perangkat Pertandingan</a>
                 </div>
             </div>
-            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
-            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
-            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
+            <a href="<?php echo SITE_URL; ?>/news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
+            <a href="<?php echo SITE_URL; ?>/bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="<?php echo SITE_URL; ?>/contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
             
             <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
 
@@ -329,7 +329,7 @@ require_once 'includes/header.php';
                     <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
                 </a>
             <?php else: ?>
-                <a href="login.php" class="btn-login-sidebar">
+                <a href="<?php echo SITE_URL; ?>/login.php" class="btn-login-sidebar">
                     <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
                 </a>
             <?php endif; ?>
