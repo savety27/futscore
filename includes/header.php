@@ -12,6 +12,17 @@ $latestNews = getLatestNews(3);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <?php 
+    if (isset($extraStyles)) {
+        if (is_array($extraStyles)) {
+            foreach ($extraStyles as $style) {
+                echo $style . "\n";
+            }
+        } else {
+            echo $extraStyles . "\n";
+        }
+    }
+    ?>
 </head>
 <body>
     <!-- Top Navbar -->

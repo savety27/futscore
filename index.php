@@ -1,5 +1,9 @@
 <?php
 $hideNavbars = true;
+$extraStyles = [
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . time() . '">',
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . time() . '">'
+];
 require_once 'includes/header.php';
 
 // Get data from database
@@ -14,9 +18,6 @@ $newTeams = getTeams(5); // tes
 
 $pageTitle = "Home";
 ?>
-
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
 
 <div class="dashboard-wrapper">
     <!-- Mobile Header -->

@@ -1,11 +1,12 @@
 <?php
 $hideNavbars = true;
 $pageTitle = "404 - Halaman Tidak Ditemukan";
+$extraStyles = [
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/redesign_core.css?v=' . time() . '">',
+    '<link rel="stylesheet" href="' . SITE_URL . '/css/index_redesign.css?v=' . time() . '">'
+];
 require_once 'includes/header.php';
 ?>
-
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
 
 <style>
 /* PREMIUM LIGHT ATHLETIC 404 AESTHETIC */
