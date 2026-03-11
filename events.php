@@ -1058,15 +1058,66 @@ if ($eventId > 0 && !empty($event)) {
 }
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo getAssetVersion('/css/index_redesign.css'); ?>">
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/events_redesign.css?v=<?php echo getAssetVersion('/css/events_redesign.css'); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/index_redesign.css?v=<?php echo time(); ?>">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/events_redesign.css?v=<?php echo time(); ?>">
 
 <div class="dashboard-wrapper">
-<?php
-$currentPage = 'events';
-include 'includes/sidebar.php';
-?>
+    <header class="mobile-dashboard-header">
+        <div class="mobile-logo">
+            <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka/Tutup Sidebar" aria-controls="sidebar" aria-expanded="false">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
+        <div class="sidebar-logo">
+            <a href="<?php echo SITE_URL; ?>">
+                <img src="<?php echo SITE_URL; ?>/images/alvetrix.png" alt="Logo">
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="<?php echo SITE_URL; ?>"><i class="fas fa-home"></i> <span>BERANDA</span></a>
+            <a href="events.php" class="active"><i class="fas fa-calendar-alt"></i> <span>EVENT</span></a>
+            <a href="all.php"><i class="fas fa-trophy"></i> <span>CHALLENGE</span></a>
+            <a href="team.php"><i class="fas fa-users"></i> <span>TEAM</span></a>
+            <div class="nav-item-dropdown">
+                <a href="#" class="nav-has-dropdown" onclick="toggleDropdown(this, 'playerDropdown'); return false;">
+                    <div class="nav-link-content">
+                        <i class="fas fa-users"></i> <span>PEMAIN</span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div id="playerDropdown" class="sidebar-dropdown">
+                    <a href="player.php">Pemain</a>
+                    <a href="staff.php">Staf Team</a>
+                    <a href="perangkat.php">Perangkat Pertandingan</a>
+                </div>
+            </div>
+            <a href="news.php"><i class="fas fa-newspaper"></i> <span>BERITA</span></a>
+            <a href="bpjs.php"><i class="fas fa-shield-alt"></i> <span>BPJSTK</span></a>
+            <a href="contact.php"><i class="fas fa-envelope"></i> <span>KONTAK</span></a>
+
+            <div class="sidebar-divider" style="margin: 15px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']): ?>
+                <a href="<?php echo ($_SESSION['admin_role'] === 'pelatih' ? SITE_URL . '/pelatih/dashboard.php' : SITE_URL . '/admin/dashboard.php'); ?>">
+                    <i class="fas fa-tachometer-alt"></i> <span>DASHBOARD</span>
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/logout.php" style="color: #e74c3c;">
+                    <i class="fas fa-sign-out-alt"></i> <span>KELUAR</span>
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="btn-login-sidebar">
+                    <i class="fas fa-sign-in-alt"></i> <span>MASUK</span>
+                </a>
+            <?php endif; ?>
+        </nav>
+    </aside>
 
     <div class="main-content-dashboard">
         <header class="dashboard-header dashboard-header-home dashboard-header-team">
@@ -1199,7 +1250,7 @@ include 'includes/sidebar.php';
                                                                             <img src="<?php echo htmlspecialchars($teamLogoResolved, ENT_QUOTES, 'UTF-8'); ?>"
                                                                                 alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"
                                                                                 class="event-team-logo"
-                                                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
                                                                             <span class="event-team-logo-placeholder" style="display:none; width: 30px; height: 30px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.8rem;"></i></span>
                                                                         <?php else: ?>
                                                                             <span class="event-team-logo-placeholder" style="display:inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--bg-hover); align-items: center; justify-content: center;"><i class="fas fa-shield-alt" style="color: var(--text-muted); font-size: 0.8rem;"></i></span>
@@ -1554,7 +1605,7 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
             <?php else: ?>
-                <div class="container section-container section-elevated all-section-card">
+                <div class="container section-container section-elevated">
                     <div class="section-header">
                         <h2 class="section-title">EVENT</h2>
                         <div class="section-tabs">
@@ -1562,7 +1613,7 @@ include 'includes/sidebar.php';
                         </div>
                     </div>
 
-                    <div class="team-filter-card blue-wrapper all-filter-card">
+                    <div class="team-filter-card">
                         <label class="team-filter-label" for="eventSelector">Pilih Event</label>
                         <div class="team-selector">
                             <select id="eventSelector" class="event-selector-select" onchange="if(this.value) window.location.href='events.php?id=' + this.value">
@@ -1613,4 +1664,422 @@ include 'includes/sidebar.php';
             <?php endif; ?>
         </div>
 
-<?php include 'includes/footer.php'; ?>
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 ALVETRIX. Semua hak dilindungi.</p>
+            <p>
+                <a href="<?php echo SITE_URL; ?>">Beranda</a> |
+                <a href="contact.php">Kontak</a> |
+                <a href="bpjs.php">BPJSTK</a>
+            </p>
+        </footer>
+    </div>
+</div>
+
+<!-- Team Info Modal -->
+<div class="team-ds-modal" id="teamInfoModal">
+    <div class="team-ds-modal-content">
+        <div class="team-ds-modal-header">
+            <div class="team-ds-modal-title" id="dsModalHeaderTitle">Info Peserta LIGA:</div>
+            <button class="team-ds-close" onclick="closeTeamInfoModal()">&times;</button>
+        </div>
+        <div class="team-ds-modal-body" id="teamInfoModalBody">
+            <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 10px;">Memuat data tim...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Player Match History Modal (nested over team modal) -->
+<div class="team-ds-modal" id="playerMatchHistoryModal" style="z-index:10099;">
+    <div class="team-ds-modal-content" style="max-width:820px;">
+        <div class="team-ds-modal-header">
+            <div class="team-ds-modal-title" id="pmhModalTitle">Match <span id="pmhPlayerName"></span>:</div>
+            <button class="team-ds-close" onclick="closePlayerMatchHistory()">&times;</button>
+        </div>
+        <div class="team-ds-modal-body" id="playerMatchHistoryBody">
+            <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 10px;">Memuat riwayat match...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function toggleDropdown(element, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        dropdown.classList.toggle('show');
+        element.classList.toggle('open');
+    }
+
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    const setSidebarOpen = (open) => {
+        if (!sidebar || !sidebarToggle || !sidebarOverlay) return;
+        sidebar.classList.toggle('active', open);
+        sidebarOverlay.classList.toggle('active', open);
+        sidebarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        sidebar.setAttribute('aria-hidden', open ? 'false' : 'true');
+        sidebarOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+        document.body.classList.toggle('sidebar-open', open);
+    };
+
+    if (sidebarToggle && sidebar && sidebarOverlay) {
+        sidebarToggle.addEventListener('click', () => {
+            const isOpen = sidebar.classList.contains('active');
+            setSidebarOpen(!isOpen);
+        });
+        sidebarOverlay.addEventListener('click', () => setSidebarOpen(false));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setSidebarOpen(false);
+        });
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) setSidebarOpen(false);
+        });
+    }
+
+    (function() {
+        const input = document.getElementById('eventSelectorInput');
+        const select = document.getElementById('eventSelector');
+        const cards = Array.from(document.querySelectorAll('.team-directory-card[data-event-name]'));
+        const emptyState = document.getElementById('eventSearchEmpty');
+        if (!input || !select) return;
+
+        const defaultOption = select.options[0] ? {
+            value: '',
+            text: select.options[0].text
+        } : {
+            value: '',
+            text: 'Pilih event dari dropdown'
+        };
+        const allOptions = Array.from(select.options)
+            .slice(1)
+            .map(function(opt) {
+                return {
+                    value: String(opt.value || ''),
+                    text: String(opt.text || '')
+                };
+            });
+
+        function renderFilteredOptions(keyword) {
+            const normalized = String(keyword || '').trim().toLowerCase();
+            const filtered = normalized === '' ?
+                allOptions :
+                allOptions.filter(function(item) {
+                    return item.text.toLowerCase().includes(normalized);
+                });
+
+            select.innerHTML = '';
+            const top = document.createElement('option');
+            top.value = defaultOption.value;
+            top.textContent = defaultOption.text;
+            select.appendChild(top);
+
+            filtered.forEach(function(item) {
+                const opt = document.createElement('option');
+                opt.value = item.value;
+                opt.textContent = item.text;
+                select.appendChild(opt);
+            });
+
+            if (!filtered.length) {
+                const none = document.createElement('option');
+                none.value = '';
+                none.textContent = 'Tidak ada event yang cocok';
+                none.disabled = true;
+                select.appendChild(none);
+            }
+        }
+
+        function renderFilteredCards(keyword) {
+            if (!cards.length) return;
+            const normalized = String(keyword || '').trim().toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach(function(card) {
+                const eventName = String(card.getAttribute('data-event-name') || '').trim().toLowerCase();
+                const isVisible = normalized === '' || eventName.includes(normalized);
+                card.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount += 1;
+            });
+
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        }
+
+        input.addEventListener('input', function() {
+            renderFilteredOptions(input.value);
+            renderFilteredCards(input.value);
+        });
+    })();
+
+    function resolveTeamLogoUrlClient(logoFile) {
+        const value = String(logoFile || '').trim().replace(/\\/g, '/');
+        if (!value) {
+            return '<?php echo SITE_URL; ?>/images/teams/default-team.png';
+        }
+        if (/^https?:\/\//i.test(value)) {
+            return value;
+        }
+        if (value.startsWith('uploads/')) {
+            return '<?php echo SITE_URL; ?>/' + value.replace(/^\/+/, '');
+        }
+        if (value.startsWith('/')) {
+            return '<?php echo SITE_URL; ?>' + value;
+        }
+        if (value.startsWith('images/teams/')) {
+            return '<?php echo SITE_URL; ?>/' + value.replace(/^\/+/, '');
+        }
+        const cleaned = value.replace(/^\/+/, '');
+        const logoName = cleaned.includes('/') ? cleaned.split('/').pop() : cleaned;
+        return '<?php echo SITE_URL; ?>/images/teams/' + logoName;
+    }
+
+    // TEAM INFO MODAL LOGIC
+    function openTeamInfoModal(eventId, teamId, category) {
+        const modal = document.getElementById('teamInfoModal');
+        const body = document.getElementById('teamInfoModalBody');
+        const headerTitle = document.getElementById('dsModalHeaderTitle');
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        body.innerHTML = '<div style="text-align: center; color: #64748b; padding: 40px 0;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top: 10px;">Memuat data tim...</p></div>';
+
+        fetch('<?php echo SITE_URL; ?>/api/get_team_event_info.php?event_id=' + eventId + '&team_id=' + teamId + '&sport_type=' + encodeURIComponent(category))
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>' + (data.error || 'Gagal memuat data') + '</p></div>';
+                    return;
+                }
+
+                headerTitle.textContent = 'Info Peserta ' + data.event_name + ':';
+
+                let html = '<div class="team-ds-info-wrap">';
+                html += '<div class="team-ds-logo-wrap">';
+                html += '<img src="' + resolveTeamLogoUrlClient(data.team.logo) + '" class="team-ds-logo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">';
+                html += '<div class="team-ds-name">' + data.team.name + '</div>';
+                html += '</div>';
+
+                html += '<div class="team-ds-subtitle">';
+                html += '<img src="<?php echo SITE_URL; ?>/images/events/alvetrix-mini.png" style="height:14px; width:auto; display:none;" onerror="this.style.display=\'none\'">';
+                html += data.event_name + ' (' + data.category + ')';
+                html += '</div>';
+
+                const stats = data.stats;
+                html += '<div class="team-ds-stats">';
+                html += '<b>Total:</b> Player (' + stats.total_players + '), Goal (' + stats.total_goals + '), ';
+                html += '<span style="color:#b91c1c;">🟥</span> (' + stats.red + '), <span style="color:#ca8a04;">🟨</span> (' + stats.yellow + '), <span style="color:#15803d;">🟩</span> (' + stats.green + '), PT (' + stats.pt + ')';
+                html += '</div></div>';
+
+                html += '<div class="team-ds-table-wrap">';
+                html += '<table class="team-ds-table">';
+                html += '<thead><tr>';
+                html += '<th>No</th>';
+                html += '<th style="text-align:left;">Player <i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Jersey <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Match <br>#<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Goal<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>🟥<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>🟨<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>🟩<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '<th>Play <br>Time<i class="fas fa-sort" style="color:#cbd5e1; font-size:10px;"></i></th>';
+                html += '</tr></thead><tbody>';
+
+                if (data.players.length === 0) {
+                    html += '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">Belum ada pemain di kategori ini</td></tr>';
+                } else {
+                    data.players.forEach((p, index) => {
+                        html += '<tr>';
+                        html += '<td style="color:#64748b;">' + (index + 1) + '</td>';
+                        html += '<td class="ts-player-col">';
+                        html += '<img src="<?php echo SITE_URL; ?>/images/players/' + p.photo + '" class="ts-photo" onerror="this.src=\'<?php echo SITE_URL; ?>/images/players/default-player.jpg\'">';
+                        html += '<span class="ts-player-name">' + p.name + '</span>';
+                        html += '</td>';
+                        html += '<td>' + p.jersey_number + '</td>';
+                        html += '<td>' + p.matches + ' <button class="pmh-trigger" title="Lihat Riwayat Match" style="background:none;border:none;cursor:pointer;padding:0 2px;color:#3b82f6;" onclick="openPlayerMatchHistory(' + eventId + ',' + p.id + ',' + teamId + ',\'' + encodeURIComponent(category) + '\');"><i class="fas fa-info-circle" style="font-size:11px;"></i></button></td>';
+                        html += '<td>' + p.goals + '</td>';
+                        html += '<td>' + p.red + '</td>';
+                        html += '<td>' + p.yellow + '</td>';
+                        html += '<td>' + p.green + '</td>';
+                        html += '<td>' + p.play_time + '</td>';
+                        html += '</tr>';
+                    });
+                }
+
+                html += '</tbody></table></div>';
+
+                body.innerHTML = html;
+            })
+            .catch(err => {
+                body.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 30px;"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Terjadi kesalahan koneksi.</p></div>';
+            });
+    }
+
+    function closeTeamInfoModal() {
+        document.getElementById('teamInfoModal').classList.remove('active');
+        document.getElementById('playerMatchHistoryModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // ── Player Match History Modal ──────────────────────────────────────────
+    function openPlayerMatchHistory(eventId, playerId, teamId, category) {
+        const modal  = document.getElementById('playerMatchHistoryModal');
+        const body   = document.getElementById('playerMatchHistoryBody');
+        const title  = document.getElementById('pmhPlayerName');
+
+        modal.classList.add('active');
+        body.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px 0;"><i class="fas fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Memuat riwayat match...</p></div>';
+
+        const url = '<?php echo SITE_URL; ?>/api/get_player_match_history.php'
+            + '?event_id=' + eventId
+            + '&player_id=' + playerId
+            + '&team_id='   + teamId
+            + '&sport_type=' + encodeURIComponent(decodeURIComponent(category));
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    body.innerHTML = '<div style="text-align:center;color:#ef4444;padding:30px;"><i class="fas fa-exclamation-triangle fa-2x"></i><p>' + (data.error || 'Gagal memuat data') + '</p></div>';
+                    return;
+                }
+
+                title.textContent = data.player_name + ' di ' + data.event_name;
+
+                const cards = data.cards;
+                let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">';
+                html += '<span style="font-size:13px;font-weight:600;color:#334155;">Jersey: <b>#' + data.jersey_number + '</b></span>';
+                html += '<span class="card-badge red">' + '🟥 ' + cards.red + '</span>';
+                html += '<span class="card-badge yellow">' + '🟨 ' + cards.yellow + '</span>';
+                html += '<span class="card-badge green">' + '🟩 ' + cards.green + '</span>';
+                html += '</div>';
+
+                html += '<div class="team-ds-table-wrap"><table class="team-ds-table" style="min-width:600px;">';
+                html += '<thead><tr>'
+                    + '<th>No</th>'
+                    + '<th style="text-align:left;">Date</th>'
+                    + '<th style="text-align:left;">Opponent</th>'
+                    + '<th>Info</th>'
+                    + '<th>Jersey</th>'
+                    + '<th>Play Time</th>'
+                    + '<th>Score</th>'
+                    + '<th>Result</th>'
+                    + '<th>Goal</th>'
+                    + '</tr></thead><tbody>';
+
+                if (!data.matches.length) {
+                    html += '<tr><td colspan="9" style="padding:24px;text-align:center;color:#64748b;">Belum ada match yang dimainkan di event ini</td></tr>';
+                } else {
+                    data.matches.forEach((m, idx) => {
+                        const logoUrl = resolveTeamLogoUrlClient(m.opp_team_logo);
+                        const scoreStr = (m.my_score !== null && m.their_score !== null)
+                            ? m.my_score + ' - ' + m.their_score : '-';
+                        const categoryLabel = (m.category && m.category !== '') ? m.category : (data.category || '-');
+                        const jerseyLabel = (data.jersey_number && data.jersey_number !== '') ? ('#' + data.jersey_number) : '-';
+                        const playTimeLabel = (typeof m.play_time === 'number') ? m.play_time : (parseInt(m.play_time || '0', 10) || 0);
+                        let infoLabel = categoryLabel;
+                        if (m.match_info && m.match_info !== '-') {
+                            infoLabel += ' | ' + m.match_info;
+                        }
+
+                        let resultHtml = '-';
+                        if (m.result === 'W') resultHtml = '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">W</span>';
+                        else if (m.result === 'L') resultHtml = '<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">L</span>';
+                        else if (m.result === 'D') resultHtml = '<span style="background:#d97706;color:#fff;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;">D</span>';
+
+                        // Format date
+                        let dateStr = m.date || '-';
+                        try {
+                            const d = new Date(m.date);
+                            if (!isNaN(d.getTime())) {
+                                dateStr = d.toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                            }
+                        } catch(e) {}
+
+                        html += '<tr>'
+                            + '<td style="color:#64748b;">' + (idx + 1) + '</td>'
+                            + '<td style="text-align:left;white-space:nowrap;font-size:12px;">' + dateStr + '</td>'
+                            + '<td style="text-align:left;"><div style="display:flex;align-items:center;gap:8px;">'
+                            +   '<img src="' + logoUrl + '" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #dbe6f3;" onerror="this.src=\'<?php echo SITE_URL; ?>/images/teams/default-team.png\'">'
+                            +   '<span style="font-size:12px;font-weight:600;">' + m.opp_team_name + '</span>'
+                            + '</div></td>'
+                            + '<td style="font-size:11px;color:#475569;">' + infoLabel + '</td>'
+                            + '<td style="font-weight:700;">' + jerseyLabel + '</td>'
+                            + '<td style="font-weight:700;">' + playTimeLabel + ' menit</td>'
+                            + '<td style="font-weight:700;">' + scoreStr + '</td>'
+                            + '<td>' + resultHtml + '</td>'
+                            + '<td>' + m.goals + '</td>'
+                            + '</tr>';
+                    });
+                }
+
+                html += '</tbody></table></div>';
+                body.innerHTML = html;
+            })
+            .catch(() => {
+                body.innerHTML = '<div style="text-align:center;color:#ef4444;padding:30px;"><i class="fas fa-exclamation-triangle fa-2x"></i><p>Terjadi kesalahan koneksi.</p></div>';
+            });
+    }
+
+    function closePlayerMatchHistory() {
+        document.getElementById('playerMatchHistoryModal').classList.remove('active');
+    }
+
+    // Close nested modal if clicks on backdrop
+    document.getElementById('playerMatchHistoryModal').addEventListener('click', function(e) {
+        if (e.target === this) closePlayerMatchHistory();
+    });
+
+    document.querySelectorAll('.team-ds-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openTeamInfoModal(this.dataset.eventId, this.dataset.teamId, this.dataset.category);
+        });
+    });
+</script>
+<script>
+    (function() {
+        const rows = Array.from(document.querySelectorAll('.evb-canvas .evb-row[data-team-id]'));
+        if (!rows.length) return;
+
+        function clearLinked() {
+            rows.forEach(function(row) {
+                row.classList.remove('linked-highlight');
+            });
+        }
+
+        function applyLinked(teamId) {
+            if (!teamId || teamId === '0') return;
+            rows.forEach(function(row) {
+                if (row.getAttribute('data-team-id') === teamId) {
+                    row.classList.add('linked-highlight');
+                }
+            });
+        }
+
+        rows.forEach(function(row) {
+            row.addEventListener('mouseenter', function() {
+                clearLinked();
+                applyLinked(row.getAttribute('data-team-id'));
+            });
+            row.addEventListener('mouseleave', function() {
+                clearLinked();
+            });
+        });
+    })();
+</script>
+<script>
+    const SITE_URL = '<?php echo SITE_URL; ?>';
+</script>
+<script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo time(); ?>"></script>
+</body>
+
+</html>
