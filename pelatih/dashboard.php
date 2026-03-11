@@ -99,28 +99,31 @@ if ($team_id) {
 }
 ?>
 
-
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-        --premium-bg: #eaf6ff;
-        --premium-card: #ffffff;
-        --premium-border: #cfe5ff;
-        --premium-text: #0f2744;
-        --premium-text-muted: #5f728a;
-        --premium-accent: #0f2744;
-        --premium-gold: #f59e0b;
-        --font-outfit: 'Outfit', sans-serif;
-        --soft-shadow: 0 6px 20px rgba(30, 64, 175, 0.08);
-        --hover-shadow: 0 14px 34px rgba(30, 64, 175, 0.16);
+        --heritage-bg: #f8f7f4;
+        --heritage-card: #ffffff;
+        --heritage-border: #e5e1da;
+        --heritage-text: #1e1b4b;
+        --heritage-text-muted: #6b7280;
+        --heritage-accent: #064e3b;
+        --heritage-gold: #b45309;
+        --heritage-crimson: #991b1b;
+        --font-display: 'Bricolage Grotesque', sans-serif;
+        --font-body: 'Plus Jakarta Sans', sans-serif;
+        --soft-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        --glow-shadow: 0 0 40px rgba(6, 78, 59, 0.08);
     }
 
     .main {
-        background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-        color: var(--premium-text);
-        font-family: var(--font-outfit);
-        padding: 30px !important;
+        background: var(--heritage-bg) !important;
+        background-image: radial-gradient(#e5e1da 0.5px, transparent 0.5px) !important;
+        background-size: 24px 24px !important;
+        color: var(--heritage-text);
+        font-family: var(--font-body);
+        padding: 40px !important;
     }
 
     .dashboard-container {
@@ -128,326 +131,419 @@ if ($team_id) {
         margin: 0 auto;
     }
 
-    /* Refined Hero */
+    /* Editorial Hero */
     .dashboard-hero {
-        margin-bottom: 40px;
-        position: relative;
+        margin-bottom: 48px;
+        border-bottom: 2px solid var(--heritage-text);
+        padding-bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .hero-content {
+        max-width: 800px;
     }
 
     .hero-label {
-        color: var(--premium-accent);
+        color: var(--heritage-gold);
+        font-family: var(--font-display);
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 0.8rem;
-        margin-bottom: 8px;
+        letter-spacing: 0.1em;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
         display: block;
     }
 
     .hero-title {
-        font-size: 2.5rem;
+        font-family: var(--font-display);
+        font-size: 3.5rem;
         font-weight: 800;
-        color: var(--premium-accent);
-        margin-bottom: 15px;
-        letter-spacing: -0.5px;
+        color: var(--heritage-text);
+        margin: 0 0 16px 0;
+        line-height: 1;
+        letter-spacing: -0.04em;
     }
 
     .hero-description {
-        color: var(--premium-text-muted);
-        font-size: 1.1rem;
-        max-width: 600px;
+        color: var(--heritage-text-muted);
+        font-size: 1.15rem;
         line-height: 1.6;
+        margin: 0;
     }
 
-    /* Stats Grid */
-    .premium-stats-grid {
+    /* Stats Grid - Modern Editorial Layout */
+    .stats-grid-wrapper {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 25px;
-        margin-bottom: 60px;
+        grid-template-columns: 1fr 2fr;
+        gap: 32px;
+        margin-bottom: 48px;
     }
 
-    .premium-card {
-        background: var(--premium-card);
-        border: 1px solid var(--premium-border);
-        border-radius: 24px;
-        padding: 30px;
-        box-shadow: var(--soft-shadow);
-        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
+    .team-identity-card {
+        background: var(--heritage-text);
+        color: white;
+        border-radius: 32px;
+        padding: 40px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
         overflow: hidden;
-        will-change: transform;
     }
 
-    .premium-card:hover {
-        transform: translateY(-11px) scale(1.017);
-        box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
-        border-color: #8ebeff;
-    }
-
-    .premium-card:active {
-        transform: translateY(-4px) scale(1.008);
-    }
-
-    .premium-card:focus-within {
-        transform: translateY(-11px) scale(1.017);
-        box-shadow: 0 26px 52px rgba(30, 64, 175, 0.26), 0 0 0 3px rgba(76, 138, 255, 0.24);
-        border-color: #8ebeff;
-    }
-
-    /* Stronger pop-forward effect for Total Pemain card */
-    .premium-card.d-2:hover,
-    .premium-card.d-2:focus-within {
-        transform: perspective(900px) translateY(-13px) translateZ(18px) scale(1.032);
-        box-shadow: 0 30px 60px rgba(30, 64, 175, 0.3), 0 0 0 4px rgba(76, 138, 255, 0.28);
-        border-color: #79abf5;
-    }
-
-    .premium-card::before {
+    .team-identity-card::after {
         content: '';
         position: absolute;
-        top: -120%;
-        left: -35%;
-        width: 35%;
-        height: 300%;
-        background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
-        transform: rotate(14deg);
-        transition: transform 0.8s ease, left 0.8s ease;
-        pointer-events: none;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.05) 0%, transparent 100%);
     }
 
-    .premium-card:hover::before {
-        left: 120%;
-    }
-
-    .card-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 25px;
-    }
-
-    .card-icon-box {
-        width: 54px;    
-        height: 54px;
-        border-radius: 16px;
+    .team-logo-main {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 20px;
+        padding: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
-        background: #eaf2ff;
-        color: var(--premium-accent);
-        transition: transform 0.28s ease, background-color 0.28s ease, color 0.28s ease;
+        margin-bottom: 24px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.2);
     }
 
-    .premium-card:hover .card-icon-box {
-        background: var(--premium-accent);
-        color: white;
-        transform: translateY(-3px) scale(1.06);
-    }
-
-    .premium-card:focus-within .card-icon-box {
-        background: var(--premium-accent);
-        color: white;
-        transform: translateY(-3px) scale(1.06);
-    }
-
-    .card-value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: var(--premium-text);
-        margin-bottom: 4px;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .card-label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--premium-text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Match Spotlight */
-    .match-spotlight {
-        margin-top: 50px;
-    }
-    .today-match-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 18px;
-    }
-    .today-match-card {
-        background: white;
-        border: 1px solid var(--premium-border);
-        border-radius: 18px;
-        padding: 18px;
-        box-shadow: var(--soft-shadow);
-    }
-    .today-teams {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--premium-accent);
-        margin-bottom: 10px;
-        line-height: 1.4;
-    }
-    .today-meta {
-        font-size: 0.9rem;
-        color: var(--premium-text-muted);
-        margin-bottom: 6px;
-    }
-    .today-meta strong {
-        color: var(--premium-text);
-        font-weight: 700;
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .section-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--premium-accent);
-        white-space: nowrap;
-    }
-
-    .section-line {
-        height: 1px;
-        background: var(--premium-border);
-        flex: 1;
-    }
-
-    .editorial-match-card {
-        background: white;
-        border: 1px solid var(--premium-border);
-        border-radius: 32px;
-        overflow: hidden;
-        box-shadow: var(--soft-shadow);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .match-body {
-        padding: 60px 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 80px;
-        background: radial-gradient(circle at center, #ffffff 0%, #eef6ff 100%);
-        position: relative;
-    }
-
-    .team-block {
-        text-align: center;
-        flex: 1;
-        transition: var(--transition);
-    }
-
-    .team-logo-frame {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 20px;
-        background: white;
-        border-radius: 50%;
-        padding: 15px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        border: 1px solid var(--premium-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .team-logo-frame img {
+    .team-logo-main img {
         width: 100%;
         height: 100%;
         object-fit: contain;
     }
 
-    .team-name-small {
-        font-size: 1.4rem;
+    .team-name-display {
+        font-family: var(--font-display);
+        font-size: 2.25rem;
         font-weight: 700;
-        color: var(--premium-accent);
+        line-height: 1.1;
+        margin-bottom: 8px;
     }
 
-    .vs-capsule {
-        padding: 10px 25px;
-        background: var(--premium-accent);
-        color: white;
+    .team-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.1);
+        padding: 6px 14px;
         border-radius: 100px;
-        font-weight: 900;
-        font-size: 1.2rem;
-        letter-spacing: 2px;
-        box-shadow: 0 10px 20px rgba(10, 36, 99, 0.2);
+        font-size: 0.85rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
     }
 
-    .match-footer {
-        padding: 30px 40px;
-        background: #eaf2ff;
+    .stats-main-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+    }
+
+    .heritage-card {
+        background: var(--heritage-card);
+        border: 1px solid var(--heritage-border);
+        border-radius: 28px;
+        padding: 32px;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        box-shadow: var(--soft-shadow);
+    }
+
+    .heritage-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--heritage-text);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .card-icon {
+        font-size: 1.25rem;
+        color: var(--heritage-text);
+        opacity: 0.6;
+    }
+
+    .card-label {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--heritage-text-muted);
+    }
+
+    .card-value {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--heritage-text);
+    }
+
+    /* Detailed Record Bar */
+    .record-row {
+        background: var(--heritage-card);
+        border: 1px solid var(--heritage-border);
+        border-radius: 24px;
+        padding: 24px 40px;
+        margin-bottom: 48px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: var(--soft-shadow);
+    }
+
+    .record-item {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .record-number {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        font-weight: 800;
+    }
+
+    .record-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--heritage-text-muted);
+        letter-spacing: 1px;
+    }
+
+    .record-divider {
+        width: 1px;
+        height: 40px;
+        background: var(--heritage-border);
+    }
+
+    /* Premium Match Spotlight */
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--heritage-text);
+        margin: 0;
+    }
+
+    .section-line {
+        height: 2px;
+        background: var(--heritage-border);
+        flex: 1;
+    }
+
+    .match-hero-card {
+        background: white;
+        border: 1px solid var(--heritage-border);
+        border-radius: 40px;
+        overflow: hidden;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.05);
+        margin-bottom: 48px;
+    }
+
+    .match-hero-content {
+        padding: 64px 48px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        text-align: center;
+        background: radial-gradient(circle at center, #ffffff 0%, #fdfcfb 100%);
+        position: relative;
+    }
+
+    .team-focus {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .team-logo-large {
+        width: 160px;
+        height: 160px;
+        background: white;
+        border-radius: 40px;
+        padding: 24px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+        border: 1px solid var(--heritage-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.5s ease;
+    }
+
+    .match-hero-card:hover .team-logo-large {
+        transform: scale(1.05) rotate(2deg);
+    }
+
+    .team-name-large {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin: 0;
+        color: var(--heritage-text);
+    }
+
+    .vs-emblem {
+        padding: 20px;
+        position: relative;
+    }
+
+    .vs-text {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: var(--heritage-gold);
+        background: var(--heritage-bg);
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 2px solid var(--heritage-gold);
+        z-index: 2;
+        position: relative;
+    }
+
+    .vs-line {
+        position: absolute;
+        top: 50%;
+        left: -100px;
+        right: -100px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--heritage-border), transparent);
+        z-index: 1;
+    }
+
+    .match-hero-footer {
+        background: var(--heritage-text);
+        padding: 32px 48px;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        border-top: 1px solid var(--premium-border);
+        gap: 32px;
     }
 
-    .info-group {
-        text-align: center;
+    .match-info-box {
+        color: white;
     }
 
-    .info-label {
+    .match-info-label {
         font-size: 0.75rem;
         font-weight: 700;
-        color: var(--premium-text-muted);
         text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin-bottom: 5px;
+        letter-spacing: 0.1em;
+        margin-bottom: 8px;
+        color: rgba(255,255,255,0.5);
     }
 
-    .info-data {
+    .match-info-value {
+        font-size: 1.15rem;
+        font-weight: 600;
+    }
+
+    /* Today's Schedule Mini-Cards */
+    .today-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+    }
+
+    .schedule-card {
+        background: white;
+        border: 1px solid var(--heritage-border);
+        border-radius: 24px;
+        padding: 28px;
+        transition: all 0.3s ease;
+    }
+
+    .schedule-card:hover {
+        border-color: var(--heritage-gold);
+        transform: translateX(8px);
+    }
+
+    .schedule-time {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--heritage-gold);
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .schedule-teams {
         font-size: 1.1rem;
         font-weight: 700;
-        color: var(--premium-text);
+        margin-bottom: 16px;
+        line-height: 1.4;
     }
 
-    .empty-state-light {
-        padding: 100px 40px;
+    .schedule-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.85rem;
+        color: var(--heritage-text-muted);
+    }
+
+    .schedule-meta i {
+        color: var(--heritage-gold);
+    }
+
+    /* Empty States */
+    .empty-state {
         text-align: center;
+        padding: 80px 40px;
         background: white;
-        border: 2px dashed #bfdbfe;
+        border: 2px dashed var(--heritage-border);
         border-radius: 32px;
     }
 
-    .empty-state-light i {
+    .empty-state i {
         font-size: 3rem;
-        color: var(--premium-border);
-        margin-bottom: 20px;
+        color: var(--heritage-border);
+        margin-bottom: 24px;
+    }
+
+    .empty-state h3 {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        margin-bottom: 8px;
     }
 
     /* Animations */
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
+    @keyframes revealUp {
+        from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes cardPop {
-        0% { opacity: 0; transform: translateY(22px) scale(0.96); }
-        65% { opacity: 1; transform: translateY(-4px) scale(1.02); }
-        100% { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
     .reveal {
-        animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        opacity: 0;
-    }
-
-    .premium-card.reveal {
-        animation: cardPop 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        animation: revealUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         opacity: 0;
     }
 
@@ -457,226 +553,215 @@ if ($team_id) {
     .d-4 { animation-delay: 0.4s; }
     .d-5 { animation-delay: 0.5s; }
 
-    @media (max-width: 992px) {
-        .main {
-            padding: 20px 15px !important;
-        }
-
-        .premium-card:hover,
-        .premium-card:focus-within {
-            transform: translateY(-4px) scale(1.006);
-            box-shadow: 0 14px 28px rgba(30, 64, 175, 0.16), 0 0 0 2px rgba(76, 138, 255, 0.18);
-        }
-
-        .premium-card.d-2:hover,
-        .premium-card.d-2:focus-within {
-            transform: translateY(-5px) scale(1.01);
-            box-shadow: 0 16px 30px rgba(30, 64, 175, 0.18), 0 0 0 2px rgba(76, 138, 255, 0.2);
-        }
-
-        .match-body {
-            flex-direction: column;
-            gap: 40px;
-            padding: 40px 20px;
-        }
-        .match-footer {
+    @media (max-width: 1024px) {
+        .stats-grid-wrapper { grid-template-columns: 1fr; }
+        .hero-title { font-size: 2.75rem; }
+        .match-hero-content { 
             grid-template-columns: 1fr;
-            padding: 30px 20px;
+            gap: 40px;
         }
-        .hero-title {
-            font-size: 2rem;
+        .vs-line { display: none; }
+        .match-hero-footer { grid-template-columns: 1fr; }
+        .record-row { 
+            flex-direction: column; 
+            gap: 32px;
+            text-align: center;
         }
+        .record-divider { display: none; }
     }
 </style>
 
 <div class="dashboard-container">
-    <!-- Header Section -->
-    <div class="dashboard-hero reveal">
-        <span class="hero-label"> </span>
-        <h1 class="hero-title">Pusat Manajemen Team</h1>
-        <p class="hero-description">Pantau performa skuad, jadwal pertandingan mendatang, dan staf manajemen. Pembaruan waktu nyata untuk musim aktif saat ini.</p>
-    </div>
+    <!-- Editorial Header -->
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Musim 2024/2025</span>
+            <h1 class="hero-title">Command Center</h1>
+            <p class="hero-description">Arsitektur strategi dan pemantauan performa atletik secara real-time untuk keunggulan kompetitif tim.</p>
+        </div>
+        <div class="hero-actions">
+            <!-- Add context-relevant button if needed -->
+        </div>
+    </header>
 
-    <!-- Quick Stats -->
-    <div class="premium-stats-grid">
-        <!-- Team Identity -->
-        <div class="premium-card reveal d-1">
-            <div class="card-top">
-                <div class="card-icon-box">
+    <!-- Core Stats Section -->
+    <div class="stats-grid-wrapper">
+        <!-- Team Identity Focus -->
+        <div class="team-identity-card reveal d-1">
+            <div class="top">
+                <div class="team-logo-main">
                     <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo ?? ''); ?>" alt="Team" style="width: 32px; height: 32px; object-fit: contain;">
+                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team">
                     <?php else: ?>
-                        <i class="fas fa-shield"></i>
+                        <i class="fas fa-shield-alt" style="font-size: 2rem; color: #1e1b4b;"></i>
                     <?php endif; ?>
                 </div>
+                <h2 class="team-name-display"><?php echo htmlspecialchars($team_name); ?></h2>
+                <div class="team-status-badge">
+                    <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                    Status: Aktif Kompetisi
+                </div>
             </div>
-            <div>
-                <div class="card-value" style="font-size: 1.5rem;"><?php echo htmlspecialchars($team_name ?? ''); ?></div>
-                <div class="card-label"> </div>
+            <div class="bottom" style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
+                <div style="font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Terakhir Diperbarui</div>
+                <div style="font-weight: 600;"><?php echo date('d F, Y • H:i'); ?></div>
             </div>
         </div>
 
-        <!-- Roster Count -->
-        <div class="premium-card reveal d-2">
-            <div class="card-top">
-                <div class="card-icon-box"><i class="fas fa-users"></i></div>
-            </div>
-            <div>
+        <!-- Secondary Stats Grid -->
+        <div class="stats-main-grid">
+            <div class="heritage-card reveal d-2">
+                <div class="card-meta">
+                    <span class="card-label">Skuad</span>
+                    <i class="fas fa-users card-icon"></i>
+                </div>
                 <div class="card-value" data-count="<?php echo (int)$player_count; ?>"><?php echo (int)$player_count; ?></div>
-                <div class="card-label">Total Pemain</div>
+                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Pemain Terdaftar</div>
             </div>
-        </div>
-
-        <!-- Staff Count -->
-        <div class="premium-card reveal d-3">
-            <div class="card-top">
-                <div class="card-icon-box"><i class="fas fa-user-tie"></i></div>
-            </div>
-            <div>
+            <div class="heritage-card reveal d-3">
+                <div class="card-meta">
+                    <span class="card-label">Manajemen</span>
+                    <i class="fas fa-briefcase card-icon"></i>
+                </div>
                 <div class="card-value" data-count="<?php echo (int)$staff_count; ?>"><?php echo (int)$staff_count; ?></div>
-                <div class="card-label">Ofisial Team</div>
+                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Ofisial Terverifikasi</div>
             </div>
-        </div>
-
-        <!-- Victory Stats -->
-        <div class="premium-card reveal d-4">
-            <div class="card-top">
-                <div class="card-icon-box" style="background: #ecfdf5; color: #059669;"><i class="fas fa-trophy"></i></div>
+            <div class="heritage-card reveal d-4" style="background: #fdfcfb; border-left: 4px solid var(--heritage-gold);">
+                <div class="card-meta">
+                    <span class="card-label">Win Rate</span>
+                    <i class="fas fa-percentage card-icon" style="color: var(--heritage-gold);"></i>
+                </div>
+                <?php 
+                    $total_games = $wins + $losses + $draws;
+                    $win_rate = $total_games > 0 ? round(($wins / $total_games) * 100) : 0;
+                ?>
+                <div class="card-value"><?php echo $win_rate; ?>%</div>
+                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Efektivitas Kemenangan</div>
             </div>
-            <div>
-                <div class="card-value" data-count="<?php echo (int)$wins; ?>"><?php echo (int)$wins; ?></div>
-                <div class="card-label">Total Kemenangan</div>
+            <div class="heritage-card reveal d-5">
+                <div class="card-meta">
+                    <span class="card-label">Matchday</span>
+                    <i class="fas fa-calendar-check card-icon"></i>
+                </div>
+                <div class="card-value" data-count="<?php echo count($today_matches); ?>"><?php echo count($today_matches); ?></div>
+                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Pertandingan Hari Ini</div>
             </div>
         </div>
     </div>
 
-    <!-- Additional Stats in row -->
-    <div class="premium-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
-         <!-- Losses -->
-         <div class="premium-card reveal d-5">
-            <div class="card-top">
-                <div class="card-icon-box" style="background: #fef2f2; color: #dc2626;"><i class="fas fa-times-circle"></i></div>
-            </div>
-            <div>
-                <div class="card-value" data-count="<?php echo (int)$losses; ?>"><?php echo (int)$losses; ?></div>
-                <div class="card-label">Total Kekalahan</div>
-            </div>
+    <!-- Win/Loss/Draw Record Bar -->
+    <div class="record-row reveal" style="animation-delay: 0.6s;">
+        <div class="record-item">
+            <div class="record-number" style="color: var(--heritage-accent);"><?php echo (int)$wins; ?></div>
+            <div class="record-label">Kemenangan</div>
         </div>
-
-        <!-- Draws -->
-        <div class="premium-card reveal d-5" style="animation-delay: 0.5s;">
-            <div class="card-top">
-                <div class="card-icon-box" style="background: #f8fafc; color: #64748b;"><i class="fas fa-handshake"></i></div>
-            </div>
-            <div>
-                <div class="card-value" data-count="<?php echo (int)$draws; ?>"><?php echo (int)$draws; ?></div>
-                <div class="card-label">Hasil Seri</div>
-            </div>
+        <div class="record-divider"></div>
+        <div class="record-item">
+            <div class="record-number" style="color: var(--heritage-text); opacity: 0.4;"><?php echo (int)$draws; ?></div>
+            <div class="record-label">Hasil Seri</div>
+        </div>
+        <div class="record-divider"></div>
+        <div class="record-item">
+            <div class="record-number" style="color: var(--heritage-crimson);"><?php echo (int)$losses; ?></div>
+            <div class="record-label">Kekalahan</div>
         </div>
     </div>
 
     <!-- Match Spotlight -->
-    <div class="match-spotlight reveal" style="animation-delay: 0.6s;">
+    <section class="reveal" style="animation-delay: 0.7s;">
         <div class="section-header">
-            <h2 class="section-title">Pertandingan Mendatang</h2>
+            <h2 class="section-title">Match Spotlight</h2>
             <div class="section-line"></div>
         </div>
 
         <?php if ($next_match): 
             $match_date = new DateTime($next_match['challenge_date']);
         ?>
-            <div class="editorial-match-card">
-                <div class="match-body">
-                    <div class="team-block">
-                        <div class="team-logo-frame">
+            <div class="match-hero-card">
+                <div class="match-hero-content">
+                    <div class="team-focus">
+                        <div class="team-logo-large">
                             <?php if ($next_match['team1_logo'] && file_exists('../images/teams/' . $next_match['team1_logo'])): ?>
-                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo'] ?? ''); ?>" alt="Team 1">
+                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo']); ?>" alt="Team 1" style="width: 100%; height: 100%; object-fit: contain;">
                             <?php else: ?>
-                                <i class="fas fa-shield" style="font-size: 2rem; color: #cbd5e1;"></i>
+                                <i class="fas fa-shield-alt" style="font-size: 4rem; color: var(--heritage-border);"></i>
                             <?php endif; ?>
                         </div>
-                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team1_name'] ?? ''); ?></h4>
+                        <h3 class="team-name-large"><?php echo htmlspecialchars($next_match['team1_name']); ?></h3>
                     </div>
 
-                    <div class="vs-capsule">VS</div>
+                    <div class="vs-emblem">
+                        <div class="vs-line"></div>
+                        <div class="vs-text">VS</div>
+                    </div>
 
-                    <div class="team-block">
-                        <div class="team-logo-frame">
+                    <div class="team-focus">
+                        <div class="team-logo-large">
                             <?php if ($next_match['team2_logo'] && file_exists('../images/teams/' . $next_match['team2_logo'])): ?>
-                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo'] ?? ''); ?>" alt="Team 2">
+                                <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo']); ?>" alt="Team 2" style="width: 100%; height: 100%; object-fit: contain;">
                             <?php else: ?>
-                                <i class="fas fa-shield" style="font-size: 2rem; color: #cbd5e1;"></i>
+                                <i class="fas fa-shield-alt" style="font-size: 4rem; color: var(--heritage-border);"></i>
                             <?php endif; ?>
                         </div>
-                        <h4 class="team-name-small"><?php echo htmlspecialchars($next_match['team2_name'] ?? ''); ?></h4>
+                        <h3 class="team-name-large"><?php echo htmlspecialchars($next_match['team2_name']); ?></h3>
                     </div>
                 </div>
 
-                <div class="match-footer">
-                    <div class="info-group">
-                        <div class="info-label">Tanggal Kickoff</div>
-                        <div class="info-data"><?php echo $match_date->format('l, d M Y'); ?></div>
+                <div class="match-hero-footer">
+                    <div class="match-info-box">
+                        <div class="match-info-label"><i class="far fa-calendar-alt"></i> Tanggal</div>
+                        <div class="match-info-value"><?php echo $match_date->format('l, d M Y'); ?></div>
                     </div>
-                    <div class="info-group">
-                        <div class="info-label">Waktu Pertandingan</div>
-                        <div class="info-data"><?php echo $match_date->format('H:i'); ?> WIB</div>
+                    <div class="match-info-box">
+                        <div class="match-info-label"><i class="far fa-clock"></i> Kickoff</div>
+                        <div class="match-info-value"><?php echo $match_date->format('H:i'); ?> WIB</div>
                     </div>
-                    <div class="info-group">
-                        <div class="info-label">Lokasi Stadion</div>
-                        <div class="info-data"><?php echo htmlspecialchars($next_match['venue_name'] ?: 'Akan diumumkan'); ?></div>
+                    <div class="match-info-box">
+                        <div class="match-info-label"><i class="fas fa-map-marker-alt"></i> Stadion</div>
+                        <div class="match-info-value"><?php echo htmlspecialchars($next_match['venue_name'] ?: 'TBD'); ?></div>
                     </div>
-                </div>
-                
-                <div style="padding: 15px; text-align: center; background: var(--premium-accent); color: white; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
-                    <?php echo htmlspecialchars($next_match['sport_type'] ?: 'Pertandingan Persahabatan'); ?>
                 </div>
             </div>
         <?php else: ?>
-            <div class="empty-state-light">
-                <i class="far fa-calendar-times"></i>
-                <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">Tidak Ada Pertandingan Terjadwal</h3>
-                <p style="color: var(--premium-text-muted);">Team saat ini sedang dalam masa istirahat di antara jadwal pertandingan.</p>
+            <div class="empty-state">
+                <i class="fas fa-calendar-day"></i>
+                <h3>Belum Ada Jadwal Pertandingan</h3>
+                <p style="color: var(--heritage-text-muted);">Tetap fokus pada pelatihan rutin sambil menunggu konfirmasi jadwal kompetisi berikutnya.</p>
             </div>
         <?php endif; ?>
-    </div>
+    </section>
 
-    <!-- Matches Today -->
-    <div class="match-spotlight reveal" style="animation-delay: 0.7s;">
+    <!-- Schedule Mini -->
+    <section class="reveal" style="animation-delay: 0.8s; margin-top: 64px;">
         <div class="section-header">
-            <h2 class="section-title">Pertandingan Hari Ini</h2>
+            <h2 class="section-title">Jadwal Hari Ini</h2>
             <div class="section-line"></div>
         </div>
 
         <?php if (!empty($today_matches)): ?>
-            <div class="today-match-list">
+            <div class="today-grid">
                 <?php foreach ($today_matches as $today_match): ?>
                     <?php $today_match_date = new DateTime($today_match['challenge_date']); ?>
-                    <div class="today-match-card">
-                        <div class="today-teams">
-                            <?php echo htmlspecialchars($today_match['team1_name'] ?? ''); ?>
-                            vs
-                            <?php echo htmlspecialchars($today_match['team2_name'] ?? ''); ?>
+                    <div class="schedule-card">
+                        <span class="schedule-time"><?php echo $today_match_date->format('H:i'); ?> WIB</span>
+                        <div class="schedule-teams">
+                            <?php echo htmlspecialchars($today_match['team1_name']); ?> 
+                            <span style="color: var(--heritage-gold); font-size: 0.8rem; margin: 0 4px;">VS</span> 
+                            <?php echo htmlspecialchars($today_match['team2_name']); ?>
                         </div>
-                        <div class="today-meta">
-                            <strong>Kickoff:</strong> <?php echo $today_match_date->format('H:i'); ?> WIB
-                        </div>
-                        <div class="today-meta">
-                            <strong>Venue:</strong> <?php echo htmlspecialchars($today_match['venue_name'] ?: 'Akan diumumkan'); ?>
-                        </div>
-                        <div class="today-meta">
-                            <strong>Kategori:</strong> <?php echo htmlspecialchars($today_match['sport_type'] ?: 'Pertandingan Persahabatan'); ?>
+                        <div class="schedule-meta">
+                            <i class="fas fa-location-dot"></i>
+                            <span><?php echo htmlspecialchars($today_match['venue_name'] ?: 'Venue TBD'); ?></span>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div class="empty-state-light" style="padding: 55px 30px; border-radius: 20px;">
-                <i class="far fa-calendar-check"></i>
-                <h3 style="font-weight: 800; color: var(--premium-accent); margin-bottom: 5px;">Tidak Ada Pertandingan Hari Ini</h3>
-                <p style="color: var(--premium-text-muted);">Belum ada jadwal pertandingan team kamu untuk hari ini.</p>
+            <div class="empty-state" style="padding: 40px;">
+                <p style="margin: 0; color: var(--heritage-text-muted); font-weight: 500;">Tidak ada pertandingan yang dijadwalkan untuk hari ini.</p>
             </div>
         <?php endif; ?>
-    </div>
+    </section>
 </div>
 
 <script>
@@ -686,12 +771,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const target = parseInt(el.getAttribute('data-count'), 10);
         if (Number.isNaN(target)) return;
 
-        const duration = 850;
+        const duration = 1200;
         const start = performance.now();
 
         function tick(now) {
             const progress = Math.min((now - start) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
+            const eased = 1 - Math.pow(1 - progress, 4); // Quartic ease out
             el.textContent = Math.round(target * eased).toString();
             if (progress < 1) requestAnimationFrame(tick);
         }
@@ -703,4 +788,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
-
