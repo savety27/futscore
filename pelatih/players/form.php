@@ -439,12 +439,15 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                     <i class="fas fa-camera"></i>
                     Foto & Dokumen
                 </h2>
+                <p class="note" style="margin-bottom: 24px; color: var(--heritage-text-muted); font-family: var(--font-body);">
+                    Unggah foto berkualitas tinggi dan dokumen asli untuk proses verifikasi keanggotaan.
+                </p>
                 
-                <div class="form-grid">
-                    <!-- Profile Photo -->
-                    <div class="form-group">
+                <div class="document-upload-grid">
+                    <!-- Profile Photo - HERO -->
+                    <div class="form-group hero-upload">
                         <label class="form-label">
-                            <span>Foto Profil</span>
+                            <span class="required-field">Foto Profil</span>
                             <span class="note">Maks 5MB</span>
                         </label>
                         
@@ -452,19 +455,22 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                         <div class="file-item">
                             <img src="../../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
                                  alt="Current Photo">
-                            <div>
-                                <div style="font-weight: 700;">Foto Saat Ini</div>
-                                <div style="font-size: 0.75rem; color: var(--heritage-text-muted);">Klik upload untuk mengganti</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.85rem;">Foto Tersimpan</div>
+                                <div style="font-size: 0.7rem; color: var(--heritage-text-muted); line-height: 1.2;">Klik upload di bawah untuk mengganti</div>
                             </div>
                         </div>
                         <?php endif; ?>
                         
                         <div class="file-upload" id="photoUpload">
-                            <div>
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--heritage-text); margin-bottom: 12px;"></i>
-                                <p style="margin: 0; font-weight: 600;">Unggah Foto Profil</p>
-                                <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: var(--heritage-text-muted);">Maksimal 5MB (JPG, PNG)</p>
+                            <div class="upload-icon-wrapper">
+                                <i class="fas fa-user-circle"></i>
                             </div>
+                            <div class="upload-text">
+                                <span class="upload-title">Pilih Foto Profil</span>
+                                <span class="upload-hint">JPG, PNG (Maksimal 5MB)</span>
+                            </div>
+                            <div class="btn-select">Pilih File</div>
                             <input type="file" name="photo" id="photoFile" accept="image/*">
                         </div>
                         <div class="file-preview" id="photoPreview"></div>
@@ -472,10 +478,10 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 
                     <?php
                     $documents = [
-                        'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image'], 'req' => true],
-                        'ktp_image' => ['label' => 'KTP / Kartu Identitas', 'current' => $player['ktp_image'], 'req' => false],
-                        'birth_cert_image' => ['label' => 'Akta Lahir', 'current' => $player['birth_cert_image'], 'req' => false],
-                        'diploma_image' => ['label' => 'Ijazah / Raport', 'current' => $player['diploma_image'], 'req' => false]
+                        'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image'], 'req' => true, 'icon' => 'fa-users'],
+                        'ktp_image' => ['label' => 'KTP / Identitas', 'current' => $player['ktp_image'], 'req' => false, 'icon' => 'fa-id-card-alt'],
+                        'birth_cert_image' => ['label' => 'Akta Lahir', 'current' => $player['birth_cert_image'], 'req' => false, 'icon' => 'fa-certificate'],
+                        'diploma_image' => ['label' => 'Ijazah / Raport', 'current' => $player['diploma_image'], 'req' => false, 'icon' => 'fa-graduation-cap']
                     ];
                     
                     foreach ($documents as $key => $doc):
@@ -488,15 +494,20 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                         
                         <?php if (!empty($doc['current'])): ?>
                         <div class="file-item">
-                            <div style="font-size: 0.85rem; font-weight: 600;">Tersimpan: <?php echo htmlspecialchars($doc['current']); ?></div>
+                            <div style="font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
+                                <i class="fas fa-check-circle" style="color: var(--heritage-accent);"></i> <?php echo htmlspecialchars($doc['current']); ?>
+                            </div>
                         </div>
                         <?php endif; ?>
                         
-                        <div class="file-upload" id="<?php echo $key; ?>Upload">
-                            <div>
-                                <i class="fas fa-file-upload" style="font-size: 1.5rem; color: var(--heritage-text); margin-bottom: 8px;"></i>
-                                <p style="margin: 0; font-weight: 600; font-size: 0.9rem;">Unggah <?php echo $doc['label']; ?></p>
+                        <div class="file-upload" id="<?php echo $key; ?>Upload" style="min-height: 140px; padding: 20px;">
+                            <div class="upload-icon-wrapper" style="width: 48px; height: 48px; font-size: 1.2rem; margin-bottom: 12px;">
+                                <i class="fas <?php echo $doc['icon']; ?>"></i>
                             </div>
+                            <div class="upload-text">
+                                <span class="upload-title" style="font-size: 0.85rem;">Unggah <?php echo $doc['label']; ?></span>
+                            </div>
+                            <div class="btn-select" style="margin-top: 10px; padding: 6px 16px; font-size: 0.7rem;">Pilih</div>
                             <input type="file" name="<?php echo $key; ?>" id="<?php echo $key; ?>File" accept="image/*">
                         </div>
                         <div class="file-preview" id="<?php echo $key; ?>Preview"></div>
