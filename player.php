@@ -41,10 +41,6 @@ require_once 'includes/header.php';
     .player-table-new td:last-child {
         padding-right: 12px;
     }
-    .player-table-new .col-nik {
-        min-width: 140px;
-        white-space: nowrap;
-    }
     .player-table-new .col-nisn {
         min-width: 110px;
         white-space: nowrap;
@@ -350,10 +346,12 @@ require_once 'includes/header.php';
         .player-table-container,
         .player-table-responsive {
             overflow: visible !important;
+            padding: 0 4px !important;
         }
         .player-table-new {
             display: block !important;
             min-width: 0 !important;
+            border: none !important;
         }
         .player-table-new thead {
             display: none !important;
@@ -361,86 +359,164 @@ require_once 'includes/header.php';
         .player-table-new tbody {
             display: flex !important;
             flex-direction: column !important;
-            gap: 14px !important;
+            gap: 24px !important;
+            padding: 10px 5px !important;
         }
         .player-table-new tr {
-            display: flex !important;
-            flex-direction: column !important;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 14px !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 28px !important;
             overflow: hidden !important;
+            box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.08) !important;
+            position: relative !important;
+            transition: all 0.3s ease !important;
         }
-        .player-table-new td {
+        
+        /* Digital Scout Card Header */
+        .player-table-new td.cell-photo,
+        .player-table-new td.cell-name,
+        .player-table-new td.cell-team {
+            grid-column: span 2 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 0 !important;
+            border-bottom: none !important;
+            background: transparent !important;
+        }
+
+        .player-table-new td.cell-photo {
+            padding-top: 28px !important;
+            z-index: 2;
+        }
+        .player-table-new td.cell-photo::before { display: none !important; }
+        .player-table-new .player-photo-sm {
+            width: 110px !important;
+            height: 110px !important;
+            border-radius: 24px !important;
+            border: 4px solid #fff !important;
+            box-shadow: 0 12px 20px -5px rgba(15, 23, 42, 0.15) !important;
+            object-fit: cover !important;
+        }
+
+        .player-table-new td.cell-name {
+            padding: 16px 20px 6px !important;
+        }
+        .player-table-new td.cell-name::before { display: none !important; }
+        .player-table-new td.cell-name .player-link {
+            font-size: 24px !important;
+            font-weight: 900 !important;
+            color: #0f172a !important;
+            text-align: center !important;
+            letter-spacing: -0.03em !important;
+            line-height: 1.1 !important;
+            text-decoration: none !important;
+        }
+
+        .player-table-new td.cell-team {
+            padding: 0 20px 28px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+        }
+        .player-table-new td.cell-team::before { display: none !important; }
+        .player-table-new .col-team-stack {
+            background: #f8fafc !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
             display: flex !important;
             align-items: center !important;
-            justify-content: space-between !important;
-            padding: 10px 12px;
-            font-size: 13px;
-            border-bottom: 1px solid #eef2f7 !important;
-            color: #334155 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            text-align: left !important;
+            gap: 8px !important;
         }
-        .player-table-new td:last-child {
-            border-bottom: none !important;
+        .player-table-new .team-name-stack {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
         }
+
+        /* Information Grid Cells */
+        .player-table-new td {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 14px 10px !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            background: #fff !important;
+            text-align: center !important;
+        }
+        
         .player-table-new td::before {
             content: attr(data-label) !important;
-            flex: 0 0 96px;
-            font-size: 10px;
+            font-size: 9px !important;
             font-weight: 800 !important;
-            color: #64748b !important;
+            color: #94a3b8 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 0.1em !important;
+            margin-bottom: 6px !important;
+            flex: none !important;
         }
-        .player-table-new td.cell-no {
-            display: none !important;
+
+        .player-table-new td:not(.cell-photo):not(.cell-name):not(.cell-team):not(.mobile-profile-cell) {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #1e293b !important;
         }
-        .player-table-new td.col-jersey {
-            width: auto;
-            min-width: 0;
-            max-width: none;
-            white-space: nowrap;
+
+        /* Stats & Category Row */
+        .player-table-new td[data-label="Match"],
+        .player-table-new td[data-label="Event"] {
+            background: #f8fafc !important;
         }
-        .player-table-new td.cell-team {
-            align-items: center;
+        .player-table-new .match-count-badge,
+        .player-table-new .event-count-badge {
+            font-size: 12px !important;
+            padding: 4px 12px !important;
+            border-radius: 999px !important;
         }
-        .col-team-stack {
-            flex-direction: row;
-            align-items: center;
-            text-align: left;
-            gap: 8px;
+        
+        .player-table-new td[data-label="Kategori"] {
+            grid-column: span 2 !important;
+            padding: 20px !important;
+            background: linear-gradient(to right, #f8fafc, #ffffff) !important;
         }
-        .team-name-stack {
-            font-size: 12px;
-            line-height: 1.2;
-        }
-        .player-photo-sm,
-        .placeholder-img {
-            width: 38px !important;
-            height: 38px !important;
+        .player-table-new td[data-label="Kategori"] .event-badge {
+            font-size: 12px !important;
+            padding: 6px 14px !important;
             border-radius: 10px !important;
+            display: inline-block !important;
         }
-        .team-logo-small {
-            width: 22px !important;
-            height: 22px !important;
+
+        /* Hide unnecessary fields */
+        .player-table-new td.cell-no { display: none !important; }
+
+        /* Footer Button Section */
+        .player-table-new td.mobile-profile-cell {
+            grid-column: span 2 !important;
+            padding: 24px !important;
+            border-bottom: none !important;
+            background: #ffffff !important;
         }
-        .match-count-badge,
-        .event-count-badge {
-            font-size: 10px;
-            padding: 2px 7px;
-            gap: 4px;
+        .mobile-profile-btn {
+            width: 100% !important;
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+            color: #ffffff !important;
+            padding: 18px !important;
+            border-radius: 18px !important;
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4) !important;
+            border: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
         }
-        .history-btn {
-            width: 30px;
-            height: 30px;
-            font-size: 13px;
-        }
-        .mobile-profile-cell {
-            width: 100%;
-        }
+
+        /* Share Section Restored */
         .player-share-section {
             width: 100%;
             display: flex;
@@ -462,19 +538,34 @@ require_once 'includes/header.php';
         }
         .player-share-buttons {
             width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
-        .player-share-btn {
-            width: 100%;
-        }
-        .player-share-feedback {
-            text-align: center;
+        .player-share-btn { width: 100%; }
+        .player-share-feedback { text-align: center; }
+
+        /* Decorative Background */
+        .player-table-new tr::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 140px;
+            background: linear-gradient(to bottom, rgba(37, 99, 235, 0.03), transparent) !important;
+            pointer-events: none;
         }
     }
+
     @media (max-width: 480px) {
-        .player-table-new td {
-            padding: 9px 10px;
-            font-size: 12px;
-        }
+        .player-table-new tbody { gap: 20px !important; }
+        .player-table-new tr { border-radius: 24px !important; }
+        .player-table-new .player-photo-sm { width: 90px !important; height: 90px !important; }
+        .player-table-new td.cell-name .player-link { font-size: 20px !important; }
+        .player-table-new td { padding: 12px 8px !important; }
+        .player-share-buttons { grid-template-columns: 1fr; }
+    }
         .player-table-new td::before {
             flex: 0 0 88px;
         }
@@ -687,12 +778,6 @@ function calculateAgeV2($birth_date) {
     return $diff->y . ' tahun ' . $diff->m . ' bulan';
 }
 
-function maskNIK($nik) {
-    if (empty($nik)) return '-';
-    if (strlen($nik) < 8) return $nik;
-    return substr($nik, 0, 3) . str_repeat('*', 9) . substr($nik, -4);
-}
-
 ?>
 
 <div class="dashboard-wrapper">
@@ -803,10 +888,7 @@ include 'includes/sidebar.php';
                                 <span class="detail-label">NISN</span>
                                 <span class="detail-value"><?php echo htmlspecialchars($player_detail['nisn'] ?: '-'); ?></span>
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">NIK</span>
-                                <span class="detail-value"><?php echo maskNIK($player_detail['nik']); ?></span>
-                            </div>
+
                             <div class="detail-item">
                                 <span class="detail-label">Tanggal Lahir</span>
                                 <span class="detail-value"><?php echo !empty($player_detail['birth_date']) ? date('d M Y', strtotime($player_detail['birth_date'])) : '-'; ?></span>
@@ -924,7 +1006,6 @@ include 'includes/sidebar.php';
                             <th class="col-center">Usia</th>
                             <th class="col-center">JK</th>
                             <th class="col-nisn">NISN</th>
-                            <th class="col-nik">NIK</th>
                             <th>Kategori</th>
                             <th class="col-center">Match</th>
                             <th class="col-center">Event</th>
@@ -934,7 +1015,7 @@ include 'includes/sidebar.php';
                     <tbody>
                         <?php if (empty($players)): ?>
                             <tr>
-                                <td colspan="14">
+                                <td colspan="13">
                                     <div class="empty-state">
                                         <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
                                         <h3>Pemain tidak ditemukan</h3>
@@ -976,7 +1057,6 @@ include 'includes/sidebar.php';
                                 <td class="col-center" data-label="Usia"><?php echo calculateAgeV2($p['birth_date']); ?></td>
                                 <td class="col-center" data-label="JK"><?php echo $p['gender'] ?: '-'; ?></td>
                                 <td class="col-nisn" data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
-                                <td class="col-nik" data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
                                 <td data-label="Kategori">
 
                                     <?php 
