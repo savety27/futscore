@@ -92,25 +92,28 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 }
 ?>
 
+<link rel="stylesheet" href="css/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/player_form.css'); ?>">
+
 <div class="container">
-    <div class="header">
-        <h1><i class="fas fa-user-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
+    <header class="header reveal">
+        <h1>
+            <i class="fas fa-user-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
             <?php echo $action === 'add' ? 'Tambah' : 'Ubah'; ?> Pemain
         </h1>
         <a href="./" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar
         </a>
-    </div>
+    </header>
 
     <?php if (isset($_GET['error'])): ?>
-        <div class="alert alert-danger">
+        <div class="alert alert-danger reveal">
             <i class="fas fa-exclamation-circle"></i>
             <span><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></span>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['msg'])): ?>
-        <div class="alert alert-success">
+        <div class="alert alert-success reveal">
             <span class="alert-icon">✓</span>
             <span>Pemain berhasil <?php echo $_GET['msg'] === 'added' ? 'ditambahkan' : 'diperbarui'; ?>!</span>
         </div>
@@ -128,10 +131,10 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             <input type="hidden" id="hasExistingKk" value="<?php echo !empty($player['kk_image']) ? '1' : '0'; ?>">
             
             <!-- Basic Information Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-1">
                 <h2 class="section-title">
                     <i class="fas fa-user-circle"></i>
-                   Profil 
+                   Profil Dasar
                 </h2>
                 
                 <div class="form-grid">
@@ -141,8 +144,8 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="note">Wajib</span>
                         </label>
                         <input type="text" name="name" class="form-control" 
-                               placeholder="Masukkan nama lengkap" required
-                               value="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
+                                placeholder="Masukkan nama lengkap" required
+                                value="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
                     </div>
                     
                     <div class="form-group">
@@ -151,8 +154,8 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="note">Wajib</span>
                         </label>
                         <input type="number" name="jersey_number" class="form-control" 
-                               placeholder="Masukkan nomor punggung" required
-                               value="<?php echo htmlspecialchars($player['jersey_number'] ?? ''); ?>">
+                                placeholder="Masukkan nomor punggung" required
+                                value="<?php echo htmlspecialchars($player['jersey_number'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -278,7 +281,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             </div>
 
             <!-- Contact Information Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-2">
                 <h2 class="section-title">
                     <i class="fas fa-address-card"></i>
                     Informasi Kontak
@@ -368,13 +371,13 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             </div>
 
             <!-- Identification Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-3">
                 <h2 class="section-title">
                     <i class="fas fa-id-card"></i>
                     Identitas & Verifikasi
                 </h2>
-                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    NIK dan NISN wajib diverifikasi sebelum data dapat disimpan.
+                <p class="note" style="margin-bottom: 24px; color: var(--heritage-text-muted); font-family: var(--font-body);">
+                    NIK dan NISN wajib diverifikasi sebelum data dapat disimpan untuk menjamin integritas atlet.
                 </p>
                 
                 <div class="form-grid">
@@ -382,7 +385,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">NIK</span>
-                            <span class="note">Wajib (16 digit)</span>
+                            <span class="note">16 digit</span>
                         </label>
                         <div class="verify-input-wrapper">
                             <input type="text" name="nik" class="form-control verify-input" 
@@ -395,7 +398,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                    data-original="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>"
                                    value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
                             <button type="button" class="verify-btn" id="nikVerifyBtn" onclick="verifyNIK()" disabled>
-                                <i class="fas fa-shield-alt"></i> Verifikasi
+                                Verifikasi
                             </button>
                         </div>
                         <input type="hidden" name="nik_verified" id="nikVerified" value="0">
@@ -407,7 +410,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">NISN</span>
-                            <span class="note">Wajib (10 digit)</span>
+                            <span class="note">10 digit</span>
                         </label>
                         <div class="verify-input-wrapper">
                             <input type="text" name="nisn" class="form-control verify-input" 
@@ -420,7 +423,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                    data-original="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>"
                                    value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>">
                             <button type="button" class="verify-btn" id="nisnVerifyBtn" onclick="verifyNISN()" disabled>
-                                <i class="fas fa-shield-alt"></i> Verifikasi
+                                Verifikasi
                             </button>
                         </div>
                         <input type="hidden" name="nisn_verified" id="nisnVerified" value="0">
@@ -430,93 +433,69 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                 </div>
             </div>
 
-            <!-- Photo Upload Section -->
-            <div class="form-section">
+            <!-- Photo & Document Upload Section -->
+            <div class="form-section reveal d-4">
                 <h2 class="section-title">
                     <i class="fas fa-camera"></i>
-                    Foto Profil 
+                    Foto & Dokumen
                 </h2>
                 
                 <div class="form-grid">
+                    <!-- Profile Photo -->
                     <div class="form-group">
                         <label class="form-label">
                             <span>Foto Profil</span>
-                            <span class="note">Maks 5MB (JPG, PNG, GIF)</span>
+                            <span class="note">Maks 5MB</span>
                         </label>
                         
                         <?php if (!empty($player['photo'])): ?>
-                        <div class="current-photo" style="margin-bottom: 20px;">
-                            <p style="font-size: 14px; color: var(--gray); margin-bottom: 10px;">
-                                <strong>Foto :</strong>
-                            </p>
-                            <div class="file-item">
-                                <img src="../../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
-                                     alt="Current Photo" style="width: 60px; height: 60px;">
-                                <div>
-                                    <div><strong><?php echo htmlspecialchars($player['photo'] ?? ''); ?></strong></div>
-                                    <div style="font-size: 12px; color: var(--gray);">Klik untuk mengganti foto</div>
-                                </div>
+                        <div class="file-item">
+                            <img src="../../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
+                                 alt="Current Photo">
+                            <div>
+                                <div style="font-weight: 700;">Foto Saat Ini</div>
+                                <div style="font-size: 0.75rem; color: var(--heritage-text-muted);">Klik upload untuk mengganti</div>
                             </div>
                         </div>
                         <?php endif; ?>
                         
                         <div class="file-upload" id="photoUpload">
                             <div>
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                                <p style="margin: 0; color: var(--gray);">Klik untuk unggah atau seret & lepas</p>
-                                <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--gray);">Maksimal 5MB</p>
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--heritage-text); margin-bottom: 12px;"></i>
+                                <p style="margin: 0; font-weight: 600;">Unggah Foto Profil</p>
+                                <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: var(--heritage-text-muted);">Maksimal 5MB (JPG, PNG)</p>
                             </div>
                             <input type="file" name="photo" id="photoFile" accept="image/*">
                         </div>
                         <div class="file-preview" id="photoPreview"></div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Document Upload Section -->
-            <div class="form-section">
-                <h2 class="section-title">
-                    <i class="fas fa-file-alt"></i>
-                    Dokumen
-                </h2>
-                
-                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Unggah dokumen pendukung. Kartu Keluarga wajib, dokumen lain opsional. Maksimal 5MB per file.
-                </p>
-                
-                <div class="form-grid">
                     <?php
                     $documents = [
-                        'ktp_image' => ['label' => 'KTP / KIA / Kartu Pelajar / Kartu Identitas', 'current' => $player['ktp_image']],
-                        'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image']],
-                        'birth_cert_image' => ['label' => 'Akta Lahir / Surat Ket. Lahir', 'current' => $player['birth_cert_image']],
-                        'diploma_image' => ['label' => 'Ijazah / Biodata Raport / Kartu NISN', 'current' => $player['diploma_image']]
+                        'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image'], 'req' => true],
+                        'ktp_image' => ['label' => 'KTP / Kartu Identitas', 'current' => $player['ktp_image'], 'req' => false],
+                        'birth_cert_image' => ['label' => 'Akta Lahir', 'current' => $player['birth_cert_image'], 'req' => false],
+                        'diploma_image' => ['label' => 'Ijazah / Raport', 'current' => $player['diploma_image'], 'req' => false]
                     ];
                     
                     foreach ($documents as $key => $doc):
-                        $is_kk = ($key === 'kk_image');
                     ?>
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="<?php echo $is_kk ? 'required-field' : ''; ?>"><?php echo $doc['label']; ?></span>
-                            <span class="note"><?php echo $is_kk ? 'Wajib' : 'Opsional'; ?></span>
+                            <span class="<?php echo $doc['req'] ? 'required-field' : ''; ?>"><?php echo $doc['label']; ?></span>
+                            <span class="note"><?php echo $doc['req'] ? 'Wajib' : 'Opsional'; ?></span>
                         </label>
-                        <?php if ($is_kk): ?>
-                            <p class="kk-warning">* FILE KARTU KELUARGA WAJIB DIUPLOAD!</p>
-                        <?php endif; ?>
                         
                         <?php if (!empty($doc['current'])): ?>
-                        <div class="current-photo" style="margin-bottom: 10px;">
-                            <p style="font-size: 12px; color: var(--gray); margin-bottom: 5px;">
-                                <strong>Foto :</strong> <?php echo htmlspecialchars($doc['current'] ?? ''); ?>
-                            </p>
+                        <div class="file-item">
+                            <div style="font-size: 0.85rem; font-weight: 600;">Tersimpan: <?php echo htmlspecialchars($doc['current']); ?></div>
                         </div>
                         <?php endif; ?>
                         
                         <div class="file-upload" id="<?php echo $key; ?>Upload">
                             <div>
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 20px; color: var(--primary); margin-bottom: 8px;"></i>
-                                <p style="margin: 0; color: var(--gray); font-size: 14px;">Unggah <?php echo $doc['label']; ?></p>
+                                <i class="fas fa-file-upload" style="font-size: 1.5rem; color: var(--heritage-text); margin-bottom: 8px;"></i>
+                                <p style="margin: 0; font-weight: 600; font-size: 0.9rem;">Unggah <?php echo $doc['label']; ?></p>
                             </div>
                             <input type="file" name="<?php echo $key; ?>" id="<?php echo $key; ?>File" accept="image/*">
                         </div>
@@ -527,15 +506,11 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             </div>
 
             <!-- Skills Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-1">
                 <h2 class="section-title">
                     <i class="fas fa-chart-line"></i>
-                    Keahlian (Rentang 0-10)
+                    Atribut Teknis (0-10)
                 </h2>
-                
-                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Nilai Default: 5
-                </p>
                 
                 <div class="skill-grid">
                     <?php
@@ -558,47 +533,45 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="skill-name"><?php echo $label; ?></span>
                             <span class="skill-value" id="<?php echo $key; ?>Value"><?php echo $value; ?></span>
                         </div>
-                        <div class="slider-container">
-                            <input type="range" name="<?php echo $key; ?>" class="slider" min="0" max="10" 
-                                   value="<?php echo $value; ?>" id="<?php echo $key; ?>Slider"
-                                   oninput="document.getElementById('<?php echo $key; ?>Value').textContent = this.value">
-                        </div>
+                        <input type="range" name="<?php echo $key; ?>" class="slider" min="0" max="10" 
+                               value="<?php echo $value; ?>" id="<?php echo $key; ?>Slider"
+                               oninput="document.getElementById('<?php echo $key; ?>Value').textContent = this.value">
                     </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
             <!-- Status Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-2">
                 <h2 class="section-title">
                     <i class="fas fa-check-circle"></i>
-                    Status Pemain
+                    Status Keanggotaan
                 </h2>
                 <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?>>
-                        <label for="status_active" style="font-weight: normal;">Pemain Aktif</label>
+                    <div style="display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 20px; border-radius: 16px;">
+                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?> style="width: 24px; height: 24px; cursor: pointer;">
+                        <div>
+                            <label for="status_active" style="font-weight: 700; cursor: pointer; color: var(--heritage-text);">Pemain Aktif</label>
+                            <div style="font-size: 0.85rem; color: var(--heritage-text-muted);">Pemain aktif akan tersedia untuk seleksi pertandingan.</div>
+                        </div>
                     </div>
-                    <small style="color: #666;">Pemain aktif akan tampil dalam sistem</small>
                 </div>
             </div>
 
             <!-- Form Actions -->
-            <div class="form-actions">
+            <div class="form-actions reveal d-3">
                 <a href="./" class="btn btn-secondary">
                     <i class="fas fa-times"></i>
-                    Batal
+                    Batalkan
                 </a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i>
-                    <?php echo $action === 'add' ? 'Simpan Pemain' : 'Perbarui Pemain'; ?>
+                    <?php echo $action === 'add' ? 'Simpan Pemain' : 'Perbarui Data'; ?>
                 </button>
             </div>
         </form>
     </div>
 </div>
-
-<link rel="stylesheet" href="css/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/player_form.css'); ?>">
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -636,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <img src="${e.target.result}" alt="Preview">
                     <div>
                         <div><strong>${file.name}</strong></div>
-                        <div style="font-size: 12px; color: var(--gray);">${formatFileSize(file.size)}</div>
+                        <div style="font-size: 12px; color: var(--heritage-text-muted);">${formatFileSize(file.size)}</div>
                     </div>
                 </div>`;
         };
@@ -658,6 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         alertText.textContent = message;
         alertBox.style.display = 'flex';
+        alertBox.className = 'alert alert-danger';
         alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
@@ -763,8 +737,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 nikVerifyBtn.classList.add('verified');
                 nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Tersimpan';
                 nikVerifyBtn.disabled = true;
-                nikInput.style.borderColor = 'var(--success)';
-                nikFeedback.textContent = 'NIK tidak diubah - verifikasi lama tetap valid';
+                nikInput.style.borderColor = 'var(--heritage-accent)';
+                nikFeedback.textContent = 'NIK tidak diubah - verifikasi tetap valid';
                 nikFeedback.className = 'verify-feedback success';
                 return;
             }
@@ -772,20 +746,19 @@ document.addEventListener('DOMContentLoaded', function() {
             nikVerified.value = '0';
             nikDetails.style.display = 'none';
             nikVerifyBtn.classList.remove('verified');
-            nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-            nikInput.style.borderColor = '#e1e5eb';
+            nikVerifyBtn.innerHTML = 'Verifikasi';
+            nikInput.style.borderColor = 'var(--heritage-border)';
 
             if (numericValue.length === 16) {
-                nikFeedback.textContent = '16 digit — Klik "Verifikasi" untuk memvalidasi';
+                nikFeedback.textContent = 'Klik "Verifikasi" untuk memvalidasi NIK';
                 nikFeedback.className = 'verify-feedback warning';
                 nikVerifyBtn.disabled = false;
-                nikInput.style.borderColor = 'var(--warning)';
             } else if (numericValue.length > 0) {
-                nikFeedback.textContent = `Kurang ${16 - numericValue.length} digit (${numericValue.length}/16)`;
+                nikFeedback.textContent = `Kurang ${16 - numericValue.length} digit`;
                 nikFeedback.className = 'verify-feedback warning';
                 nikVerifyBtn.disabled = true;
             } else {
-                nikFeedback.textContent = 'NIK harus diisi — 16 digit angka';
+                nikFeedback.textContent = '16 digit angka';
                 nikFeedback.className = 'verify-feedback';
                 nikVerifyBtn.disabled = true;
             }
@@ -833,10 +806,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         nikVerifyBtn.disabled = true;
         nikVerifyBtn.classList.add('loading');
-        nikVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
-        nikFeedback.textContent = 'Sedang memverifikasi NIK...';
-        nikFeedback.className = 'verify-feedback';
-        nikFeedback.style.animation = 'verifyPulse 1s infinite';
+        nikVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        nikFeedback.textContent = 'Sedang memverifikasi...';
 
         const formData = new FormData();
         formData.append('type', 'nik');
@@ -845,13 +816,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         submitIdentityVerification(formData)
             .then(data => {
-                nikFeedback.style.animation = '';
                 if (data.verified) {
                     nikVerified.value = '1';
                     nikFeedback.textContent = '✓ ' + data.message;
                     nikFeedback.className = 'verify-feedback success';
-                    nikInput.style.borderColor = 'var(--success)';
-                    nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                    nikInput.style.borderColor = 'var(--heritage-accent)';
+                    nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
                     nikVerifyBtn.classList.remove('loading');
                     nikVerifyBtn.classList.add('verified');
 
@@ -859,9 +829,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.details) {
                         autofillFieldsFromNikDetails(data.details);
                         let html = '<strong>📋 Data NIK:</strong><br>';
-                        if (data.details.provinsi) html += `<div class="detail-row"><span class="detail-label">Provinsi</span><span class="detail-value">${data.details.provinsi}</span></div>`;
-                        if (data.details.tanggal_lahir) html += `<div class="detail-row"><span class="detail-label">Tgl Lahir</span><span class="detail-value">${data.details.tanggal_lahir}</span></div>`;
-                        if (data.details.jenis_kelamin) html += `<div class="detail-row"><span class="detail-label">Jenis Kelamin</span><span class="detail-value">${data.details.jenis_kelamin}</span></div>`;
+                        if (data.details.provinsi) html += `Provinsi: ${data.details.provinsi}<br>`;
+                        if (data.details.tanggal_lahir) html += `Tgl Lahir: ${data.details.tanggal_lahir}<br>`;
+                        if (data.details.jenis_kelamin) html += `Gender: ${data.details.jenis_kelamin}`;
                         nikDetails.innerHTML = html;
                         nikDetails.style.display = 'block';
                     }
@@ -869,24 +839,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     nikVerified.value = '0';
                     nikFeedback.textContent = '✗ ' + data.message;
                     nikFeedback.className = 'verify-feedback error';
-                    nikInput.style.borderColor = 'var(--danger)';
-                    nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nikInput.style.borderColor = 'var(--heritage-crimson)';
+                    nikVerifyBtn.innerHTML = 'Gagal';
                     nikVerifyBtn.classList.remove('loading');
                     nikVerifyBtn.disabled = false;
-                    nikDetails.style.display = 'none';
                 }
             })
             .catch(err => {
-                const message = err && (err.status || err.data) && err.message
-                    ? err.message
-                    : 'Gagal menghubungi server verifikasi';
-                nikFeedback.style.animation = '';
-                nikFeedback.textContent = '⚠ ' + message;
+                nikFeedback.textContent = '⚠ Gagal menghubungi server';
                 nikFeedback.className = 'verify-feedback error';
-                nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                nikVerifyBtn.innerHTML = 'Verifikasi';
                 nikVerifyBtn.classList.remove('loading');
                 nikVerifyBtn.disabled = false;
-                nikDetails.style.display = 'none';
             });
     };
 
@@ -911,32 +875,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 nisnVerifyBtn.classList.add('verified');
                 nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Tersimpan';
                 nisnVerifyBtn.disabled = true;
-                nisnInput.style.borderColor = 'var(--success)';
-                const nisnDetailsEl = document.getElementById('nisnDetails');
-                if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
-                nisnFeedback.textContent = 'NISN tidak diubah - verifikasi lama tetap valid';
+                nisnInput.style.borderColor = 'var(--heritage-accent)';
+                nisnFeedback.textContent = 'NISN tidak diubah';
                 nisnFeedback.className = 'verify-feedback success';
                 return;
             }
             // Reset verification
             nisnVerified.value = '0';
             nisnVerifyBtn.classList.remove('verified');
-            nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-            nisnInput.style.borderColor = '#e1e5eb';
-            const nisnDetailsEl = document.getElementById('nisnDetails');
-            if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
+            nisnVerifyBtn.innerHTML = 'Verifikasi';
+            nisnInput.style.borderColor = 'var(--heritage-border)';
 
             if (numericValue.length === 10) {
-                nisnFeedback.textContent = '10 digit — Klik "Verifikasi" untuk memvalidasi';
+                nisnFeedback.textContent = 'Klik "Verifikasi" untuk NISN';
                 nisnFeedback.className = 'verify-feedback warning';
                 nisnVerifyBtn.disabled = false;
-                nisnInput.style.borderColor = 'var(--warning)';
             } else if (numericValue.length > 0) {
-                nisnFeedback.textContent = `Kurang ${10 - numericValue.length} digit (${numericValue.length}/10)`;
+                nisnFeedback.textContent = `Kurang ${10 - numericValue.length} digit`;
                 nisnFeedback.className = 'verify-feedback warning';
                 nisnVerifyBtn.disabled = true;
             } else {
-                nisnFeedback.textContent = 'NISN harus diisi — 10 digit angka';
+                nisnFeedback.textContent = '10 digit angka';
                 nisnFeedback.className = 'verify-feedback';
                 nisnVerifyBtn.disabled = true;
             }
@@ -960,10 +919,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         nisnVerifyBtn.disabled = true;
         nisnVerifyBtn.classList.add('loading');
-        nisnVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
-        nisnFeedback.textContent = 'Sedang memverifikasi NISN...';
-        nisnFeedback.className = 'verify-feedback';
-        nisnFeedback.style.animation = 'verifyPulse 1s infinite';
+        nisnVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        nisnFeedback.textContent = 'Sedang memverifikasi...';
 
         const formData = new FormData();
         formData.append('type', 'nisn');
@@ -972,13 +929,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         submitIdentityVerification(formData)
             .then(data => {
-                nisnFeedback.style.animation = '';
                 if (data.verified) {
                     nisnVerified.value = '1';
                     nisnFeedback.textContent = '✓ ' + data.message;
                     nisnFeedback.className = 'verify-feedback success';
-                    nisnInput.style.borderColor = 'var(--success)';
-                    nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                    nisnInput.style.borderColor = 'var(--heritage-accent)';
+                    nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.classList.add('verified');
 
@@ -986,11 +942,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const nisnDetailsEl = document.getElementById('nisnDetails');
                     if (data.details && nisnDetailsEl) {
                         let html = '<strong>📋 Data NISN:</strong><br>';
-                        if (data.details.tahun_lahir) html += `<div class="detail-row"><span class="detail-label">Tahun Lahir</span><span class="detail-value">${data.details.tahun_lahir}</span></div>`;
-                        if (data.details.usia) html += `<div class="detail-row"><span class="detail-label">Usia</span><span class="detail-value">${data.details.usia}</span></div>`;
-                        if (data.details.perkiraan_jenjang) html += `<div class="detail-row"><span class="detail-label">Jenjang</span><span class="detail-value">${data.details.perkiraan_jenjang}</span></div>`;
-                        if (data.details.kode_tengah) html += `<div class="detail-row"><span class="detail-label">Kode Tengah</span><span class="detail-value">${data.details.kode_tengah}</span></div>`;
-                        if (data.details.nomor_urut) html += `<div class="detail-row"><span class="detail-label">No. Urut</span><span class="detail-value">${data.details.nomor_urut}</span></div>`;
+                        if (data.details.usia) html += `Usia: ${data.details.usia}<br>`;
+                        if (data.details.perkiraan_jenjang) html += `Jenjang: ${data.details.perkiraan_jenjang}`;
                         nisnDetailsEl.innerHTML = html;
                         nisnDetailsEl.style.display = 'block';
                     }
@@ -998,24 +951,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     nisnVerified.value = '0';
                     nisnFeedback.textContent = '✗ ' + data.message;
                     nisnFeedback.className = 'verify-feedback error';
-                    nisnInput.style.borderColor = 'var(--danger)';
-                    nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nisnInput.style.borderColor = 'var(--heritage-crimson)';
+                    nisnVerifyBtn.innerHTML = 'Gagal';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.disabled = false;
                 }
             })
             .catch(err => {
-                const message = err && (err.status || err.data) && err.message
-                    ? err.message
-                    : 'Gagal menghubungi server verifikasi';
-                nisnFeedback.style.animation = '';
-                nisnFeedback.textContent = '⚠ ' + message;
+                nisnFeedback.textContent = '⚠ Gagal menghubungi server';
                 nisnFeedback.className = 'verify-feedback error';
-                nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                nisnVerifyBtn.innerHTML = 'Verifikasi';
                 nisnVerifyBtn.classList.remove('loading');
                 nisnVerifyBtn.disabled = false;
-                const nisnDetailsEl = document.getElementById('nisnDetails');
-                if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
             });
     };
 
@@ -1059,14 +1006,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // CHECK VERIFICATION STATUS
             if (nikVerified.value !== '1') {
                 e.preventDefault();
-                showClientAlert('NIK belum terverifikasi. Silakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
+                showClientAlert('NIK belum terverifikasi.');
                 nikInput.focus();
                 return false;
             }
 
             if (nisnVerified.value !== '1') {
                 e.preventDefault();
-                showClientAlert('NISN belum terverifikasi. Silakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
+                showClientAlert('NISN belum terverifikasi.');
                 nisnInput.focus();
                 return false;
             }
@@ -1079,16 +1026,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hasExistingKk && !kkSelected) {
                 e.preventDefault();
                 showClientAlert('File Kartu Keluarga (KK) wajib diupload!');
-                const kkUpload = document.getElementById('kk_imageUpload');
-                if (kkUpload) {
-                    kkUpload.classList.add('kk-highlight');
-                    kkUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    const kkFileEl = document.getElementById('kk_imageFile');
-                    if (kkFileEl) {
-                        kkFileEl.focus({ preventScroll: true });
-                    }
-                    setTimeout(() => kkUpload.classList.remove('kk-highlight'), 3000);
-                }
                 return false;
             }
 
@@ -1102,8 +1039,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Keep birth date empty on initial load; user must choose manually.
 });
 </script>
 
