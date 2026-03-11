@@ -31,9 +31,34 @@ $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
+$next_match = null;
 $has_challenge_event_id = false;
 $has_events_table = false;
 $can_join_event_name = false;
+
+if ($my_team_id) {
+    try {
+        $stmt = $conn->prepare("
+            SELECT c.*, 
+                   t1.name as team1_name, t1.logo as team1_logo,
+                   t2.name as team2_name, t2.logo as team2_logo,
+                   v.name as venue_name
+            FROM challenges c
+            JOIN teams t1 ON c.challenger_id = t1.id
+            JOIN teams t2 ON c.opponent_id = t2.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.status = 'accepted' 
+              AND (c.challenger_id = ? OR c.opponent_id = ?)
+              AND c.challenge_date >= NOW()
+            ORDER BY c.challenge_date ASC
+            LIMIT 1
+        ");
+        $stmt->execute([$my_team_id, $my_team_id]);
+        $next_match = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $next_match = null;
+    }
+}
 
 try {
     $check_event_col = $conn->query("SHOW COLUMNS FROM challenges LIKE 'event_id'");
@@ -291,6 +316,108 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
     border: 1px solid #dbeafe;
     font-size: 13px;
     font-weight: 700;
+}
+
+.next-match-card {
+    margin-bottom: 24px;
+}
+
+.next-match-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.next-match-teams {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex: 1 1 360px;
+}
+
+.next-team {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.next-team-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: #eef5ff;
+    border: 1px solid #dbeafe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.next-team-logo img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+.next-team-name {
+    font-weight: 700;
+    color: var(--dark);
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.next-vs {
+    font-weight: 800;
+    color: var(--secondary);
+    letter-spacing: 0.08em;
+}
+
+.next-match-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    flex: 1 1 320px;
+}
+
+.next-match-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex: 0 1 auto;
+}
+
+.next-meta-item {
+    background: #f8fbff;
+    border: 1px solid #e2ecf8;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.next-meta-label {
+    font-size: 11px;
+    color: var(--gray);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.next-meta-value {
+    margin-top: 4px;
+    font-weight: 700;
+    color: var(--dark);
+    font-size: 14px;
+}
+
+.next-empty {
+    text-align: center;
+    color: var(--gray);
+    padding: 18px;
+    background: #f8fbff;
+    border-radius: 14px;
+    border: 1px dashed #dbeafe;
 }
 
 .section-header {
@@ -611,6 +738,64 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
     <div class="page-summary">
         <span class="summary-pill"><i class="fas fa-futbol"></i> <?php echo (int)$total_data; ?> Pertandingan</span>
     </div>
+</div>
+
+<div class="card next-match-card">
+    <div class="section-header">
+        <h2 class="section-title">Pertandingan Terdekat</h2>
+    </div>
+
+    <?php if ($next_match): ?>
+        <?php $match_date = new DateTime($next_match['challenge_date']); ?>
+        <div class="next-match-body">
+            <div class="next-match-teams">
+                <div class="next-team">
+                    <div class="next-team-logo">
+                        <?php if (!empty($next_match['team1_logo']) && file_exists('../images/teams/' . $next_match['team1_logo'])): ?>
+                            <img src="../images/teams/<?php echo htmlspecialchars($next_match['team1_logo']); ?>" alt="Team 1">
+                        <?php else: ?>
+                            <i class="fas fa-shield-alt" style="font-size: 24px; color: #9ca3af;"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="next-team-name"><?php echo htmlspecialchars($next_match['team1_name'] ?? '-'); ?></div>
+                </div>
+                <div class="next-vs">VS</div>
+                <div class="next-team">
+                    <div class="next-team-logo">
+                        <?php if (!empty($next_match['team2_logo']) && file_exists('../images/teams/' . $next_match['team2_logo'])): ?>
+                            <img src="../images/teams/<?php echo htmlspecialchars($next_match['team2_logo']); ?>" alt="Team 2">
+                        <?php else: ?>
+                            <i class="fas fa-shield-alt" style="font-size: 24px; color: #9ca3af;"></i>
+                        <?php endif; ?>
+                    </div>
+                    <div class="next-team-name"><?php echo htmlspecialchars($next_match['team2_name'] ?? '-'); ?></div>
+                </div>
+            </div>
+
+            <div class="next-match-meta">
+                <div class="next-meta-item">
+                    <div class="next-meta-label">Tanggal</div>
+                    <div class="next-meta-value"><?php echo $match_date->format('l, d M Y'); ?></div>
+                </div>
+                <div class="next-meta-item">
+                    <div class="next-meta-label">Kickoff</div>
+                    <div class="next-meta-value"><?php echo $match_date->format('H:i'); ?> WIB</div>
+                </div>
+                <div class="next-meta-item">
+                    <div class="next-meta-label">Venue</div>
+                    <div class="next-meta-value"><?php echo htmlspecialchars($next_match['venue_name'] ?: 'TBD'); ?></div>
+                </div>
+            </div>
+
+            <div class="next-match-actions">
+                <a href="match_lineup.php?id=<?php echo $next_match['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-users-cog"></i> Lineup
+                </a>
+            </div>
+        </div>
+    <?php else: ?>
+        <div class="next-empty">Belum ada pertandingan terjadwal yang akan datang.</div>
+    <?php endif; ?>
 </div>
 
 <div class="card">
