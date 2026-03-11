@@ -230,7 +230,9 @@ if ($team_id) {
         padding: 40px;
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
         position: relative;
         overflow: hidden;
     }
@@ -243,16 +245,17 @@ if ($team_id) {
     }
 
     .team-logo-main {
-        width: 80px;
-        height: 80px;
+        width: 150px;
+        height: 150px;
         background: white;
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 24px;
+        margin-bottom: 28px;
         box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        margin-left: 47.5px;
     }
 
     .team-logo-main img {
@@ -653,8 +656,10 @@ if ($team_id) {
             gap: 16px;
         }
         
-        .team-identity-card { padding: 32px 24px; border-radius: 24px; }
+        .team-identity-card { padding: 40px 24px; border-radius: 24px; }
         .team-name-display { font-size: 1.75rem; }
+        .team-status-badge { padding: 4px 10px; font-size: 0.75rem; }
+        .team-status-badge span { width: 6px !important; height: 6px !important; }
 
         .quick-actions-grid { grid-template-columns: 1fr; }
         .quick-action-card { min-height: 96px; }
