@@ -644,10 +644,61 @@
     margin-top: 12px;
     padding: 12px;
     border-width: 1px;
+    max-height: 2000px;
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
 }
+
+/* History Table Styles */
+.player-history-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.history-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px;
+}
+
+.history-table thead th {
+    background: #f8fafc;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 12px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.history-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    font-size: 13px;
+    color: #0f172a;
+    vertical-align: top;
+}
+
+.history-table .col-no { width: 40px; white-space: nowrap; }
+.history-table .col-tanggal { width: 110px; white-space: nowrap; }
+.history-table .col-pertandingan { min-width: 260px; }
+.history-table .col-event { min-width: 140px; white-space: nowrap; }
+.history-table .col-posisi { white-space: nowrap; }
+.history-table .col-peran { white-space: nowrap; }
+.history-table .col-babak { white-space: nowrap; }
+.history-table .col-hasil { width: 60px; white-space: nowrap; }
 
 .player-history-summary {
     display: flex;
@@ -1149,6 +1200,7 @@
         margin-top: 12px;
         padding: 12px;
         border-width: 1px;
+        max-height: 2000px;
         opacity: 1;
         transform: translateY(0);
         pointer-events: auto;

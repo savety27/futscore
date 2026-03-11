@@ -41,10 +41,6 @@ require_once 'includes/header.php';
     .player-table-new td:last-child {
         padding-right: 12px;
     }
-    .player-table-new .col-nik {
-        min-width: 140px;
-        white-space: nowrap;
-    }
     .player-table-new .col-nisn {
         min-width: 110px;
         white-space: nowrap;
@@ -179,7 +175,7 @@ require_once 'includes/header.php';
         text-align: left;
     }
     .event-popover::after {
-        content: '';
+        content: \'\';
         position: absolute;
         top: 100%;
         left: 50%;
@@ -208,179 +204,6 @@ require_once 'includes/header.php';
     .history-btn:hover {
         background: #bfdbfe;
         transform: translateY(-1px);
-    }
-    .history-modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.55);
-        z-index: 10000;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    .history-modal.open {
-        display: flex;
-    }
-    .history-modal-content {
-        width: min(1120px, 100%);
-        max-height: calc(100vh - 40px);
-        overflow: hidden;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 20px 50px rgba(2, 6, 23, 0.25);
-        display: flex;
-        flex-direction: column;
-    }
-    .history-modal-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .history-modal-header h3 {
-        margin: 0;
-        font-size: 18px;
-        color: #0f172a;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .history-modal-meta {
-        margin-top: 4px;
-        color: #64748b;
-        font-size: 13px;
-    }
-    .history-close-btn {
-        width: 34px;
-        height: 34px;
-        border: 0;
-        border-radius: 10px;
-        background: #f1f5f9;
-        color: #334155;
-        cursor: pointer;
-    }
-    .history-modal-body {
-        padding: 16px 20px 20px;
-        overflow: auto;
-    }
-    .history-loading,
-    .history-empty {
-        padding: 30px 12px;
-        text-align: center;
-        color: #64748b;
-    }
-    .history-loading i,
-    .history-empty i {
-        margin-right: 8px;
-    }
-    .history-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 1120px;
-    }
-    .history-table th,
-    .history-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #e2e8f0;
-        text-align: left;
-        font-size: 13px;
-        color: #0f172a;
-        vertical-align: top;
-    }
-    .history-table td.col-no,
-    .history-table td.col-event,
-    .history-table td.col-kategori,
-    .history-table td.col-match,
-    .history-table td.col-tanggal,
-    .history-table td.col-babak,
-    .history-table td.col-posisi,
-    .history-table td.col-peran,
-    .history-table td.col-hasil {
-        white-space: nowrap;
-    }
-    .history-table td.col-pertandingan {
-        min-width: 260px;
-        white-space: normal;
-    }
-    .history-table td.col-match {
-        min-width: 120px;
-    }
-    .history-table td.col-event,
-    .history-table td.col-kategori {
-        min-width: 140px;
-    }
-    .history-table td.col-tanggal {
-        min-width: 130px;
-    }
-    .history-table td.col-hasil {
-        min-width: 84px;
-    }
-    .history-table th {
-        background: #f8fafc;
-        font-size: 12px;
-        color: #475569;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        white-space: nowrap;
-    }
-    .h-event-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        border: 1px solid #93c5fd;
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-    .h-starter-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 700;
-    }
-    .h-starter-yes {
-        background: #fef9c3;
-        color: #854d0e;
-    }
-    .h-starter-sub {
-        background: #e2e8f0;
-        color: #334155;
-    }
-    .h-half-pill {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #f1f5f9;
-        color: #334155;
-        font-size: 11px;
-        font-weight: 700;
-    }
-    .h-result-win {
-        color: #166534;
-        font-weight: 700;
-    }
-    .h-result-lose {
-        color: #991b1b;
-        font-weight: 700;
-    }
-    .h-result-draw {
-        color: #1e3a8a;
-        font-weight: 700;
-    }
-    .h-result-na {
-        color: #64748b;
-        font-weight: 700;
-    }
-    .history-table-wrap {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
     .player-detail-actions {
         flex-direction: column;
@@ -519,10 +342,74 @@ require_once 'includes/header.php';
         fill: currentColor;
         flex: 0 0 auto;
     }
-    @media (max-width: 768px) {
+
+    /* Detail Card Refinements */
+    .player-detail-card {
+        background: #ffffff;
+        border-radius: 32px;
+        padding: 32px;
+        box-shadow: 0 20px 50px rgba(15, 39, 68, 0.12);
+        border: 1px solid rgba(15, 39, 68, 0.05);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .player-detail-card::before {
+        content: \'\';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 180px;
+        background: linear-gradient(135deg, rgba(15, 39, 68, 0.04) 0%, transparent 100%);
+        pointer-events: none;
+    }
+
+    .player-photo-lg {
+        width: 160px;
+        height: 160px;
+        border-radius: 28px;
+        border: 6px solid #fff;
+        box-shadow: 0 15px 35px rgba(15, 39, 68, 0.15);
+    }
+
+    .player-detail-main h2 {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--navy);
+        letter-spacing: -0.03em;
+        margin-bottom: 12px;
+    }
+
+    .player-skills-section {
+        background: #f8fafc;
+        border: 1px solid rgba(15, 39, 68, 0.06);
+        border-radius: 24px;
+        padding: 24px;
+        margin-top: 20px;
+    }
+
+    .player-skill-item {
+        background: #ffffff;
+        border: 1px solid rgba(15, 39, 68, 0.04);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(15, 39, 68, 0.03);
+    }
+
+    .player-skill-fill {
+        background: linear-gradient(90deg, var(--navy) 0%, var(--blue-accent) 100%);
+    }
+
+    @media (max-width: 992px) {
         .player-table-container,
         .player-table-responsive {
             overflow: visible !important;
+            padding: 0 4px !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         .player-table-new {
             display: block !important;
@@ -532,175 +419,194 @@ require_once 'includes/header.php';
             display: none !important;
         }
         .player-table-new tbody {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 14px !important;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+            gap: 20px !important;
+            padding: 10px 0 !important;
         }
         .player-table-new tr {
             display: flex !important;
             flex-direction: column !important;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 14px !important;
+            background: #ffffff !important;
+            border: 1px solid rgba(15, 39, 68, 0.08) !important;
+            border-radius: 24px !important;
             overflow: hidden !important;
+            box-shadow: 0 10px 25px -5px rgba(15, 39, 68, 0.08) !important;
+            position: relative !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            isolation: isolate;
         }
-        .player-table-new td {
+
+        .player-table-new tr:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 20px 40px -10px rgba(15, 39, 68, 0.15) !important;
+            border-color: var(--blue-accent) !important;
+        }
+
+        /* Jersey Watermark Background */
+        .player-table-new tr::after {
+            content: attr(data-jersey) !important;
+            position: absolute !important;
+            top: -10px !important;
+            right: -10px !important;
+            font-size: 120px !important;
+            font-weight: 900 !important;
+            color: rgba(15, 39, 68, 0.03) !important;
+            line-height: 1 !important;
+            z-index: 0 !important;
+            pointer-events: none !important;
+            font-family: \'Plus Jakarta Sans\', sans-serif !important;
+            font-style: italic !important;
+        }
+        
+        /* Hero Section Styling */
+        .player-table-new td.cell-photo {
+            order: 1 !important;
+            padding: 24px 24px 12px !important;
             display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding: 10px 12px;
-            font-size: 13px;
-            border-bottom: 1px solid #eef2f7 !important;
-            color: #334155 !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            text-align: left !important;
+            justify-content: center !important;
+            background: linear-gradient(to bottom, rgba(15, 39, 68, 0.02), transparent) !important;
+            z-index: 1 !important;
         }
-        .player-table-new td:last-child {
+        .player-table-new td.cell-photo::before { display: none !important; }
+        .player-table-new .player-photo-sm {
+            width: 100px !important;
+            height: 100px !important;
+            border-radius: 20px !important;
+            border: 4px solid #fff !important;
+            box-shadow: 0 8px 20px -5px rgba(15, 39, 68, 0.15) !important;
+            object-fit: cover !important;
+        }
+
+        .player-table-new td.cell-name {
+            order: 2 !important;
+            padding: 0 24px 8px !important;
+            text-align: center !important;
             border-bottom: none !important;
         }
+        .player-table-new td.cell-name::before { display: none !important; }
+        .player-table-new td.cell-name .player-link {
+            font-size: 20px !important;
+            font-weight: 800 !important;
+            color: var(--navy) !important;
+            letter-spacing: -0.02em !important;
+            line-height: 1.2 !important;
+            display: block !important;
+        }
+
+        .player-table-new td.cell-team {
+            order: 3 !important;
+            padding: 0 24px 20px !important;
+            justify-content: center !important;
+            border-bottom: none !important;
+        }
+        .player-table-new td.cell-team::before { display: none !important; }
+        .player-table-new .col-team-stack {
+            background: var(--white-blue) !important;
+            padding: 6px 12px !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(15, 39, 68, 0.05) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+        .player-table-new .team-name-stack {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: var(--gray-600) !important;
+        }
+
+        /* Stats Grid */
+        .player-table-new td:not(.cell-photo):not(.cell-name):not(.cell-team):not(.mobile-profile-cell) {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 12px 24px !important;
+            border-bottom: 1px solid rgba(15, 39, 68, 0.04) !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: var(--navy) !important;
+            background: transparent !important;
+        }
+
         .player-table-new td::before {
             content: attr(data-label) !important;
-            flex: 0 0 96px;
-            font-size: 10px;
-            font-weight: 800 !important;
-            color: #64748b !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            color: var(--gray-400) !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 0.05em !important;
+            flex: 1 !important;
+            text-align: left !important;
         }
-        .player-table-new td.cell-no {
-            display: none !important;
+
+        /* Specialized Badges in Grid */
+        .player-table-new td[data-label="Match"] .match-count-badge,
+        .player-table-new td[data-label="Event"] .event-count-badge {
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+            border-radius: 8px !important;
         }
-        .player-table-new td.col-jersey {
-            width: auto;
-            min-width: 0;
-            max-width: none;
-            white-space: nowrap;
+
+        .player-table-new td[data-label="Kategori"] .event-badge {
+            font-size: 10px !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: var(--blue-primary) !important;
+            border: 1px solid #dbeafe !important;
         }
-        .player-table-new td.cell-team {
-            align-items: center;
-        }
-        .col-team-stack {
-            flex-direction: row;
-            align-items: center;
-            text-align: left;
-            gap: 8px;
-        }
-        .team-name-stack {
-            font-size: 12px;
-            line-height: 1.2;
-        }
-        .player-photo-sm,
-        .placeholder-img {
-            width: 38px !important;
-            height: 38px !important;
-            border-radius: 10px !important;
-        }
-        .team-logo-small {
-            width: 22px !important;
-            height: 22px !important;
-        }
-        .match-count-badge,
-        .event-count-badge {
-            font-size: 10px;
-            padding: 2px 7px;
-            gap: 4px;
-        }
-        .history-btn {
-            width: 30px;
-            height: 30px;
-            font-size: 13px;
-        }
-        .mobile-profile-cell {
-            display: block !important;
-            order: 99;
-            padding: 10px 12px !important;
+
+        /* Action Section */
+        .player-table-new td.mobile-profile-cell {
+            order: 100 !important;
+            padding: 20px 24px 24px !important;
             border-bottom: none !important;
-            background: #f8fbff;
+            background: #ffffff !important;
+            display: block !important;
         }
-        .player-table-new td.mobile-profile-cell::before {
-            content: none !important;
+        .player-table-new td.mobile-profile-cell::before { display: none !important; }
+        .mobile-profile-btn {
+            width: 100% !important;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--blue-primary) 100%) !important;
+            color: #ffffff !important;
+            padding: 14px !important;
+            border-radius: 14px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            box-shadow: 0 8px 20px -5px rgba(15, 39, 68, 0.2) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            border: none !important;
+        }
+
+        /* Hidden Fields for Cleaner Mobile Look */
+        .player-table-new td.cell-no,
+        .player-table-new td[data-label="Dibuat Pada"] {
             display: none !important;
         }
-        .mobile-profile-btn {
-            min-height: 38px;
-            font-size: 12px;
-            letter-spacing: 0.2px;
+
+        .player-detail-card {
+            border-radius: 24px;
+            padding: 24px;
         }
-        .history-modal {
-            padding: 10px;
+        .player-photo-lg {
+            width: 120px;
+            height: 120px;
         }
-        .history-modal-content {
-            max-height: calc(100vh - 20px);
-            border-radius: 12px;
-        }
-        .history-modal-header {
-            padding: 12px 14px;
-        }
-        .history-modal-header h3 {
-            font-size: 16px;
-        }
-        .history-modal-meta {
-            font-size: 12px;
-            line-height: 1.35;
-        }
-        .history-modal-body {
-            padding: 10px 12px 14px;
-        }
-        .history-table th,
-        .history-table td {
-            padding: 8px 9px;
-            font-size: 12px;
-        }
-        .player-detail-actions {
-            width: 100%;
-        }
-        .player-share-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .player-share-toggle {
-            width: 100%;
-            justify-content: center;
-            min-height: 48px;
-            padding: 16px 24px;
-            font-size: 14px;
-        }
-        .player-share-menu {
-            position: static;
-            width: 100%;
-            max-width: 100%;
-            margin-top: 8px;
-            box-shadow: none;
-        }
-        .player-share-buttons {
-            width: 100%;
-        }
-        .player-share-btn {
-            width: 100%;
-        }
-        .player-share-feedback {
-            text-align: center;
+        .player-detail-main h2 {
+            font-size: 22px;
         }
     }
-    @media (max-width: 480px) {
-        .player-table-new td {
-            padding: 9px 10px;
-            font-size: 12px;
-        }
-        .player-table-new td::before {
-            flex: 0 0 88px;
-        }
-        .team-name-stack {
-            font-size: 11px;
-        }
-        .match-count-badge,
-        .event-count-badge {
-            font-size: 9px;
-        }
-        .player-share-buttons {
-            grid-template-columns: 1fr;
+
+    @media (max-width: 600px) {
+        .player-table-new tbody {
+            grid-template-columns: 1fr !important;
+            padding: 10px 4px !important;
         }
     }
 </style>
@@ -901,12 +807,6 @@ function calculateAgeV2($birth_date) {
     return $diff->y . ' tahun ' . $diff->m . ' bulan';
 }
 
-function maskNIK($nik) {
-    if (empty($nik)) return '-';
-    if (strlen($nik) < 8) return $nik;
-    return substr($nik, 0, 3) . str_repeat('*', 9) . substr($nik, -4);
-}
-
 ?>
 
 <div class="dashboard-wrapper">
@@ -1017,10 +917,7 @@ include 'includes/sidebar.php';
                                 <span class="detail-label">NISN</span>
                                 <span class="detail-value"><?php echo htmlspecialchars($player_detail['nisn'] ?: '-'); ?></span>
                             </div>
-                            <div class="detail-item">
-                                <span class="detail-label">NIK</span>
-                                <span class="detail-value"><?php echo maskNIK($player_detail['nik']); ?></span>
-                            </div>
+
                             <div class="detail-item">
                                 <span class="detail-label">Tanggal Lahir</span>
                                 <span class="detail-value"><?php echo !empty($player_detail['birth_date']) ? date('d M Y', strtotime($player_detail['birth_date'])) : '-'; ?></span>
@@ -1138,7 +1035,6 @@ include 'includes/sidebar.php';
                             <th class="col-center">Usia</th>
                             <th class="col-center">JK</th>
                             <th class="col-nisn">NISN</th>
-                            <th class="col-nik">NIK</th>
                             <th>Kategori</th>
                             <th class="col-center">Match</th>
                             <th class="col-center">Event</th>
@@ -1148,7 +1044,7 @@ include 'includes/sidebar.php';
                     <tbody>
                         <?php if (empty($players)): ?>
                             <tr>
-                                <td colspan="14">
+                                <td colspan="13">
                                     <div class="empty-state">
                                         <div class="empty-icon"><i class="fas fa-user-slash"></i></div>
                                         <h3>Pemain tidak ditemukan</h3>
@@ -1161,7 +1057,7 @@ include 'includes/sidebar.php';
                             $no = $offset + 1;
                             foreach ($players as $p): 
                             ?>
-                            <tr>
+                            <tr data-jersey="<?php echo $p['jersey_number'] ?: ''; ?>">
                                 <td class="col-no cell-no" data-label="No"><?php echo $no++; ?></td>
                                 <td class="col-photo cell-photo" data-label="Foto">
                                     <?php if (!empty($p['photo']) && file_exists('images/players/' . $p['photo'])): ?>
@@ -1190,7 +1086,6 @@ include 'includes/sidebar.php';
                                 <td class="col-center" data-label="Usia"><?php echo calculateAgeV2($p['birth_date']); ?></td>
                                 <td class="col-center" data-label="JK"><?php echo $p['gender'] ?: '-'; ?></td>
                                 <td class="col-nisn" data-label="NISN"><?php echo htmlspecialchars($p['nisn'] ?: '-'); ?></td>
-                                <td class="col-nik" data-label="NIK"><?php echo maskNIK($p['nik']); ?></td>
                                 <td data-label="Kategori">
 
                                     <?php 
@@ -1214,9 +1109,9 @@ include 'includes/sidebar.php';
                                 </td>
                                 <td class="col-center" data-label="Match">
                                     <?php $match_count = $player_match_counts[(int) $p['id']] ?? 0; ?>
-                                    <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
+                                    <a href="player.php?id=<?php echo $p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#playerHistoryPanel" class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>" style="text-decoration: none;">
                                         <i class="fas fa-futbol"></i> <?php echo $match_count; ?>
-                                    </span>
+                                    </a>
                                 </td>
                                 <td class="col-center" data-label="Event">
                                     <?php
@@ -1228,9 +1123,9 @@ include 'includes/sidebar.php';
                                     }
                                     ?>
                                     <span class="event-count-badge-wrap">
-                                        <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>">
+                                        <a href="player.php?id=<?php echo $p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#playerHistoryPanel" class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>" style="text-decoration: none;">
                                             <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
-                                        </span>
+                                        </a>
                                         <?php if ($event_count > 0): ?>
                                         <div class="event-popover"><?php echo htmlspecialchars(implode("\n", $event_full_info)); ?></div>
                                         <?php endif; ?>
@@ -1302,4 +1197,6 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
+<script>window.FUTSCORE_SITE_URL = '<?php echo SITE_URL; ?>';</script>
+<script src="<?php echo SITE_URL; ?>/assets/js/player-history.js?v=<?php echo getAssetVersion('/assets/js/player-history.js'); ?>"></script>
 <?php include 'includes/footer.php'; ?>
