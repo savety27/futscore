@@ -617,24 +617,6 @@ if ($team_id) {
         .match-hero-content { padding: 40px 16px; }
         .vs-text { width: 50px; height: 50px; font-size: 1.1rem; }
     }
-        .hero-title { font-size: 2.25rem; }
-        .hero-description { font-size: 1rem; }
-        .dashboard-hero { margin-bottom: 32px; padding-bottom: 24px; }
-        
-        .team-identity-card { padding: 32px; border-radius: 24px; }
-        .team-name-display { font-size: 1.75rem; }
-        
-        .stats-main-grid { grid-template-columns: 1fr; gap: 16px; }
-        .heritage-card { border-radius: 20px; padding: 20px; }
-        .heritage-card[style*="grid-column: span 2"] { grid-column: span 1 !important; }
-        
-        .section-title { font-size: 1.5rem; }
-        .team-logo-large { width: 120px; height: 120px; padding: 16px; border-radius: 24px; }
-        .team-name-large { font-size: 1.5rem; }
-        
-        .today-grid { grid-template-columns: 1fr; }
-        .schedule-card { padding: 20px; }
-    }
 
     @media (max-width: 480px) {
         .hero-title { font-size: 1.85rem; }
@@ -642,20 +624,6 @@ if ($team_id) {
         .card-value { font-size: 1.85rem; }
         .match-hero-content { padding: 40px 16px; }
         .vs-text { width: 60px; height: 60px; font-size: 1.25rem; }
-    }
-        .hero-title { font-size: 2.75rem; }
-        .match-hero-content { 
-            grid-template-columns: 1fr;
-            gap: 40px;
-        }
-        .vs-line { display: none; }
-        .match-hero-footer { grid-template-columns: 1fr; }
-        .record-row { 
-            flex-direction: column; 
-            gap: 32px;
-            text-align: center;
-        }
-        .record-divider { display: none; }
     }
 </style>
 
