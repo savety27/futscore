@@ -1,10 +1,10 @@
 <?php
-require_once 'config/database.php';
+require_once '../config/database.php';
 $page_title = 'Pemain Saya';
 $current_page = 'players';
-require_once 'includes/header.php';
+require_once '../includes/header.php';
 
-$event_helper_path = __DIR__ . '/../admin/includes/event_helpers.php';
+$event_helper_path = __DIR__ . '/../../admin/includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
     require_once $event_helper_path;
 }
@@ -76,7 +76,7 @@ if (isset($_GET['id'])) {
             if (empty($player['status'])) $player['status'] = 'active';
         } else {
             echo "<div class='alert alert-danger'>Player not found or unauthorized.</div>";
-            require_once 'includes/footer.php';
+            require_once '../includes/footer.php';
             exit;
         }
     } catch (PDOException $e) {
@@ -92,25 +92,28 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 }
 ?>
 
+<link rel="stylesheet" href="css/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/player_form.css'); ?>">
+
 <div class="container">
-    <div class="header">
-        <h1><i class="fas fa-user-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
+    <header class="header reveal">
+        <h1>
+            <i class="fas fa-user-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
             <?php echo $action === 'add' ? 'Tambah' : 'Ubah'; ?> Pemain
         </h1>
-        <a href="players.php" class="btn btn-secondary">
+        <a href="./" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar
         </a>
-    </div>
+    </header>
 
     <?php if (isset($_GET['error'])): ?>
-        <div class="alert alert-danger">
+        <div class="alert alert-danger reveal">
             <i class="fas fa-exclamation-circle"></i>
             <span><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></span>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['msg'])): ?>
-        <div class="alert alert-success">
+        <div class="alert alert-success reveal">
             <span class="alert-icon">✓</span>
             <span>Pemain berhasil <?php echo $_GET['msg'] === 'added' ? 'ditambahkan' : 'diperbarui'; ?>!</span>
         </div>
@@ -122,16 +125,16 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
     </div>
 
     <div class="form-container">
-        <form action="player_actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
+        <form action="actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
             <input type="hidden" name="action" value="<?php echo $action; ?>">
             <input type="hidden" name="id" value="<?php echo $player_id; ?>">
             <input type="hidden" id="hasExistingKk" value="<?php echo !empty($player['kk_image']) ? '1' : '0'; ?>">
             
             <!-- Basic Information Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-1">
                 <h2 class="section-title">
                     <i class="fas fa-user-circle"></i>
-                   Profil 
+                   Profil Dasar
                 </h2>
                 
                 <div class="form-grid">
@@ -141,8 +144,8 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="note">Wajib</span>
                         </label>
                         <input type="text" name="name" class="form-control" 
-                               placeholder="Masukkan nama lengkap" required
-                               value="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
+                                placeholder="Masukkan nama lengkap" required
+                                value="<?php echo htmlspecialchars($player['name'] ?? ''); ?>">
                     </div>
                     
                     <div class="form-group">
@@ -151,8 +154,8 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="note">Wajib</span>
                         </label>
                         <input type="number" name="jersey_number" class="form-control" 
-                               placeholder="Masukkan nomor punggung" required
-                               value="<?php echo htmlspecialchars($player['jersey_number'] ?? ''); ?>">
+                                placeholder="Masukkan nomor punggung" required
+                                value="<?php echo htmlspecialchars($player['jersey_number'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
@@ -160,7 +163,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="required-field">Kategori</span>
                             <span class="note">Wajib</span>
                         </label>
-                        <select name="sport_type" class="form-control" required>
+                        <select name="sport_type" class="form-control custom-select" required>
                             <option value="">Pilih Kategori</option>
                             <?php foreach ($event_options as $sport): ?>
                                 <?php $selected = ($player['sport_type'] == $sport) ? 'selected' : ''; ?>
@@ -176,7 +179,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="required-field">Posisi</span>
                             <span class="note">Wajib</span>
                         </label>
-                        <select name="position" class="form-control" required>
+                        <select name="position" class="form-control custom-select" required>
                             <option value="">Pilih Posisi</option>
                             <?php 
                             $positions = [
@@ -252,7 +255,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span>Kaki Dominan</span>
                             <span class="note">Opsional</span>
                         </label>
-                        <select name="dominant_foot" class="form-control">
+                        <select name="dominant_foot" class="form-control custom-select">
                             <option value="">Pilih Kaki Dominan</option>
                             <option value="kanan" <?php echo ($player['dominant_foot'] == 'kanan') ? 'selected' : ''; ?>>Kanan</option>
                             <option value="kiri" <?php echo ($player['dominant_foot'] == 'kiri') ? 'selected' : ''; ?>>Kiri</option>
@@ -278,7 +281,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             </div>
 
             <!-- Contact Information Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-2">
                 <h2 class="section-title">
                     <i class="fas fa-address-card"></i>
                     Informasi Kontak
@@ -368,13 +371,13 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             </div>
 
             <!-- Identification Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-3">
                 <h2 class="section-title">
                     <i class="fas fa-id-card"></i>
                     Identitas & Verifikasi
                 </h2>
-                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    NIK dan NISN wajib diverifikasi sebelum data dapat disimpan.
+                <p class="note" style="margin-bottom: 24px; color: var(--heritage-text-muted); font-family: var(--font-body);">
+                    NIK dan NISN wajib diverifikasi sebelum data dapat disimpan untuk menjamin integritas atlet.
                 </p>
                 
                 <div class="form-grid">
@@ -382,7 +385,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">NIK</span>
-                            <span class="note">Wajib (16 digit)</span>
+                            <span class="note">16 digit</span>
                         </label>
                         <div class="verify-input-wrapper">
                             <input type="text" name="nik" class="form-control verify-input" 
@@ -395,7 +398,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                    data-original="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>"
                                    value="<?php echo htmlspecialchars($player['nik'] ?? ''); ?>">
                             <button type="button" class="verify-btn" id="nikVerifyBtn" onclick="verifyNIK()" disabled>
-                                <i class="fas fa-shield-alt"></i> Verifikasi
+                                Verifikasi
                             </button>
                         </div>
                         <input type="hidden" name="nik_verified" id="nikVerified" value="0">
@@ -407,7 +410,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                     <div class="form-group">
                         <label class="form-label">
                             <span class="required-field">NISN</span>
-                            <span class="note">Wajib (10 digit)</span>
+                            <span class="note">10 digit</span>
                         </label>
                         <div class="verify-input-wrapper">
                             <input type="text" name="nisn" class="form-control verify-input" 
@@ -420,7 +423,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                    data-original="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>"
                                    value="<?php echo htmlspecialchars($player['nisn'] ?? ''); ?>">
                             <button type="button" class="verify-btn" id="nisnVerifyBtn" onclick="verifyNISN()" disabled>
-                                <i class="fas fa-shield-alt"></i> Verifikasi
+                                Verifikasi
                             </button>
                         </div>
                         <input type="hidden" name="nisn_verified" id="nisnVerified" value="0">
@@ -430,94 +433,81 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                 </div>
             </div>
 
-            <!-- Photo Upload Section -->
-            <div class="form-section">
+            <!-- Photo & Document Upload Section -->
+            <div class="form-section reveal d-4">
                 <h2 class="section-title">
                     <i class="fas fa-camera"></i>
-                    Foto Profil 
+                    Foto & Dokumen
                 </h2>
+                <p class="note" style="margin-bottom: 24px; color: var(--heritage-text-muted); font-family: var(--font-body);">
+                    Unggah foto berkualitas tinggi dan dokumen asli untuk proses verifikasi keanggotaan.
+                </p>
                 
-                <div class="form-grid">
-                    <div class="form-group">
+                <div class="document-upload-grid">
+                    <!-- Profile Photo - HERO -->
+                    <div class="form-group hero-upload">
                         <label class="form-label">
-                            <span>Foto Profil</span>
-                            <span class="note">Maks 5MB (JPG, PNG, GIF)</span>
+                            <span class="required-field">Foto Profil</span>
+                            <span class="note">Maks 5MB</span>
                         </label>
                         
                         <?php if (!empty($player['photo'])): ?>
-                        <div class="current-photo" style="margin-bottom: 20px;">
-                            <p style="font-size: 14px; color: var(--gray); margin-bottom: 10px;">
-                                <strong>Foto :</strong>
-                            </p>
-                            <div class="file-item">
-                                <img src="../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
-                                     alt="Current Photo" style="width: 60px; height: 60px;">
-                                <div>
-                                    <div><strong><?php echo htmlspecialchars($player['photo'] ?? ''); ?></strong></div>
-                                    <div style="font-size: 12px; color: var(--gray);">Klik untuk mengganti foto</div>
-                                </div>
+                        <div class="file-item">
+                            <img src="../../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
+                                 alt="Current Photo">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; font-size: 0.85rem;">Foto Tersimpan</div>
+                                <div style="font-size: 0.7rem; color: var(--heritage-text-muted); line-height: 1.2;">Klik upload di bawah untuk mengganti</div>
                             </div>
                         </div>
                         <?php endif; ?>
                         
                         <div class="file-upload" id="photoUpload">
-                            <div>
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                                <p style="margin: 0; color: var(--gray);">Klik untuk unggah atau seret & lepas</p>
-                                <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--gray);">Maksimal 5MB</p>
+                            <div class="upload-icon-wrapper">
+                                <i class="fas fa-user-circle"></i>
                             </div>
+                            <div class="upload-text">
+                                <span class="upload-title">Pilih Foto Profil</span>
+                                <span class="upload-hint">JPG, PNG (Maksimal 5MB)</span>
+                            </div>
+                            <div class="btn-select">Pilih File</div>
                             <input type="file" name="photo" id="photoFile" accept="image/*">
                         </div>
                         <div class="file-preview" id="photoPreview"></div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Document Upload Section -->
-            <div class="form-section">
-                <h2 class="section-title">
-                    <i class="fas fa-file-alt"></i>
-                    Dokumen
-                </h2>
-                
-                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Unggah dokumen pendukung. Kartu Keluarga wajib, dokumen lain opsional. Maksimal 5MB per file.
-                </p>
-                
-                <div class="form-grid">
                     <?php
                     $documents = [
-                        'ktp_image' => ['label' => 'KTP / KIA / Kartu Pelajar / Kartu Identitas', 'current' => $player['ktp_image']],
-                        'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image']],
-                        'birth_cert_image' => ['label' => 'Akta Lahir / Surat Ket. Lahir', 'current' => $player['birth_cert_image']],
-                        'diploma_image' => ['label' => 'Ijazah / Biodata Raport / Kartu NISN', 'current' => $player['diploma_image']]
+                        'kk_image' => ['label' => 'Kartu Keluarga', 'current' => $player['kk_image'], 'req' => true, 'icon' => 'fa-users'],
+                        'ktp_image' => ['label' => 'KTP / Identitas', 'current' => $player['ktp_image'], 'req' => false, 'icon' => 'fa-id-card-alt'],
+                        'birth_cert_image' => ['label' => 'Akta Lahir', 'current' => $player['birth_cert_image'], 'req' => false, 'icon' => 'fa-certificate'],
+                        'diploma_image' => ['label' => 'Ijazah / Raport', 'current' => $player['diploma_image'], 'req' => false, 'icon' => 'fa-graduation-cap']
                     ];
                     
                     foreach ($documents as $key => $doc):
-                        $is_kk = ($key === 'kk_image');
                     ?>
                     <div class="form-group">
                         <label class="form-label">
-                            <span class="<?php echo $is_kk ? 'required-field' : ''; ?>"><?php echo $doc['label']; ?></span>
-                            <span class="note"><?php echo $is_kk ? 'Wajib' : 'Opsional'; ?></span>
+                            <span class="<?php echo $doc['req'] ? 'required-field' : ''; ?>"><?php echo $doc['label']; ?></span>
+                            <span class="note"><?php echo $doc['req'] ? 'Wajib' : 'Opsional'; ?></span>
                         </label>
-                        <?php if ($is_kk): ?>
-                            <p class="kk-warning">* FILE KARTU KELUARGA WAJIB DIUPLOAD!</p>
-                        <?php endif; ?>
                         
                         <?php if (!empty($doc['current'])): ?>
-                        <div class="current-photo" style="margin-bottom: 10px;">
-                            <p style="font-size: 12px; color: var(--gray); margin-bottom: 5px;">
-                                <strong>Foto :</strong> <?php echo htmlspecialchars($doc['current'] ?? ''); ?>
-                            </p>
+                        <div class="file-item">
+                            <div style="font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">
+                                <i class="fas fa-check-circle" style="color: var(--heritage-accent);"></i> <?php echo htmlspecialchars($doc['current']); ?>
+                            </div>
                         </div>
                         <?php endif; ?>
                         
-                        <div class="file-upload" id="<?php echo $key; ?>Upload">
-                            <div>
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 20px; color: var(--primary); margin-bottom: 8px;"></i>
-                                <p style="margin: 0; color: var(--gray); font-size: 14px;">Unggah <?php echo $doc['label']; ?></p>
+                        <div class="file-upload" id="<?php echo $key; ?>Upload" style="min-height: 140px; padding: 20px;">
+                            <div class="upload-icon-wrapper" style="width: 48px; height: 48px; font-size: 1.2rem; margin-bottom: 12px;">
+                                <i class="fas <?php echo $doc['icon']; ?>"></i>
                             </div>
+                            <div class="upload-text">
+                                <span class="upload-title" style="font-size: 0.85rem;">Unggah <?php echo $doc['label']; ?></span>
+                            </div>
+                            <div class="btn-select" style="margin-top: 10px; padding: 6px 16px; font-size: 0.7rem;">Pilih</div>
                             <input type="file" name="<?php echo $key; ?>" id="<?php echo $key; ?>File" accept="image/*">
                         </div>
                         <div class="file-preview" id="<?php echo $key; ?>Preview"></div>
@@ -527,15 +517,11 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             </div>
 
             <!-- Skills Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-1">
                 <h2 class="section-title">
                     <i class="fas fa-chart-line"></i>
-                    Keahlian (Rentang 0-10)
+                    Atribut Teknis (0-10)
                 </h2>
-                
-                <p class="note" style="margin-bottom: 20px; color: var(--gray);">
-                    Nilai Default: 5
-                </p>
                 
                 <div class="skill-grid">
                     <?php
@@ -558,573 +544,114 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="skill-name"><?php echo $label; ?></span>
                             <span class="skill-value" id="<?php echo $key; ?>Value"><?php echo $value; ?></span>
                         </div>
-                        <div class="slider-container">
-                            <input type="range" name="<?php echo $key; ?>" class="slider" min="0" max="10" 
-                                   value="<?php echo $value; ?>" id="<?php echo $key; ?>Slider"
-                                   oninput="document.getElementById('<?php echo $key; ?>Value').textContent = this.value">
-                        </div>
+                        <input type="range" name="<?php echo $key; ?>" class="slider" min="0" max="10" 
+                               value="<?php echo $value; ?>" id="<?php echo $key; ?>Slider"
+                               oninput="document.getElementById('<?php echo $key; ?>Value').textContent = this.value">
                     </div>
                     <?php endforeach; ?>
                 </div>
             </div>
 
             <!-- Status Section -->
-            <div class="form-section">
+            <div class="form-section reveal d-2">
                 <h2 class="section-title">
                     <i class="fas fa-check-circle"></i>
-                    Status Pemain
+                    Status Keanggotaan
                 </h2>
                 <div class="form-group">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?>>
-                        <label for="status_active" style="font-weight: normal;">Pemain Aktif</label>
+                    <div class="status-active-container">
+                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?> class="status-checkbox">
+                        <div class="status-info">
+                            <label for="status_active" class="status-label">Pemain Aktif</label>
+                            <div class="status-description">Pemain aktif akan tersedia untuk seleksi pertandingan.</div>
+                        </div>
                     </div>
-                    <small style="color: #666;">Pemain aktif akan tampil dalam sistem</small>
                 </div>
             </div>
 
             <!-- Form Actions -->
-            <div class="form-actions">
-                <a href="players.php" class="btn btn-secondary">
+            <div class="form-actions reveal d-3">
+                <a href="./" class="btn btn-secondary">
                     <i class="fas fa-times"></i>
-                    Batal
+                    Batalkan
                 </a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i>
-                    <?php echo $action === 'add' ? 'Simpan Pemain' : 'Perbarui Pemain'; ?>
+                    <?php echo $action === 'add' ? 'Simpan Pemain' : 'Perbarui Data'; ?>
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<style>
-/* Additional styles for the form */
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0;
-}
-
-.header {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.header h1 {
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.form-container {
-    background: white;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.form-section {
-    margin-bottom: 40px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 30px;
-}
-
-.form-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.section-title {
-    font-size: 20px;
-    color: var(--primary);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--dark);
-    font-size: 14px;
-}
-
-.form-control {
-    width: 100%;
-    padding: 14px 16px;
-    border: 2px solid #e1e5eb;
-    border-radius: 12px;
-    font-size: 15px;
-    transition: var(--transition);
-    background-color: #fff;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.date-input {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.radio-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.radio-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    padding: 8px 12px;
-    border: 2px solid #e1e5eb;
-    border-radius: 8px;
-    transition: var(--transition);
-}
-
-.radio-option:hover {
-    border-color: var(--primary);
-    background: #f8f9ff;
-}
-
-.radio-option input[type="radio"]:checked + span {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.file-upload {
-    border: 2px dashed #e1e5eb;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    transition: var(--transition);
-    cursor: pointer;
-    background: #fafbff;
-    min-height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.file-upload:hover {
-    border-color: var(--primary);
-    background: #f0f4ff;
-}
-
-.file-upload.dragover {
-    border-color: var(--secondary);
-    background: #fff9e6;
-}
-
-.file-upload input[type="file"] {
-    display: none;
-}
-
-.file-preview {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.file-item {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.file-item img {
-    width: 50px;
-    height: 50px;
-    border-radius: 6px;
-    object-fit: cover;
-}
-
-.skill-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.skill-item {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.skill-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.skill-name {
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.skill-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--primary);
-}
-
-.slider-container {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.slider {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: #ddd;
-    border-radius: 3px;
-    outline: none;
-}
-
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-}
-
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 30px;
-    padding-top: 30px;
-    border-top: 2px solid #eee;
-}
-
-.btn {
-    padding: 14px 28px;
-    border-radius: 12px;
-    border: none;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, #1a365d 100%);
-    color: white;
-    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.3);
-}
-
-.btn-secondary {
-    background: #f8f9fa;
-    color: var(--dark);
-    border: 2px solid #e1e5eb;
-}
-
-.btn-secondary:hover {
-    background: #e9ecef;
-    border-color: #ced4da;
-}
-
-.alert {
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    animation: slideDown 0.3s ease-out;
-}
-
-.alert-success {
-    background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-    color: var(--success);
-    border-left: 4px solid var(--success);
-}
-
-.alert-danger {
-    background: linear-gradient(135deg, #FFE5E5 0%, #FFCCCC 100%);
-    color: var(--danger);
-    border-left: 4px solid var(--danger);
-}
-
-  .note {
-      font-size: 12px;
-      color: var(--gray);
-      margin-top: 5px;
-      font-style: italic;
-  }
-
-  .kk-warning {
-      margin: 6px 0 0;
-      color: var(--danger);
-      font-weight: bold;
-      font-size: 12px;
-  }
-
-.required-field::after {
-    content: " *";
-    color: var(--danger);
-    font-weight: bold;
-}
-
-.verify-input-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: stretch;
-}
-
-.verify-input-wrapper .verify-input {
-    flex: 1;
-}
-
-.verify-btn {
-    padding: 10px 18px;
-    border: none;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: linear-gradient(135deg, var(--primary) 0%, #1a365d 100%);
-    color: white;
-    box-shadow: 0 3px 10px rgba(10, 36, 99, 0.2);
-}
-
-.verify-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.3);
-}
-
-.verify-btn:disabled {
-    background: #ccc;
-    color: #888;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.verify-btn.loading {
-    background: linear-gradient(135deg, #6C757D 0%, #495057 100%);
-    pointer-events: none;
-}
-
-.verify-btn.verified {
-    background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
-    color: #ffffff;
-}
-
-.verify-btn.verified:disabled {
-    background: linear-gradient(135deg, var(--success) 0%, #1B5E20 100%);
-    color: #ffffff;
-    opacity: 1;
-    cursor: default;
-}
-
-.verify-feedback {
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--gray);
-    min-height: 18px;
-}
-
-.verify-feedback.warning {
-    color: var(--warning);
-}
-
-.verify-feedback.error {
-    color: var(--danger);
-    font-weight: 600;
-}
-
-.verify-feedback.success {
-    color: var(--success);
-    font-weight: 600;
-}
-
-.verify-details {
-    margin-top: 10px;
-    padding: 12px 15px;
-    background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
-    border-radius: 10px;
-    border-left: 4px solid var(--success);
-    font-size: 13px;
-    line-height: 1.6;
-    animation: slideDown 0.3s ease-out;
-}
-
-.verify-details .detail-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 2px 0;
-}
-
-.verify-details .detail-label {
-    color: var(--gray);
-    font-weight: 500;
-}
-
-.verify-details .detail-value {
-    color: var(--dark);
-    font-weight: 600;
-}
-
-.kk-highlight {
-    box-shadow: 0 0 20px rgba(211, 47, 47, 0.45) !important;
-    border-color: var(--danger) !important;
-}
-
-@keyframes verifyPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Mobile Responsive */
-@media screen and (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: center;
-        text-align: center;
-        padding: 20px;
-    }
-    
-    .header h1 {
-        font-size: 24px;
-        justify-content: center;
-    }
-    
-    .form-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    
-    .date-input {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .skill-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .radio-group {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .form-container {
-        padding: 20px 15px;
-    }
-    
-    .section-title {
-        font-size: 18px;
-    }
-    
-    .file-upload {
-        padding: 15px;
-    }
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ============================================================
+    // CUSTOM SELECT DROPDOWN
+    // ============================================================
+    function initCustomSelects() {
+        const customSelects = document.querySelectorAll('.custom-select');
+        
+        customSelects.forEach(select => {
+            // Hide native select
+            select.style.display = 'none';
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+            
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
+            const selectedOption = select.options[select.selectedIndex];
+            trigger.textContent = selectedOption ? selectedOption.textContent : 'Pilih...';
+            wrapper.appendChild(trigger);
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'custom-options';
+            wrapper.appendChild(optionsContainer);
+            
+            Array.from(select.options).forEach(option => {
+                const opt = document.createElement('div');
+                opt.className = 'custom-option' + (option.selected ? ' selected' : '');
+                opt.textContent = option.textContent;
+                opt.dataset.value = option.value;
+                
+                opt.addEventListener('click', () => {
+                    select.value = option.value;
+                    trigger.textContent = option.textContent;
+                    
+                    // Update classes
+                    optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    
+                    wrapper.classList.remove('open');
+                    
+                    // Trigger native change event
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                
+                optionsContainer.appendChild(opt);
+            });
+            
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close other open selects
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) w.classList.remove('open');
+                });
+                wrapper.classList.toggle('open');
+            });
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+        });
+    }
+
+    initCustomSelects();
+
     // ============================================================
     // FILE UPLOAD FUNCTIONALITY
     // ============================================================
@@ -1159,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <img src="${e.target.result}" alt="Preview">
                     <div>
                         <div><strong>${file.name}</strong></div>
-                        <div style="font-size: 12px; color: var(--gray);">${formatFileSize(file.size)}</div>
+                        <div style="font-size: 12px; color: var(--heritage-text-muted);">${formatFileSize(file.size)}</div>
                     </div>
                 </div>`;
         };
@@ -1181,6 +708,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         alertText.textContent = message;
         alertBox.style.display = 'flex';
+        alertBox.className = 'alert alert-danger';
         alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
@@ -1286,8 +814,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 nikVerifyBtn.classList.add('verified');
                 nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Tersimpan';
                 nikVerifyBtn.disabled = true;
-                nikInput.style.borderColor = 'var(--success)';
-                nikFeedback.textContent = 'NIK tidak diubah - verifikasi lama tetap valid';
+                nikInput.style.borderColor = 'var(--heritage-accent)';
+                nikFeedback.textContent = 'NIK tidak diubah - verifikasi tetap valid';
                 nikFeedback.className = 'verify-feedback success';
                 return;
             }
@@ -1295,20 +823,19 @@ document.addEventListener('DOMContentLoaded', function() {
             nikVerified.value = '0';
             nikDetails.style.display = 'none';
             nikVerifyBtn.classList.remove('verified');
-            nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-            nikInput.style.borderColor = '#e1e5eb';
+            nikVerifyBtn.innerHTML = 'Verifikasi';
+            nikInput.style.borderColor = 'var(--heritage-border)';
 
             if (numericValue.length === 16) {
-                nikFeedback.textContent = '16 digit — Klik "Verifikasi" untuk memvalidasi';
+                nikFeedback.textContent = 'Klik "Verifikasi" untuk memvalidasi NIK';
                 nikFeedback.className = 'verify-feedback warning';
                 nikVerifyBtn.disabled = false;
-                nikInput.style.borderColor = 'var(--warning)';
             } else if (numericValue.length > 0) {
-                nikFeedback.textContent = `Kurang ${16 - numericValue.length} digit (${numericValue.length}/16)`;
+                nikFeedback.textContent = `Kurang ${16 - numericValue.length} digit`;
                 nikFeedback.className = 'verify-feedback warning';
                 nikVerifyBtn.disabled = true;
             } else {
-                nikFeedback.textContent = 'NIK harus diisi — 16 digit angka';
+                nikFeedback.textContent = '16 digit angka';
                 nikFeedback.className = 'verify-feedback';
                 nikVerifyBtn.disabled = true;
             }
@@ -1328,7 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function submitIdentityVerification(formData) {
         formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
 
-        return fetch('../api/verify_identity.php', {
+        return fetch('../../api/verify_identity.php', {
             method: 'POST',
             body: formData,
             headers: {
@@ -1356,10 +883,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         nikVerifyBtn.disabled = true;
         nikVerifyBtn.classList.add('loading');
-        nikVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
-        nikFeedback.textContent = 'Sedang memverifikasi NIK...';
-        nikFeedback.className = 'verify-feedback';
-        nikFeedback.style.animation = 'verifyPulse 1s infinite';
+        nikVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        nikFeedback.textContent = 'Sedang memverifikasi...';
 
         const formData = new FormData();
         formData.append('type', 'nik');
@@ -1368,13 +893,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         submitIdentityVerification(formData)
             .then(data => {
-                nikFeedback.style.animation = '';
                 if (data.verified) {
                     nikVerified.value = '1';
                     nikFeedback.textContent = '✓ ' + data.message;
                     nikFeedback.className = 'verify-feedback success';
-                    nikInput.style.borderColor = 'var(--success)';
-                    nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                    nikInput.style.borderColor = 'var(--heritage-accent)';
+                    nikVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
                     nikVerifyBtn.classList.remove('loading');
                     nikVerifyBtn.classList.add('verified');
 
@@ -1382,9 +906,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.details) {
                         autofillFieldsFromNikDetails(data.details);
                         let html = '<strong>📋 Data NIK:</strong><br>';
-                        if (data.details.provinsi) html += `<div class="detail-row"><span class="detail-label">Provinsi</span><span class="detail-value">${data.details.provinsi}</span></div>`;
-                        if (data.details.tanggal_lahir) html += `<div class="detail-row"><span class="detail-label">Tgl Lahir</span><span class="detail-value">${data.details.tanggal_lahir}</span></div>`;
-                        if (data.details.jenis_kelamin) html += `<div class="detail-row"><span class="detail-label">Jenis Kelamin</span><span class="detail-value">${data.details.jenis_kelamin}</span></div>`;
+                        if (data.details.provinsi) html += `Provinsi: ${data.details.provinsi}<br>`;
+                        if (data.details.tanggal_lahir) html += `Tgl Lahir: ${data.details.tanggal_lahir}<br>`;
+                        if (data.details.jenis_kelamin) html += `Gender: ${data.details.jenis_kelamin}`;
                         nikDetails.innerHTML = html;
                         nikDetails.style.display = 'block';
                     }
@@ -1392,24 +916,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     nikVerified.value = '0';
                     nikFeedback.textContent = '✗ ' + data.message;
                     nikFeedback.className = 'verify-feedback error';
-                    nikInput.style.borderColor = 'var(--danger)';
-                    nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nikInput.style.borderColor = 'var(--heritage-crimson)';
+                    nikVerifyBtn.innerHTML = 'Gagal';
                     nikVerifyBtn.classList.remove('loading');
                     nikVerifyBtn.disabled = false;
-                    nikDetails.style.display = 'none';
                 }
             })
             .catch(err => {
-                const message = err && (err.status || err.data) && err.message
-                    ? err.message
-                    : 'Gagal menghubungi server verifikasi';
-                nikFeedback.style.animation = '';
-                nikFeedback.textContent = '⚠ ' + message;
+                nikFeedback.textContent = '⚠ Gagal menghubungi server';
                 nikFeedback.className = 'verify-feedback error';
-                nikVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                nikVerifyBtn.innerHTML = 'Verifikasi';
                 nikVerifyBtn.classList.remove('loading');
                 nikVerifyBtn.disabled = false;
-                nikDetails.style.display = 'none';
             });
     };
 
@@ -1434,32 +952,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 nisnVerifyBtn.classList.add('verified');
                 nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Tersimpan';
                 nisnVerifyBtn.disabled = true;
-                nisnInput.style.borderColor = 'var(--success)';
-                const nisnDetailsEl = document.getElementById('nisnDetails');
-                if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
-                nisnFeedback.textContent = 'NISN tidak diubah - verifikasi lama tetap valid';
+                nisnInput.style.borderColor = 'var(--heritage-accent)';
+                nisnFeedback.textContent = 'NISN tidak diubah';
                 nisnFeedback.className = 'verify-feedback success';
                 return;
             }
             // Reset verification
             nisnVerified.value = '0';
             nisnVerifyBtn.classList.remove('verified');
-            nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
-            nisnInput.style.borderColor = '#e1e5eb';
-            const nisnDetailsEl = document.getElementById('nisnDetails');
-            if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
+            nisnVerifyBtn.innerHTML = 'Verifikasi';
+            nisnInput.style.borderColor = 'var(--heritage-border)';
 
             if (numericValue.length === 10) {
-                nisnFeedback.textContent = '10 digit — Klik "Verifikasi" untuk memvalidasi';
+                nisnFeedback.textContent = 'Klik "Verifikasi" untuk NISN';
                 nisnFeedback.className = 'verify-feedback warning';
                 nisnVerifyBtn.disabled = false;
-                nisnInput.style.borderColor = 'var(--warning)';
             } else if (numericValue.length > 0) {
-                nisnFeedback.textContent = `Kurang ${10 - numericValue.length} digit (${numericValue.length}/10)`;
+                nisnFeedback.textContent = `Kurang ${10 - numericValue.length} digit`;
                 nisnFeedback.className = 'verify-feedback warning';
                 nisnVerifyBtn.disabled = true;
             } else {
-                nisnFeedback.textContent = 'NISN harus diisi — 10 digit angka';
+                nisnFeedback.textContent = '10 digit angka';
                 nisnFeedback.className = 'verify-feedback';
                 nisnVerifyBtn.disabled = true;
             }
@@ -1483,10 +996,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         nisnVerifyBtn.disabled = true;
         nisnVerifyBtn.classList.add('loading');
-        nisnVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
-        nisnFeedback.textContent = 'Sedang memverifikasi NISN...';
-        nisnFeedback.className = 'verify-feedback';
-        nisnFeedback.style.animation = 'verifyPulse 1s infinite';
+        nisnVerifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        nisnFeedback.textContent = 'Sedang memverifikasi...';
 
         const formData = new FormData();
         formData.append('type', 'nisn');
@@ -1495,13 +1006,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         submitIdentityVerification(formData)
             .then(data => {
-                nisnFeedback.style.animation = '';
                 if (data.verified) {
                     nisnVerified.value = '1';
                     nisnFeedback.textContent = '✓ ' + data.message;
                     nisnFeedback.className = 'verify-feedback success';
-                    nisnInput.style.borderColor = 'var(--success)';
-                    nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Terverifikasi';
+                    nisnInput.style.borderColor = 'var(--heritage-accent)';
+                    nisnVerifyBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.classList.add('verified');
 
@@ -1509,11 +1019,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const nisnDetailsEl = document.getElementById('nisnDetails');
                     if (data.details && nisnDetailsEl) {
                         let html = '<strong>📋 Data NISN:</strong><br>';
-                        if (data.details.tahun_lahir) html += `<div class="detail-row"><span class="detail-label">Tahun Lahir</span><span class="detail-value">${data.details.tahun_lahir}</span></div>`;
-                        if (data.details.usia) html += `<div class="detail-row"><span class="detail-label">Usia</span><span class="detail-value">${data.details.usia}</span></div>`;
-                        if (data.details.perkiraan_jenjang) html += `<div class="detail-row"><span class="detail-label">Jenjang</span><span class="detail-value">${data.details.perkiraan_jenjang}</span></div>`;
-                        if (data.details.kode_tengah) html += `<div class="detail-row"><span class="detail-label">Kode Tengah</span><span class="detail-value">${data.details.kode_tengah}</span></div>`;
-                        if (data.details.nomor_urut) html += `<div class="detail-row"><span class="detail-label">No. Urut</span><span class="detail-value">${data.details.nomor_urut}</span></div>`;
+                        if (data.details.usia) html += `Usia: ${data.details.usia}<br>`;
+                        if (data.details.perkiraan_jenjang) html += `Jenjang: ${data.details.perkiraan_jenjang}`;
                         nisnDetailsEl.innerHTML = html;
                         nisnDetailsEl.style.display = 'block';
                     }
@@ -1521,24 +1028,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     nisnVerified.value = '0';
                     nisnFeedback.textContent = '✗ ' + data.message;
                     nisnFeedback.className = 'verify-feedback error';
-                    nisnInput.style.borderColor = 'var(--danger)';
-                    nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                    nisnInput.style.borderColor = 'var(--heritage-crimson)';
+                    nisnVerifyBtn.innerHTML = 'Gagal';
                     nisnVerifyBtn.classList.remove('loading');
                     nisnVerifyBtn.disabled = false;
                 }
             })
             .catch(err => {
-                const message = err && (err.status || err.data) && err.message
-                    ? err.message
-                    : 'Gagal menghubungi server verifikasi';
-                nisnFeedback.style.animation = '';
-                nisnFeedback.textContent = '⚠ ' + message;
+                nisnFeedback.textContent = '⚠ Gagal menghubungi server';
                 nisnFeedback.className = 'verify-feedback error';
-                nisnVerifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Verifikasi';
+                nisnVerifyBtn.innerHTML = 'Verifikasi';
                 nisnVerifyBtn.classList.remove('loading');
                 nisnVerifyBtn.disabled = false;
-                const nisnDetailsEl = document.getElementById('nisnDetails');
-                if (nisnDetailsEl) nisnDetailsEl.style.display = 'none';
             });
     };
 
@@ -1582,14 +1083,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // CHECK VERIFICATION STATUS
             if (nikVerified.value !== '1') {
                 e.preventDefault();
-                showClientAlert('NIK belum terverifikasi. Silakan klik tombol "Verifikasi" pada kolom NIK terlebih dahulu.');
+                showClientAlert('NIK belum terverifikasi.');
                 nikInput.focus();
                 return false;
             }
 
             if (nisnVerified.value !== '1') {
                 e.preventDefault();
-                showClientAlert('NISN belum terverifikasi. Silakan klik tombol "Verifikasi" pada kolom NISN terlebih dahulu.');
+                showClientAlert('NISN belum terverifikasi.');
                 nisnInput.focus();
                 return false;
             }
@@ -1602,16 +1103,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hasExistingKk && !kkSelected) {
                 e.preventDefault();
                 showClientAlert('File Kartu Keluarga (KK) wajib diupload!');
-                const kkUpload = document.getElementById('kk_imageUpload');
-                if (kkUpload) {
-                    kkUpload.classList.add('kk-highlight');
-                    kkUpload.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    const kkFileEl = document.getElementById('kk_imageFile');
-                    if (kkFileEl) {
-                        kkFileEl.focus({ preventScroll: true });
-                    }
-                    setTimeout(() => kkUpload.classList.remove('kk-highlight'), 3000);
-                }
                 return false;
             }
 
@@ -1625,9 +1116,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Keep birth date empty on initial load; user must choose manually.
 });
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

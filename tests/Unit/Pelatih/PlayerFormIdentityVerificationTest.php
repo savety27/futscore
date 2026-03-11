@@ -8,7 +8,7 @@ final class PlayerFormIdentityVerificationTest extends TestCase
 
     protected function setUp(): void
     {
-        $source = file_get_contents(__DIR__ . '/../../../pelatih/player_form.php');
+        $source = file_get_contents(__DIR__ . '/../../../pelatih/players/form.php');
         $this->assertNotFalse($source);
 
         $this->source = $source;
@@ -28,6 +28,6 @@ final class PlayerFormIdentityVerificationTest extends TestCase
         preg_match_all('/submitIdentityVerification\(formData\)\s*\.then/', $this->source, $matches);
 
         $this->assertCount(2, $matches[0]);
-        $this->assertSame(1, substr_count($this->source, "fetch('../api/verify_identity.php'"));
+        $this->assertSame(1, substr_count($this->source, "fetch('../../api/verify_identity.php'"));
     }
 }

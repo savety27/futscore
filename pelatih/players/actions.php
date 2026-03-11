@@ -1,10 +1,10 @@
 <?php
-require_once 'config/database.php';
+require_once '../config/database.php';
 session_start();
 
 // Ensure user is logged in and is a pelatih
 if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'pelatih') {
-    header('Location: ../login.php');
+    header('Location: ../../login.php');
     exit;
 }
 
@@ -24,7 +24,7 @@ $action = $_POST['action'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Function to handle file upload
-    function uploadPlayerFile($file, $upload_dir = '../images/players/', $prefix = 'player_') {
+    function uploadPlayerFile($file, $upload_dir = '../../images/players/', $prefix = 'player_') {
         if (!isset($file) || $file['error'] != 0) {
             return null;
         }
@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ktp_image, $kk_image, $birth_cert_image, $diploma_image
             ]);
             
-            header("Location: players.php?msg=added");
+            header("Location: ./index.php?msg=added");
             exit;
         }
         
@@ -338,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 }
-                header("Location: players.php?msg=updated");
+                header("Location: ./index.php?msg=updated");
             } else {
                 // No DB row changed (e.g. unauthorized id/team): remove newly uploaded files.
                 foreach ($uploaded_files_to_cleanup as $new_file) {
@@ -347,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unlink($new_file_path);
                     }
                 }
-                header("Location: players.php?msg=no_changes");
+                header("Location: ./index.php?msg=no_changes");
             }
             exit;
         }
@@ -367,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $player = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$player) {
-                header("Location: players.php?msg=not_found");
+                header("Location: ./index.php?msg=not_found");
                 exit;
             }
 
@@ -405,7 +405,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($stmt->rowCount() <= 0) {
                 $conn->rollBack();
-                header("Location: players.php?msg=not_found");
+                header("Location: ./index.php?msg=not_found");
                 exit;
             }
 
@@ -422,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            header("Location: players.php?msg=deleted");
+            header("Location: ./index.php?msg=deleted");
             exit;
         }
     } catch (Exception $e) {
@@ -468,20 +468,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = urlencode($error_msg);
         
         if ($action === 'add') {
-            $redirect_url = 'player_form.php?error=' . $error_msg;
+            $redirect_url = 'form.php?error=' . $error_msg;
         } elseif ($action === 'edit') {
             $player_id = $_POST['id'] ?? '';
-            $redirect_url = "player_form.php?id=$player_id&error=$error_msg";
+            $redirect_url = "form.php?id=$player_id&error=$error_msg";
         } else {
             // Delete or unknown
-            $redirect_url = 'players.php?error=' . $error_msg;
+            $redirect_url = 'index.php?error=' . $error_msg;
         }
         
         header("Location: $redirect_url");
         exit;
     }
 } else {
-    header("Location: players.php");
+    header("Location: index.php");
     exit;
 }
 ?>

@@ -1,9 +1,11 @@
 <?php
 $page_title = 'Pemain Saya';
 $current_page = 'players';
-require_once 'config/database.php';
-require_once 'includes/header.php';
-
+require_once '../config/database.php';
+require_once '../includes/header.php';
+?>
+<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
+<?php
 $team_id = $_SESSION['team_id'] ?? 0;
 $filter_category = trim((string)($_GET['category'] ?? ''));
 $filter_search = trim((string)($_GET['q'] ?? ''));
@@ -150,220 +152,66 @@ $build_page_url = function(int $page) use ($base_query_params): string {
     $params['page'] = $page;
     return '?' . http_build_query($params);
 };
-$players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' . http_build_query($base_query_params) : '');
+$players_export_url = 'export.php' . (!empty($base_query_params) ? '?' . http_build_query($base_query_params) : '');
 ?>
 
-<style>
-/* Background only: baby-blue like dashboard */
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
+<div class="players-container">
+    <!-- Editorial Header -->
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Manajemen Skuad</span>
+            <h1 class="hero-title">Direktori Pemain</h1>
+            <p class="hero-description">Kelola roster, filter kategori, dan pantau profil pemain aktif tim Anda secara komprehensif.</p>
+        </div>
+        <div class="hero-actions">
+            <span class="summary-pill"><i class="fas fa-id-badge"></i> <?php echo (int)$total_players; ?> Pemain Terdaftar</span>
+        </div>
+    </header>
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.page-title-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    line-height: 1.15;
-}
-
-.page-title i {
-    color: var(--secondary);
-}
-
-.page-subtitle {
-    margin: 0;
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.summary-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: #eef5ff;
-    color: var(--primary);
-    border: 1px solid #dbeafe;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.section-header {
-    margin-bottom: 16px;
-}
-
-.filter-container {
-    margin-bottom: 20px;
-}
-
-.players-filter-card {
-    padding: 16px;
-    border: 1px solid #dbe5f3;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
-}
-
-.players-filter-form {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(210px, 0.72fr) auto;
-    gap: 12px;
-    align-items: center;
-}
-
-.players-search-group {
-    position: relative;
-}
-
-.players-search-group i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #7b8797;
-    font-size: 13px;
-}
-
-.players-search-input,
-.players-filter-select {
-    width: 100%;
-    height: 42px;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #1f2937;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.players-search-input {
-    padding: 0 12px 0 36px;
-}
-
-.players-filter-select {
-    padding: 0 12px;
-}
-
-.players-search-input:focus,
-.players-filter-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
-}
-
-.players-filter-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.players-filter-actions .btn-filter,
-.players-filter-actions .clear-filter-btn {
-    height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    font-size: 13px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.players-filter-actions .btn-filter {
-    background: linear-gradient(135deg, var(--primary), #1a4f9e);
-    color: #ffffff;
-}
-
-.players-filter-actions .btn-filter:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
-}
-
-.players-filter-actions .clear-filter-btn {
-    background: #ffffff;
-    border-color: #d3dcea;
-    color: #3b4a5f;
-}
-
-.players-filter-actions .clear-filter-btn:hover {
-    background: #f2f6fc;
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        padding: 18px;
-        border-radius: 16px;
-    }
-
-    .page-title {
-        font-size: 23px;
-    }
-
-    .players-filter-form {
-        grid-template-columns: 1fr;
-    }
-
-    .players-filter-actions {
-        width: 100%;
-    }
-
-    .players-filter-actions .btn-filter,
-    .players-filter-actions .clear-filter-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-</style>
-
-<div class="page-header">
-    <div class="page-title-wrap">
-        <h1 class="page-title"><i class="fas fa-users"></i> Direktori Pemain</h1>
-        <p class="page-subtitle">Kelola roster, filter kategori, dan pantau profil pemain aktif tim Anda.</p>
-    </div>
-    <div class="page-summary">
-        <span class="summary-pill"><i class="fas fa-id-badge"></i> <?php echo (int)$total_players; ?> Pemain</span>
-    </div>
-</div>
-
-<div class="card">
-    <div class="section-header">
-        <h2 class="section-title">Daftar Pemain</h2>
-        <div class="section-actions">
-            <a href="player_form.php" class="btn-primary">
-                <i class="fas fa-plus"></i> Tambah Pemain
-            </a>
-            <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-export">
-                <i class="fas fa-download"></i> Export Excel
-            </a>
+    <div class="filter-container reveal d-1">
+        <div class="players-filter-card">
+            <form method="GET" class="players-filter-form">
+                <div class="filter-group">
+                    <label>Pencarian</label>
+                    <div class="players-search-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="q" class="players-search-input" placeholder="Cari nama atau nomor..." value="<?php echo htmlspecialchars($filter_search); ?>">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Kategori</label>
+                    <select name="category" class="players-filter-select">
+                        <option value="">Semua Kategori</option>
+                        <?php foreach ($category_options as $category): ?>
+                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $filter_category === $category ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($category); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="players-filter-actions">
+                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+                    <a href="./" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
+                </div>
+            </form>
         </div>
     </div>
+
+    <div class="reveal d-2">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">Daftar Pemain</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="section-actions">
+                <a href="form.php" class="btn-premium btn-add">
+                    <i class="fas fa-plus"></i> Tambah Pemain
+                </a>
+                <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-premium btn-export">
+                    <i class="fas fa-download"></i> Export Excel
+                </a>
+            </div>
+        </div>
 
 <?php if (isset($_GET['msg'])): ?>
         <div class="message-alert">
@@ -384,36 +232,13 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
         </div>
     <?php endif; ?>
 
-    <div class="filter-container">
-        <div class="players-filter-card">
-            <form method="GET" class="players-filter-form">
-                <div class="players-search-group">
-                    <i class="fas fa-search"></i>
-                    <input type="text" name="q" class="players-search-input" placeholder="Cari nama atau nomor pemain..." value="<?php echo htmlspecialchars($filter_search); ?>">
-                </div>
-                <div>
-                    <select name="category" class="players-filter-select">
-                        <option value="">Semua Kategori</option>
-                        <?php foreach ($category_options as $category): ?>
-                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $filter_category === $category ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="players-filter-actions">
-                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Terapkan</button>
-                    <a href="players.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <?php if (empty($players)): ?>
+
+<?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
             <p>Tidak ada pemain ditemukan.</p>
-            <a href="player_form.php" class="btn-primary">Tambah Pemain Pertama Anda</a>
+            <a href="form.php" class="btn-premium btn-add">Tambah Pemain Pertama Anda</a>
         </div>
     <?php else: ?>
         <div class="table-responsive">
@@ -507,7 +332,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
                             </div>
                         </td>
                         <td class="name-cell">
-                            <a href="player_view.php?id=<?php echo $player['id']; ?>" 
+                            <a href="view.php?id=<?php echo $player['id']; ?>" 
                                class="player-name-link"
                                title="Klik untuk lihat detail pemain"
                                aria-label="Lihat detail pemain <?php echo htmlspecialchars($player['name'] ?? ''); ?>">
@@ -568,19 +393,19 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
                             <div class="action-buttons">
                                 <?php $delete_disabled = !empty($player['has_related_data']); ?>
                                 <!-- TAMBAHKAN TOMBOL VIEW DISINI -->
-                                <a href="player_view.php?id=<?php echo $player['id']; ?>" 
+                                <a href="view.php?id=<?php echo $player['id']; ?>" 
                                    class="btn-primary btn-sm btn-view"
                                    title="Lihat Detail Pemain"
                                    aria-label="Lihat Detail Pemain">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="player_form.php?id=<?php echo $player['id']; ?>" 
+                                <a href="form.php?id=<?php echo $player['id']; ?>" 
                                    class="btn-primary btn-sm"
                                    title="Ubah Pemain"
                                    aria-label="Ubah Pemain">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="player_actions.php" method="POST" class="delete-form<?php echo $delete_disabled ? ' delete-form-disabled' : ''; ?>">
+                                <form action="actions.php" method="POST" class="delete-form<?php echo $delete_disabled ? ' delete-form-disabled' : ''; ?>">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo $player['id']; ?>">
                                     <button type="submit" 
@@ -674,9 +499,9 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
         </div>
         <?php endif; ?>
     <?php endif; ?>
-</div>
+</div><!-- Close players-container -->
 
-<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
+
 
 
 <script>
@@ -1021,4 +846,4 @@ document.head.appendChild(style);
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>
