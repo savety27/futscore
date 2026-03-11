@@ -17,11 +17,12 @@ $next_match = null;
 if ($team_id) {
     try {
         // Get Team Name and Logo
-        $stmt = $conn->prepare("SELECT name, logo FROM teams WHERE id = ?");
+        $stmt = $conn->prepare("SELECT name, logo, is_active FROM teams WHERE id = ?");
         $stmt->execute([$team_id]);
         $team = $stmt->fetch(PDO::FETCH_ASSOC);
         $team_name = $team ? ($team['name'] ?: 'Unknown Team') : 'Unknown Team';
         $team_logo = $team ? $team['logo'] : null;
+        $is_active = $team ? (int)$team['is_active'] : 0;
 
         // Get Player Count
         $stmt = $conn->prepare("SELECT COUNT(*) FROM players WHERE team_id = ?");
@@ -654,8 +655,8 @@ if ($team_id) {
                 </div>
                 <h2 class="team-name-display"><?php echo htmlspecialchars($team_name); ?></h2>
                 <div class="team-status-badge">
-                    <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
-                    Status: Aktif Kompetisi
+                    <span style="width: 8px; height: 8px; background: <?php echo $is_active ? '#10b981' : '#ef4444'; ?>; border-radius: 50%;"></span>
+                    Status: <?php echo $is_active ? 'Aktif Kompetisi' : 'Nonaktif / Ditangguhkan'; ?>
                 </div>
             </div>
             <div class="bottom" style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
