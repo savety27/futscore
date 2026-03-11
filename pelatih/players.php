@@ -3,7 +3,9 @@ $page_title = 'Pemain Saya';
 $current_page = 'players';
 require_once 'config/database.php';
 require_once 'includes/header.php';
-
+?>
+<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
+<?php
 $team_id = $_SESSION['team_id'] ?? 0;
 $filter_category = trim((string)($_GET['category'] ?? ''));
 $filter_search = trim((string)($_GET['q'] ?? ''));
@@ -153,323 +155,6 @@ $build_page_url = function(int $page) use ($base_query_params): string {
 $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' . http_build_query($base_query_params) : '');
 ?>
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
-    :root {
-        --heritage-bg: #f8f7f4;
-        --heritage-card: #ffffff;
-        --heritage-border: #e5e1da;
-        --heritage-text: #1e1b4b;
-        --heritage-text-muted: #6b7280;
-        --heritage-accent: #064e3b;
-        --heritage-gold: #b45309;
-        --heritage-crimson: #991b1b;
-        --font-display: 'Bricolage Grotesque', sans-serif;
-        --font-body: 'Plus Jakarta Sans', sans-serif;
-        --soft-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-    }
-
-    .topbar {
-        display: none !important;
-    }
-
-    .main {
-        background: var(--heritage-bg) !important;
-        background-image: radial-gradient(#e5e1da 0.5px, transparent 0.5px) !important;
-        background-size: 24px 24px !important;
-        color: var(--heritage-text);
-        font-family: var(--font-body);
-        padding: 40px 60px !important;
-        margin-left: 280px !important;
-        width: calc(100% - 280px);
-        min-height: 100vh;
-        box-sizing: border-box;
-    }
-
-    .players-container {
-        width: 100%;
-        max-width: 1300px;
-        margin: 0 auto;
-        box-sizing: border-box;
-    }
-
-    /* Editorial Header */
-    .dashboard-hero {
-        margin-bottom: 48px;
-        border-bottom: 2px solid var(--heritage-text);
-        padding-bottom: 32px;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-
-    .hero-content {
-        max-width: 800px;
-        flex-shrink: 1;
-    }
-
-    .hero-label {
-        color: var(--heritage-gold);
-        font-family: var(--font-display);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        font-size: 0.9rem;
-        margin-bottom: 12px;
-        display: block;
-    }
-
-    .hero-title {
-        font-family: var(--font-display);
-        font-size: 3.5rem;
-        font-weight: 800;
-        color: var(--heritage-text);
-        margin: 0 0 16px 0;
-        line-height: 1;
-        letter-spacing: -0.04em;
-    }
-
-    .hero-description {
-        color: var(--heritage-text-muted);
-        font-size: 1.15rem;
-        line-height: 1.6;
-        margin: 0;
-    }
-
-    .summary-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 20px;
-        border-radius: 16px;
-        background: var(--heritage-text);
-        color: white;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 1rem;
-        box-shadow: 0 10px 20px rgba(30, 27, 75, 0.15);
-    }
-
-    /* Filters Redesign */
-    .players-filter-card {
-        background: var(--heritage-card);
-        border: 1px solid var(--heritage-border);
-        border-radius: 28px;
-        padding: 32px;
-        margin-bottom: 40px;
-        box-shadow: var(--soft-shadow);
-    }
-
-    .players-filter-form {
-        display: grid;
-        grid-template-columns: 1fr 1fr auto;
-        gap: 24px;
-        align-items: end;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .filter-group label {
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--heritage-text-muted);
-    }
-
-    .players-search-group {
-        position: relative;
-    }
-
-    .players-search-group i {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--heritage-text-muted);
-    }
-
-    .players-search-input,
-    .players-filter-select {
-        width: 100%;
-        height: 54px;
-        background: #fdfcfb;
-        border: 1px solid var(--heritage-border);
-        border-radius: 16px;
-        padding: 0 20px;
-        font-family: var(--font-body);
-        font-size: 1rem;
-        color: var(--heritage-text);
-        transition: all 0.3s ease;
-    }
-
-    .players-search-input {
-        padding-left: 48px;
-    }
-
-    .players-search-input:focus,
-    .players-filter-select:focus {
-        outline: none;
-        border-color: var(--heritage-gold);
-        background: white;
-        box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.05);
-    }
-
-    .players-filter-actions {
-        display: flex;
-        gap: 12px;
-    }
-
-    .btn-filter, .clear-filter-btn {
-        height: 54px;
-        padding: 0 28px;
-        border-radius: 16px;
-        font-family: var(--font-display);
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-        text-decoration: none;
-    }
-
-    .btn-filter {
-        background: var(--heritage-text);
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-filter:hover {
-        background: var(--heritage-gold);
-        transform: translateY(-2px);
-    }
-
-    .clear-filter-btn {
-        background: white;
-        color: var(--heritage-text);
-        border: 1px solid var(--heritage-border);
-    }
-
-    .clear-filter-btn:hover {
-        background: #fdfcfb;
-        border-color: var(--heritage-text);
-    }
-
-    /* Sections and Layout */
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 32px;
-        gap: 24px;
-    }
-
-    .section-title-wrap {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        flex: 1;
-    }
-
-    .section-title {
-        font-family: var(--font-display);
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--heritage-text);
-        margin: 0;
-        white-space: nowrap;
-    }
-
-    .section-line {
-        height: 2px;
-        background: var(--heritage-border);
-        flex: 1;
-    }
-
-    .section-actions {
-        display: flex;
-        gap: 16px;
-    }
-
-    .btn-premium {
-        padding: 12px 24px;
-        border-radius: 14px;
-        font-family: var(--font-display);
-        font-weight: 700;
-        font-size: 0.95rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .btn-add {
-        background: var(--heritage-accent);
-        color: white;
-    }
-
-    .btn-add:hover {
-        background: #065f46;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(6, 78, 59, 0.15);
-    }
-
-    .btn-export {
-        background: white;
-        color: var(--heritage-text);
-        border: 1px solid var(--heritage-border);
-    }
-
-    .btn-export:hover {
-        border-color: var(--heritage-text);
-        background: #fdfcfb;
-    }
-
-    /* Animations */
-    @keyframes revealUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .reveal {
-        animation: revealUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        opacity: 0;
-    }
-
-    .d-1 { animation-delay: 0.1s; }
-    .d-2 { animation-delay: 0.2s; }
-    .d-3 { animation-delay: 0.3s; }
-
-    @media (max-width: 1024px) {
-        .players-filter-form { grid-template-columns: 1fr; }
-        .hero-title { font-size: 2.75rem; }
-    }
-
-    @media (max-width: 768px) {
-        .main { 
-            padding: 20px !important; 
-            margin-left: 0 !important;
-            width: 100%;
-        }
-        .dashboard-hero { flex-direction: column; align-items: flex-start; }
-        .hero-title { font-size: 2.25rem; }
-        .section-header { flex-direction: column; align-items: flex-start; }
-        .section-line { display: none; }
-        .section-actions { width: 100%; }
-        .btn-premium { flex: 1; justify-content: center; }
-    }
-</style>
-
 <div class="players-container">
     <!-- Editorial Header -->
     <header class="dashboard-hero reveal">
@@ -549,11 +234,11 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
 
 
 
-    <?php if (empty($players)): ?>
+<?php if (empty($players)): ?>
         <div class="empty-state">
             <i class="fas fa-users"></i>
             <p>Tidak ada pemain ditemukan.</p>
-            <a href="player_form.php" class="btn-primary">Tambah Pemain Pertama Anda</a>
+            <a href="player_form.php" class="btn-premium btn-add">Tambah Pemain Pertama Anda</a>
         </div>
     <?php else: ?>
         <div class="table-responsive">
@@ -816,7 +501,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
     <?php endif; ?>
 </div><!-- Close players-container -->
 
-<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
+
 
 
 <script>
