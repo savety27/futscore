@@ -1852,22 +1852,26 @@ function displayFlashMessage() {
 /**
  * Debug function
  */
-function debug($data) {
-    echo '<pre>';
-    print_r($data);
-    echo '</pre>';
+if (!function_exists('debug')) {
+    function debug($data) {
+        echo '<pre>';
+        print_r($data);
+        echo '</pre>';
+    }
 }
 
 /**
  * Log error
  */
-function logError($message, $file = '', $line = '') {
-    $logMessage = date('Y-m-d H:i:s') . " - ";
-    if ($file) $logMessage .= "File: $file - ";
-    if ($line) $logMessage .= "Line: $line - ";
-    $logMessage .= "Message: $message" . PHP_EOL;
-    
-    error_log($logMessage, 3, 'error_log.txt');
+if (!function_exists('logError')) {
+    function logError($message, $file = '', $line = '') {
+        $logMessage = date('Y-m-d H:i:s') . " - ";
+        if ($file) $logMessage .= "File: $file - ";
+        if ($line) $logMessage .= "Line: $line - ";
+        $logMessage .= "Message: $message" . PHP_EOL;
+        
+        error_log($logMessage, 3, 'error_log.txt');
+    }
 }
 
 /**
