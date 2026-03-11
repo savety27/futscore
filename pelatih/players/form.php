@@ -548,11 +548,11 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                     Status Keanggotaan
                 </h2>
                 <div class="form-group">
-                    <div style="display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 20px; border-radius: 16px;">
-                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?> style="width: 24px; height: 24px; cursor: pointer;">
-                        <div>
-                            <label for="status_active" style="font-weight: 700; cursor: pointer; color: var(--heritage-text);">Pemain Aktif</label>
-                            <div style="font-size: 0.85rem; color: var(--heritage-text-muted);">Pemain aktif akan tersedia untuk seleksi pertandingan.</div>
+                    <div class="status-active-container">
+                        <input type="checkbox" id="status_active" name="status" value="active" <?php echo ($player['status'] ?? 'active') === 'active' ? 'checked' : ''; ?> class="status-checkbox">
+                        <div class="status-info">
+                            <label for="status_active" class="status-label">Pemain Aktif</label>
+                            <div class="status-description">Pemain aktif akan tersedia untuk seleksi pertandingan.</div>
                         </div>
                     </div>
                 </div>
