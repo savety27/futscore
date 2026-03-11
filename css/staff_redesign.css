@@ -1221,6 +1221,7 @@
         grid-area: name;
         display: block;
         padding-top: 4px;
+        text-align: left;
     }
 
     .staff-table-new td.col-team {
@@ -1254,10 +1255,12 @@
 
     .staff-name {
         font-size: 16px;
+        text-align: left;
     }
 
     .staff-contact {
         font-size: 12px;
+        margin: 0;
     }
 }
 

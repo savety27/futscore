@@ -1574,17 +1574,44 @@ $pageTitle = "Perangkat Pertandingan";
     }
 }
 
-@media (max-width: 768px) {
-    .entity-profile-card {
-        margin-top: -14px;
-        border-radius: 16px;
-        padding: 16px;
-    }
+    @media (max-width: 768px) {
+        .entity-profile-card {
+            margin-top: -14px;
+            border-radius: 16px;
+            padding: 16px;
+        }
 
-    .entity-profile-photo {
-        width: 100px;
-        height: 100px;
-    }
+        .entity-profile-header {
+            align-items: center;
+        }
+
+        .entity-profile-photo {
+            width: 100px;
+            height: 100px;
+        }
+
+        .entity-profile-identity {
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .entity-profile-main {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .entity-profile-main h2 {
+            text-align: center;
+            width: 100%;
+        }
+
+        .entity-profile-meta {
+            justify-content: center;
+        }
 
     .entity-profile-actions,
     .entity-profile-actions .btn-filter-reset,
@@ -2071,5 +2098,9 @@ include 'includes/sidebar.php';
             </div>
         </div>
 
+    <script>
+        const SITE_URL = '<?php echo SITE_URL; ?>';
+    </script>
+    <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
     </body>
 </html>
