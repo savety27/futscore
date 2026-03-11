@@ -175,7 +175,7 @@ require_once 'includes/header.php';
         text-align: left;
     }
     .event-popover::after {
-        content: '';
+        content: \'\';
         position: absolute;
         top: 100%;
         left: 50%;
@@ -342,242 +342,271 @@ require_once 'includes/header.php';
         fill: currentColor;
         flex: 0 0 auto;
     }
-    @media (max-width: 768px) {
+
+    /* Detail Card Refinements */
+    .player-detail-card {
+        background: #ffffff;
+        border-radius: 32px;
+        padding: 32px;
+        box-shadow: 0 20px 50px rgba(15, 39, 68, 0.12);
+        border: 1px solid rgba(15, 39, 68, 0.05);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .player-detail-card::before {
+        content: \'\';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 180px;
+        background: linear-gradient(135deg, rgba(15, 39, 68, 0.04) 0%, transparent 100%);
+        pointer-events: none;
+    }
+
+    .player-photo-lg {
+        width: 160px;
+        height: 160px;
+        border-radius: 28px;
+        border: 6px solid #fff;
+        box-shadow: 0 15px 35px rgba(15, 39, 68, 0.15);
+    }
+
+    .player-detail-main h2 {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--navy);
+        letter-spacing: -0.03em;
+        margin-bottom: 12px;
+    }
+
+    .player-skills-section {
+        background: #f8fafc;
+        border: 1px solid rgba(15, 39, 68, 0.06);
+        border-radius: 24px;
+        padding: 24px;
+        margin-top: 20px;
+    }
+
+    .player-skill-item {
+        background: #ffffff;
+        border: 1px solid rgba(15, 39, 68, 0.04);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(15, 39, 68, 0.03);
+    }
+
+    .player-skill-fill {
+        background: linear-gradient(90deg, var(--navy) 0%, var(--blue-accent) 100%);
+    }
+
+    @media (max-width: 992px) {
         .player-table-container,
         .player-table-responsive {
             overflow: visible !important;
             padding: 0 4px !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         .player-table-new {
             display: block !important;
             min-width: 0 !important;
-            border: none !important;
         }
         .player-table-new thead {
             display: none !important;
         }
         .player-table-new tbody {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 24px !important;
-            padding: 10px 5px !important;
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+            gap: 20px !important;
+            padding: 10px 0 !important;
         }
         .player-table-new tr {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            background: #ffffff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 28px !important;
-            overflow: hidden !important;
-            box-shadow: 0 4px 20px -5px rgba(15, 23, 42, 0.08) !important;
-            position: relative !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        /* Digital Scout Card Header */
-        .player-table-new td.cell-photo,
-        .player-table-new td.cell-name,
-        .player-table-new td.cell-team {
-            grid-column: span 2 !important;
             display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            padding: 0 !important;
-            border-bottom: none !important;
-            background: transparent !important;
+            flex-direction: column !important;
+            background: #ffffff !important;
+            border: 1px solid rgba(15, 39, 68, 0.08) !important;
+            border-radius: 24px !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 25px -5px rgba(15, 39, 68, 0.08) !important;
+            position: relative !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            isolation: isolate;
         }
 
+        .player-table-new tr:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 20px 40px -10px rgba(15, 39, 68, 0.15) !important;
+            border-color: var(--blue-accent) !important;
+        }
+
+        /* Jersey Watermark Background */
+        .player-table-new tr::after {
+            content: attr(data-jersey) !important;
+            position: absolute !important;
+            top: -10px !important;
+            right: -10px !important;
+            font-size: 120px !important;
+            font-weight: 900 !important;
+            color: rgba(15, 39, 68, 0.03) !important;
+            line-height: 1 !important;
+            z-index: 0 !important;
+            pointer-events: none !important;
+            font-family: \'Plus Jakarta Sans\', sans-serif !important;
+            font-style: italic !important;
+        }
+        
+        /* Hero Section Styling */
         .player-table-new td.cell-photo {
-            padding-top: 28px !important;
-            z-index: 2;
+            order: 1 !important;
+            padding: 24px 24px 12px !important;
+            display: flex !important;
+            justify-content: center !important;
+            background: linear-gradient(to bottom, rgba(15, 39, 68, 0.02), transparent) !important;
+            z-index: 1 !important;
         }
         .player-table-new td.cell-photo::before { display: none !important; }
         .player-table-new .player-photo-sm {
-            width: 110px !important;
-            height: 110px !important;
-            border-radius: 24px !important;
+            width: 100px !important;
+            height: 100px !important;
+            border-radius: 20px !important;
             border: 4px solid #fff !important;
-            box-shadow: 0 12px 20px -5px rgba(15, 23, 42, 0.15) !important;
+            box-shadow: 0 8px 20px -5px rgba(15, 39, 68, 0.15) !important;
             object-fit: cover !important;
         }
 
         .player-table-new td.cell-name {
-            padding: 16px 20px 6px !important;
+            order: 2 !important;
+            padding: 0 24px 8px !important;
+            text-align: center !important;
+            border-bottom: none !important;
         }
         .player-table-new td.cell-name::before { display: none !important; }
         .player-table-new td.cell-name .player-link {
-            font-size: 24px !important;
-            font-weight: 900 !important;
-            color: #0f172a !important;
-            text-align: center !important;
-            letter-spacing: -0.03em !important;
-            line-height: 1.1 !important;
-            text-decoration: none !important;
+            font-size: 20px !important;
+            font-weight: 800 !important;
+            color: var(--navy) !important;
+            letter-spacing: -0.02em !important;
+            line-height: 1.2 !important;
+            display: block !important;
         }
 
         .player-table-new td.cell-team {
-            padding: 0 20px 28px !important;
-            border-bottom: 1px solid #f1f5f9 !important;
+            order: 3 !important;
+            padding: 0 24px 20px !important;
+            justify-content: center !important;
+            border-bottom: none !important;
         }
         .player-table-new td.cell-team::before { display: none !important; }
         .player-table-new .col-team-stack {
-            background: #f8fafc !important;
-            padding: 8px 16px !important;
-            border-radius: 12px !important;
-            border: 1px solid #e2e8f0 !important;
-            display: flex !important;
+            background: var(--white-blue) !important;
+            padding: 6px 12px !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(15, 39, 68, 0.05) !important;
+            display: inline-flex !important;
             align-items: center !important;
             gap: 8px !important;
         }
         .player-table-new .team-name-stack {
-            font-size: 13px !important;
+            font-size: 11px !important;
             font-weight: 700 !important;
-            color: #64748b !important;
+            color: var(--gray-600) !important;
         }
 
-        /* Information Grid Cells */
-        .player-table-new td {
+        /* Stats Grid */
+        .player-table-new td:not(.cell-photo):not(.cell-name):not(.cell-team):not(.mobile-profile-cell) {
             display: flex !important;
-            flex-direction: column !important;
+            justify-content: space-between !important;
             align-items: center !important;
-            justify-content: center !important;
-            padding: 14px 10px !important;
-            border-bottom: 1px solid #f1f5f9 !important;
-            background: #fff !important;
-            text-align: center !important;
+            padding: 12px 24px !important;
+            border-bottom: 1px solid rgba(15, 39, 68, 0.04) !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: var(--navy) !important;
+            background: transparent !important;
         }
-        
+
         .player-table-new td::before {
             content: attr(data-label) !important;
-            font-size: 9px !important;
-            font-weight: 800 !important;
-            color: #94a3b8 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.1em !important;
-            margin-bottom: 6px !important;
-            flex: none !important;
-        }
-
-        .player-table-new td:not(.cell-photo):not(.cell-name):not(.cell-team):not(.mobile-profile-cell) {
-            font-size: 14px !important;
+            font-size: 10px !important;
             font-weight: 700 !important;
-            color: #1e293b !important;
+            color: var(--gray-400) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            flex: 1 !important;
+            text-align: left !important;
         }
 
-        /* Stats & Category Row */
-        .player-table-new td[data-label="Match"],
-        .player-table-new td[data-label="Event"] {
-            background: #f8fafc !important;
+        /* Specialized Badges in Grid */
+        .player-table-new td[data-label="Match"] .match-count-badge,
+        .player-table-new td[data-label="Event"] .event-count-badge {
+            font-size: 11px !important;
+            padding: 4px 10px !important;
+            border-radius: 8px !important;
         }
-        .player-table-new .match-count-badge,
-        .player-table-new .event-count-badge {
-            font-size: 12px !important;
-            padding: 4px 12px !important;
-            border-radius: 999px !important;
-        }
-        
-        .player-table-new td[data-label="Kategori"] {
-            grid-column: span 2 !important;
-            padding: 20px !important;
-            background: linear-gradient(to right, #f8fafc, #ffffff) !important;
-        }
+
         .player-table-new td[data-label="Kategori"] .event-badge {
-            font-size: 12px !important;
-            padding: 6px 14px !important;
-            border-radius: 10px !important;
-            display: inline-block !important;
+            font-size: 10px !important;
+            padding: 4px 8px !important;
+            border-radius: 6px !important;
+            background: #eff6ff !important;
+            color: var(--blue-primary) !important;
+            border: 1px solid #dbeafe !important;
         }
 
-        /* Hide unnecessary fields */
-        .player-table-new td.cell-no { display: none !important; }
-
-        /* Footer Button Section */
+        /* Action Section */
         .player-table-new td.mobile-profile-cell {
-            grid-column: span 2 !important;
-            padding: 24px !important;
+            order: 100 !important;
+            padding: 20px 24px 24px !important;
             border-bottom: none !important;
             background: #ffffff !important;
+            display: block !important;
         }
+        .player-table-new td.mobile-profile-cell::before { display: none !important; }
         .mobile-profile-btn {
             width: 100% !important;
-            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--blue-primary) 100%) !important;
             color: #ffffff !important;
-            padding: 18px !important;
-            border-radius: 18px !important;
-            font-size: 14px !important;
-            font-weight: 800 !important;
+            padding: 14px !important;
+            border-radius: 14px !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 1px !important;
-            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4) !important;
-            border: none !important;
+            letter-spacing: 0.05em !important;
+            box-shadow: 0 8px 20px -5px rgba(15, 39, 68, 0.2) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 10px !important;
+            border: none !important;
         }
 
-        /* Share Section Restored */
-        .player-share-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
+        /* Hidden Fields for Cleaner Mobile Look */
+        .player-table-new td.cell-no,
+        .player-table-new td[data-label="Dibuat Pada"] {
+            display: none !important;
         }
-        .player-share-toggle {
-            width: 100%;
-            justify-content: center;
-            min-height: 48px;
-            padding: 16px 24px;
-            font-size: 14px;
-        }
-        .player-share-menu {
-            position: static;
-            width: 100%;
-            max-width: 100%;
-            margin-top: 8px;
-            box-shadow: none;
-        }
-        .player-share-buttons {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .player-share-btn { width: 100%; }
-        .player-share-feedback { text-align: center; }
 
-        /* Decorative Background */
-        .player-table-new tr::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 140px;
-            background: linear-gradient(to bottom, rgba(37, 99, 235, 0.03), transparent) !important;
-            pointer-events: none;
+        .player-detail-card {
+            border-radius: 24px;
+            padding: 24px;
+        }
+        .player-photo-lg {
+            width: 120px;
+            height: 120px;
+        }
+        .player-detail-main h2 {
+            font-size: 22px;
         }
     }
 
-    @media (max-width: 480px) {
-        .player-table-new tbody { gap: 20px !important; }
-        .player-table-new tr { border-radius: 24px !important; }
-        .player-table-new .player-photo-sm { width: 90px !important; height: 90px !important; }
-        .player-table-new td.cell-name .player-link { font-size: 20px !important; }
-        .player-table-new td { padding: 12px 8px !important; }
-        .player-share-buttons { grid-template-columns: 1fr; }
-    }
-        .player-table-new td::before {
-            flex: 0 0 88px;
-        }
-        .team-name-stack {
-            font-size: 11px;
-        }
-        .match-count-badge,
-        .event-count-badge {
-            font-size: 9px;
-        }
-        .player-share-buttons {
-            grid-template-columns: 1fr;
+    @media (max-width: 600px) {
+        .player-table-new tbody {
+            grid-template-columns: 1fr !important;
+            padding: 10px 4px !important;
         }
     }
 </style>
@@ -1028,7 +1057,7 @@ include 'includes/sidebar.php';
                             $no = $offset + 1;
                             foreach ($players as $p): 
                             ?>
-                            <tr>
+                            <tr data-jersey="<?php echo $p['jersey_number'] ?: ''; ?>">
                                 <td class="col-no cell-no" data-label="No"><?php echo $no++; ?></td>
                                 <td class="col-photo cell-photo" data-label="Foto">
                                     <?php if (!empty($p['photo']) && file_exists('images/players/' . $p['photo'])): ?>
