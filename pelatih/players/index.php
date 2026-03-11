@@ -1,10 +1,10 @@
 <?php
 $page_title = 'Pemain Saya';
 $current_page = 'players';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 ?>
-<link rel="stylesheet" href="css/players/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players/players.css'); ?>">
+<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
 <?php
 $team_id = $_SESSION['team_id'] ?? 0;
 $filter_category = trim((string)($_GET['category'] ?? ''));
@@ -152,7 +152,7 @@ $build_page_url = function(int $page) use ($base_query_params): string {
     $params['page'] = $page;
     return '?' . http_build_query($params);
 };
-$players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' . http_build_query($base_query_params) : '');
+$players_export_url = 'export.php' . (!empty($base_query_params) ? '?' . http_build_query($base_query_params) : '');
 ?>
 
 <div class="players-container">
@@ -191,7 +191,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
                 </div>
                 <div class="players-filter-actions">
                     <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
-                    <a href="players.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
+                    <a href="./" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
                 </div>
             </form>
         </div>
@@ -204,7 +204,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
                 <div class="section-line"></div>
             </div>
             <div class="section-actions">
-                <a href="player_form.php" class="btn-premium btn-add">
+                <a href="form.php" class="btn-premium btn-add">
                     <i class="fas fa-plus"></i> Tambah Pemain
                 </a>
                 <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-premium btn-export">
@@ -238,7 +238,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
         <div class="empty-state">
             <i class="fas fa-users"></i>
             <p>Tidak ada pemain ditemukan.</p>
-            <a href="player_form.php" class="btn-premium btn-add">Tambah Pemain Pertama Anda</a>
+            <a href="form.php" class="btn-premium btn-add">Tambah Pemain Pertama Anda</a>
         </div>
     <?php else: ?>
         <div class="table-responsive">
@@ -332,7 +332,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
                             </div>
                         </td>
                         <td class="name-cell">
-                            <a href="player_view.php?id=<?php echo $player['id']; ?>" 
+                            <a href="view.php?id=<?php echo $player['id']; ?>" 
                                class="player-name-link"
                                title="Klik untuk lihat detail pemain"
                                aria-label="Lihat detail pemain <?php echo htmlspecialchars($player['name'] ?? ''); ?>">
@@ -393,19 +393,19 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
                             <div class="action-buttons">
                                 <?php $delete_disabled = !empty($player['has_related_data']); ?>
                                 <!-- TAMBAHKAN TOMBOL VIEW DISINI -->
-                                <a href="player_view.php?id=<?php echo $player['id']; ?>" 
+                                <a href="view.php?id=<?php echo $player['id']; ?>" 
                                    class="btn-primary btn-sm btn-view"
                                    title="Lihat Detail Pemain"
                                    aria-label="Lihat Detail Pemain">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="player_form.php?id=<?php echo $player['id']; ?>" 
+                                <a href="form.php?id=<?php echo $player['id']; ?>" 
                                    class="btn-primary btn-sm"
                                    title="Ubah Pemain"
                                    aria-label="Ubah Pemain">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="player_actions.php" method="POST" class="delete-form<?php echo $delete_disabled ? ' delete-form-disabled' : ''; ?>">
+                                <form action="actions.php" method="POST" class="delete-form<?php echo $delete_disabled ? ' delete-form-disabled' : ''; ?>">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?php echo $player['id']; ?>">
                                     <button type="submit" 
@@ -846,4 +846,4 @@ document.head.appendChild(style);
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

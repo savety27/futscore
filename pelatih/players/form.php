@@ -1,10 +1,10 @@
 <?php
-require_once 'config/database.php';
+require_once '../config/database.php';
 $page_title = 'Pemain Saya';
 $current_page = 'players';
-require_once 'includes/header.php';
+require_once '../includes/header.php';
 
-$event_helper_path = __DIR__ . '/../admin/includes/event_helpers.php';
+$event_helper_path = __DIR__ . '/../../admin/includes/event_helpers.php';
 if (file_exists($event_helper_path)) {
     require_once $event_helper_path;
 }
@@ -76,7 +76,7 @@ if (isset($_GET['id'])) {
             if (empty($player['status'])) $player['status'] = 'active';
         } else {
             echo "<div class='alert alert-danger'>Player not found or unauthorized.</div>";
-            require_once 'includes/footer.php';
+            require_once '../includes/footer.php';
             exit;
         }
     } catch (PDOException $e) {
@@ -97,7 +97,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
         <h1><i class="fas fa-user-<?php echo $action === 'add' ? 'plus' : 'edit'; ?>"></i> 
             <?php echo $action === 'add' ? 'Tambah' : 'Ubah'; ?> Pemain
         </h1>
-        <a href="players.php" class="btn btn-secondary">
+        <a href="./" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar
         </a>
     </div>
@@ -122,7 +122,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
     </div>
 
     <div class="form-container">
-        <form action="player_actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
+        <form action="actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
             <input type="hidden" name="action" value="<?php echo $action; ?>">
             <input type="hidden" name="id" value="<?php echo $player_id; ?>">
             <input type="hidden" id="hasExistingKk" value="<?php echo !empty($player['kk_image']) ? '1' : '0'; ?>">
@@ -450,7 +450,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                                 <strong>Foto :</strong>
                             </p>
                             <div class="file-item">
-                                <img src="../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
+                                <img src="../../images/players/<?php echo htmlspecialchars($player['photo'] ?? ''); ?>" 
                                      alt="Current Photo" style="width: 60px; height: 60px;">
                                 <div>
                                     <div><strong><?php echo htmlspecialchars($player['photo'] ?? ''); ?></strong></div>
@@ -585,7 +585,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 
             <!-- Form Actions -->
             <div class="form-actions">
-                <a href="players.php" class="btn btn-secondary">
+                <a href="./" class="btn btn-secondary">
                     <i class="fas fa-times"></i>
                     Batal
                 </a>
@@ -598,7 +598,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
     </div>
 </div>
 
-<link rel="stylesheet" href="css/players/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players/player_form.css'); ?>">
+<link rel="stylesheet" href="css/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/player_form.css'); ?>">
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -805,7 +805,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function submitIdentityVerification(formData) {
         formData.append('csrf_token', window.ADMIN_CSRF_TOKEN || '');
 
-        return fetch('../api/verify_identity.php', {
+        return fetch('../../api/verify_identity.php', {
             method: 'POST',
             body: formData,
             headers: {
@@ -1107,4 +1107,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

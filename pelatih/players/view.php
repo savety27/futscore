@@ -1,13 +1,13 @@
 <?php
 $page_title = 'Detail Player';
 $current_page = 'players';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 $team_id = $_SESSION['team_id'] ?? 0;
 
 if (!isset($_GET['id']) || empty($_GET['id']) || !$team_id) {
-    header('Location: players.php');
+    header('Location: ./');
     exit;
 }
 
@@ -25,7 +25,7 @@ try {
     $player = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$player) {
-        header('Location: players.php');
+        header('Location: ./');
         exit;
     }
 
@@ -52,18 +52,18 @@ try {
 
 } catch (Exception $e) {
     echo "<div class='card'><div class='alert alert-danger'>Error: " . htmlspecialchars($e->getMessage()) . "</div></div>";
-    require_once 'includes/footer.php';
+    require_once '../includes/footer.php';
     exit;
 }
 ?>
 
-<link rel="stylesheet" href="css/players/player_view.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players/player_view.css'); ?>">
+<link rel="stylesheet" href="css/player_view.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/player_view.css'); ?>">
 
 <div class="player-view">
     <div class="container">
             <!-- Header -->
             <div class="header">
-                <a href="players.php" class="back-btn">
+                <a href="./" class="back-btn">
                     <i class="fas fa-arrow-left"></i>
                     Kembali ke Players
                 </a>
@@ -72,7 +72,7 @@ try {
                     <span>Player Profile</span>
                 </div>
                 <div class="action-buttons">
-                    <a href="player_form.php?id=<?php echo $player['id']; ?>" class="btn btn-warning">
+                    <a href="form.php?id=<?php echo $player['id']; ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i>
                         Edit Player
                     </a>
@@ -80,7 +80,7 @@ try {
                         <i class="fas fa-camera"></i>
                         Print Player
                     </button>
-                    <a href="players.php" class="btn btn-primary">
+                    <a href="./" class="btn btn-primary">
                         <i class="fas fa-list"></i>
                         All Players
                     </a>
@@ -93,7 +93,7 @@ try {
                     <?php 
                     $photo_displayed = false;
                     if (!empty($player['photo'])): 
-                        $photo_path = 'images/players/' . $player['photo'];
+                        $photo_path = '../../images/players/' . $player['photo'];
                         $possible_paths = [
                             $photo_path,
                             '../' . $photo_path,
@@ -386,7 +386,7 @@ try {
                             <?php echo !empty($player['ktp_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['ktp_image'])): 
-                            $ktp_path = 'images/players/' . $player['ktp_image'];
+                            $ktp_path = '../../images/players/' . $player['ktp_image'];
                             $possible_paths = [
                                 $ktp_path,
                                 '../' . $ktp_path,
@@ -420,7 +420,7 @@ try {
                             <?php echo !empty($player['kk_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['kk_image'])): 
-                            $kk_path = 'images/players/' . $player['kk_image'];
+                            $kk_path = '../../images/players/' . $player['kk_image'];
                             $possible_paths = [
                                 $kk_path,
                                 '../' . $kk_path,
@@ -454,7 +454,7 @@ try {
                             <?php echo !empty($player['birth_cert_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['birth_cert_image'])): 
-                            $akte_path = 'images/players/' . $player['birth_cert_image'];
+                            $akte_path = '../../images/players/' . $player['birth_cert_image'];
                             $possible_paths = [
                                 $akte_path,
                                 '../' . $akte_path,
@@ -488,7 +488,7 @@ try {
                             <?php echo !empty($player['diploma_image']) ? 'Tersedia' : 'Tidak Tersedia'; ?>
                         </div>
                         <?php if (!empty($player['diploma_image'])): 
-                            $ijazah_path = 'images/players/' . $player['diploma_image'];
+                            $ijazah_path = '../../images/players/' . $player['diploma_image'];
                             $possible_paths = [
                                 $ijazah_path,
                                 '../' . $ijazah_path,
@@ -598,4 +598,4 @@ async function downloadPlayerScreenshot() {
 }
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>
