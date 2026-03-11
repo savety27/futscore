@@ -154,216 +154,379 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
 ?>
 
 <style>
-/* Background only: baby-blue like dashboard */
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.page-title-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    line-height: 1.15;
-}
-
-.page-title i {
-    color: var(--secondary);
-}
-
-.page-subtitle {
-    margin: 0;
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.summary-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: #eef5ff;
-    color: var(--primary);
-    border: 1px solid #dbeafe;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.section-header {
-    margin-bottom: 16px;
-}
-
-.filter-container {
-    margin-bottom: 20px;
-}
-
-.players-filter-card {
-    padding: 16px;
-    border: 1px solid #dbe5f3;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
-}
-
-.players-filter-form {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(210px, 0.72fr) auto;
-    gap: 12px;
-    align-items: center;
-}
-
-.players-search-group {
-    position: relative;
-}
-
-.players-search-group i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #7b8797;
-    font-size: 13px;
-}
-
-.players-search-input,
-.players-filter-select {
-    width: 100%;
-    height: 42px;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #1f2937;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.players-search-input {
-    padding: 0 12px 0 36px;
-}
-
-.players-filter-select {
-    padding: 0 12px;
-}
-
-.players-search-input:focus,
-.players-filter-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
-}
-
-.players-filter-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.players-filter-actions .btn-filter,
-.players-filter-actions .clear-filter-btn {
-    height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    font-size: 13px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.players-filter-actions .btn-filter {
-    background: linear-gradient(135deg, var(--primary), #1a4f9e);
-    color: #ffffff;
-}
-
-.players-filter-actions .btn-filter:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
-}
-
-.players-filter-actions .clear-filter-btn {
-    background: #ffffff;
-    border-color: #d3dcea;
-    color: #3b4a5f;
-}
-
-.players-filter-actions .clear-filter-btn:hover {
-    background: #f2f6fc;
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        padding: 18px;
-        border-radius: 16px;
+    :root {
+        --heritage-bg: #f8f7f4;
+        --heritage-card: #ffffff;
+        --heritage-border: #e5e1da;
+        --heritage-text: #1e1b4b;
+        --heritage-text-muted: #6b7280;
+        --heritage-accent: #064e3b;
+        --heritage-gold: #b45309;
+        --heritage-crimson: #991b1b;
+        --font-display: 'Bricolage Grotesque', sans-serif;
+        --font-body: 'Plus Jakarta Sans', sans-serif;
+        --soft-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
     }
 
-    .page-title {
-        font-size: 23px;
+    .topbar {
+        display: none !important;
+    }
+
+    .main {
+        background: var(--heritage-bg) !important;
+        background-image: radial-gradient(#e5e1da 0.5px, transparent 0.5px) !important;
+        background-size: 24px 24px !important;
+        color: var(--heritage-text);
+        font-family: var(--font-body);
+        padding: 40px 60px !important;
+        margin-left: 280px !important;
+        width: calc(100% - 280px);
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .players-container {
+        width: 100%;
+        max-width: 1300px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
+    /* Editorial Header */
+    .dashboard-hero {
+        margin-bottom: 48px;
+        border-bottom: 2px solid var(--heritage-text);
+        padding-bottom: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        flex-shrink: 1;
+    }
+
+    .hero-label {
+        color: var(--heritage-gold);
+        font-family: var(--font-display);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--heritage-text);
+        margin: 0 0 16px 0;
+        line-height: 1;
+        letter-spacing: -0.04em;
+    }
+
+    .hero-description {
+        color: var(--heritage-text-muted);
+        font-size: 1.15rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .summary-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        border-radius: 16px;
+        background: var(--heritage-text);
+        color: white;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1rem;
+        box-shadow: 0 10px 20px rgba(30, 27, 75, 0.15);
+    }
+
+    /* Filters Redesign */
+    .players-filter-card {
+        background: var(--heritage-card);
+        border: 1px solid var(--heritage-border);
+        border-radius: 28px;
+        padding: 32px;
+        margin-bottom: 40px;
+        box-shadow: var(--soft-shadow);
     }
 
     .players-filter-form {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 24px;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-group label {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--heritage-text-muted);
+    }
+
+    .players-search-group {
+        position: relative;
+    }
+
+    .players-search-group i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--heritage-text-muted);
+    }
+
+    .players-search-input,
+    .players-filter-select {
+        width: 100%;
+        height: 54px;
+        background: #fdfcfb;
+        border: 1px solid var(--heritage-border);
+        border-radius: 16px;
+        padding: 0 20px;
+        font-family: var(--font-body);
+        font-size: 1rem;
+        color: var(--heritage-text);
+        transition: all 0.3s ease;
+    }
+
+    .players-search-input {
+        padding-left: 48px;
+    }
+
+    .players-search-input:focus,
+    .players-filter-select:focus {
+        outline: none;
+        border-color: var(--heritage-gold);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.05);
     }
 
     .players-filter-actions {
-        width: 100%;
+        display: flex;
+        gap: 12px;
     }
 
-    .players-filter-actions .btn-filter,
-    .players-filter-actions .clear-filter-btn {
-        width: 100%;
-        justify-content: center;
+    .btn-filter, .clear-filter-btn {
+        height: 54px;
+        padding: 0 28px;
+        border-radius: 16px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        text-decoration: none;
     }
-}
+
+    .btn-filter {
+        background: var(--heritage-text);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-filter:hover {
+        background: var(--heritage-gold);
+        transform: translateY(-2px);
+    }
+
+    .clear-filter-btn {
+        background: white;
+        color: var(--heritage-text);
+        border: 1px solid var(--heritage-border);
+    }
+
+    .clear-filter-btn:hover {
+        background: #fdfcfb;
+        border-color: var(--heritage-text);
+    }
+
+    /* Sections and Layout */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        gap: 24px;
+    }
+
+    .section-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex: 1;
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--heritage-text);
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .section-line {
+        height: 2px;
+        background: var(--heritage-border);
+        flex: 1;
+    }
+
+    .section-actions {
+        display: flex;
+        gap: 16px;
+    }
+
+    .btn-premium {
+        padding: 12px 24px;
+        border-radius: 14px;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add {
+        background: var(--heritage-accent);
+        color: white;
+    }
+
+    .btn-add:hover {
+        background: #065f46;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(6, 78, 59, 0.15);
+    }
+
+    .btn-export {
+        background: white;
+        color: var(--heritage-text);
+        border: 1px solid var(--heritage-border);
+    }
+
+    .btn-export:hover {
+        border-color: var(--heritage-text);
+        background: #fdfcfb;
+    }
+
+    /* Animations */
+    @keyframes revealUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+        animation: revealUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        opacity: 0;
+    }
+
+    .d-1 { animation-delay: 0.1s; }
+    .d-2 { animation-delay: 0.2s; }
+    .d-3 { animation-delay: 0.3s; }
+
+    @media (max-width: 1024px) {
+        .players-filter-form { grid-template-columns: 1fr; }
+        .hero-title { font-size: 2.75rem; }
+    }
+
+    @media (max-width: 768px) {
+        .main { 
+            padding: 20px !important; 
+            margin-left: 0 !important;
+            width: 100%;
+        }
+        .dashboard-hero { flex-direction: column; align-items: flex-start; }
+        .hero-title { font-size: 2.25rem; }
+        .section-header { flex-direction: column; align-items: flex-start; }
+        .section-line { display: none; }
+        .section-actions { width: 100%; }
+        .btn-premium { flex: 1; justify-content: center; }
+    }
 </style>
 
-<div class="page-header">
-    <div class="page-title-wrap">
-        <h1 class="page-title"><i class="fas fa-users"></i> Direktori Pemain</h1>
-        <p class="page-subtitle">Kelola roster, filter kategori, dan pantau profil pemain aktif tim Anda.</p>
-    </div>
-    <div class="page-summary">
-        <span class="summary-pill"><i class="fas fa-id-badge"></i> <?php echo (int)$total_players; ?> Pemain</span>
-    </div>
-</div>
+<div class="players-container">
+    <!-- Editorial Header -->
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Manajemen Skuad</span>
+            <h1 class="hero-title">Direktori Pemain</h1>
+            <p class="hero-description">Kelola roster, filter kategori, dan pantau profil pemain aktif tim Anda secara komprehensif.</p>
+        </div>
+        <div class="hero-actions">
+            <span class="summary-pill"><i class="fas fa-id-badge"></i> <?php echo (int)$total_players; ?> Pemain Terdaftar</span>
+        </div>
+    </header>
 
-<div class="card">
-    <div class="section-header">
-        <h2 class="section-title">Daftar Pemain</h2>
-        <div class="section-actions">
-            <a href="player_form.php" class="btn-primary">
-                <i class="fas fa-plus"></i> Tambah Pemain
-            </a>
-            <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-export">
-                <i class="fas fa-download"></i> Export Excel
-            </a>
+    <div class="filter-container reveal d-1">
+        <div class="players-filter-card">
+            <form method="GET" class="players-filter-form">
+                <div class="filter-group">
+                    <label>Pencarian</label>
+                    <div class="players-search-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="q" class="players-search-input" placeholder="Cari nama atau nomor..." value="<?php echo htmlspecialchars($filter_search); ?>">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Kategori</label>
+                    <select name="category" class="players-filter-select">
+                        <option value="">Semua Kategori</option>
+                        <?php foreach ($category_options as $category): ?>
+                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $filter_category === $category ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($category); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="players-filter-actions">
+                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+                    <a href="players.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
+                </div>
+            </form>
         </div>
     </div>
+
+    <div class="reveal d-2">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">Daftar Pemain</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="section-actions">
+                <a href="player_form.php" class="btn-premium btn-add">
+                    <i class="fas fa-plus"></i> Tambah Pemain
+                </a>
+                <a href="<?php echo htmlspecialchars($players_export_url); ?>" class="btn-premium btn-export">
+                    <i class="fas fa-download"></i> Export Excel
+                </a>
+            </div>
+        </div>
 
 <?php if (isset($_GET['msg'])): ?>
         <div class="message-alert">
@@ -384,30 +547,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
         </div>
     <?php endif; ?>
 
-    <div class="filter-container">
-        <div class="players-filter-card">
-            <form method="GET" class="players-filter-form">
-                <div class="players-search-group">
-                    <i class="fas fa-search"></i>
-                    <input type="text" name="q" class="players-search-input" placeholder="Cari nama atau nomor pemain..." value="<?php echo htmlspecialchars($filter_search); ?>">
-                </div>
-                <div>
-                    <select name="category" class="players-filter-select">
-                        <option value="">Semua Kategori</option>
-                        <?php foreach ($category_options as $category): ?>
-                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $filter_category === $category ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="players-filter-actions">
-                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Terapkan</button>
-                    <a href="players.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <?php if (empty($players)): ?>
         <div class="empty-state">
@@ -674,7 +814,7 @@ $players_export_url = 'players_export.php' . (!empty($base_query_params) ? '?' .
         </div>
         <?php endif; ?>
     <?php endif; ?>
-</div>
+</div><!-- Close players-container -->
 
 <link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
 
