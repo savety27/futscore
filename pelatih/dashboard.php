@@ -13,6 +13,8 @@ $losses = 0;
 $draws = 0;
 $ongoing = 0;
 $next_match = null;
+$matches_needing_lineup = 0;
+$upcoming_matches_h7 = 0;
 
 if ($team_id) {
     try {
@@ -96,7 +98,31 @@ if ($team_id) {
             ORDER BY c.challenge_date ASC
         ");
         $stmt->execute([$team_id, $team_id]);
+        $stmt->execute([$team_id, $team_id]);
         $today_matches = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        // Get Matches Needing Lineup
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) FROM challenges c
+            WHERE c.status = 'accepted'
+              AND (c.challenger_id = ? OR c.opponent_id = ?)
+              AND c.challenge_date >= CURDATE()
+              AND NOT EXISTS (
+                  SELECT 1 FROM lineups l WHERE l.match_id = c.id AND l.team_id = ?
+              )
+        ");
+        $stmt->execute([$team_id, $team_id, $team_id]);
+        $matches_needing_lineup = $stmt->fetchColumn();
+
+        // Get Upcoming Matches H-7
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) FROM challenges 
+            WHERE status = 'accepted' 
+              AND (challenger_id = ? OR opponent_id = ?) 
+              AND challenge_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+        ");
+        $stmt->execute([$team_id, $team_id]);
+        $upcoming_matches_h7 = $stmt->fetchColumn();
 
     } catch (PDOException $e) {
         $player_count = 0;
@@ -197,13 +223,16 @@ if ($team_id) {
     }
 
     .team-identity-card {
+        grid-row: span 2;
         background: var(--heritage-text);
         color: white;
         border-radius: 32px;
         padding: 40px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
         position: relative;
         overflow: hidden;
     }
@@ -216,16 +245,17 @@ if ($team_id) {
     }
 
     .team-logo-main {
-        width: 80px;
-        height: 80px;
+        width: 150px;
+        height: 150px;
         background: white;
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 24px;
+        margin-bottom: 28px;
         box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        margin-left: 47.5px;
     }
 
     .team-logo-main img {
@@ -254,9 +284,33 @@ if ($team_id) {
         backdrop-filter: blur(4px);
     }
 
+    .team-side-column {
+        display: grid;
+        grid-template-rows: repeat(3, 1fr);
+
+        gap: 24px;
+    }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+    }
+
+    .quick-action-card {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .quick-action-card:hover {
+        color: inherit;
+    }
+
+
         .stats-main-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
         gap: 24px;
     }
 
@@ -574,6 +628,7 @@ if ($team_id) {
 
     @media (max-width: 1024px) {
         .stats-grid-wrapper { grid-template-columns: 1fr; }
+        .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .match-hero-content { 
             grid-template-columns: 1fr;
             gap: 40px;
@@ -601,8 +656,13 @@ if ($team_id) {
             gap: 16px;
         }
         
-        .team-identity-card { padding: 32px 24px; border-radius: 24px; }
+        .team-identity-card { padding: 40px 24px; border-radius: 24px; }
         .team-name-display { font-size: 1.75rem; }
+        .team-status-badge { padding: 4px 10px; font-size: 0.75rem; }
+        .team-status-badge span { width: 6px !important; height: 6px !important; }
+
+        .quick-actions-grid { grid-template-columns: 1fr; }
+        .quick-action-card { min-height: 96px; }
         
         .stats-main-grid { grid-template-columns: 1fr; gap: 16px; }
         .heritage-card { border-radius: 20px; padding: 20px; }
@@ -644,28 +704,49 @@ if ($team_id) {
     <!-- Core Stats Section -->
     <div class="stats-grid-wrapper">
         <!-- Team Identity Focus -->
-        <div class="team-identity-card reveal d-1">
-            <div class="top">
-                <div class="team-logo-main">
-                    <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team">
-                    <?php else: ?>
-                        <i class="fas fa-shield-alt" style="font-size: 2rem; color: #1e1b4b;"></i>
-                    <?php endif; ?>
-                </div>
-                <h2 class="team-name-display"><?php echo htmlspecialchars($team_name); ?></h2>
-                <div class="team-status-badge">
-                    <span style="width: 8px; height: 8px; background: <?php echo $is_active ? '#10b981' : '#ef4444'; ?>; border-radius: 50%;"></span>
-                    Status: <?php echo $is_active ? 'Aktif Kompetisi' : 'Nonaktif / Ditangguhkan'; ?>
+        <div class="team-side-column">
+            <div class="team-identity-card reveal d-1">
+                <div class="top">
+                    <div class="team-logo-main">
+                        <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
+                            <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="Team">
+                        <?php else: ?>
+                            <i class="fas fa-shield-alt" style="font-size: 2rem; color: #1e1b4b;"></i>
+                        <?php endif; ?>
+                    </div>
+                    <h2 class="team-name-display"><?php echo htmlspecialchars($team_name); ?></h2>
+                    <div class="team-status-badge">
+                        <span style="width: 8px; height: 8px; background: <?php echo $is_active ? '#10b981' : '#ef4444'; ?>; border-radius: 50%;"></span>
+                        Status: <?php echo $is_active ? 'Aktif Kompetisi' : 'Nonaktif / Ditangguhkan'; ?>
+                    </div>
                 </div>
             </div>
-            <div class="bottom" style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
-                <div style="font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Terakhir Diperbarui</div>
-                <div style="font-weight: 600;"><?php echo date('d F, Y • H:i'); ?></div>
+
+            <div class="quick-actions-grid reveal d-2">
+                <a class="heritage-card quick-action-card" href="schedule.php" aria-label="Butuh Match Lineup" style="border-bottom: 3px solid var(--heritage-text);">
+                    <div class="card-meta">
+                        <span class="card-label">Match Lineup</span>
+                        <i class="fas fa-users-cog card-icon" style="color: var(--heritage-text);"></i>
+                    </div>
+                    <div class="card-value" style="color: var(--heritage-text);" data-count="<?php echo (int)$matches_needing_lineup; ?>">
+                        <?php echo (int)$matches_needing_lineup; ?>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Butuh Lineup (Upcoming)</div>
+                </a>
+                <a class="heritage-card quick-action-card" href="schedule.php#daftar-jadwal-pertandingan" aria-label="Pertandingan Terdekat" style="border-bottom: 3px solid var(--heritage-text);">
+                    <div class="card-meta">
+                        <span class="card-label">Pertandingan</span>
+                        <i class="fas fa-calendar-day card-icon" style="color: var(--heritage-text);"></i>
+                    </div>
+                    <div class="card-value" style="color: var(--heritage-text);" data-count="<?php echo (int)$upcoming_matches_h7; ?>">
+                        <?php echo (int)$upcoming_matches_h7; ?>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Terdekat (H-7)</div>
+                </a>
             </div>
         </div>
 
-                <!-- Secondary Stats Grid -->
+        <!-- Secondary Stats Grid -->
         <div class="stats-main-grid">
             <!-- Row 1 -->
             <div class="heritage-card reveal d-2">

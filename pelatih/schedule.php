@@ -279,6 +279,10 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
     flex-wrap: wrap;
 }
 
+#daftar-jadwal-pertandingan {
+    scroll-margin-top: 120px;
+}
+
 .page-title-wrap {
     display: flex;
     flex-direction: column;
@@ -798,7 +802,7 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
     <?php endif; ?>
 </div>
 
-<div class="card">
+<div class="card" id="daftar-jadwal-pertandingan">
     <div class="section-header">
         <h2 class="section-title">Daftar Jadwal Pertandingan</h2>
         <div class="section-actions">

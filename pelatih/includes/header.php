@@ -15,6 +15,7 @@ $pelatih_name = $_SESSION['admin_fullname'] ?? 'Pelatih';
 $team_id = $_SESSION['team_id'] ?? 0;
 $path_prefix = (basename(dirname($_SERVER['SCRIPT_NAME'])) == 'players') ? '../' : '';
 $team_name = 'Alvetrix';
+$team_logo = '';
 
 if ($team_id && isset($conn)) {
     try {
@@ -41,6 +42,14 @@ if ($team_id && isset($conn)) {
     } catch (PDOException $e) {
         // Silent fail
     }
+}
+
+$root_path = dirname(__DIR__, 2);
+$team_logo_exists = false;
+$team_logo_path = '';
+if (!empty($team_logo)) {
+    $team_logo_path = $root_path . '/images/teams/' . $team_logo;
+    $team_logo_exists = is_file($team_logo_path);
 }
 ?>
 <!DOCTYPE html>
@@ -69,8 +78,8 @@ if ($team_id && isset($conn)) {
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
-                <div class="logo <?php echo (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)) ? 'has-team-logo' : ''; ?>">
-                    <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
+            <div class="logo <?php echo $team_logo_exists ? 'has-team-logo' : ''; ?>">
+                    <?php if ($team_logo_exists): ?>
                         <img src="<?php echo $path_prefix; ?>../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="<?php echo htmlspecialchars($team_name); ?>" class="sidebar-team-logo">
                     <?php endif; ?>
                 </div>
@@ -93,12 +102,6 @@ if ($team_id && isset($conn)) {
                 <a href="<?php echo $path_prefix; ?>players/" class="menu-link <?php echo $current_page === 'players' ? 'active' : ''; ?>">
                     <span class="menu-icon">👥</span>
                     <span class="menu-text">Pemain Saya</span>
-                </a>
-            </div>
-            <div class="menu-item">
-                <a href="<?php echo $path_prefix; ?>All_player.php" class="menu-link <?php echo $current_page === 'all_players' ? 'active' : ''; ?>">
-                    <span class="menu-icon">📋</span>
-                    <span class="menu-text">Semua Pemain</span>
                 </a>
             </div>
 
