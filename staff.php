@@ -2246,6 +2246,10 @@ $pageTitle = "Staff List";
                 </div>
             </div>
 
+    <script>
+        const SITE_URL = '<?php echo SITE_URL; ?>';
+    </script>
+    <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
 </body>
 
 </html>
