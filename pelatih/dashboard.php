@@ -11,8 +11,8 @@ $staff_count = 0;
 $wins = 0;
 $losses = 0;
 $draws = 0;
+$ongoing = 0;
 $next_match = null;
-$today_matches = [];
 
 if ($team_id) {
     try {
@@ -47,6 +47,18 @@ if ($team_id) {
         $stmt = $conn->prepare("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND (challenger_id = ? OR opponent_id = ?) AND winner_team_id IS NULL");
         $stmt->execute([$team_id, $team_id]);
         $draws = $stmt->fetchColumn();
+
+        // Get Ongoing Matches
+        // Definition: status 'accepted' and match time is today and near current time (let's say match lasts 2 hours)
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) FROM challenges 
+            WHERE status = 'accepted' 
+            AND (challenger_id = ? OR opponent_id = ?) 
+            AND challenge_date <= NOW() 
+            AND challenge_date >= DATE_SUB(NOW(), INTERVAL 2 HOUR)
+        ");
+        $stmt->execute([$team_id, $team_id]);
+        $ongoing = $stmt->fetchColumn();
 
         // Get Next Match Spotlight
         $stmt = $conn->prepare("
@@ -241,9 +253,9 @@ if ($team_id) {
         backdrop-filter: blur(4px);
     }
 
-    .stats-main-grid {
+        .stats-main-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 24px;
     }
 
@@ -251,7 +263,7 @@ if ($team_id) {
         background: var(--heritage-card);
         border: 1px solid var(--heritage-border);
         border-radius: 28px;
-        padding: 32px;
+        padding: 24px;
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         display: flex;
         flex-direction: column;
@@ -270,11 +282,11 @@ if ($team_id) {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
     }
 
     .card-icon {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         color: var(--heritage-text);
         opacity: 0.6;
     }
@@ -282,7 +294,7 @@ if ($team_id) {
     .card-label {
         font-family: var(--font-display);
         font-weight: 700;
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--heritage-text-muted);
@@ -290,7 +302,7 @@ if ($team_id) {
 
     .card-value {
         font-family: var(--font-display);
-        font-size: 3rem;
+        font-size: 2.25rem;
         font-weight: 800;
         line-height: 1;
         color: var(--heritage-text);
@@ -575,7 +587,7 @@ if ($team_id) {
     <!-- Editorial Header -->
     <header class="dashboard-hero reveal">
         <div class="hero-content">
-            <span class="hero-label">Musim 2024/2025</span>
+            <span class="hero-label">Musim 2025/2026</span>
             <h1 class="hero-title">Command Center</h1>
             <p class="hero-description">Arsitektur strategi dan pemantauan performa atletik secara real-time untuk keunggulan kompetitif tim.</p>
         </div>
@@ -608,15 +620,16 @@ if ($team_id) {
             </div>
         </div>
 
-        <!-- Secondary Stats Grid -->
+                <!-- Secondary Stats Grid -->
         <div class="stats-main-grid">
+            <!-- Row 1 -->
             <div class="heritage-card reveal d-2">
                 <div class="card-meta">
                     <span class="card-label">Skuad</span>
                     <i class="fas fa-users card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo (int)$player_count; ?>"><?php echo (int)$player_count; ?></div>
-                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Pemain Terdaftar</div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Pemain Terdaftar</div>
             </div>
             <div class="heritage-card reveal d-3">
                 <div class="card-meta">
@@ -624,49 +637,66 @@ if ($team_id) {
                     <i class="fas fa-briefcase card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo (int)$staff_count; ?>"><?php echo (int)$staff_count; ?></div>
-                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Ofisial Terverifikasi</div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Ofisial Terverifikasi</div>
             </div>
-            <div class="heritage-card reveal d-4" style="background: #fdfcfb; border-left: 4px solid var(--heritage-gold);">
-                <div class="card-meta">
-                    <span class="card-label">Win Rate</span>
-                    <i class="fas fa-percentage card-icon" style="color: var(--heritage-gold);"></i>
-                </div>
-                <?php 
-                    $total_games = $wins + $losses + $draws;
-                    $win_rate = $total_games > 0 ? round(($wins / $total_games) * 100) : 0;
-                ?>
-                <div class="card-value"><?php echo $win_rate; ?>%</div>
-                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Efektivitas Kemenangan</div>
-            </div>
-            <div class="heritage-card reveal d-5">
+            <div class="heritage-card reveal d-4">
                 <div class="card-meta">
                     <span class="card-label">Matchday</span>
                     <i class="fas fa-calendar-check card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo count($today_matches); ?>"><?php echo count($today_matches); ?></div>
-                <div style="font-size: 0.9rem; color: var(--heritage-text-muted); margin-top: 8px;">Pertandingan Hari Ini</div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Pertandingan Hari Ini</div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="heritage-card reveal d-5" style="border-bottom: 3px solid var(--heritage-accent);">
+                <div class="card-meta">
+                    <span class="card-label">Menang</span>
+                    <i class="fas fa-trophy card-icon" style="color: var(--heritage-accent);"></i>
+                </div>
+                <div class="card-value" style="color: var(--heritage-accent);" data-count="<?php echo (int)$wins; ?>"><?php echo (int)$wins; ?></div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Total Kemenangan</div>
+            </div>
+            <div class="heritage-card reveal d-2">
+                <div class="card-meta">
+                    <span class="card-label">Seri</span>
+                    <i class="fas fa-handshake card-icon"></i>
+                </div>
+                <div class="card-value" data-count="<?php echo (int)$draws; ?>"><?php echo (int)$draws; ?></div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Hasil Imbang</div>
+            </div>
+            <div class="heritage-card reveal d-3" style="border-bottom: 3px solid var(--heritage-crimson);">
+                <div class="card-meta">
+                    <span class="card-label">Kalah</span>
+                    <i class="fas fa-times-circle card-icon" style="color: var(--heritage-crimson);"></i>
+                </div>
+                <div class="card-value" style="color: var(--heritage-crimson);" data-count="<?php echo (int)$losses; ?>"><?php echo (int)$losses; ?></div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Total Kekalahan</div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="heritage-card reveal d-4" style="border-bottom: 3px solid var(--heritage-gold);">
+                <div class="card-meta">
+                    <span class="card-label">Ongoing</span>
+                    <i class="fas fa-clock card-icon" style="color: var(--heritage-gold);"></i>
+                </div>
+                <div class="card-value" style="color: var(--heritage-gold);" data-count="<?php echo (int)$ongoing; ?>"><?php echo (int)$ongoing; ?></div>
+                <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Sedang Berlangsung</div>
+            </div>
+            <div class="heritage-card reveal d-5" style="grid-column: span 2; background: var(--heritage-text); color: white;">
+                <div class="card-meta">
+                    <span class="card-label" style="color: rgba(255,255,255,0.6);">Win Rate</span>
+                    <i class="fas fa-chart-line card-icon" style="color: white; opacity: 1;"></i>
+                </div>
+                <?php 
+                    $total_games = $wins + $losses + $draws;
+                    $win_rate = $total_games > 0 ? round(($wins / $total_games) * 100) : 0;
+                ?>
+                <div class="card-value" style="color: white;"><?php echo $win_rate; ?>%</div>
+                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Efektivitas Strategi Tim</div>
             </div>
         </div>
     </div>
-
-    <!-- Win/Loss/Draw Record Bar -->
-    <div class="record-row reveal" style="animation-delay: 0.6s;">
-        <div class="record-item">
-            <div class="record-number" style="color: var(--heritage-accent);"><?php echo (int)$wins; ?></div>
-            <div class="record-label">Kemenangan</div>
-        </div>
-        <div class="record-divider"></div>
-        <div class="record-item">
-            <div class="record-number" style="color: var(--heritage-text); opacity: 0.4;"><?php echo (int)$draws; ?></div>
-            <div class="record-label">Hasil Seri</div>
-        </div>
-        <div class="record-divider"></div>
-        <div class="record-item">
-            <div class="record-number" style="color: var(--heritage-crimson);"><?php echo (int)$losses; ?></div>
-            <div class="record-label">Kekalahan</div>
-        </div>
-    </div>
-
     <!-- Match Spotlight -->
     <section class="reveal" style="animation-delay: 0.7s;">
         <div class="section-header">
