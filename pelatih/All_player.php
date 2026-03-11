@@ -716,6 +716,112 @@ require_once __DIR__ . '/includes/header.php';
         border-color: #0088cc;
         color: #fff;
     }
+
+    /* --- Pelatih Sidebar Override (match dashboard look) --- */
+    body .sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
+        color: #ffffff;
+        padding: 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 100;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+        transition: var(--transition);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        display: block;
+        transform: none;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body .sidebar-header {
+        padding-top: 20px;
+        padding-right: 10px;
+        padding-bottom: 10px;
+        text-align: center;
+        background: transparent;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 10px;
+    }
+
+    body .menu {
+        padding: 25px 15px;
+    }
+
+    body .menu-item {
+        margin-bottom: 8px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    body .menu-link {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        color: rgba(255, 255, 255, 0.75);
+        text-decoration: none;
+        transition: var(--transition);
+        position: relative;
+        border-radius: 12px;
+        margin: 4px 0;
+    }
+
+    body .menu-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        transform: translateX(5px);
+    }
+
+    body .menu-link.active {
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%);
+        color: var(--secondary);
+        font-weight: 700;
+        border-right: 4px solid var(--secondary);
+        border-radius: 12px 0 0 12px;
+    }
+
+    body .menu-icon {
+        font-size: 18px;
+        margin-right: 15px;
+        width: 24px;
+        text-align: center;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    body .menu-text {
+        flex: 1;
+        font-size: 15px;
+        letter-spacing: 0.3px;
+    }
+
+    @media screen and (max-width: 1024px) {
+        body .sidebar {
+            width: 240px;
+        }
+
+        body .main {
+            margin-left: 240px;
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        body .sidebar {
+            transform: translateX(-100%);
+            box-shadow: none;
+            width: 280px;
+        }
+
+        body .sidebar.active {
+            transform: translateX(0);
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.3);
+        }
+
+        body .main {
+            margin-left: 0;
+            width: 100%;
+        }
+    }
     .player-share-btn.twitter {
         background: #0f172a;
         border-color: #0f172a;
