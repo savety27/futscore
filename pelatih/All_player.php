@@ -421,199 +421,6 @@ require_once __DIR__ . '/includes/header.php';
         background: #bfdbfe;
         transform: translateY(-1px);
     }
-    .history-modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.55);
-        z-index: 10000;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    .history-modal.open {
-        display: flex;
-    }
-    .history-modal-content {
-        width: min(1120px, 100%);
-        max-height: calc(100vh - 40px);
-        overflow: hidden;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 20px 50px rgba(2, 6, 23, 0.25);
-        display: flex;
-        flex-direction: column;
-    }
-    .history-modal-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-    }
-    .history-modal-header h3 {
-        margin: 0;
-        font-size: 18px;
-        color: #0f172a;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .history-modal-meta {
-        margin-top: 4px;
-        color: #64748b;
-        font-size: 13px;
-    }
-    .history-close-btn {
-        width: 34px;
-        height: 34px;
-        border: 0;
-        border-radius: 10px;
-        background: #f1f5f9;
-        color: #334155;
-        cursor: pointer;
-    }
-    .history-modal-body {
-        padding: 16px 20px 20px;
-        overflow: auto;
-    }
-    .history-loading,
-    .history-empty {
-        padding: 30px 12px;
-        text-align: center;
-        color: #64748b;
-    }
-    .history-loading i,
-    .history-empty i {
-        margin-right: 8px;
-    }
-    .history-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 1120px;
-    }
-    .history-table th,
-    .history-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #e2e8f0;
-        text-align: left;
-        font-size: 13px;
-        color: #0f172a;
-        vertical-align: top;
-    }
-    .history-table td.col-no,
-    .history-table td.col-event,
-    .history-table td.col-kategori,
-    .history-table td.col-match,
-    .history-table td.col-tanggal,
-    .history-table td.col-babak,
-    .history-table td.col-posisi,
-    .history-table td.col-peran,
-    .history-table td.col-hasil {
-        white-space: nowrap;
-    }
-    .history-table td.col-pertandingan {
-        min-width: 260px;
-        white-space: normal;
-    }
-    .history-table td.col-match {
-        min-width: 120px;
-    }
-    .history-table td.col-event,
-    .history-table td.col-kategori {
-        min-width: 140px;
-    }
-    .history-table td.col-tanggal {
-        min-width: 130px;
-    }
-    .history-table td.col-hasil {
-        min-width: 84px;
-    }
-    .history-table th {
-        background: #f8fafc;
-        font-size: 12px;
-        color: #475569;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        white-space: nowrap;
-    }
-    .h-event-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        border: 1px solid #93c5fd;
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-    .event-badge {
-        display: inline-flex !important;
-        align-items: center;
-        border-radius: 999px !important;
-        white-space: nowrap !important;
-        max-width: 100% !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        word-break: keep-all !important;
-        overflow-wrap: normal !important;
-    }
-    .h-starter-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 700;
-    }
-    .event-badge.multiline {
-        display: inline-block !important;
-        white-space: normal !important;
-        text-align: center !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
-        max-width: 200px !important;
-        line-height: 1.15 !important;
-    }
-    .h-starter-yes {
-        background: #fef9c3;
-        color: #854d0e;
-    }
-    .h-starter-sub {
-        background: #e2e8f0;
-        color: #334155;
-    }
-    .h-half-pill {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #f1f5f9;
-        color: #334155;
-        font-size: 11px;
-        font-weight: 700;
-    }
-    .h-result-win {
-        color: #166534;
-        font-weight: 700;
-    }
-    .h-result-lose {
-        color: #991b1b;
-        font-weight: 700;
-    }
-    .h-result-draw {
-        color: #1e3a8a;
-        font-weight: 700;
-    }
-    .h-result-na {
-        color: #64748b;
-        font-weight: 700;
-    }
-    .history-table-wrap {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
     .player-detail-actions {
         flex-direction: column;
         flex-wrap: nowrap;
@@ -855,47 +662,6 @@ require_once __DIR__ . '/includes/header.php';
             font-size: 13px;
         }
         .mobile-profile-cell {
-            display: block !important;
-            order: 99;
-            padding: 10px 12px !important;
-            border-bottom: none !important;
-            background: #f8fbff;
-        }
-        .player-table-new td.mobile-profile-cell::before {
-            content: none !important;
-            display: none !important;
-        }
-        .mobile-profile-btn {
-            min-height: 38px;
-            font-size: 12px;
-            letter-spacing: 0.2px;
-        }
-        .history-modal {
-            padding: 10px;
-        }
-        .history-modal-content {
-            max-height: calc(100vh - 20px);
-            border-radius: 12px;
-        }
-        .history-modal-header {
-            padding: 12px 14px;
-        }
-        .history-modal-header h3 {
-            font-size: 16px;
-        }
-        .history-modal-meta {
-            font-size: 12px;
-            line-height: 1.35;
-        }
-        .history-modal-body {
-            padding: 10px 12px 14px;
-        }
-        .history-table th,
-        .history-table td {
-            padding: 8px 9px;
-            font-size: 12px;
-        }
-        .player-detail-actions {
             width: 100%;
         }
         .player-share-section {
@@ -1457,9 +1223,9 @@ function maskNIK($nik) {
                                 </td>
                                 <td class="col-center" data-label="Match">
                                     <?php $match_count = $player_match_counts[(int) $p['id']] ?? 0; ?>
-                                    <span class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>">
+                                    <a href="All_player.php?id=<?php echo $p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#playerHistoryPanel" class="match-count-badge <?php echo $match_count === 0 ? 'zero' : ''; ?>" style="text-decoration: none;">
                                         <i class="fas fa-futbol"></i> <?php echo $match_count; ?>
-                                    </span>
+                                    </a>
                                 </td>
                                 <td class="col-center" data-label="Event">
                                     <?php
@@ -1471,9 +1237,9 @@ function maskNIK($nik) {
                                     }
                                     ?>
                                     <span class="event-count-badge-wrap">
-                                        <span class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>">
+                                        <a href="All_player.php?id=<?php echo $p['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>#playerHistoryPanel" class="event-count-badge <?php echo $event_count === 0 ? 'zero' : ''; ?>" style="text-decoration: none;">
                                             <i class="fas fa-calendar-check"></i> <?php echo $event_count; ?>
-                                        </span>
+                                        </a>
                                         <?php if ($event_count > 0): ?>
                                         <div class="event-popover"><?php echo htmlspecialchars(implode("\n", $event_full_info)); ?></div>
                                         <?php endif; ?>
@@ -1545,4 +1311,6 @@ function maskNIK($nik) {
             </div>
         </div>
 
+<script>window.FUTSCORE_SITE_URL = '<?php echo SITE_URL; ?>';</script>
+<script src="<?php echo SITE_URL; ?>/assets/js/player-history.js?v=<?php echo getAssetVersion('/assets/js/player-history.js'); ?>"></script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
