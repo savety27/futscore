@@ -95,12 +95,6 @@ if ($team_id && isset($conn)) {
                     <span class="menu-text">Pemain Saya</span>
                 </a>
             </div>
-            <div class="menu-item">
-                <a href="<?php echo $path_prefix; ?>All_player.php" class="menu-link <?php echo $current_page === 'all_players' ? 'active' : ''; ?>">
-                    <span class="menu-icon">📋</span>
-                    <span class="menu-text">Semua Pemain</span>
-                </a>
-            </div>
 
             <div class="menu-item">
                 <a href="<?php echo $path_prefix; ?>team.php" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">

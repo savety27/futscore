@@ -50,12 +50,10 @@ function logError($message) {
 }
 
 // Function untuk debug
-if (!function_exists('debug')) {
-    function debug($data) {
-        echo "<pre>";
-        print_r($data);
-        echo "</pre>";
-    }
+function debug($data) {
+    echo "<pre>";
+    print_r($data);
+    echo "</pre>";
 }
 
 // Return connection object
