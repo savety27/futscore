@@ -4,7 +4,7 @@ $current_page = 'players';
 require_once 'config/database.php';
 require_once 'includes/header.php';
 ?>
-<link rel="stylesheet" href="css/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players.css'); ?>">
+<link rel="stylesheet" href="css/players/players.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/players/players.css'); ?>">
 <?php
 $team_id = $_SESSION['team_id'] ?? 0;
 $filter_category = trim((string)($_GET['category'] ?? ''));
