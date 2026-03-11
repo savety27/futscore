@@ -163,7 +163,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="required-field">Kategori</span>
                             <span class="note">Wajib</span>
                         </label>
-                        <select name="sport_type" class="form-control" required>
+                        <select name="sport_type" class="form-control custom-select" required>
                             <option value="">Pilih Kategori</option>
                             <?php foreach ($event_options as $sport): ?>
                                 <?php $selected = ($player['sport_type'] == $sport) ? 'selected' : ''; ?>
@@ -179,7 +179,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span class="required-field">Posisi</span>
                             <span class="note">Wajib</span>
                         </label>
-                        <select name="position" class="form-control" required>
+                        <select name="position" class="form-control custom-select" required>
                             <option value="">Pilih Posisi</option>
                             <?php 
                             $positions = [
@@ -255,7 +255,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
                             <span>Kaki Dominan</span>
                             <span class="note">Opsional</span>
                         </label>
-                        <select name="dominant_foot" class="form-control">
+                        <select name="dominant_foot" class="form-control custom-select">
                             <option value="">Pilih Kaki Dominan</option>
                             <option value="kanan" <?php echo ($player['dominant_foot'] == 'kanan') ? 'selected' : ''; ?>>Kanan</option>
                             <option value="kiri" <?php echo ($player['dominant_foot'] == 'kiri') ? 'selected' : ''; ?>>Kiri</option>
@@ -575,6 +575,72 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ============================================================
+    // CUSTOM SELECT DROPDOWN
+    // ============================================================
+    function initCustomSelects() {
+        const customSelects = document.querySelectorAll('.custom-select');
+        
+        customSelects.forEach(select => {
+            // Hide native select
+            select.style.display = 'none';
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+            
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
+            const selectedOption = select.options[select.selectedIndex];
+            trigger.textContent = selectedOption ? selectedOption.textContent : 'Pilih...';
+            wrapper.appendChild(trigger);
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'custom-options';
+            wrapper.appendChild(optionsContainer);
+            
+            Array.from(select.options).forEach(option => {
+                const opt = document.createElement('div');
+                opt.className = 'custom-option' + (option.selected ? ' selected' : '');
+                opt.textContent = option.textContent;
+                opt.dataset.value = option.value;
+                
+                opt.addEventListener('click', () => {
+                    select.value = option.value;
+                    trigger.textContent = option.textContent;
+                    
+                    // Update classes
+                    optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    
+                    wrapper.classList.remove('open');
+                    
+                    // Trigger native change event
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                
+                optionsContainer.appendChild(opt);
+            });
+            
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close other open selects
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) w.classList.remove('open');
+                });
+                wrapper.classList.toggle('open');
+            });
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+        });
+    }
+
+    initCustomSelects();
+
     // ============================================================
     // FILE UPLOAD FUNCTIONALITY
     // ============================================================

@@ -136,6 +136,114 @@
     box-shadow: 0 0 0 4px rgba(30, 27, 75, 0.05);
 }
 
+/* Custom Select Styling */
+.custom-select-wrapper {
+    position: relative;
+    user-select: none;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--heritage-text);
+    background: #ffffff;
+    border: 1.5px solid var(--heritage-border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--heritage-text);
+    background: var(--heritage-bg);
+}
+
+.custom-select-wrapper.open .custom-select-trigger {
+    border-color: var(--heritage-text);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: 0 4px 20px rgba(30, 27, 75, 0.08);
+}
+
+.custom-select-trigger::after {
+    content: "\f078";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 0.8rem;
+    color: var(--heritage-gold);
+    transition: transform 0.3s ease;
+}
+
+.custom-select-wrapper.open .custom-select-trigger::after {
+    transform: rotate(180deg);
+}
+
+.custom-options {
+    position: absolute;
+    display: block;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border: 1.5px solid var(--heritage-text);
+    border-top: none;
+    background: #fff;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-10px);
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+    z-index: 100;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(30, 27, 75, 0.1);
+}
+
+.custom-select-wrapper.open .custom-options {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+    transform: translateY(0);
+}
+
+.custom-option {
+    position: relative;
+    display: block;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--heritage-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-option:hover {
+    background: var(--heritage-bg);
+    color: var(--heritage-gold);
+    padding-left: 24px;
+}
+
+.custom-option.selected {
+    background: #f1f0ff;
+    color: var(--heritage-text);
+    font-weight: 700;
+}
+
+.custom-option.selected::before {
+    content: "•";
+    color: var(--heritage-gold);
+    margin-right: 8px;
+}
+
 .date-input {
     display: grid;
     grid-template-columns: 1fr 1fr;
