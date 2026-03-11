@@ -414,6 +414,13 @@ include 'includes/sidebar.php';
                             </div>
                             <?php endif; ?>
 
+                            <div class="team-meta-item">
+                                <div class="team-meta-label">Warna Kostum</div>
+                                <div class="team-meta-value">
+                                    <?php echo !empty($team['uniform_color']) ? htmlspecialchars($team['uniform_color']) : '-'; ?>
+                                </div>
+                            </div>
+
                             <?php if (!empty($team['events_array'])): ?>
                             <div class="team-meta-item">
                                 <div class="team-meta-label event-meta-label">Cabor / Event</div>
