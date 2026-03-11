@@ -20,9 +20,37 @@ if ($teamId > 0) {
     
     // SMART MATCH: Get event participation (Official & Team History)
     $conn = $db->getConnection();
+    $hasChallengeEventId = $conn->query("SHOW COLUMNS FROM `challenges` LIKE 'event_id'")->fetch_assoc();
     
     // Optimized Query: Combines all sources and matches with official events in one go
     // This structure preserves multiple IDs for the same name while deduplicating identical events
+    // Note: Avoid using challenges.sport_type as it can be a league/age label, not an event.
+    $participationSources = [];
+    $bindTypes = '';
+    $bindParams = [];
+    
+    $participationSources[] = "
+        SELECT e.name as source_name, e.id as source_id
+        FROM events e
+        JOIN event_team_values etv ON e.id = etv.event_id
+        WHERE etv.team_id = ?
+    ";
+    $bindTypes .= 'i';
+    $bindParams[] = $teamId;
+    
+    if ($hasChallengeEventId) {
+        $participationSources[] = "
+            SELECT e.name as source_name, c.event_id as source_id
+            FROM challenges c
+            JOIN events e ON e.id = c.event_id
+            WHERE (c.challenger_id = ? OR c.opponent_id = ?)
+              AND c.event_id IS NOT NULL
+        ";
+        $bindTypes .= 'ii';
+        $bindParams[] = $teamId;
+        $bindParams[] = $teamId;
+    }
+    
     $participationSql = "
         SELECT 
             COALESCE(e.name, matched.event_name) as event_name,
@@ -42,33 +70,22 @@ if ($teamId > 0) {
                     s.source_name,
                     COALESCE(s.source_id, (SELECT id FROM events WHERE s.source_name LIKE CONCAT('%', name, '%') OR name LIKE CONCAT('%', s.source_name, '%') ORDER BY start_date DESC, id DESC LIMIT 1)) as best_id
                 FROM (
-                    SELECT e.name as source_name, e.id as source_id 
-                    FROM events e 
-                    JOIN event_team_values etv ON e.id = etv.event_id 
-                    WHERE etv.team_id = ?
-                    
-                    UNION
-                    
-                    SELECT sport_type as source_name, event_id as source_id 
-                    FROM challenges 
-                    WHERE (challenger_id = ? OR opponent_id = ?) 
-                      AND sport_type IS NOT NULL AND sport_type <> ''
-                      
-                    UNION
-                    
-                    SELECT event_name as source_name, NULL as source_id 
-                    FROM team_events 
-                    WHERE team_id = ?
+                    " . implode(" UNION ", $participationSources) . "
                 ) s
             ) s
             GROUP BY s.best_id, (CASE WHEN s.best_id IS NULL THEN s.source_name ELSE '' END)
         ) matched
         LEFT JOIN events e ON matched.best_id = e.id
+        WHERE e.id IS NOT NULL
         ORDER BY is_official DESC, e.start_date DESC
     ";
     
     $pStmt = $conn->prepare($participationSql);
-    $pStmt->bind_param("iiii", $teamId, $teamId, $teamId, $teamId);
+    $bindRefs = [$bindTypes];
+    foreach ($bindParams as $k => $v) {
+        $bindRefs[] = &$bindParams[$k];
+    }
+    call_user_func_array([$pStmt, 'bind_param'], $bindRefs);
     $pStmt->execute();
     $pResult = $pStmt->get_result();
     
@@ -420,7 +437,6 @@ include 'includes/sidebar.php';
                     </div>
                 </div>
 
-                <?php if (!empty($participations)): ?>
                 <!-- EVENT PARTICIPATION SECTION -->
                 <div class="container section-container participation-section">
                     <div class="section-header">
@@ -428,64 +444,87 @@ include 'includes/sidebar.php';
                     </div>
                     
                     <div class="participation-table-container">
-                        <?php foreach ($participations as $p): ?>
-                            <?php 
-                                $isLink = !empty($p['event_id']);
-                                $rowTag = $isLink ? 'a' : 'div';
-                                $rowAttr = $isLink ? 'href="events.php?id=' . (int)$p['event_id'] . '"' : '';
-                            ?>
-                            <<?php echo $rowTag; ?> <?php echo $rowAttr; ?> class="participation-row <?php echo $isLink ? 'is-link' : ''; ?>">
+                        <?php if (empty($participations)): ?>
+                            <div class="participation-row">
                                 <div class="participation-event-info">
-                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars(!empty($p['image']) ? $p['image'] : 'default-event.png'); ?>" 
-                                         alt="<?php echo htmlspecialchars($p['event_name']); ?>" 
-                                         class="participation-event-logo"
-                                         onerror="this.src='<?php echo SITE_URL; ?>/images/alvetrix.png'">
+                                    <div class="participation-event-logo" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;color:#94a3b8;">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
                                     <div class="participation-event-details">
-                                        <span class="participation-event-name"><?php echo htmlspecialchars($p['event_name']); ?></span>
+                                        <span class="participation-event-name">Belum ada partisipasi event</span>
                                         <div class="participation-event-category">
-                                            <span><?php echo htmlspecialchars($p['category']); ?></span>
-                                            <?php if($p['is_official']): ?>
-                                                <span class="status-pill-small status-official">Official</span>
-                                            <?php else: ?>
-                                                <span class="status-pill-small status-history">History</span>
-                                            <?php endif; ?>
+                                            <span>Event resmi akan muncul di sini setelah tim ikut serta.</span>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="participation-meta">
-                                    <div class="participation-meta-item">
-                                        <span class="participation-meta-label">PERIODE</span>
-                                        <span class="participation-meta-value">
-                                            <?php 
-                                            if (!empty($p['start_date'])) {
-                                                $start = strtotime($p['start_date']);
-                                                $end = !empty($p['end_date']) ? strtotime($p['end_date']) : null;
-                                                echo date('d M', $start) . ($end ? ' - ' . date('d M Y', $end) : date(' Y', $start));
-                                            } else {
-                                                echo 'Records Found';
-                                            }
-                                            ?>
-                                        </span>
-                                    </div>
-                                    <div class="participation-meta-item">
-                                        <span class="participation-meta-label">LOKASI</span>
-                                        <span class="participation-meta-value"><?php echo htmlspecialchars($p['location'] ?? '-'); ?></span>
-                                    </div>
-                                </div>
-                                
                                 <div class="participation-arrow">
-                                    <?php if($isLink): ?>
-                                        <i class="fas fa-chevron-right"></i>
-                                    <?php else: ?>
-                                        <i class="fas fa-info-circle" style="opacity: 0.3;"></i>
-                                    <?php endif; ?>
+                                    <i class="fas fa-info-circle" style="opacity: 0.3;"></i>
                                 </div>
-                            </<?php echo $rowTag; ?>>
-                        <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($participations as $p): ?>
+                                <?php 
+                                    $isLink = !empty($p['event_id']);
+                                    $rowTag = $isLink ? 'a' : 'div';
+                                    $rowAttr = $isLink ? 'href="events.php?id=' . (int)$p['event_id'] . '"' : '';
+                                ?>
+                                <<?php echo $rowTag; ?> <?php echo $rowAttr; ?> class="participation-row <?php echo $isLink ? 'is-link' : ''; ?>">
+                                    <div class="participation-event-info">
+                                    <img src="<?php echo SITE_URL; ?>/images/events/<?php echo htmlspecialchars(!empty($p['image']) ? $p['image'] : 'default-event.png'); ?>" 
+                                         alt="<?php echo htmlspecialchars($p['event_name']); ?>" 
+                                         class="participation-event-logo"
+                                         style="opacity:0;"
+                                         onload="this.style.opacity=1; var fb=this.parentNode.querySelector('.event-fallback-icon'); if(fb){fb.style.display='none';}"
+                                         onerror="this.style.display='none'; var fb=this.parentNode.querySelector('.event-fallback-icon'); if(fb){fb.style.display='flex';}">
+                                    <span class="participation-event-logo event-fallback-icon" style="display:none; align-items:center; justify-content:center; color:#94a3b8;" aria-hidden="true">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </span>
+                                        <div class="participation-event-details">
+                                            <span class="participation-event-name"><?php echo htmlspecialchars($p['event_name']); ?></span>
+                                            <div class="participation-event-category">
+                                                <span><?php echo htmlspecialchars($p['category']); ?></span>
+                                                <?php if($p['is_official']): ?>
+                                                    <span class="status-pill-small status-official">Official</span>
+                                                <?php else: ?>
+                                                    <span class="status-pill-small status-history">History</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="participation-meta">
+                                        <div class="participation-meta-item">
+                                            <span class="participation-meta-label">PERIODE</span>
+                                            <span class="participation-meta-value">
+                                                <?php 
+                                                if (!empty($p['start_date'])) {
+                                                    $start = strtotime($p['start_date']);
+                                                    $end = !empty($p['end_date']) ? strtotime($p['end_date']) : null;
+                                                    echo date('d M', $start) . ($end ? ' - ' . date('d M Y', $end) : date(' Y', $start));
+                                                } else {
+                                                    echo 'Records Found';
+                                                }
+                                                ?>
+                                            </span>
+                                        </div>
+                                        <div class="participation-meta-item">
+                                            <span class="participation-meta-label">LOKASI</span>
+                                            <span class="participation-meta-value"><?php echo htmlspecialchars($p['location'] ?? '-'); ?></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="participation-arrow">
+                                        <?php if($isLink): ?>
+                                            <i class="fas fa-chevron-right"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-info-circle" style="opacity: 0.3;"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                </<?php echo $rowTag; ?>>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <?php endif; ?>
                 
                 <div class="container section-container team-roster-section">
                     <div class="section-header">
@@ -545,7 +584,7 @@ include 'includes/sidebar.php';
                 // Function to get correct photo URL for staff
                 function getStaffPhotoUrl(photo) {
                     if (!photo) {
-                        return '<?php echo SITE_URL; ?>/images/staff/default-staff.jpg';
+                        return '';
                     }
                     
                     // Check if photo is already a full path or contains uploads/
@@ -563,7 +602,7 @@ include 'includes/sidebar.php';
                 // Function to get correct photo URL for players
                 function getPlayerPhotoUrl(photo) {
                     if (!photo) {
-                        return '<?php echo SITE_URL; ?>/images/players/default-player.jpg';
+                        return '';
                     }
                     
                     // Check if photo is already a full path or contains uploads/
@@ -757,11 +796,16 @@ include 'includes/sidebar.php';
                     
                     const detailPanel = document.getElementById('playerDetailPanel');
                     detailPanel.innerHTML = `
-                        <div class="player-photo-container">
+                        <div class="player-photo-container" style="position: relative;">
                             <img src="${photoUrl}" 
                                  alt="${escapeHtml(player.name)}" 
                                  class="player-photo-large"
-                                 onerror="this.src='<?php echo SITE_URL; ?>/images/players/default-player.jpg'">
+                                 style="opacity:0; position:absolute; inset:0; width:100%; height:100%; ${photoUrl ? '' : 'display:none;'}"
+                                 onload="this.style.opacity=1; var fb=this.parentNode.querySelector('.player-fallback-icon'); if(fb){fb.style.display='none';}"
+                                 onerror="this.style.display='none'; var fb=this.parentNode.querySelector('.player-fallback-icon'); if(fb){fb.style.display='flex';}">
+                            <span class="player-photo-large player-fallback-icon" style="display:flex; align-items:center; justify-content:center; color:#94a3b8; position:absolute; inset:0; font-size:56px;" aria-hidden="true">
+                                <i class="fas fa-user"></i>
+                            </span>
                         </div>
                         
                         <div class="player-detail-info">
@@ -830,11 +874,16 @@ include 'includes/sidebar.php';
                     
                     const detailPanel = document.getElementById('playerDetailPanel');
                     detailPanel.innerHTML = `
-                        <div class="player-photo-container">
+                        <div class="player-photo-container" style="position: relative;">
                             <img src="${photoUrl}" 
                                  alt="${escapeHtml(staff.name)}" 
                                  class="player-photo-large"
-                                 onerror="this.src='<?php echo SITE_URL; ?>/images/staff/default-staff.jpg'">
+                                 style="opacity:0; position:absolute; inset:0; width:100%; height:100%; ${photoUrl ? '' : 'display:none;'}"
+                                 onload="this.style.opacity=1; var fb=this.parentNode.querySelector('.player-fallback-icon'); if(fb){fb.style.display='none';}"
+                                 onerror="this.style.display='none'; var fb=this.parentNode.querySelector('.player-fallback-icon'); if(fb){fb.style.display='flex';}">
+                            <span class="player-photo-large player-fallback-icon" style="display:flex; align-items:center; justify-content:center; color:#94a3b8; position:absolute; inset:0; font-size:56px;" aria-hidden="true">
+                                <i class="fas fa-user"></i>
+                            </span>
                         </div>
                         
                         <div class="player-detail-info">
