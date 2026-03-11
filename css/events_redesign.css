@@ -1,4 +1,4 @@
-    .event-poster-profile {
+.event-poster-profile {
         width: 160px;
         height: 160px;
         border-radius: 22px;
@@ -86,6 +86,11 @@
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         line-height: 1.65;
+    }
+
+    /* Allow horizontal scrolling on the events page when needed */
+    body.page-events {
+        overflow-x: auto;
     }
 
     /* Modal Styles for Team Info */
@@ -199,6 +204,8 @@
         border: 1px solid #dbe6f3;
         border-radius: 12px;
         margin-top: 10px;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
     }
 
     .team-ds-table {
@@ -333,6 +340,8 @@
         margin-top: 14px;
         border: 2px solid #c8d7eb;
         border-radius: 12px;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
     }
 
     .event-standing-table {
@@ -808,5 +817,49 @@
 
         to {
             transform: translateX(130%);
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Make wide tables easier to scroll on mobile */
+        .event-standing-wrap {
+            margin-left: -12px;
+            margin-right: -12px;
+            border-left: 0;
+            border-right: 0;
+            border-radius: 10px;
+        }
+
+        .event-standing-table th,
+        .event-standing-table td {
+            white-space: nowrap;
+        }
+
+        /* Bracket card: scroll sideways INSIDE the card */
+        .event-bracket-wrap {
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
+        }
+
+        /* Restore absolute/horizontal layout (undo the 1100px stacked-grid override) */
+        .evb-canvas {
+            display: block !important;
+            min-height: 540px;
+        }
+
+        .evb-match {
+            position: absolute !important;
+            width: 260px !important;
+        }
+
+        .evb-line {
+            display: block !important;
+        }
+
+        .evb-rank {
+            position: absolute !important;
+            right: -62px !important;
         }
     }
