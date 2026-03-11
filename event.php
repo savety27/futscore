@@ -177,7 +177,7 @@ include 'includes/sidebar.php';
                 <div>
                     <div class="header-eyebrow">ALVETRIX</div>
                     <h1>EVENT & KATEGORI</h1>
-                    <p class="header-subtitle">Klik event untuk melihat daftar peserta berdasarkan kategori seperti U10, U12, U14, dan lainnya.</p>
+                    <p class="header-subtitle">Klik event untuk melihat daftar peserta berdasarkan kategori.</p>
                 </div>
                 <div class="header-actions">
                     <a href="events.php" class="btn-primary"><i class="fas fa-arrow-left"></i> Hub Event</a>
@@ -197,7 +197,7 @@ include 'includes/sidebar.php';
                     
                     <!-- Status Filter -->
                     <div class="filter-group">
-                        <label for="status">Status Event</label>
+                        <label for="status">Status Kategori</label>
                         <select name="status" id="status">
                             <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>Semua Status</option>
                             <option value="active" <?php echo $filter_status === 'active' ? 'selected' : ''; ?>>Active</option>
@@ -207,9 +207,9 @@ include 'includes/sidebar.php';
                     
                     <!-- Sport Filter -->
                     <div class="filter-group">
-                        <label for="sport">Event</label>
+                        <label for="sport">Kategori</label>
                         <select name="sport" id="sport">
-                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Event</option>
+                            <option value="all" <?php echo $filter_sport === 'all' ? 'selected' : ''; ?>>Semua Kategori</option>
                             <?php foreach ($sports as $sport): ?>
                                 <option value="<?php echo htmlspecialchars($sport ?? ''); ?>" <?php echo $filter_sport == $sport ? 'selected' : ''; ?>><?php echo htmlspecialchars($sport ?? ''); ?></option>
                             <?php endforeach; ?>
@@ -239,12 +239,12 @@ include 'includes/sidebar.php';
                     <thead>
                         <tr>
                             <th style="width: 50px; text-align: center;">No</th>
-                            <th>Event</th>
+                            <th style="text-align: center;">Event</th>
                             <th style="width: 120px; text-align: center;">Total Match</th>
                             <th style="width: 120px; text-align: center;">Completed</th>
                             <th style="width: 140px; text-align: center;">Belum Selesai</th>
                             <th style="width: 170px; text-align: center;">Jadwal Terakhir</th>
-                            <th style="width: 120px; text-align: center;">Status Event</th>
+                            <th style="width: 120px; text-align: center;">Status Kategori</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -270,7 +270,7 @@ include 'includes/sidebar.php';
                         ?>
                         <tr class="match-row-new">
                             <td data-label="No" style="text-align: center; font-weight: 700; color: #666;"><?php echo $no++; ?></td>
-                            <td data-label="Event" style="font-weight: 700; color: #002d62;">
+                            <td data-label="Event" style="text-align: center; font-weight: 700; color: #002d62;">
                                 <a href="<?php echo htmlspecialchars($event_detail_url); ?>" class="event-link-badge" title="Lihat peserta event ini">
                                     <span class="badge-new badge-cabor"><?php echo htmlspecialchars($e['event_name'] ?? '-'); ?></span>
                                     <?php if ((int) ($e['total_categories'] ?? 0) > 1): ?>
