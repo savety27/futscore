@@ -13,6 +13,7 @@ $page_title = $page_title ?? 'Dashboard';
 $current_page = $current_page ?? 'dashboard';
 $pelatih_name = $_SESSION['admin_fullname'] ?? 'Pelatih';
 $team_id = $_SESSION['team_id'] ?? 0;
+$path_prefix = (basename(dirname($_SERVER['SCRIPT_NAME'])) == 'players') ? '../' : '';
 $team_name = 'Alvetrix';
 
 if ($team_id && isset($conn)) {
@@ -49,7 +50,7 @@ if ($team_id && isset($conn)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Area Pelatih</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../css/style.css'); ?>">
+    <link rel="stylesheet" href="<?php echo $path_prefix; ?>css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../css/style.css'); ?>">
     <style>
         /* Additional page specific styles can go here */
     </style>
@@ -70,7 +71,7 @@ if ($team_id && isset($conn)) {
             <div class="logo-container">
                 <div class="logo <?php echo (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)) ? 'has-team-logo' : ''; ?>">
                     <?php if (!empty($team_logo) && file_exists('../images/teams/' . $team_logo)): ?>
-                        <img src="../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="<?php echo htmlspecialchars($team_name); ?>" class="sidebar-team-logo">
+                        <img src="<?php echo $path_prefix; ?>../images/teams/<?php echo htmlspecialchars($team_logo); ?>" alt="<?php echo htmlspecialchars($team_name); ?>" class="sidebar-team-logo">
                     <?php endif; ?>
                 </div>
             </div>
@@ -82,41 +83,41 @@ if ($team_id && isset($conn)) {
 
         <div class="menu">
             <div class="menu-item">
-                <a href="dashboard.php" class="menu-link <?php echo $current_page === 'dashboard' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>dashboard.php" class="menu-link <?php echo $current_page === 'dashboard' ? 'active' : ''; ?>">
                     <span class="menu-icon">🏠</span>
                     <span class="menu-text">Dashboard</span>
                 </a>
             </div>
             
             <div class="menu-item">
-                <a href="players.php" class="menu-link <?php echo $current_page === 'players' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>players/" class="menu-link <?php echo $current_page === 'players' ? 'active' : ''; ?>">
                     <span class="menu-icon">👥</span>
                     <span class="menu-text">Pemain Saya</span>
                 </a>
             </div>
             <div class="menu-item">
-                <a href="All_player.php" class="menu-link <?php echo $current_page === 'all_players' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>All_player.php" class="menu-link <?php echo $current_page === 'all_players' ? 'active' : ''; ?>">
                     <span class="menu-icon">📋</span>
                     <span class="menu-text">Semua Pemain</span>
                 </a>
             </div>
 
             <div class="menu-item">
-                <a href="team.php" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>team.php" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">
                     <span class="menu-icon">🏆</span>
                     <span class="menu-text">Team</span>
                 </a>
             </div>
 
             <div class="menu-item">
-                <a href="team_staff.php" class="menu-link <?php echo $current_page === 'team_staff' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>team_staff.php" class="menu-link <?php echo $current_page === 'team_staff' ? 'active' : ''; ?>">
                     <span class="menu-icon">👔</span>
                     <span class="menu-text">Staf Team</span>
                 </a>
             </div>
 
              <div class="menu-item">
-                <a href="schedule.php" class="menu-link <?php echo $current_page === 'schedule' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>schedule.php" class="menu-link <?php echo $current_page === 'schedule' ? 'active' : ''; ?>">
                     <span class="menu-icon">📅</span>
                     <span class="menu-text">Jadwal</span>
                 </a>
@@ -134,7 +135,7 @@ if ($team_id && isset($conn)) {
             </div>
             
             <div class="user-actions">
-                <a href="../pelatih/logout.php" class="logout-btn">
+                <a href="<?php echo $path_prefix; ?>logout.php" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Keluar
                 </a>
             </div>
