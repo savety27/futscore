@@ -887,20 +887,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         align-items: end;
     }
 
-    /* Floating Save Bar for Mobile/Desktop */
+    /* Static Save Bar */
     .save-bar {
-        position: sticky;
-        bottom: 20px;
         background: var(--heritage-text);
         color: white;
-        padding: 16px 24px;
-        border-radius: 16px;
+        padding: 24px 32px;
+        border-radius: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        margin-top: 32px;
-        z-index: 100;
+        box-shadow: var(--soft-shadow);
+        margin-top: 40px;
         border: 1px solid rgba(255,255,255,0.1);
     }
 
