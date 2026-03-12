@@ -418,8 +418,12 @@ $pageTitle = "Perangkat Pertandingan";
 
 /* Specific alignments and styles from reference */
 .col-no { width: 40px; text-align: center; }
-.col-photo { width: 80px; text-align: center; }
-.col-name { color: #111827; font-weight: 500; }
+.col-photo { width: 80px; text-align: center;}
+.staff-table td.col-name,
+.staff-table-new td.col-name {
+    color: #111827;
+    font-weight: 500;
+}
 .col-team { display: flex; align-items: center; gap: 8px; }
 .team-logo-small { width: 24px; height: 24px; border-radius: 50%; object-fit: contain; background: #eee; }
 .col-center { text-align: center; }
@@ -821,7 +825,8 @@ $pageTitle = "Perangkat Pertandingan";
 .history-status-pill.default { background: #e2e8f0; color: #475569; }
 
 /* Created At */
-.col-created {
+.staff-table td.col-created,
+.staff-table-new td.col-created {
     color: #718096;
     font-size: 12px;
     white-space: nowrap;
@@ -1209,8 +1214,63 @@ $pageTitle = "Perangkat Pertandingan";
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/redesign_core.css?v=<?php echo getAssetVersion('/css/redesign_core.css'); ?>">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/staff_redesign.css?v=<?php echo getAssetVersion('/css/staff_redesign.css'); ?>">
 <style>
+.staff-table-new th {
+    text-align: center !important;
+    vertical-align: middle;
+}
+
+.staff-table-new td {
+    vertical-align: middle;
+}
+
+.staff-table-new th.col-name,
+.staff-table-new th.col-created {
+    color: #fff !important;
+}
 .staff-table-new td.col-name .staff-name {
     color: #111827 !important;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Center Align Data Columns */
+.staff-table-new td.col-no,
+.staff-table-new td.col-photo,
+.staff-table-new td.col-age,
+.staff-table-new td.col-certificate,
+.staff-table-new td.col-matches,
+.staff-table-new td.col-events,
+.staff-table-new td.col-status,
+.staff-table-new td.col-created {
+    text-align: center !important;
+}
+
+/* Container Spacing & Widths */
+.staff-table-new th.col-status,
+.staff-table-new td.col-status {
+    width: 100px;
+}
+.staff-table-new th.col-created,
+.staff-table-new td.col-created {
+    width: 110px;
+}
+
+@media (max-width: 768px) {
+    .staff-table-new.perangkat-table tr {
+        grid-template-columns: 72px 1fr;
+        grid-template-areas:
+            "photo name"
+            "photo age"
+            "photo certificate"
+            "photo match"
+            "photo event"
+            "photo status"
+            "photo created";
+    }
+
+    .staff-table-new.perangkat-table td.col-status {
+        grid-area: status;
+    }
 }
 
 .dashboard-body.has-profile-detail .filter-card {
@@ -1694,6 +1754,22 @@ $pageTitle = "Perangkat Pertandingan";
     <div class="image-title" id="imageTitle"></div>
 </div>
 
+<!-- Match History Modal -->
+<div class="match-history-modal" id="perangkatHistoryModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="match-history-content" role="document">
+        <div class="match-history-header">
+            <div>
+                <h3><i class="fas fa-chart-line"></i> <span id="perangkatHistoryName">Riwayat Match</span></h3>
+                <div class="match-history-meta" id="perangkatHistoryMeta">-</div>
+            </div>
+            <button type="button" class="match-history-close" id="perangkatHistoryClose" aria-label="Tutup riwayat"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="match-history-body" id="perangkatHistoryBody">
+            <div class="match-history-loading"><i class="fas fa-spinner fa-spin"></i> Memuat riwayat...</div>
+        </div>
+    </div>
+</div>
+
 <div class="dashboard-wrapper">
 <?php 
 $currentPage = 'perangkat';
@@ -1751,7 +1827,6 @@ include 'includes/sidebar.php';
                                 <div class="entity-profile-main">
                                     <h2><?php echo htmlspecialchars((string)($perangkat_detail['name'] ?? '-')); ?></h2>
                                     <div class="entity-profile-meta">
-                                        <span class="entity-meta-pill"><i class="fas fa-id-card"></i> <?php echo htmlspecialchars(maskPerangkatKtp($perangkat_detail['no_ktp'] ?? '')); ?></span>
                                         <span class="entity-meta-pill outline"><i class="fas fa-user-clock"></i> <?php echo htmlspecialchars(calculatePerangkatAge($perangkat_detail['age'] ?? null)); ?></span>
                                         <span class="entity-meta-pill outline"><i class="fas fa-circle-check"></i> <?php echo ((int)($perangkat_detail['is_active'] ?? 0) === 1) ? 'Aktif' : 'Nonaktif'; ?></span>
                                     </div>
@@ -1813,10 +1888,6 @@ include 'includes/sidebar.php';
                         </div>
 
                         <div class="entity-profile-grid">
-                            <div class="entity-detail-item">
-                                <span class="entity-detail-label">No. KTP</span>
-                                <span class="entity-detail-value"><?php echo htmlspecialchars(maskPerangkatKtp($perangkat_detail['no_ktp'] ?? '')); ?></span>
-                            </div>
                             <div class="entity-detail-item">
                                 <span class="entity-detail-label">Email</span>
                                 <span class="entity-detail-value"><?php echo !empty($perangkat_detail['email']) ? htmlspecialchars((string)$perangkat_detail['email']) : '-'; ?></span>
@@ -1889,25 +1960,24 @@ include 'includes/sidebar.php';
             </div>
 
             <div class="table-container-new">
-                <table class="staff-table-new">
+                <table class="staff-table-new perangkat-table">
                     <thead>
                         <tr>
                             <th class="col-no">No</th>
                             <th class="col-photo">Foto</th>
-                            <th style="text-align:center;">Nama Perangkat</th>
-                            <th>No. KTP</th>
+                            <th class="col-name">Nama Perangkat</th>
                             <th class="col-age">Usia</th>
                             <th class="col-certificate">Lisensi</th>
                             <th class="col-matches">Match</th>
                             <th class="col-events">Event</th>
-                            <th>Status</th>
-                            <th>Dibuat</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-created">Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($perangkatRows)): ?>
                             <tr>
-                                <td colspan="10" class="no-data">
+                                <td colspan="9" class="no-data">
                                     <i class="fas fa-user-slash"></i>
                                     <p>Tidak ada perangkat ditemukan</p>
                                     <?php if (!empty($search)): ?>
@@ -1953,21 +2023,6 @@ include 'includes/sidebar.php';
                                             <div><i class="fas fa-phone"></i> <?php echo htmlspecialchars($p['phone'] ?? ''); ?></div>
                                         <?php endif; ?>
                                     </div>
-                                </td>
-                                
-                                <td data-label="No. KTP">
-                                    <?php
-                                    $noKtp = trim((string)($p['no_ktp'] ?? ''));
-                                    if ($noKtp !== '') {
-                                        if (strlen($noKtp) > 7) {
-                                            echo htmlspecialchars(substr($noKtp, 0, 3) . str_repeat('*', max(strlen($noKtp) - 7, 1)) . substr($noKtp, -4));
-                                        } else {
-                                            echo htmlspecialchars(substr($noKtp, 0, 1) . str_repeat('*', max(strlen($noKtp) - 2, 1)) . substr($noKtp, -1));
-                                        }
-                                    } else {
-                                        echo '-';
-                                    }
-                                    ?>
                                 </td>
                                 
                                 <td class="col-age" data-label="Usia"><?php echo htmlspecialchars(calculatePerangkatAge($p['age'] ?? null)); ?></td>
@@ -2024,7 +2079,7 @@ include 'includes/sidebar.php';
                                     </span>
                                 </td>
 
-                                <td data-label="Status">
+                                <td class="col-status" data-label="Status">
                                     <?php if ((int)($p['is_active'] ?? 0) === 1): ?>
                                         <span class="position-badge manager-badge">Aktif</span>
                                     <?php else: ?>
@@ -2102,5 +2157,6 @@ include 'includes/sidebar.php';
         const SITE_URL = '<?php echo SITE_URL; ?>';
     </script>
     <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
+    <script src="<?php echo SITE_URL; ?>/assets/js/perangkat-profile.js?v=<?php echo getAssetVersion('/assets/js/perangkat-profile.js'); ?>"></script>
     </body>
 </html>
