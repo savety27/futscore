@@ -901,8 +901,10 @@
 }
 
 .clear-filter-btn:hover {
-    background: #fdfcfb;
-    border-color: var(--heritage-text);
+    background: var(--heritage-gold);
+    color: white;
+    border-color: var(--heritage-gold);
+    transform: translateY(-2px);
 }
 
 /* Sections and Layout */
@@ -972,8 +974,10 @@
 }
 
 .btn-export:hover {
-    border-color: var(--heritage-text);
-    background: #fdfcfb;
+    background: var(--heritage-gold);
+    color: white;
+    border-color: var(--heritage-gold);
+    transform: translateY(-2px);
 }
 
 /* Animations */
