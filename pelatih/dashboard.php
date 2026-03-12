@@ -153,7 +153,7 @@ if ($team_id) {
         $stmt->execute([$team_id, $team_id]);
         $chart_matches_raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Build cumulative performance series
+        // Build cumulative performance series (win-only increments)
         $chart_labels = [];
         $chart_values = [];
         $chart_tooltips = [];
@@ -168,7 +168,6 @@ if ($team_id) {
                 $cumulative += 3; // Win = +3
             } elseif ($cm['winner_team_id'] === null || $cm['winner_team_id'] == 0) {
                 $result = 'Seri';
-                $cumulative += 1; // Draw = +1
             } else {
                 $result = 'Kalah';
                 // Loss = no change
@@ -191,7 +190,6 @@ if ($team_id) {
                 'opp'    => $opp,
                 'result' => $result,
                 'score'  => $score_str,
-                'pts'    => $cumulative,
             ];
         }
 
@@ -381,6 +379,15 @@ if ($team_id) {
         color: inherit;
     }
 
+    .quick-action-card:hover,
+    .quick-action-card:focus-within {
+        transform: translateY(-9px) scale(1.02) !important;
+        border-color: var(--heritage-text);
+        border-width: 2px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 34px 70px rgba(17, 24, 39, 0.2), 0 0 0 6px rgba(100, 116, 139, 0.32) !important;
+    }
+
 
         .stats-main-grid {
         display: grid;
@@ -394,18 +401,59 @@ if ($team_id) {
         border: 1px solid var(--heritage-border);
         border-radius: 28px;
         padding: 24px;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
+        overflow: hidden;
+        will-change: transform;
+        box-sizing: border-box;
         box-shadow: var(--soft-shadow);
     }
 
-    .heritage-card:hover {
-        transform: translateY(-8px);
+    .heritage-card:hover,
+    .heritage-card:focus-within {
+        transform: translateY(-10px) scale(1.015);
         border-color: var(--heritage-text);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+        border-width: 2px;
+        box-shadow: 0 26px 52px rgba(17, 24, 39, 0.14), 0 0 0 4px rgba(100, 116, 139, 0.22);
+    }
+
+    .stats-main-grid .heritage-card {
+        cursor: pointer;
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.32s ease;
+    }
+
+    .stats-main-grid .heritage-card:not(.perf-chart-card):hover,
+    .stats-main-grid .heritage-card:not(.perf-chart-card):focus-within {
+        transform: translateY(-9px) scale(1.02) !important;
+        border-color: var(--heritage-text);
+        border-width: 2px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        box-shadow: 0 34px 70px rgba(17, 24, 39, 0.2), 0 0 0 6px rgba(100, 116, 139, 0.32) !important;
+    }
+
+    .heritage-card:active {
+        transform: translateY(-4px) scale(1.008);
+    }
+
+    .heritage-card::before {
+        content: '';
+        position: absolute;
+        top: -120%;
+        left: -35%;
+        width: 35%;
+        height: 300%;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+        transform: rotate(14deg);
+        transition: transform 0.8s ease, left 0.8s ease;
+        pointer-events: none;
+    }
+
+    .heritage-card:hover::before,
+    .heritage-card:focus-within::before {
+        left: 120%;
     }
 
     .card-meta {
@@ -419,6 +467,13 @@ if ($team_id) {
         font-size: 1.1rem;
         color: var(--heritage-text);
         opacity: 0.6;
+        transition: transform 0.28s ease, opacity 0.28s ease;
+    }
+
+    .heritage-card:hover .card-icon,
+    .heritage-card:focus-within .card-icon {
+        opacity: 1;
+        transform: translateY(-3px) scale(1.06);
     }
 
     .card-label {
@@ -680,8 +735,8 @@ if ($team_id) {
 
     /* Animations */
     @keyframes revealUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
     .reveal {
@@ -1183,7 +1238,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span style="color:${resultColor}; font-weight:700;">${resultIcon} ${t.result}</span>
                 <span style="background:#f3f4f6; border-radius:6px; padding:2px 8px; font-weight:800; color:#1e1b4b; font-size:0.8rem;">${t.score}</span>
             </div>
-            <div style="margin-top:6px; font-size:0.7rem; color:#9ca3af;">Poin kumulatif: <strong style="color:#064e3b;">${t.pts}</strong></div>
         `;
 
         // Position near cursor but inside chart card
