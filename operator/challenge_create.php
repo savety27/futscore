@@ -389,598 +389,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Buat Challenge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
+<link rel="stylesheet" href="css/challenge_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/challenge_form.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <link rel="stylesheet" href="../css/challenge_official_combobox.css?v=<?php echo (int) @filemtime(__DIR__ . '/../css/challenge_official_combobox.css'); ?>">
-<style>
-:root {
-    --primary: #0f2744;
-    --secondary: #f59e0b;
-    --accent: #3b82f6;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --light: #F8F9FA;
-    --dark: #1e293b;
-    --gray: #64748b;
-    --glass-white: rgba(255, 255, 255, 0.85);
-    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-    --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
-    color: var(--dark);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* ===== MAIN CONTENT ===== */
-.main {
-    flex: 1;
-    padding: 30px;
-    margin-left: 280px;
-    width: calc(100% - 280px);
-    max-width: calc(100vw - 280px);
-    overflow-x: hidden;
-    transition: var(--transition);
-}
-
-/* Topbar */
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40px;
-    padding: 20px 25px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
-}
-
-.greeting h1 {
-    font-size: 28px;
-    color: var(--primary);
-    margin-bottom: 5px;
-}
-
-.greeting p {
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.user-actions {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.logout-btn {
-    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
-    color: white;
-    padding: 12px 28px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
-}
-
-.logout-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
-}
-
-/* Page Header */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.page-title {
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.page-title i {
-    color: var(--secondary);
-    font-size: 32px;
-}
-
-.search-bar {
-    position: relative;
-    width: 400px;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 15px 50px 15px 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-}
-
-.search-bar input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.search-bar button {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 15px;
-}
-
-.btn {
-    padding: 12px 25px;
-    border-radius: 12px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    font-size: 15px;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: white;
-    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(10, 36, 99, 0.3);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, var(--success), #4CAF50);
-    color: white;
-    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
-}
-
-.btn-success:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
-}
-
-.btn-secondary {
-    background: #6b7280;
-    color: white;
-    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
-}
-
-.btn-secondary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-}
-
-/* Form Styles */
-.form-container {
-    background: white;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 30px;
-}
-
-.form-section {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-.form-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.section-title {
-    font-size: 20px;
-    color: var(--primary);
-    margin-bottom: 20px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--dark);
-    font-size: 14px;
-}
-
-.required {
-    color: var(--danger);
-}
-
-.form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    font-family: inherit;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 100px;
-}
-
-.form-select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    cursor: pointer;
-}
-
-.form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-/* Action Buttons */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid #f0f0f0;
-}
-
-/* Alert */
-.alert {
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.alert-danger {
-    background: rgba(211, 47, 47, 0.1);
-    border-left: 4px solid var(--danger);
-    color: var(--danger);
-}
-
-.alert-success {
-    background: rgba(46, 125, 50, 0.1);
-    border-left: 4px solid var(--success);
-    color: var(--success);
-}
-
-/* Error styling */
-.error {
-    color: var(--danger);
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-}
-
-.is-invalid {
-    border-color: var(--danger) !important;
-}
-
-/* Team vs Team Display */
-.vs-display {
-    text-align: center;
-    padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 12px;
-    margin: 20px 0;
-}
-
-.vs-title {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 15px;
-    font-weight: 600;
-}
-
-.team-vs-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-
-.team-box {
-    text-align: center;
-    min-width: 200px;
-}
-
-.team-box h4 {
-    font-size: 16px;
-    color: var(--dark);
-    margin-bottom: 5px;
-}
-
-.team-box p {
-    font-size: 14px;
-    color: var(--gray);
-}
-
-.vs-symbol {
-    font-size: 32px;
-    font-weight: bold;
-    color: var(--secondary);
-    background: var(--primary);
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .team-vs-container {
-        flex-direction: column;
-        gap: 20px;
-    }
-}
-
-
-/* =========================================
-   MOBILE RESPONSIVE DESIGN
-   ========================================= */
-
-/* Default: Hide mobile-only elements on desktop */
-
-
-/* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
-
-    .main {
-        margin-left: 240px;
-        width: calc(100% - 240px);
-        max-width: calc(100vw - 240px);
-    }
-}
-
-/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
-    
-
-
-    /* Main Content: Full width on mobile */
-    .main {
-        margin-left: 0;
-        padding: 20px 15px;
-        width: 100%;
-        max-width: 100vw;
-    }
-
-    /* Topbar: Stack vertically */
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .greeting h1 {
-        font-size: 24px;
-    }
-
-    .user-actions {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    /* Page Header: Stack vertically */
-    .page-header {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-    }
-
-    .page-title {
-        width: 100%;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .search-bar {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .action-buttons {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        flex: 1;
-        justify-content: center;
-    }
-    
-    /* Form Layout adaptations */
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column-reverse;
-        gap: 10px;
-    }
-    
-    .team-vs-container {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .team-box {
-        min-width: 100%;
-    }
-}
-
-/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
-@media screen and (max-width: 480px) {
-    
-    /* Reduce font sizes */
-    .greeting h1 {
-        font-size: 20px;
-    }
-    
-    .greeting p {
-        font-size: 13px;
-    }
-
-    .page-title {
-        font-size: 22px;
-    }
-
-    .page-title i {
-        font-size: 26px;
-    }
-
-
-    .logo,
-    .logo img {
-        max-width: 120px;
-    }
-
-    
-
-    .menu-link {
-        padding: 14px 15px;
-        font-size: 15px;
-    }
-
-    .menu-icon {
-        font-size: 20px;
-        width: 28px;
-    }
-
-
-    /* Compact buttons */
-    .btn {
-        padding: 10px 18px;
-        font-size: 14px;
-    }
-
-    .logout-btn {
-        padding: 10px 20px;
-        font-size: 14px;
-    }
-}
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
 </head>
 <body>
 
@@ -991,10 +405,10 @@ body {
     <!-- MAIN CONTENT -->
     <div class="main">
         <!-- TOPBAR -->
-        <div class="topbar">
+        <div class="topbar reveal">
             <div class="greeting">
                 <h1>Buat Challenge Baru 🏆</h1>
-                <p>Buat tantangan antar team</p>
+                <p>Kelola tantangan antar team dengan mudah</p>
             </div>
             
             <div class="user-actions">
@@ -1005,256 +419,250 @@ body {
             </div>
         </div>
 
-        <!-- PAGE HEADER -->
-        <div class="page-header">
-            <div class="page-title">
-                <i class="fas fa-plus-circle"></i>
-                <span>Buat Challenge Baru</span>
+        <div class="challenge-container">
+            <!-- Editorial Header -->
+            <header class="header reveal d-1">
+                <h1>
+                    <i class="fas fa-plus-circle"></i>
+                    Buat Challenge
+                </h1>
+                <a href="challenge.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                </a>
+            </header>
+
+            <!-- ERROR MESSAGES -->
+            <?php if (isset($errors['database'])): ?>
+            <div class="alert alert-danger reveal">
+                <i class="fas fa-exclamation-circle"></i>
+                <?php echo $errors['database']; ?>
             </div>
-            <a href="challenge.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                Kembali
-            </a>
-        </div>
+            <?php endif; ?>
 
-        <!-- ERROR MESSAGES -->
-        <?php if (isset($errors['database'])): ?>
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <?php echo $errors['database']; ?>
-        </div>
-        <?php endif; ?>
-
-        <!-- CREATE CHALLENGE FORM -->
-        <div class="form-container">
-            <form method="POST" action="" id="challengeForm">
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-users"></i>
-                        Pilih Team
-                    </div>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="challenger_id">
-                                Challenger Team <span class="required">*</span>
-                            </label>
-                            <select id="challenger_id" name="challenger_id" 
-                                    class="form-select <?php echo isset($errors['challenger_id']) ? 'is-invalid' : ''; ?>" 
-                                    required>
-                                <option value="">Pilih Challenger Team</option>
-                                <?php foreach ($teams as $team): ?>
-                                    <option value="<?php echo $team['id']; ?>" 
-                                            data-sport="<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>"
-                                            <?php echo $form_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if (isset($errors['challenger_id'])): ?>
-                                <span class="error"><?php echo $errors['challenger_id']; ?></span>
-                            <?php endif; ?>
-                        </div>
+            <!-- CREATE CHALLENGE FORM -->
+            <div class="form-container">
+                <form method="POST" action="" id="challengeForm">
+                    <!-- Basic Information Section -->
+                    <div class="form-section reveal d-1">
+                        <h2 class="section-title">
+                            <i class="fas fa-users"></i>
+                            Pilih Team
+                        </h2>
                         
-                        <div class="form-group">
-                            <label class="form-label" for="opponent_id">
-                                Opponent Team <span class="required">*</span>
-                            </label>
-                            <select id="opponent_id" name="opponent_id" 
-                                    class="form-select <?php echo isset($errors['opponent_id']) ? 'is-invalid' : ''; ?>" 
-                                    required>
-                                <option value="">Pilih Opponent Team</option>
-                                <?php foreach ($teams as $team): ?>
-                                    <option value="<?php echo $team['id']; ?>"
-                                            <?php echo $form_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($team['name'] ?? ''); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if (isset($errors['opponent_id'])): ?>
-                                <span class="error"><?php echo $errors['opponent_id']; ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    
-                    <!-- VS Display -->
-                    <div class="vs-display" id="vsDisplay" style="display: none;">
-                        <div class="vs-title">PERTANDINGAN</div>
-                        <div class="team-vs-container">
-                            <div class="team-box" id="challengerBox">
-                                <!-- Filled by JavaScript -->
-                            </div>
-                            <div class="vs-symbol">VS</div>
-                            <div class="team-box" id="opponentBox">
-                                <!-- Filled by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-calendar-alt"></i>
-                        Detail Challenge
-                    </div>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="event_id">
-                                Event Aktif <span class="required">*</span>
-                            </label>
-                            <select id="event_id" name="event_id"
-                                    class="form-select <?php echo isset($errors['event_id']) ? 'is-invalid' : ''; ?>"
-                                    required disabled>
-                                <?php if ($operator_event_locked): ?>
-                                    <option value="<?php echo (int)$operator_event_id; ?>" selected>
-                                        <?php echo htmlspecialchars($operator_event_name); ?>
-                                    </option>
-                                <?php else: ?>
-                                    <option value="">Akun operator belum terhubung ke event</option>
-                                <?php endif; ?>
-                            </select>
-                            <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($form_data['event_id'] ?? ''); ?>">
-                            <?php if (isset($errors['event_id'])): ?>
-                                <span class="error"><?php echo $errors['event_id']; ?></span>
-                            <?php endif; ?>
-                            <small style="color:#666; display:block; margin-top:5px;">
-                                Event dikunci otomatis sesuai akun operator.
-                            </small>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="venue_id">
-                                Venue/Lokasi <span class="required">*</span>
-                            </label>
-                            <select id="venue_id" name="venue_id" 
-                                    class="form-select <?php echo isset($errors['venue_id']) ? 'is-invalid' : ''; ?>" 
-                                    required>
-                                <option value="">Pilih Venue</option>
-                                <?php foreach ($venues as $venue): ?>
-                                    <option value="<?php echo $venue['id']; ?>"
-                                            <?php echo $form_data['venue_id'] == $venue['id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($venue['name'] ?? ''); ?> (<?php echo htmlspecialchars($venue['location'] ?? ''); ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if (isset($errors['venue_id'])): ?>
-                                <span class="error"><?php echo $errors['venue_id']; ?></span>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="sport_type">
-                                Kategori <span class="required">*</span>
-                            </label>
-                            <select id="sport_type" name="sport_type" 
-                                    class="form-select <?php echo isset($errors['sport_type']) ? 'is-invalid' : ''; ?>" 
-                                    required>
-                                <option value="">Pilih Kategori</option>
-                                <?php foreach ($event_types as $event_option): ?>
-                                    <option value="<?php echo htmlspecialchars($event_option); ?>" <?php echo $form_data['sport_type'] == $event_option ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($event_option); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <?php if (isset($errors['sport_type'])): ?>
-                                <span class="error"><?php echo $errors['sport_type']; ?></span>
-                            <?php endif; ?>
-                            <span class="error" id="teamCategoryWarning" style="display: none;"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="challenge_date">
-                                Tanggal Challenge <span class="required">*</span>
-                            </label>
-                            <input type="date" 
-                                   id="challenge_date" 
-                                   name="challenge_date" 
-                                   class="form-input <?php echo isset($errors['challenge_date']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['challenge_date'] ?? ''); ?>"
-                                   min="<?php echo date('Y-m-d'); ?>"
-                                   required>
-                            <?php if (isset($errors['challenge_date'])): ?>
-                                <span class="error"><?php echo $errors['challenge_date']; ?></span>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="challenge_time">
-                                Waktu Challenge <span class="required">*</span>
-                            </label>
-                            <input type="time" 
-                                   id="challenge_time" 
-                                   name="challenge_time" 
-                                   class="form-input <?php echo isset($errors['challenge_time']) ? 'is-invalid' : ''; ?>" 
-                                   value="<?php echo htmlspecialchars($form_data['challenge_time'] ?? ''); ?>"
-                                   required>
-                            <?php if (isset($errors['challenge_time'])): ?>
-                                <span class="error"><?php echo $errors['challenge_time']; ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="expiry_info">
-                                Challenge Expiry
-                            </label>
-                            <input type="text" id="expiry_info" class="form-input" value="Otomatis 24 jam sebelum pertandingan" readonly>
-                            <small style="color: #666;">Batas penerimaan ditetapkan otomatis oleh sistem.</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="match_official_search">
-                                Wasit/Pengawas
-                            </label>
-                            <div class="official-combobox" data-official-combobox>
-                                <input type="text"
-                                       id="match_official_search"
-                                       class="form-input official-combobox-input"
-                                       placeholder="Cari dan pilih wasit/pengawas...">
-                                <select id="match_official"
-                                        name="match_official"
-                                        class="form-select official-combobox-native <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
-                                    <option value="">Pilih Wasit/Pengawas</option>
-                                    <?php foreach ($perangkat_official_names as $official_name): ?>
-                                        <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($form_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($official_name); ?>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Challenger Team <span class="required">*</span>
+                                </label>
+                                <select id="challenger_id" name="challenger_id" 
+                                        class="form-control <?php echo isset($errors['challenger_id']) ? 'is-invalid' : ''; ?>" 
+                                        required>
+                                    <option value="">Pilih Challenger Team</option>
+                                    <?php foreach ($teams as $team): ?>
+                                        <option value="<?php echo $team['id']; ?>" 
+                                                data-sport="<?php echo htmlspecialchars($team['sport_type'] ?? ''); ?>"
+                                                <?php echo $form_data['challenger_id'] == $team['id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($team['name'] ?? ''); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <?php if (isset($errors['challenger_id'])): ?>
+                                    <span class="error"><?php echo $errors['challenger_id']; ?></span>
+                                <?php endif; ?>
                             </div>
-                            <?php if (isset($errors['match_official'])): ?>
-                                <span class="error"><?php echo $errors['match_official']; ?></span>
-                            <?php endif; ?>
-                            <small style="color: #666;">Daftar diambil dari data Perangkat aktif.</small>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Opponent Team <span class="required">*</span>
+                                </label>
+                                <select id="opponent_id" name="opponent_id" 
+                                        class="form-control <?php echo isset($errors['opponent_id']) ? 'is-invalid' : ''; ?>" 
+                                        required>
+                                    <option value="">Pilih Opponent Team</option>
+                                    <?php foreach ($teams as $team): ?>
+                                        <option value="<?php echo $team['id']; ?>"
+                                                <?php echo $form_data['opponent_id'] == $team['id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($team['name'] ?? ''); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if (isset($errors['opponent_id'])): ?>
+                                    <span class="error"><?php echo $errors['opponent_id']; ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <!-- VS Display -->
+                        <div class="vs-display" id="vsDisplay" style="display: none;">
+                            <div class="vs-title">FIXTURE PREVIEW</div>
+                            <div class="team-vs-container">
+                                <div class="team-box" id="challengerBox">
+                                    <!-- Filled by JavaScript -->
+                                </div>
+                                <div class="vs-symbol">VS</div>
+                                <div class="team-box" id="opponentBox">
+                                    <!-- Filled by JavaScript -->
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="notes">
-                            Catatan Tambahan
-                        </label>
-                        <textarea id="notes" name="notes" class="form-textarea" 
-                                  placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($form_data['notes'] ?? ''); ?></textarea>
-                    </div>
-                </div>
+                    <div class="form-section reveal d-2">
+                        <h2 class="section-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Detail Challenge
+                        </h2>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Event Aktif <span class="required">*</span>
+                                </label>
+                                <select id="event_id" name="event_id"
+                                        class="form-control <?php echo isset($errors['event_id']) ? 'is-invalid' : ''; ?>"
+                                        required disabled>
+                                    <?php if ($operator_event_locked): ?>
+                                        <option value="<?php echo (int)$operator_event_id; ?>" selected>
+                                            <?php echo htmlspecialchars($operator_event_name); ?>
+                                        </option>
+                                    <?php else: ?>
+                                        <option value="">Akun operator belum terhubung ke event</option>
+                                    <?php endif; ?>
+                                </select>
+                                <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($form_data['event_id'] ?? ''); ?>">
+                                <?php if (isset($errors['event_id'])): ?>
+                                    <span class="error"><?php echo $errors['event_id']; ?></span>
+                                <?php endif; ?>
+                                <small style="color:#666; display:block; margin-top:5px; font-size: 0.75rem;">
+                                    Event dikunci otomatis sesuai akun operator.
+                                </small>
+                            </div>
 
-                <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="reset" class="btn btn-secondary">
-                        <i class="fas fa-redo"></i>
-                        Reset
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i>
-                        Kirim Challenge
-                    </button>
-                </div>
-            </form>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Venue/Lokasi <span class="required">*</span>
+                                </label>
+                                <select id="venue_id" name="venue_id" 
+                                        class="form-control <?php echo isset($errors['venue_id']) ? 'is-invalid' : ''; ?>" 
+                                        required>
+                                    <option value="">Pilih Venue</option>
+                                    <?php foreach ($venues as $venue): ?>
+                                        <option value="<?php echo $venue['id']; ?>"
+                                                <?php echo $form_data['venue_id'] == $venue['id'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($venue['name'] ?? ''); ?> (<?php echo htmlspecialchars($venue['location'] ?? ''); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if (isset($errors['venue_id'])): ?>
+                                    <span class="error"><?php echo $errors['venue_id']; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Kategori <span class="required">*</span>
+                                </label>
+                                <select id="sport_type" name="sport_type" 
+                                        class="form-control <?php echo isset($errors['sport_type']) ? 'is-invalid' : ''; ?>" 
+                                        required>
+                                    <option value="">Pilih Kategori</option>
+                                    <?php foreach ($event_types as $event_option): ?>
+                                        <option value="<?php echo htmlspecialchars($event_option); ?>" <?php echo $form_data['sport_type'] == $event_option ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($event_option); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if (isset($errors['sport_type'])): ?>
+                                    <span class="error"><?php echo $errors['sport_type']; ?></span>
+                                <?php endif; ?>
+                                <span class="error" id="teamCategoryWarning" style="display: none;"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Tanggal Challenge <span class="required">*</span>
+                                </label>
+                                <input type="date" 
+                                       id="challenge_date" 
+                                       name="challenge_date" 
+                                       class="form-control <?php echo isset($errors['challenge_date']) ? 'is-invalid' : ''; ?>" 
+                                       value="<?php echo htmlspecialchars($form_data['challenge_date'] ?? ''); ?>"
+                                       min="<?php echo date('Y-m-d'); ?>"
+                                       required>
+                                <?php if (isset($errors['challenge_date'])): ?>
+                                    <span class="error"><?php echo $errors['challenge_date']; ?></span>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Waktu Challenge <span class="required">*</span>
+                                </label>
+                                <input type="time" 
+                                       id="challenge_time" 
+                                       name="challenge_time" 
+                                       class="form-control <?php echo isset($errors['challenge_time']) ? 'is-invalid' : ''; ?>" 
+                                       value="<?php echo htmlspecialchars($form_data['challenge_time'] ?? ''); ?>"
+                                       required>
+                                <?php if (isset($errors['challenge_time'])): ?>
+                                    <span class="error"><?php echo $errors['challenge_time']; ?></span>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Wasit/Pengawas
+                                </label>
+                                <div class="official-combobox" data-official-combobox>
+                                    <input type="text"
+                                           id="match_official_search"
+                                           class="form-control official-combobox-input"
+                                           placeholder="Cari dan pilih wasit/pengawas...">
+                                    <select id="match_official"
+                                            name="match_official"
+                                            class="form-control official-combobox-native <?php echo isset($errors['match_official']) ? 'is-invalid' : ''; ?>">
+                                        <option value="">Pilih Wasit/Pengawas</option>
+                                        <?php foreach ($perangkat_official_names as $official_name): ?>
+                                            <option value="<?php echo htmlspecialchars($official_name); ?>" <?php echo ($form_data['match_official'] ?? '') === $official_name ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($official_name); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <?php if (isset($errors['match_official'])): ?>
+                                    <span class="error"><?php echo $errors['match_official']; ?></span>
+                                <?php endif; ?>
+                                <small style="color: #666; font-size: 0.75rem;">Daftar diambil dari data Perangkat aktif.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 24px;">
+                            <label class="form-label">
+                                Catatan Tambahan
+                            </label>
+                            <textarea id="notes" name="notes" class="form-textarea" 
+                                      placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($form_data['notes'] ?? ''); ?></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions reveal d-3">
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i>
+                            Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Kirim Challenge
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
+    </div>
+</div>
+
     </div>
 </div>
 
