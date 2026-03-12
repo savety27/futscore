@@ -388,11 +388,21 @@ if ($team_id) {
     }
 
 
-        .stats-main-grid {
+    .stats-main-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         grid-template-rows: repeat(3, 1fr);
         gap: 24px;
+    }
+
+    .heritage-card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .heritage-card-link:hover,
+    .heritage-card-link:focus {
+        color: inherit;
     }
 
     .heritage-card {
@@ -958,56 +968,56 @@ if ($team_id) {
         <!-- Secondary Stats Grid -->
         <div class="stats-main-grid">
             <!-- Row 1 -->
-            <div class="heritage-card reveal d-2">
+            <a class="heritage-card reveal d-2 heritage-card-link" href="players/" aria-label="Pemain Saya">
                 <div class="card-meta">
                     <span class="card-label">Skuad</span>
                     <i class="fas fa-users card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo (int)$player_count; ?>"><?php echo (int)$player_count; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Pemain Terdaftar</div>
-            </div>
-            <div class="heritage-card reveal d-3">
+            </a>
+            <a class="heritage-card reveal d-3 heritage-card-link" href="staff/" aria-label="Staf Team">
                 <div class="card-meta">
                     <span class="card-label">Manajemen</span>
                     <i class="fas fa-briefcase card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo (int)$staff_count; ?>"><?php echo (int)$staff_count; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Ofisial Terverifikasi</div>
-            </div>
-            <div class="heritage-card reveal d-4">
+            </a>
+            <a class="heritage-card reveal d-4 heritage-card-link" href="schedule.php" aria-label="Jadwal Pertandingan">
                 <div class="card-meta">
                     <span class="card-label">Matchday</span>
                     <i class="fas fa-calendar-check card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo count($today_matches); ?>"><?php echo count($today_matches); ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Pertandingan Hari Ini</div>
-            </div>
+            </a>
 
             <!-- Row 2 -->
-            <div class="heritage-card reveal d-5" style="border-bottom: 3px solid var(--heritage-accent);">
+            <a class="heritage-card heritage-card-link reveal d-5" href="schedule.php?result=menang#daftar-jadwal-pertandingan" style="border-bottom: 3px solid var(--heritage-accent);" aria-label="Lihat pertandingan menang">
                 <div class="card-meta">
                     <span class="card-label">Menang</span>
                     <i class="fas fa-trophy card-icon" style="color: var(--heritage-accent);"></i>
                 </div>
                 <div class="card-value" style="color: var(--heritage-accent);" data-count="<?php echo (int)$wins; ?>"><?php echo (int)$wins; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Total Kemenangan</div>
-            </div>
-            <div class="heritage-card reveal d-2">
+            </a>
+            <a class="heritage-card heritage-card-link reveal d-2" href="schedule.php?result=seri#daftar-jadwal-pertandingan" aria-label="Lihat pertandingan seri">
                 <div class="card-meta">
                     <span class="card-label">Seri</span>
                     <i class="fas fa-handshake card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo (int)$draws; ?>"><?php echo (int)$draws; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Hasil Imbang</div>
-            </div>
-            <div class="heritage-card reveal d-3" style="border-bottom: 3px solid var(--heritage-crimson);">
+            </a>
+            <a class="heritage-card heritage-card-link reveal d-3" href="schedule.php?result=kalah#daftar-jadwal-pertandingan" style="border-bottom: 3px solid var(--heritage-crimson);" aria-label="Lihat pertandingan kalah">
                 <div class="card-meta">
                     <span class="card-label">Kalah</span>
                     <i class="fas fa-times-circle card-icon" style="color: var(--heritage-crimson);"></i>
                 </div>
                 <div class="card-value" style="color: var(--heritage-crimson);" data-count="<?php echo (int)$losses; ?>"><?php echo (int)$losses; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Total Kekalahan</div>
-            </div>
+            </a>
 
             <!-- Row 3 -->
             <div class="heritage-card reveal d-4" style="border-bottom: 3px solid var(--heritage-gold);">

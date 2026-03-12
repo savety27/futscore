@@ -28,6 +28,7 @@ if ($my_team_id == 0) {
 // Handle search dan filter
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
+$result_filter = isset($_GET['result']) ? trim($_GET['result']) : ''; // menang | seri | kalah
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -138,6 +139,18 @@ if (!empty($sport_filter)) {
     $count_query .= " AND c.sport_type = ?";
 }
 
+// Tambahkan kondisi untuk filter hasil (menang/seri/kalah)
+if ($result_filter === 'menang') {
+    $base_query  .= " AND c.status = 'completed' AND c.winner_team_id = ?";
+    $count_query .= " AND c.status = 'completed' AND c.winner_team_id = ?";
+} elseif ($result_filter === 'kalah') {
+    $base_query  .= " AND c.status = 'completed' AND c.winner_team_id IS NOT NULL AND c.winner_team_id != ?";
+    $count_query .= " AND c.status = 'completed' AND c.winner_team_id IS NOT NULL AND c.winner_team_id != ?";
+} elseif ($result_filter === 'seri') {
+    $base_query  .= " AND c.status = 'completed' AND c.winner_team_id IS NULL";
+    $count_query .= " AND c.status = 'completed' AND c.winner_team_id IS NULL";
+}
+
 $base_query .= " ORDER BY c.challenge_date DESC";
 
 $total_data = 0;
@@ -157,6 +170,10 @@ try {
     }
     if (!empty($sport_filter)) {
         $filter_params[] = $sport_filter;
+    }
+    // result filter: menang & kalah need $my_team_id as extra param; seri needs none
+    if ($result_filter === 'menang' || $result_filter === 'kalah') {
+        $filter_params[] = $my_team_id;
     }
 
     // Hitung total data dengan filter
@@ -254,6 +271,14 @@ if ($sport_filter !== '') {
     $schedule_export_params['sport'] = $sport_filter;
 }
 $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) ? '?' . http_build_query($schedule_export_params) : '');
+
+// Label for active result filter
+$result_filter_labels = ['menang' => '🏆 Menang', 'seri' => '🤝 Seri', 'kalah' => '❌ Kalah'];
+$result_filter_label = $result_filter_labels[$result_filter] ?? '';
+
+// Build reset URL preserving other filters but removing result
+$reset_result_params = array_filter(['search' => $search, 'sport' => $sport_filter]);
+$reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_build_query($reset_result_params) : '');
 ?>
 
 <link rel="stylesheet" href="css/schedule.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/schedule.css'); ?>">
@@ -339,9 +364,22 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
         </div>
     </div>
 
+    <?php if (!empty($result_filter) && !empty($result_filter_label)): ?>
+    <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #f0faf5; border: 1.5px solid #10b981; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #065f46;">
+        <i class="fas fa-filter"></i>
+        Menampilkan pertandingan: <strong><?php echo htmlspecialchars($result_filter_label); ?></strong>
+        <a href="<?php echo htmlspecialchars($reset_result_url); ?>" style="margin-left: auto; font-size: 0.82rem; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; text-decoration: none; border: 1px solid #6ee7b7;">
+            <i class="fas fa-times"></i> Hapus Filter Ini
+        </a>
+    </div>
+    <?php endif; ?>
+
     <div class="filter-container reveal d-2">
         <div class="teams-filter-card">
             <form action="" method="GET" class="teams-filter-form">
+                <?php if (!empty($result_filter)): ?>
+                <input type="hidden" name="result" value="<?php echo htmlspecialchars($result_filter); ?>">
+                <?php endif; ?>
                 <div class="filter-group">
                     <label>Pencarian</label>
                     <div class="teams-search-group">
@@ -384,7 +422,7 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
                     <button type="submit" class="btn-filter">
                         <i class="fas fa-filter"></i> Terapkan
                     </button>
-                    <?php if (!empty($search) || !empty($sport_filter)): ?>
+                    <?php if (!empty($search) || !empty($sport_filter) || !empty($result_filter)): ?>
                     <a href="schedule.php" class="clear-filter-btn">
                         <i class="fas fa-times"></i> Reset
                     </a>
