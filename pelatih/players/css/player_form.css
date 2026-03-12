@@ -65,6 +65,7 @@
 }
 
 .form-section {
+    position: relative;
     background: var(--heritage-card);
     border: 1px solid var(--heritage-border);
     border-radius: 28px;
@@ -74,7 +75,9 @@
     transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.form-section:hover {
+.form-section:hover,
+.form-section:focus-within {
+    z-index: 20;
     border-color: var(--heritage-text);
     box-shadow: 0 20px 40px rgba(0,0,0,0.06);
 }
