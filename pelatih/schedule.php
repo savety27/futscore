@@ -256,493 +256,20 @@ if ($sport_filter !== '') {
 $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) ? '?' . http_build_query($schedule_export_params) : '');
 ?>
 
-<style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-    width: calc(100% - 280px);
-    max-width: calc(100vw - 280px);
-    overflow-x: hidden;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-#daftar-jadwal-pertandingan {
-    scroll-margin-top: 120px;
-}
-
-.page-title-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    line-height: 1.15;
-}
-
-.page-title i {
-    color: var(--secondary);
-}
-
-.page-subtitle {
-    margin: 0;
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.summary-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: #eef5ff;
-    color: var(--primary);
-    border: 1px solid #dbeafe;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.next-match-card {
-    margin-bottom: 24px;
-}
-
-.next-match-body {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.next-match-teams {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    flex: 1 1 360px;
-}
-
-.next-team {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.next-team-logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    background: #eef5ff;
-    border: 1px solid #dbeafe;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.next-team-logo img {
-    width: 80%;
-    height: 80%;
-    object-fit: contain;
-}
-
-.next-team-name {
-    font-weight: 700;
-    color: var(--dark);
-    font-size: 16px;
-    line-height: 1.2;
-}
-
-.next-vs {
-    font-weight: 800;
-    color: var(--secondary);
-    letter-spacing: 0.08em;
-}
-
-.next-match-meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 10px;
-    flex: 1 1 320px;
-}
-
-.next-match-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    flex: 0 1 auto;
-}
-
-.next-meta-item {
-    background: #f8fbff;
-    border: 1px solid #e2ecf8;
-    border-radius: 12px;
-    padding: 10px 12px;
-}
-
-.next-meta-label {
-    font-size: 11px;
-    color: var(--gray);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.next-meta-value {
-    margin-top: 4px;
-    font-weight: 700;
-    color: var(--dark);
-    font-size: 14px;
-}
-
-.next-empty {
-    text-align: center;
-    color: var(--gray);
-    padding: 18px;
-    background: #f8fbff;
-    border-radius: 14px;
-    border: 1px dashed #dbeafe;
-}
-
-.section-header {
-    margin-bottom: 16px;
-}
-
-.filter-container {
-    margin-bottom: 25px;
-}
-
-.schedule-filter-card {
-    padding: 16px;
-    border: 1px solid #dbe5f3;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
-}
-
-.schedule-filter-form {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(210px, 0.72fr) auto;
-    gap: 12px;
-    align-items: center;
-}
-
-.schedule-search-group {
-    position: relative;
-}
-
-.schedule-search-group i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #7b8797;
-    font-size: 13px;
-}
-
-.schedule-search-input,
-.schedule-custom-select-trigger {
-    width: 100%;
-    height: 42px;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #1f2937;
-    font-size: 14px;
-    transition: all 0.2s ease;
-}
-
-.schedule-search-input {
-    padding: 0 12px 0 36px;
-}
-
-.schedule-select-wrap {
-    position: relative;
-}
-
-.schedule-custom-select {
-    position: relative;
-}
-
-.schedule-custom-select-trigger {
-    padding: 0 34px 0 12px;
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.schedule-custom-select-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-}
-
-.schedule-custom-select-label i {
-    color: #7b8797;
-    font-size: 13px;
-    flex: 0 0 auto;
-}
-
-.schedule-custom-select-trigger span.schedule-custom-select-text {
-    display: block;
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.schedule-custom-select-trigger .select-icon-right {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 11px;
-    color: #7b8797;
-    transition: transform 0.2s ease;
-}
-
-.schedule-custom-select.open .schedule-custom-select-trigger .select-icon-right {
-    transform: translateY(-50%) rotate(180deg);
-}
-
-.schedule-custom-select-menu {
-    display: none;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 6px);
-    background: #ffffff;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    box-shadow: 0 12px 24px rgba(10, 36, 99, 0.16);
-    padding: 6px;
-    max-height: 260px;
-    overflow-y: auto;
-    z-index: 20;
-}
-
-.schedule-custom-select.open .schedule-custom-select-menu {
-    display: block;
-}
-
-.schedule-custom-option {
-    width: 100%;
-    text-align: left;
-    border: none;
-    background: transparent;
-    color: #1f2937;
-    font-size: 13px;
-    font-weight: 600;
-    border-radius: 8px;
-    padding: 9px 10px;
-    cursor: pointer;
-}
-
-.schedule-custom-option:hover {
-    background: #f2f6fc;
-}
-
-.schedule-custom-option.active {
-    background: #e8f0ff;
-    color: #0f3d8b;
-}
-
-.schedule-search-input:focus,
-.schedule-custom-select-trigger:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
-}
-
-.schedule-filter-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.schedule-filter-actions .btn-filter,
-.schedule-filter-actions .clear-filter-btn {
-    height: 42px;
-    padding: 0 14px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    font-size: 13px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.schedule-filter-actions .btn-filter {
-    background: linear-gradient(135deg, var(--primary), #1a4f9e);
-    color: #ffffff;
-}
-
-.schedule-filter-actions .btn-filter:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.22);
-}
-
-.schedule-filter-actions .clear-filter-btn {
-    background: #ffffff;
-    border-color: #d3dcea;
-    color: #3b4a5f;
-}
-
-.schedule-filter-actions .clear-filter-btn:hover {
-    background: #f2f6fc;
-}
-
-.schedule-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    background: #ffffff;
-}
-
-.schedule-table-wrap .data-table {
-    min-width: 1180px;
-    margin: 0;
-}
-
-@media (max-width: 1024px) {
-    .main {
-        width: calc(100% - 240px);
-        max-width: calc(100vw - 240px);
-    }
-}
-
-@media (max-width: 768px) {
-    .main {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .schedule-filter-form {
-        grid-template-columns: 1fr;
-    }
-
-    .schedule-filter-actions .btn-filter,
-    .schedule-filter-actions .clear-filter-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .schedule-table-wrap {
-        border-radius: 12px;
-    }
-
-    .data-table {
-        min-width: 1120px;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 10px 9px;
-        font-size: 12px;
-        white-space: nowrap;
-        vertical-align: middle;
-    }
-
-    .data-table td:nth-child(3) > div {
-        min-width: 220px;
-    }
-
-    .event-badge {
-        font-size: 11px !important;
-        white-space: nowrap;
-        line-height: 1.2;
-    }
-}
-
-.data-table tbody tr {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    position: relative;
-    will-change: transform;
-}
-
-.event-badge {
-    display: inline-block;
-    max-width: none;
-    white-space: nowrap;
-    overflow: visible;
-    text-overflow: clip;
-    line-height: 1.25;
-    text-align: center;
-    word-break: normal;
-    vertical-align: middle;
-}
-
-.data-table tbody tr:hover,
-.data-table tbody tr:focus-within {
-    background: #eef5ff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        padding: 18px;
-        border-radius: 16px;
-    }
-
-    .page-title {
-        font-size: 23px;
-    }
-
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
-    }
-}
-
-@media (hover: none) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: none;
-        box-shadow: none;
-        background: #f8f9fa;
-    }
-}
-</style>
-
-<div class="page-header">
-    <div class="page-title-wrap">
-        <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Jadwal Pertandingan</h1>
-        <p class="page-subtitle">Pantau jadwal, hasil, status challenge, dan atur lineup untuk pertandingan aktif tim Anda.</p>
-    </div>
-    <div class="page-summary">
-        <span class="summary-pill"><i class="fas fa-futbol"></i> <?php echo (int)$total_data; ?> Pertandingan</span>
-    </div>
-</div>
+<link rel="stylesheet" href="css/schedule.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/schedule.css'); ?>">
+
+<div class="teams-container">
+    <!-- Editorial Header -->
+    <header class="dashboard-hero reveal d-1">
+        <div class="hero-content">
+            <span class="hero-label">Jadwal</span>
+            <h1 class="hero-title">Jadwal Pertandingan</h1>
+            <p class="hero-description">Pantau jadwal, hasil, status challenge, dan atur lineup untuk pertandingan aktif tim Anda.</p>
+        </div>
+        <div class="hero-actions">
+            <span class="summary-pill"><i class="fas fa-futbol"></i> <?php echo (int)$total_data; ?> Pertandingan</span>
+        </div>
+    </header>
 
 <div class="card next-match-card">
     <div class="section-header">
@@ -812,42 +339,48 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
         </div>
     </div>
 
-    <div class="filter-container">
-        <div class="schedule-filter-card">
-            <form action="" method="GET" class="schedule-filter-form">
-                <div class="schedule-search-group">
-                    <i class="fas fa-search"></i>
-                    <input
-                        type="text"
-                        name="search"
-                        placeholder="Cari kode, team, event, atau status pertandingan..."
-                        value="<?php echo htmlspecialchars($search); ?>"
-                        class="schedule-search-input"
-                    >
+    <div class="filter-container reveal d-2">
+        <div class="teams-filter-card">
+            <form action="" method="GET" class="teams-filter-form">
+                <div class="filter-group">
+                    <label>Pencarian</label>
+                    <div class="teams-search-group">
+                        <i class="fas fa-search"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            placeholder="Cari kode, team, event, atau status pertandingan..."
+                            value="<?php echo htmlspecialchars($search); ?>"
+                            class="teams-search-input"
+                        >
+                    </div>
                 </div>
 
-                <div class="schedule-select-wrap">
-                    <div class="schedule-custom-select" id="scheduleSportSelect">
-                        <input type="hidden" name="sport" id="scheduleSportValue" value="<?php echo htmlspecialchars($sport_filter); ?>">
-                        <button type="button" class="schedule-custom-select-trigger" id="scheduleSportTrigger" aria-expanded="false">
-                            <span class="schedule-custom-select-label">
-                                <i class="fas fa-trophy"></i>
-                                <span id="scheduleSportLabel" class="schedule-custom-select-text"><?php echo $sport_filter !== '' ? htmlspecialchars($sport_filter) : 'Semua Event'; ?></span>
-                            </span>
-                            <i class="fas fa-chevron-down select-icon-right"></i>
-                        </button>
-                        <div class="schedule-custom-select-menu" id="scheduleSportMenu">
-                            <button type="button" class="schedule-custom-option <?php echo $sport_filter === '' ? 'active' : ''; ?>" data-value="">Semua Event</button>
-                            <?php foreach ($sport_types as $sport): ?>
-                                <button type="button" class="schedule-custom-option <?php echo $sport_filter === $sport ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($sport); ?>">
-                                    <?php echo htmlspecialchars($sport); ?>
-                                </button>
-                            <?php endforeach; ?>
+                <div class="filter-group">
+                    <label>Kategori Event</label>
+                    <div class="schedule-select-wrap">
+                        <div class="schedule-custom-select" id="scheduleSportSelect">
+                            <input type="hidden" name="sport" id="scheduleSportValue" value="<?php echo htmlspecialchars($sport_filter); ?>">
+                            <button type="button" class="schedule-custom-select-trigger" id="scheduleSportTrigger" aria-expanded="false">
+                                <span class="schedule-custom-select-label">
+                                    <i class="fas fa-trophy"></i>
+                                    <span id="scheduleSportLabel" class="schedule-custom-select-text"><?php echo $sport_filter !== '' ? htmlspecialchars($sport_filter) : 'Semua Event'; ?></span>
+                                </span>
+                                <i class="fas fa-chevron-down select-icon-right"></i>
+                            </button>
+                            <div class="schedule-custom-select-menu" id="scheduleSportMenu">
+                                <button type="button" class="schedule-custom-option <?php echo $sport_filter === '' ? 'active' : ''; ?>" data-value="">Semua Event</button>
+                                <?php foreach ($sport_types as $sport): ?>
+                                    <button type="button" class="schedule-custom-option <?php echo $sport_filter === $sport ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($sport); ?>">
+                                        <?php echo htmlspecialchars($sport); ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="schedule-filter-actions">
+                <div class="teams-filter-actions">
                     <button type="submit" class="btn-filter">
                         <i class="fas fa-filter"></i> Terapkan
                     </button>
@@ -864,18 +397,18 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
     <?php if (empty($challenges)): ?>
         <p style="text-align: center; color: var(--gray); padding: 20px;">Pertandingan tidak ditemukan.</p>
     <?php else: ?>
-        <div class="schedule-table-wrap">
+        <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="text-align:center;">Kode Pertandingan</th>
-                        <th style="text-align:center;">Tanggal</th>
-                        <th style="text-align:center;">Team</th>
-                        <th style="text-align:center;">Event</th>
-                        <th style="text-align:center;">Lokasi</th>
+                        <th>Kode Pertandingan</th>
+                        <th>Tanggal</th>
+                        <th>Team</th>
+                        <th>Event</th>
+                        <th>Lokasi</th>
                         <th style="text-align:center;">Skor</th>
-                        <th style="text-align:center;">Status</th>
-                        <th style="text-align:center;">Status Pertandingan</th>
+                        <th>Status</th>
+                        <th>Status Pertandingan</th>
                         <th style="text-align:center;">Aksi</th>
                     </tr>
                 </thead>
@@ -1011,20 +544,45 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">&laquo; Seb</a>
+                <a href="?page=1&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Halaman Pertama">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Sebelumnya">
+                    <i class="fas fa-angle-left"></i>
+                </a>
             <?php endif; ?>
             
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $page + 2);
+            
+            if ($start_page > 1): ?>
+                <span class="page-dots">...</span>
+            <?php endif; ?>
+            
+            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
+                    <?php echo $i; ?>
+                </a>
             <?php endfor; ?>
             
+            <?php if ($end_page < $total_pages): ?>
+                <span class="page-dots">...</span>
+            <?php endif; ?>
+            
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link">Sel &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Berikutnya">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Halaman Terakhir">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
 
     <?php endif; ?>
+</div>
 </div>
 
 <script>
