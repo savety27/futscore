@@ -10,13 +10,13 @@ require_once 'includes/header.php';
 
 // Get data from database
 $latestChallenges = getLatestChallenges();
-$scheduledMatches = getScheduledChallenges(5);
-$completedMatches = getCompletedChallenges(5);
-$newPlayers = getPlayers(5);
-$recentTransfers = getPlayerTransfers(5);
+$scheduledMatches = getScheduledChallenges(6);
+$completedMatches = getCompletedChallenges(6);
+$newPlayers = getPlayers(8);
+$recentTransfers = getPlayerTransfers(8);
 
-$recentWinners = getRecentWinners(5);
-$newTeams = getTeams(5); // tes
+$recentWinners = getRecentWinners(4);
+$newTeams = getTeams(8); // tes
 
 $pageTitle = "Home";
 ?>
@@ -146,7 +146,7 @@ include 'includes/sidebar.php';
     <!-- Tab New News -->
     <div class="tab-content active" id="new-news">
         <?php 
-        $newNews = getLatestNews(3);
+        $newNews = getLatestNews(4);
         
         if (empty($newNews)): 
         ?>
@@ -160,15 +160,21 @@ include 'includes/sidebar.php';
             <div class="news-main">
                 <?php 
                 $news = $newNews[0];
-                $image = !empty($news['gambar']) ? $news['gambar'] : 'news1.jpg';
-                $imagePath = SITE_URL . '/images/berita/' . $image;
+                $hasImage = !empty($news['gambar']);
+                $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $news['gambar']) : '';
                 $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
                 <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-large news-link" data-news-id="<?php echo $news['id']; ?>">
+                    <?php if ($hasImage): ?>
                     <img src="<?php echo $imagePath; ?>" 
                          alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>" 
                          class="news-image"
                          onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                    <?php else: ?>
+                    <div class="news-image-placeholder">
+                        <i class="far fa-newspaper"></i>
+                    </div>
+                    <?php endif; ?>
                     <div class="news-content">
                         <div class="news-meta">
                             <span class="news-date"><?php echo formatDate($news['created_at']); ?></span>
@@ -193,16 +199,22 @@ include 'includes/sidebar.php';
                 <?php 
                 for ($i = 1; $i < count($newNews); $i++): 
                     $news = $newNews[$i];
-                    $image = !empty($news['gambar']) ? $news['gambar'] : 'news' . ($i + 1) . '.jpg';
-                    $imagePath = SITE_URL . '/images/berita/' . $image;
+                    $hasImage = !empty($news['gambar']);
+                    $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $news['gambar']) : '';
                     $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
                 <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-small news-link" data-news-id="<?php echo $news['id']; ?>">
                     <div class="news-thumbnail">
+                        <?php if ($hasImage): ?>
                         <img src="<?php echo $imagePath; ?>" 
                              alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                              class="news-thumb"
                              onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                        <?php else: ?>
+                        <div class="news-thumb-placeholder">
+                            <i class="far fa-newspaper"></i>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <div class="news-content-small">
                         <div class="news-meta">
@@ -228,7 +240,7 @@ include 'includes/sidebar.php';
     <!-- Tab Popular News -->
     <div class="tab-content" id="popular-news">
         <?php 
-        $popularNews = getPopularNews(3);
+        $popularNews = getPopularNews(4);
         
         if (empty($popularNews)): 
         ?>
@@ -242,15 +254,21 @@ include 'includes/sidebar.php';
             <div class="news-main">
                 <?php 
                 $news = $popularNews[0];
-                $image = !empty($news['gambar']) ? $news['gambar'] : 'news1.jpg';
-                $imagePath = SITE_URL . '/images/berita/' . $image;
+                $hasImage = !empty($news['gambar']);
+                $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $news['gambar']) : '';
                 $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
                 <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-large news-link" data-news-id="<?php echo $news['id']; ?>">
+                    <?php if ($hasImage): ?>
                     <img src="<?php echo $imagePath; ?>" 
                          alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>" 
                          class="news-image"
                          onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                    <?php else: ?>
+                    <div class="news-image-placeholder">
+                        <i class="far fa-newspaper"></i>
+                    </div>
+                    <?php endif; ?>
                     <div class="news-content">
                         <div class="news-meta">
                             <span class="news-date"><?php echo formatDate($news['created_at']); ?></span>
@@ -275,16 +293,22 @@ include 'includes/sidebar.php';
                 <?php 
                 for ($i = 1; $i < count($popularNews); $i++): 
                     $news = $popularNews[$i];
-                    $image = !empty($news['gambar']) ? $news['gambar'] : 'news' . ($i + 1) . '.jpg';
-                    $imagePath = SITE_URL . '/images/berita/' . $image;
+                    $hasImage = !empty($news['gambar']);
+                    $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $news['gambar']) : '';
                     $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                 ?>
                 <a href="<?php echo SITE_URL; ?>/news.php?slug=<?php echo $news['slug']; ?>" class="news-item-small news-link" data-news-id="<?php echo $news['id']; ?>">
                     <div class="news-thumbnail">
+                        <?php if ($hasImage): ?>
                         <img src="<?php echo $imagePath; ?>" 
                              alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                              class="news-thumb"
                              onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                        <?php else: ?>
+                        <div class="news-thumb-placeholder">
+                            <i class="far fa-newspaper"></i>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <div class="news-content-small">
                         <div class="news-meta">

@@ -294,14 +294,20 @@ include 'includes/sidebar.php';
                         </div>
                         <div class="news-image-detail-container">
                             <?php
-                            $image = !empty($news['gambar']) ? $news['gambar'] : 'default-news.jpg';
-                            $imagePath = SITE_URL . '/images/berita/' . $image;
+                            $hasImage = !empty($news['gambar']);
+                            $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $news['gambar']) : '';
                             $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                             ?>
+                            <?php if ($hasImage): ?>
                             <img src="<?php echo $imagePath; ?>" 
                                  alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                                  class="news-image-detail-main"
                                  onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                            <?php else: ?>
+                            <div class="news-image-detail-placeholder">
+                                <i class="far fa-newspaper"></i>
+                            </div>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="news-content-detail-wrapper">
@@ -360,7 +366,8 @@ include 'includes/sidebar.php';
                                    target="_blank" class="share-btn whatsapp">
                                     <i class="fab fa-whatsapp"></i>
                                 </a>
-                                <a href="mailto:?subject=<?php echo urlencode($news['judul']); ?>&body=<?php echo urlencode('Baca artikel ini: ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>" 
+                                <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;su=<?php echo urlencode($news['judul']); ?>&amp;body=<?php echo urlencode('Baca artikel ini: ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>&amp;tf=1" 
+                                   target="_blank"
                                    class="share-btn email">
                                     <i class="fas fa-envelope"></i>
                                 </a>
@@ -375,17 +382,23 @@ include 'includes/sidebar.php';
                         </div>
                         <div class="related-grid">
                             <?php foreach ($relatedNews as $related): 
-                                $image = !empty($related['gambar']) ? $related['gambar'] : 'default-news.jpg';
-                                $imagePath = SITE_URL . '/images/berita/' . $image;
+                                $hasImage = !empty($related['gambar']);
+                                $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $related['gambar']) : '';
                                 $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                             ?>
                             <div class="related-item-card">
                                 <a href="news.php?slug=<?php echo $related['slug']; ?>" class="related-link">
                                     <div class="related-image-container">
+                                        <?php if ($hasImage): ?>
                                         <img src="<?php echo $imagePath; ?>" 
                                              alt="<?php echo htmlspecialchars($related['judul'] ?? ''); ?>"
                                              class="related-image"
                                              onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                                        <?php else: ?>
+                                        <div class="related-image-placeholder">
+                                            <i class="far fa-newspaper"></i>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="related-content">
                                         <h4 class="related-title"><?php echo htmlspecialchars($related['judul'] ?? ''); ?></h4>
@@ -516,17 +529,23 @@ include 'includes/sidebar.php';
                             <?php else: ?>
                             <div class="news-grid">
                                 <?php foreach ($newsList as $news): 
-                                    $image = !empty($news['gambar']) ? $news['gambar'] : 'default-news.jpg';
-                                    $imagePath = SITE_URL . '/images/berita/' . $image;
+                                    $hasImage = !empty($news['gambar']);
+                                    $imagePath = $hasImage ? (SITE_URL . '/images/berita/' . $news['gambar']) : '';
                                     $defaultImage = SITE_URL . '/images/berita/default-news.jpg';
                                 ?>
                                 <div class="news-item">
                                     <div class="news-item-image">
                                         <a href="news.php?slug=<?php echo $news['slug']; ?>" class="news-image-link">
+                                            <?php if ($hasImage): ?>
                                             <img src="<?php echo $imagePath; ?>" 
                                                  alt="<?php echo htmlspecialchars($news['judul'] ?? ''); ?>"
                                                  class="news-image"
                                                  onerror="this.onerror=null; this.src='<?php echo $defaultImage; ?>'">
+                                            <?php else: ?>
+                                            <div class="news-image-placeholder">
+                                                <i class="far fa-newspaper"></i>
+                                            </div>
+                                            <?php endif; ?>
                                             <div class="news-image-overlay"></div>
                                             <?php if ($news['views'] > 100): ?>
                                             <span class="news-trending">
