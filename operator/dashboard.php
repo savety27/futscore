@@ -36,6 +36,11 @@ $berita_total = 0;
 $today_matches = [];
 $next_match = null;
 
+// Chart variables
+$chart_labels = [];
+$chart_values = [];
+$chart_tooltips = [];
+
 if ($operator_id > 0) {
     try {
         $stmt = $conn->prepare("
@@ -133,6 +138,43 @@ if ($event_id > 0) {
         ");
         $stmt->execute([$event_id]);
         $next_match = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Get last 30 days completed matches for event velocity chart
+        $stmt = $conn->prepare("
+            SELECT 
+                c.id,
+                c.challenge_date,
+                t1.name AS challenger_name,
+                t2.name AS opponent_name,
+                c.challenger_score,
+                c.opponent_score
+            FROM challenges c
+            JOIN teams t1 ON c.challenger_id = t1.id
+            JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE c.status = 'completed'
+              AND c.event_id = ?
+              AND c.challenge_date >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+              AND c.challenge_date <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            ORDER BY c.challenge_date ASC
+        ");
+        $stmt->execute([$event_id]);
+        $chart_matches_raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $cumulative = 0;
+        foreach ($chart_matches_raw as $cm) {
+            $match_dt = new DateTime($cm['challenge_date']);
+            $label = $match_dt->format('d/m');
+            $cumulative++; // Incremental count of completed matches
+            
+            $chart_labels[]   = $label;
+            $chart_values[]   = $cumulative;
+            $chart_tooltips[] = [
+                'date'   => $match_dt->format('d M Y'),
+                'opp'    => $cm['challenger_name'] . ' vs ' . $cm['opponent_name'],
+                'result' => 'Selesai',
+                'score'  => ($cm['challenger_score'] ?? '0') . ' - ' . ($cm['opponent_score'] ?? '0'),
+            ];
+        }
 
     } catch (PDOException $e) {
         // Keep dashboard rendering
@@ -455,6 +497,39 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="card-value" style="color: var(--heritage-gold);"><?php echo $event_progress_percent; ?>%</div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;"><?php echo $event_runtime_label; ?></div>
             </div>
+            
+            <!-- Event Operational Velocity (Line Chart) -->
+            <div class="heritage-card reveal d-4" style="grid-column: span 2; background: var(--heritage-accent); color: white; padding: 28px 28px 20px; position: relative;">
+                <div class="card-meta" style="margin-bottom: 12px;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span class="card-label" style="color: rgba(255,255,255,0.55);">Operational Velocity</span>
+                        <span style="font-family: var(--font-display); font-size:1.1rem; font-weight:700; color:white; letter-spacing:-0.02em;">Cumulative Challenge Completion</span>
+                    </div>
+                    <div style="display:flex; gap:16px; align-items:center;">
+                        <div style="text-align:right;">
+                            <div style="font-size:0.7rem; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:.06em;">Finished</div>
+                            <div style="font-family:var(--font-display); font-size:1.4rem; font-weight:800; color:#f59e0b;"><?php echo (int)$challenge_completed; ?></div>
+                        </div>
+                        <i class="fas fa-chart-line" style="color: rgba(255,255,255,0.3); font-size:1.1rem;"></i>
+                    </div>
+                </div>
+                <?php if (!empty($chart_values)): ?>
+                <div style="position:relative; height:140px; margin-top:8px;">
+                    <canvas id="velocityChart"></canvas>
+                </div>
+                <div id="velocityChartTooltip" style="
+                    position:absolute; pointer-events:none; display:none;
+                    background:rgba(255,255,255,0.97); color:#1e1b4b;
+                    border-radius:12px; padding:10px 14px;
+                    font-family:var(--font-body); font-size:0.8rem; font-weight:600;
+                    box-shadow:0 8px 24px rgba(0,0,0,0.18);
+                    white-space:nowrap; z-index:50; min-width:160px;
+                    border-left: 3px solid #b45309;
+                "></div>
+                <?php else: ?>
+                <div style="height:120px; display:flex; align-items:center; justify-content:center; opacity:0.4; font-size:0.9rem;">Belum ada data challenge yang selesai dalam 30 hari terakhir</div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
@@ -591,8 +666,10 @@ require_once __DIR__ . '/includes/header.php';
     </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // ── Counter animation ──────────────────────────────────────────────────
     const counters = document.querySelectorAll('.card-value[data-count]');
     counters.forEach((el) => {
         const target = parseInt(el.getAttribute('data-count'), 10);
@@ -608,6 +685,105 @@ document.addEventListener('DOMContentLoaded', function () {
         el.textContent = '0';
         requestAnimationFrame(tick);
     });
+
+    // ── Operational Velocity Chart (Line Chart) ───────────────────────────
+    <?php if (!empty($chart_values)): ?>
+    const chartLabels   = <?php echo json_encode($chart_labels); ?>;
+    const chartValues   = <?php echo json_encode($chart_values); ?>;
+    const chartTooltips = <?php echo json_encode($chart_tooltips); ?>;
+
+    const ctx = document.getElementById('velocityChart');
+    if (!ctx) return;
+
+    const canvasCtx = ctx.getContext('2d');
+    const grad = canvasCtx.createLinearGradient(0, 0, 0, 140);
+    grad.addColorStop(0, 'rgba(245,158,11,0.25)'); // Amber Glow
+    grad.addColorStop(1, 'rgba(245,158,11,0.00)');
+
+    const velocityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Cumulative Progress',
+                data: chartValues,
+                borderColor: '#f59e0b',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#b45309',
+                pointBorderColor: '#0f2744',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHitRadius: 14,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#f59e0b',
+                pointHoverBorderWidth: 2.5,
+                fill: true,
+                backgroundColor: grad,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1000, easing: 'easeOutQuart' },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false },
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
+                    ticks: {
+                        color: 'rgba(255,255,255,0.4)',
+                        font: { size: 10, family: "'Plus Jakarta Sans', sans-serif" },
+                    },
+                    border: { display: false },
+                },
+                y: {
+                    display: false,
+                    beginAtZero: true,
+                }
+            },
+        }
+    });
+
+    const tooltipEl = document.getElementById('velocityChartTooltip');
+    ctx.addEventListener('mousemove', function(e) {
+        const points = velocityChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
+        if (points.length === 0) {
+            tooltipEl.style.display = 'none';
+            return;
+        }
+        const idx = points[0].index;
+        const t   = chartTooltips[idx];
+
+        tooltipEl.innerHTML = `
+            <div style="font-size:0.7rem; color:#6b7280; margin-bottom:4px;">${t.date}</div>
+            <div style="font-size:0.85rem; font-weight:700; color:#1e1b4b; margin-bottom:6px;">${t.opp}</div>
+            <div style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
+                <span style="color:#b45309; font-weight:700;">⚙️ ${t.result}</span>
+                <span style="background:#f3f4f6; border-radius:6px; padding:2px 8px; font-weight:800; color:#1e1b4b; font-size:0.8rem;">${t.score}</span>
+            </div>
+        `;
+
+        const cardRect = tooltipEl.parentElement.getBoundingClientRect();
+        let left = (e.clientX - cardRect.left) + 12;
+        let top  = (e.clientY - cardRect.top)  - 20;
+        
+        tooltipEl.style.display = 'block';
+        const tw = tooltipEl.offsetWidth;
+        if (left + tw > cardRect.width - 10) left = left - tw - 24;
+        if (top < 0) top = 0;
+        tooltipEl.style.left = left + 'px';
+        tooltipEl.style.top  = top + 'px';
+    });
+
+    ctx.addEventListener('mouseleave', function() {
+        tooltipEl.style.display = 'none';
+    });
+    <?php endif; ?>
 });
 </script>
 
