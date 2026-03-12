@@ -303,6 +303,18 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                                title="Lihat Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            <a href="form.php?id=<?php echo $staff['id']; ?>" 
+                               class="btn-action btn-edit" 
+                               title="Edit Staf">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="actions.php" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus staf ini?');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="<?php echo $staff['id']; ?>">
+                                <button type="submit" class="btn-action btn-delete" title="Hapus Staf">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -630,6 +642,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .btn-view:hover {
     background: #2563eb;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-edit {
+    background: #f59e0b;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-edit:hover {
+    background: #d97706;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+    border: none;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
     color: white;
     transform: translateY(-2px);
 }

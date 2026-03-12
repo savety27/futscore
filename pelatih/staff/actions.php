@@ -34,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     
     try {
-        if ($action !== 'add') {
-            throw new Exception('Aksi ini tidak diizinkan. Pelatih hanya dapat menambah staf baru.');
-        }
+
 
         // Get form data
         $name = trim($_POST['name'] ?? '');

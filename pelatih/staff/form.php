@@ -11,12 +11,7 @@ $certificates = [];
 $is_edit = isset($_GET['id']);
 $staff_id = $is_edit ? (int)$_GET['id'] : 0;
 
-// Coaches can only add. Edit is restricted to admin.
-if ($is_edit) {
-    $_SESSION['error_message'] = 'Aksi edit staf hanya dapat dilakukan oleh admin.';
-    header("Location: index.php");
-    exit;
-}
+
 
 // Handle edit mode - fetch staff data
 if ($is_edit) {
