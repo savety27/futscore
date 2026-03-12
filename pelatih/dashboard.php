@@ -330,7 +330,7 @@ if ($team_id) {
         justify-content: center;
         margin-bottom: 28px;
         box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-        margin-left: 47.5px;
+        margin: 0 auto 28px auto;
     }
 
     .team-logo-main img {
@@ -739,7 +739,7 @@ if ($team_id) {
             align-items: center;
             text-align: center;
         }
-        .team-logo-main { width: 96px; height: 96px; margin-left: 0; margin-bottom: 16px; }
+        .team-logo-main { width: 96px; height: 96px; margin: 0 auto 16px auto; }
         .team-name-display { font-size: 1.25rem; }
         .team-status-badge { padding: 4px 8px; font-size: 0.7rem; line-height: 1.2; text-align: center; }
         .team-status-badge { align-self: center; }
