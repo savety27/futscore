@@ -1,9 +1,11 @@
 <?php
 $page_title = 'Pemain Team';
 $current_page = 'team'; // Keep 'team' as current page to highlight the sidebar correctly
-require_once 'config/database.php';
-require_once 'includes/header.php';
-
+require_once '../config/database.php';
+require_once '../includes/header.php';
+?>
+<link rel="stylesheet" href="css/teams.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/teams.css'); ?>">
+<?php
 $team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
 $team_info = null;
 
@@ -15,8 +17,8 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
-    require_once 'includes/footer.php';
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
+    require_once '../includes/footer.php';
     exit;
 }
 
@@ -72,20 +74,26 @@ try {
 }
 ?>
 
-<div class="card">
-    <div class="section-header">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <?php if (!empty($team_info['logo'])): ?>
-                <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
-            <?php endif; ?>
-            <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Pemain</span></h2>
+<div class="teams-container">
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Pemain Team</span>
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 16px;">
+                <?php if (!empty($team_info['logo'])): ?>
+                    <img src="../../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--heritage-border);" onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
+                <?php endif; ?>
+                <h1 class="hero-title" style="margin: 0;"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?></h1>
             </div>
+            <p class="hero-description">Kelola roster dan pantau profil pemain tim ini secara komprehensif.</p>
         </div>
-        <a href="team.php" class="btn-secondary btn-back-refined">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
-        </a>
-    </div>
+        <div class="hero-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+            <a href="index.php" class="btn-premium btn-export" style="background: white;">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
+            </a>
+        </div>
+    </header>
+
+    <div class="reveal d-2">
 
     <?php if (empty($players)): ?>
         <div class="empty-state">
@@ -298,99 +306,182 @@ try {
         </div>
         <?php endif; ?>
     <?php endif; ?>
+    </div>
 </div>
 
-<style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize skill scores
+    document.querySelectorAll('.skill-score').forEach(score => {
+        const skillValue = parseFloat(score.textContent);
+        
+        const getSkillBase = (attr) => {
+            const val = score.getAttribute(attr);
+            return (val !== null && val !== "") ? parseInt(val) : 5;
+        };
+        
+        const data = {
+            dribbling: getSkillBase('data-dribbling'),
+            technique: getSkillBase('data-technique'),
+            speed: getSkillBase('data-speed'),
+            juggling: getSkillBase('data-juggling'),
+            shooting: getSkillBase('data-shooting'),
+            setplay: getSkillBase('data-setplay'),
+            passing: getSkillBase('data-passing'),
+            control: getSkillBase('data-control')
+        };
+        
+        const row = score.closest('tr');
+        const name = row.querySelector('.name-cell strong').textContent;
+        const position = row.querySelector('.position-badge').textContent;
+        
+        const colors = {
+            9: ['#10b981', '#059669'],
+            8: ['#84cc16', '#65a30d'],
+            7: ['#facc15', '#eab308'],
+            6: ['#fbbf24', '#d97706'],
+            5: ['#f97316', '#ea580c'],
+            4: ['#ef4444', '#dc2626'],
+            3: ['#ec4899', '#db2777'],
+            1: ['#a855f7', '#9333ea'],
+        };
 
-/* Reusing styles from players.php mainly */
-.empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
-.empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
-.data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; }
-.data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }
-.data-table th { padding: 15px 12px; text-align: left; font-weight: 600; color: white; border: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-.data-table td { padding: 15px 12px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
-.data-table tbody tr {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    position: relative;
-    will-change: transform;
-}
-.data-table tbody tr:hover,
-.data-table tbody tr:focus-within {
-    background: #eef5ff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
-}
-.btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
-.btn-secondary:hover { background: #d5d5d5; color: #000; }
-.btn-back-refined {
-    background: #ffffff;
-    color: #334155;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    box-shadow: 0 6px 14px rgba(10, 36, 99, 0.08);
-}
-.btn-back-refined:hover {
-    background: #f2f6fc;
-    color: #0f172a;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.12);
-}
+        function getGradient(value) {
+            const level = Math.floor(value);
+            const palette = colors[level] || (value >= 9 ? colors[9] : colors[1]);
+            return `linear-gradient(90deg, ${palette[0]}, ${palette[1]})`;
+        }
+        
+        function getColor(value) {
+             if (value >= 9) return '#10b981';
+             if (value >= 7) return '#84cc16';
+             if (value >= 6) return '#facc15';
+             if (value >= 5) return '#f97316';
+             return '#ef4444';
+        }
 
-/* Photo */
-.player-photo { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: #f8f9fa; }
-.player-photo img { width: 100%; height: 100%; object-fit: cover; }
-.default-photo { width: 100%; height: 100%; background: linear-gradient(135deg, var(--secondary), #FFEC8B); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; }
+        const overallColor = getColor(skillValue);
 
-/* Jersey Number */
-.jersey-number { display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border-radius: 50%; text-align: center; line-height: 40px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 8px rgba(10, 36, 99, 0.2); }
+        let tooltipHTML = `
+            <div class="tooltip-header">
+                <div class="tooltip-player-info">
+                    <h4>${name}</h4>
+                    <span>${position}</span>
+                </div>
+                <div class="tooltip-rating-badge" style="color: ${overallColor}; border-color: ${overallColor}40; background: ${overallColor}10;">
+                    ${skillValue.toFixed(1)}
+                </div>
+            </div>
+            <div class="tooltip-body">
+                <div class="skill-details">
+        `;
+        
+        const skillPairs = [
+            [{n:'Dribbling', v:data.dribbling}, {n:'Control', v:data.control}],
+            [{n:'Passing', v:data.passing}, {n:'Shooting', v:data.shooting}],
+            [{n:'Speed', v:data.speed}, {n:'Technique', v:data.technique}],
+            [{n:'Set Play', v:data.setplay}, {n:'Juggling', v:data.juggling}]
+        ];
+        
+        skillPairs.forEach(pair => {
+            tooltipHTML += `<div class="skill-row">`;
+            pair.forEach(skill => {
+                const gradient = getGradient(skill.v);
+                const isHigh = skill.v >= 8 ? 'high-stat' : '';
+                tooltipHTML += `
+                    <div class="skill-item">
+                        <div class="skill-header">
+                            <span>${skill.n}</span>
+                            <span>${skill.v}</span>
+                        </div>
+                        <div class="skill-track">
+                            <div class="skill-progress ${isHigh}" style="width: ${skill.v * 10}%; background: ${gradient};"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            tooltipHTML += `</div>`;
+        });
+        
+        tooltipHTML += `
+                </div>
+            </div>
+            <div class="tooltip-footer">
+                <div class="overall-text">
+                    PERINGKAT KESELURUHAN <span class="overall-value" style="color: ${overallColor}">${skillValue.toFixed(1)}</span>
+                </div>
+            </div>
+        `;
+        
+        score.setAttribute('data-full-tooltip', tooltipHTML);
+        
+        score.addEventListener('mouseenter', showTooltip);
+        score.addEventListener('mouseleave', hideTooltip);
+        score.addEventListener('touchstart', (e) => {
+             if(tooltip && tooltip._source === score) {
+                 hideTooltip();
+             } else {
+                 showTooltip(e);
+             }
+        }, {passive: true});
+    });
+    
+    let tooltip = null;
+    let tooltipTimeout = null;
 
-/* Position Badge */
-.position-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white; text-align: center; min-width: 40px; background: #2196F3; }
-.position-badge[data-position="GK"] { background: linear-gradient(135deg, #FF9800, #F57C00); }
-.position-badge[data-position="DF"], .position-badge[data-position="CB"], .position-badge[data-position="LB"], .position-badge[data-position="RB"] { background: linear-gradient(135deg, #4CAF50, #2E7D32); }
-.position-badge[data-position="MF"], .position-badge[data-position="CM"], .position-badge[data-position="DM"], .position-badge[data-position="AM"] { background: linear-gradient(135deg, #2196F3, #1976D2); }
-.position-badge[data-position="FW"], .position-badge[data-position="ST"], .position-badge[data-position="LW"], .position-badge[data-position="RW"] { background: linear-gradient(135deg, #F44336, #C62828); }
+    function showTooltip(e) {
+        if (tooltipTimeout) clearTimeout(tooltipTimeout);
+        if (tooltip) tooltip.remove();
 
-/* Status Badge */
-.status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; color: white; }
-.status-badge.active { background: #4CAF50; }
-.status-badge.inactive { background: #9e9e9e; }
-.status-badge.injured { background: #F44336; }
+        const target = e.currentTarget;
+        const html = target.getAttribute('data-full-tooltip');
+        
+        tooltip = document.createElement('div');
+        tooltip.className = 'custom-tooltip';
+        tooltip.innerHTML = html;
+        tooltip._source = target;
+        
+        document.body.appendChild(tooltip);
+        
+        const rect = target.getBoundingClientRect();
+        const spacing = 12;
+        let top = rect.top - tooltip.offsetHeight - spacing;
+        let left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+        
+        if (top < 10) {
+            top = rect.bottom + spacing;
+            tooltip.style.transformOrigin = 'top center';
+        } else {
+             tooltip.style.transformOrigin = 'bottom center';
+        }
+        
+        if (left < 10) left = 10;
+        if (left + tooltip.offsetWidth > window.innerWidth - 10) {
+            left = window.innerWidth - tooltip.offsetWidth - 10;
+        }
 
-/* Stats Summary */
-.stats-summary { display: flex; gap: 20px; padding: 20px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; margin-top: 20px; margin-bottom: 20px; }
-.stat-item { flex: 1; text-align: center; }
-.stat-label { font-size: 12px; text-transform: uppercase; color: var(--gray); display: block; margin-bottom: 4px; }
-.stat-value { font-size: 20px; font-weight: 700; color: var(--primary); }
-
-/* Pagination */
-.pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
-.page-link { padding: 8px 14px; background: white; border: 2px solid #e0e0e0; border-radius: 8px; color: var(--dark); text-decoration: none; font-weight: 600; }
-.page-link.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-@media (max-width: 768px) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.position = 'fixed';
+        
+        requestAnimationFrame(() => {
+            tooltip.classList.add('visible');
+        });
     }
-}
 
-@media (hover: none) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: none;
-        box-shadow: none;
-        background: #f8f9fa;
+    function hideTooltip() {
+        if (tooltip) {
+            tooltip.classList.remove('visible');
+            tooltipTimeout = setTimeout(() => {
+                if(tooltip && !tooltip.classList.contains('visible')) {
+                    tooltip.remove();
+                    tooltip = null;
+                }
+            }, 200);
+        }
     }
-}
-</style>
+});
+</script>
 
-<?php require_once 'includes/footer.php'; ?>
+
+<?php require_once '../includes/footer.php'; ?>

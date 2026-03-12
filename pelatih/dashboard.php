@@ -628,6 +628,8 @@ if ($team_id) {
 
     @media (max-width: 1024px) {
         .stats-grid-wrapper { grid-template-columns: 1fr; }
+        .team-side-column { display: flex; flex-direction: column; gap: 24px; }
+        .team-logo-main { margin-left: 0; }
         .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .match-hero-content { 
             grid-template-columns: 1fr;

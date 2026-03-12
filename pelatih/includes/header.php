@@ -13,8 +13,9 @@ $page_title = $page_title ?? 'Dashboard';
 $current_page = $current_page ?? 'dashboard';
 $pelatih_name = $_SESSION['admin_fullname'] ?? 'Pelatih';
 $team_id = $_SESSION['team_id'] ?? 0;
-$path_prefix = (basename(dirname($_SERVER['SCRIPT_NAME'])) == 'players') ? '../' : '';
-$team_name = 'Alvetrix';
+$current_dir = basename(dirname($_SERVER['SCRIPT_NAME']));
+$path_prefix = in_array($current_dir, ['players', 'teams', 'staff']) ? '../' : '';
+$team_name = '';
 $team_logo = '';
 
 if ($team_id && isset($conn)) {
@@ -106,14 +107,14 @@ if (!empty($team_logo)) {
             </div>
 
             <div class="menu-item">
-                <a href="<?php echo $path_prefix; ?>team.php" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>teams/" class="menu-link <?php echo $current_page === 'team' ? 'active' : ''; ?>">
                     <span class="menu-icon">🏆</span>
                     <span class="menu-text">Team</span>
                 </a>
             </div>
 
             <div class="menu-item">
-                <a href="<?php echo $path_prefix; ?>team_staff.php" class="menu-link <?php echo $current_page === 'team_staff' ? 'active' : ''; ?>">
+                <a href="<?php echo $path_prefix; ?>staff/" class="menu-link <?php echo $current_page === 'team_staff' ? 'active' : ''; ?>">
                     <span class="menu-icon">👔</span>
                     <span class="menu-text">Staf Team</span>
                 </a>

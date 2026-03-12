@@ -4,11 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'pelatih') {
-    header('Location: ../login.php');
+    header('Location: ../../login.php');
     exit;
 }
 
-require_once 'config/database.php';
+require_once '../config/database.php';
 
 $search = trim((string)($_GET['search'] ?? ''));
 

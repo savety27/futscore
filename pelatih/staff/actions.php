@@ -1,10 +1,10 @@
 <?php
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 // Ensure user is logged in and is a coach
 if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 'pelatih') {
-    header('Location: ../login.php');
+    header('Location: ../../login.php');
     exit;
 }
 
@@ -22,7 +22,7 @@ if (!$team_id && isset($_SESSION['admin_id'])) {
 
 if (!$team_id) {
     $_SESSION['error_message'] = 'Team belum terhubung ke akun pelatih. Silakan hubungi administrator.';
-    header('Location: team_staff.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -34,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     
     try {
-        if ($action !== 'add') {
-            throw new Exception('Aksi ini tidak diizinkan. Pelatih hanya dapat menambah staf baru.');
-        }
+
 
         // Get form data
         $name = trim($_POST['name'] ?? '');
@@ -88,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Generate unique filename
                     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
                     $filename = 'staff_' . time() . '_' . uniqid() . '.' . $ext;
-                    $upload_dir = '../uploads/staff/';
+                    $upload_dir = '../../uploads/staff/';
                     
                     // Create directory if not exists
                     if (!file_exists($upload_dir)) {
@@ -140,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         // Generate unique filename
                         $filename = 'cert_' . time() . '_' . uniqid() . '.' . $file_ext;
-                        $upload_dir = '../uploads/certificates/';
+                        $upload_dir = '../../uploads/certificates/';
                         
                         // Create directory if not exists
                         if (!file_exists($upload_dir)) {
@@ -216,11 +214,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conn->commit();
                 
                 $_SESSION['success_message'] = "Staff berhasil ditambahkan!";
-                header("Location: team_staff.php");
+                header("Location: index.php");
                 exit;
             } else {
                 $_SESSION['error_message'] = implode('<br>', $errors);
-                header("Location: staff_form.php");
+                header("Location: form.php");
                 exit;
             }
         }
@@ -261,8 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Handle photo deletion
             if (isset($_POST['delete_photo']) && $photo_path) {
-                if (file_exists('../' . $photo_path)) {
-                    @unlink('../' . $photo_path);
+                if (file_exists('../../' . $photo_path)) {
+                    @unlink('../../' . $photo_path);
                 }
                 $photo_path = null;
             }
@@ -287,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Generate unique filename
                     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
                     $filename = 'staff_' . time() . '_' . uniqid() . '.' . $ext;
-                    $upload_dir = '../uploads/staff/';
+                    $upload_dir = '../../uploads/staff/';
                     
                     // Create directory if not exists
                     if (!file_exists($upload_dir)) {
@@ -298,8 +296,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     if (move_uploaded_file($file['tmp_name'], $target_path)) {
                         // Delete old photo if exists
-                        if ($photo_path && file_exists('../' . $photo_path)) {
-                            @unlink('../' . $photo_path);
+                        if ($photo_path && file_exists('../../' . $photo_path)) {
+                            @unlink('../../' . $photo_path);
                         }
                         $photo_path = 'uploads/staff/' . $filename;
                     } else {
@@ -346,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         // Generate unique filename
                         $filename = 'cert_' . time() . '_' . uniqid() . '.' . $file_ext;
-                        $upload_dir = '../uploads/certificates/';
+                        $upload_dir = '../../uploads/certificates/';
                         
                         // Create directory if not exists
                         if (!file_exists($upload_dir)) {
@@ -423,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ");
                         $stmt->execute([$cert_id, $id, $team_id]);
                         if ($cert = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                            $file_path = '../uploads/certificates/' . $cert['certificate_file'];
+                            $file_path = '../../uploads/certificates/' . $cert['certificate_file'];
                             if (file_exists($file_path)) {
                                 @unlink($file_path);
                             }
@@ -460,11 +458,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conn->commit();
                 
                 $_SESSION['success_message'] = "Staff berhasil diperbarui!";
-                header("Location: team_staff.php");
+                header("Location: index.php");
                 exit;
             } else {
                 $_SESSION['error_message'] = implode('<br>', $errors);
-                header("Location: staff_form.php?id=" . $id);
+                header("Location: form.php?id=" . $id);
                 exit;
             }
         }
@@ -500,15 +498,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Delete certificates files
             foreach ($certificates as $cert) {
-                $file_path = '../uploads/certificates/' . $cert['certificate_file'];
+                $file_path = '../../uploads/certificates/' . $cert['certificate_file'];
                 if (file_exists($file_path)) {
                     @unlink($file_path);
                 }
             }
             
             // Delete staff photo
-            if (!empty($staff['photo']) && file_exists('../' . $staff['photo'])) {
-                @unlink('../' . $staff['photo']);
+            if (!empty($staff['photo']) && file_exists('../../' . $staff['photo'])) {
+                @unlink('../../' . $staff['photo']);
             }
             
             // Delete certificates from database
@@ -531,7 +529,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['error_message'] = "Gagal menghapus staff atau akses ditolak.";
             }
             
-            header("Location: team_staff.php");
+            header("Location: index.php");
             exit;
         }
         
@@ -543,14 +541,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['error_message'] = $e->getMessage();
         
         if ($action === 'add') {
-            header("Location: staff_form.php");
+            header("Location: form.php");
         } else {
-            header("Location: team_staff.php");
+            header("Location: index.php");
         }
         exit;
     }
 } else {
-    header("Location: team_staff.php");
+    header("Location: index.php");
     exit;
 }
 ?>

@@ -1,9 +1,11 @@
 <?php
 $page_title = 'Staf Team';
 $current_page = 'team'; // Keep 'team' as current page for sidebar
-require_once 'config/database.php';
-require_once 'includes/header.php';
-
+require_once '../config/database.php';
+require_once '../includes/header.php';
+?>
+<link rel="stylesheet" href="css/teams.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/teams.css'); ?>">
+<?php
 $team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
 $team_info = null;
 
@@ -15,8 +17,8 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
-    require_once 'includes/footer.php';
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
+    require_once '../includes/footer.php';
     exit;
 }
 
@@ -117,29 +119,45 @@ try {
     </div>
 </div>
 
-<div class="card">
-    <div class="section-header">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <?php if (!empty($team_info['logo'])): ?>
-                <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
-            <?php endif; ?>
-            <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Staf</span></h2>
+<div class="teams-container">
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Staf Team</span>
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 16px;">
+                <?php if (!empty($team_info['logo'])): ?>
+                    <img src="../../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--heritage-border);" onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
+                <?php endif; ?>
+                <h1 class="hero-title" style="margin: 0;"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?></h1>
+            </div>
+            <p class="hero-description">Kelola dan pantau profil staf tim ini secara komprehensif.</p>
+        </div>
+        <div class="hero-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+            <a href="index.php" class="btn-premium btn-export" style="background: white;">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
+            </a>
+        </div>
+    </header>
+
+    <div class="reveal d-2">
+        <div class="filter-container">
+            <div class="teams-filter-card">
+                <form action="" method="GET" style="display: flex; gap: 15px; width: 100%; align-items: center;">
+                    <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
+                    <div style="flex: 1; position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--heritage-text); opacity: 0.5;"></i>
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari staf berdasarkan nama, posisi, dll..." value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    <button type="submit" class="btn-premium">
+                        <i class="fas fa-search"></i> Cari
+                    </button>
+                    <?php if(!empty($search)): ?>
+                        <a href="?team_id=<?php echo $team_id; ?>" class="btn-premium" style="background: white; color: var(--heritage-text);">
+                            <i class="fas fa-times"></i> Reset
+                        </a>
+                    <?php endif; ?>
+                </form>
             </div>
         </div>
-        <a href="team.php" class="btn-secondary btn-back-refined">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
-        </a>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="search-bar" style="margin-bottom: 20px;">
-        <form action="" method="GET">
-            <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
-            <input type="text" name="search" placeholder="Cari staf..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
-            <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
-    </div>
 
     <?php if (empty($staff_list)): ?>
         <div class="empty-state">
@@ -163,12 +181,17 @@ try {
                     <?php foreach ($staff_list as $staff): ?>
                     <tr>
                          <td>
-                            <img src="../uploads/staff/<?php echo basename($staff['photo']); ?>" 
-                            alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
+                            <img src="../../uploads/staff/<?php echo basename($staff['photo']); ?>" 
+                            alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" class="staff-photo" onerror="this.onerror=null; this.src='../../images/staff/default-staff.png'">
                         </td>
                         <td class="name-cell">
-                            <?php echo htmlspecialchars($staff['name'] ?? ''); ?>
-                            <div style="font-size: 11px; color: var(--gray); font-weight: normal;"><?php echo htmlspecialchars($staff['email'] ?? ''); ?></div>
+                            <strong><?php echo htmlspecialchars($staff['name'] ?? ''); ?></strong>
+                            <div class="player-info" style="margin-top: 4px;">
+                                <small style="display: flex; align-items: center; gap: 4px;">
+                                    <i class="fas fa-envelope" style="font-size: 10px; opacity: 0.7;"></i> 
+                                    <?php echo htmlspecialchars($staff['email'] ?? '-'); ?>
+                                </small>
+                            </div>
                         </td>
                         <td class="position-cell">
                             <span class="position-badge"><?php echo htmlspecialchars($staff['position'] ?? ''); ?></span>
@@ -199,20 +222,36 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=1&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-left"></i></a>
             <?php endif; ?>
             
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
-            <?php endfor; ?>
+            <?php
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $page + 2);
+            
+            if ($start_page > 1) {
+                echo '<span class="pagination-dots">...</span>';
+            }
+            
+            for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php endfor; 
+            
+            if ($end_page < $total_pages) {
+                echo '<span class="pagination-dots">...</span>';
+            }
+            ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-right"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-double-right"></i></a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
 
     <?php endif; ?>
+    </div>
 </div>
 
 <script>
@@ -251,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function loadCertificates(staffId) {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'get_certificates.php?staff_id=' + staffId, true); // Ensure get_certificates.php handles this correctly without session checks if intended for public? Actually this is pelatih folder so session is required, which we have via header.php -> functions.php
+        xhr.open('GET', '../staff/get_certificates.php?staff_id=' + staffId, true); // Ensure get_certificates.php handles this correctly without session checks if intended for public? Actually this is pelatih folder so session is required, which we have via header.php -> functions.php
         
         xhr.onload = function() {
             if (xhr.status === 200) {
@@ -271,48 +310,20 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
-
-/* Reused Styles */
-.empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
-.empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
-.btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
-.btn-secondary:hover { background: #d5d5d5; color: #000; }
-.btn-back-refined {
-    background: #ffffff;
-    color: #334155;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    box-shadow: 0 6px 14px rgba(10, 36, 99, 0.08);
-}
-.btn-back-refined:hover {
-    background: #f2f6fc;
-    color: #0f172a;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.12);
-}
-.data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; }
-.data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }
-.data-table th { padding: 15px 12px; text-align: left; font-weight: 600; color: white; border: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-.data-table td { padding: 15px 12px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
-
-.staff-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.position-badge { display: inline-block; padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: 600; background: #e3f2fd; color: #1565c0; }
-.age-cell { text-align: center; font-weight: 600; color: #555; }
-.certificate-cell { text-align: center; }
-.certificate-count { display: inline-block; padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: 600; background: #e8f5e9; color: #2e7d32; transition: all 0.2s; }
-.certificate-count.clickable:hover { transform: scale(1.05); background: #c8e6c9; }
-
-/* Modal Styles */
+/* Modal Styles specific to staff page */
 .modal-content { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-.certificate-item { margin-bottom: 15px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; background: #f8f9fa; }
-.certificate-image { max-width: 100%; height: auto; border-radius: 8px; margin-top: 10px; border: 2px solid #ddd; }
+.certificate-item { margin-bottom: 15px; padding: 15px; border: 1px solid var(--heritage-border); border-radius: 10px; background: var(--heritage-bg); }
+.certificate-image { max-width: 100%; height: auto; border-radius: 8px; margin-top: 10px; border: 2px solid var(--heritage-border); }
+
+/* Overrides for staff specific table cells */
+.staff-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: var(--heritage-bg); }
+.position-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(30, 64, 175, 0.1); color: #1e40af; border: 1px solid rgba(30, 64, 175, 0.2); text-transform: uppercase; letter-spacing: 0.5px; }
+.age-cell { text-align: center; font-weight: 600; color: var(--heritage-text); font-size: 14px; }
+.certificate-cell { text-align: center; }
+.certificate-count { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); transition: all 0.3s ease; }
+.certificate-count.clickable:hover { transform: translateY(-2px); background: rgba(16, 185, 129, 0.15); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
+.certificate-count[style*="background: #eee"] { background: var(--heritage-bg) !important; color: #64748b !important; border-color: var(--heritage-border) !important; font-weight: 500; }
 </style>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

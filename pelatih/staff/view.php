@@ -1,14 +1,14 @@
 <?php
 $page_title = 'Lihat Detail Staf Team';
 $current_page = 'team_staff';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 // Get staff ID
 $staff_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($staff_id <= 0) {
-    header("Location: team_staff.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -28,7 +28,7 @@ try {
     
     if (!$staff_data) {
         $_SESSION['error_message'] = 'Staff tidak ditemukan atau akses ditolak.';
-        header("Location: team_staff.php");
+        header("Location: index.php");
         exit;
     }
     
@@ -48,7 +48,7 @@ try {
     
 } catch (PDOException $e) {
     $_SESSION['error_message'] = 'Error: ' . $e->getMessage();
-    header("Location: team_staff.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -386,7 +386,7 @@ $position_labels = [
             <i class="fas fa-user-tie"></i>
             <span>Detail Staff Team</span>
         </h2>
-        <a href="team_staff.php" class="btn btn-secondary btn-back-model">
+        <a href="index.php" class="btn btn-secondary btn-back-model">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
     </div>
@@ -398,10 +398,10 @@ $position_labels = [
     <div class="info-header">
         <div class="staff-main-info">
             <?php if (!empty($staff_data['photo'])): ?>
-                <img src="../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
+                <img src="../../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
                      alt="<?php echo htmlspecialchars($staff_data['name']); ?>" 
                      class="staff-photo-large"
-                     onerror="this.src='../images/staff/default-staff.png'">
+                     onerror="this.src='../../images/staff/default-staff.png'">
             <?php else: ?>
                 <div class="staff-photo-large" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-user-tie" style="font-size: 60px; color: #999;"></i>
@@ -532,7 +532,7 @@ $position_labels = [
                 <?php if (!empty($cert['certificate_file'])): ?>
                 <div class="certificate-file">
                     <?php 
-                    $file_path = '../uploads/certificates/' . $cert['certificate_file'];
+                    $file_path = '../../uploads/certificates/' . $cert['certificate_file'];
                     $file_ext = strtolower(pathinfo($cert['certificate_file'], PATHINFO_EXTENSION));
                     ?>
                     
@@ -556,4 +556,4 @@ $position_labels = [
     <?php endif; ?>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>
