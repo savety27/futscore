@@ -111,11 +111,20 @@ try {
 ?>
 
 <!-- Modal untuk menampilkan sertifikat (Reused) -->
-<div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
-    <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; position: relative;">
-        <span class="close-modal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: var(--danger);">&times;</span>
-        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Sertifikat</h3>
-        <div id="certificatesList" style="max-height: 400px; overflow-y: auto;"></div>
+<div id="certificatesModal" class="modal-overlay" style="display: none;">
+    <div class="modal-container reveal d-1">
+        <header class="modal-header">
+            <div class="header-content">
+                <i class="fas fa-medal header-icon"></i>
+                <h3 id="modalTitle" class="modal-title">Sertifikat Staf</h3>
+            </div>
+            <button class="close-modal-btn" aria-label="Tutup Modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="modal-body-content">
+            <div id="certificatesList" class="certificates-list-wrapper"></div>
+        </div>
     </div>
 </div>
 
@@ -260,11 +269,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('certificatesModal');
     const modalTitle = document.getElementById('modalTitle');
     const certificatesList = document.getElementById('certificatesList');
-    const closeModal = document.querySelector('.close-modal');
+    const closeModal = document.querySelector('.close-modal-btn');
     const viewCertificatesLinks = document.querySelectorAll('.view-certificates');
     
+    function openModal() {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent scroll
+    }
+
     function closeCertificateModal() {
-        modal.style.display = 'none';
+        modal.classList.add('fade-out');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('fade-out');
+            document.body.style.overflow = '';
+        }, 300);
     }
     
     closeModal.addEventListener('click', closeCertificateModal);
@@ -281,27 +300,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const staffName = this.getAttribute('data-staff-name');
             
             modalTitle.textContent = 'Sertifikat - ' + staffName;
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Memuat sertifikat...</p></div>';
-            modal.style.display = 'block';
-            
+            certificatesList.innerHTML = `
+                <div class="modal-loading">
+                    <div class="loader-spinner"></div>
+                    <p>Mencari sertifikat untuk ${staffName}...</p>
+                </div>
+            `;
+            openModal();
             loadCertificates(staffId);
         });
     });
     
     function loadCertificates(staffId) {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', '../staff/get_certificates.php?staff_id=' + staffId, true); // Ensure get_certificates.php handles this correctly without session checks if intended for public? Actually this is pelatih folder so session is required, which we have via header.php -> functions.php
+        xhr.open('GET', '../staff/get_certificates.php?staff_id=' + staffId, true);
         
         xhr.onload = function() {
             if (xhr.status === 200) {
                 certificatesList.innerHTML = xhr.responseText;
+                // Add staggered animation to loaded items
+                const items = certificatesList.querySelectorAll('.certificate-card');
+                items.forEach((item, index) => {
+                    item.style.animationDelay = (index * 0.1) + 's';
+                    item.classList.add('reveal', 'd-1');
+                });
             } else {
-                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat sertifikat</p></div>';
+                certificatesList.innerHTML = '<div class="modal-error"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat sertifikat. Silakan coba lagi nanti.</p></div>';
             }
         };
         
         xhr.onerror = function() {
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Kesalahan jaringan</p></div>';
+            certificatesList.innerHTML = '<div class="modal-error"><i class="fas fa-wifi"></i><p>Kesalahan jaringan. Pastikan koneksi internet Anda stabil.</p></div>';
         };
         
         xhr.send();
@@ -310,13 +339,334 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-/* Modal Styles specific to staff page */
-.modal-content { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-.certificate-item { margin-bottom: 15px; padding: 15px; border: 1px solid var(--heritage-border); border-radius: 10px; background: var(--heritage-bg); }
-.certificate-image { max-width: 100%; height: auto; border-radius: 8px; margin-top: 10px; border: 2px solid var(--heritage-border); }
+/* Modern Modal Overlay with Glassmorphism */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: modalFadeIn 0.3s ease-out;
+}
 
-/* Overrides for staff specific table cells */
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-overlay.fade-out {
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+}
+
+/* Modal Container */
+.modal-container {
+    background: white;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modal Header */
+.modal-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--heritage-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    z-index: 10;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    font-size: 1.5rem;
+    color: var(--heritage-gold);
+}
+
+.modal-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--heritage-text);
+    letter-spacing: -0.02em;
+}
+
+.close-modal-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: var(--heritage-bg);
+    color: var(--heritage-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    background: var(--heritage-crimson);
+    color: white;
+    transform: rotate(90deg);
+}
+
+/* Modal Body */
+.modal-body-content {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    background: #fdfcfb;
+}
+
+/* Custom Scrollbar for Modal Body */
+.modal-body-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body-content::-webkit-scrollbar-thumb {
+    background: var(--heritage-border);
+    border-radius: 3px;
+}
+
+.modal-body-content::-webkit-scrollbar-thumb:hover {
+    background: var(--heritage-gold);
+}
+
+/* Certificates Grid & Cards */
+.certificates-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.certificate-card {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid var(--heritage-border);
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.certificate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
+    border-color: var(--heritage-gold);
+}
+
+.certificate-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.cert-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(180, 83, 9, 0.1);
+    color: var(--heritage-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.cert-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cert-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--heritage-text);
+}
+
+.cert-date {
+    font-size: 0.875rem;
+    color: var(--heritage-text-muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.certificate-details {
+    margin-bottom: 16px;
+    background: var(--heritage-bg);
+    padding: 12px 16px;
+    border-radius: 12px;
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--heritage-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: var(--heritage-text);
+    font-size: 0.95rem;
+}
+
+.certificate-preview {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--heritage-border);
+    background: #f1f5f9;
+}
+
+.certificate-image {
+    width: 100%;
+    display: block;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.preview-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(30, 27, 75, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+}
+
+.certificate-preview:hover .preview-overlay {
+    opacity: 1;
+}
+
+.certificate-preview:hover .certificate-image {
+    transform: scale(1.05);
+}
+
+.btn-view-full {
+    background: white;
+    color: var(--heritage-text);
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.certificate-preview:hover .btn-view-full {
+    transform: translateY(0);
+}
+
+/* Modal Loading & Error States */
+.modal-loading, .modal-error {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.loader-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--heritage-border);
+    border-top: 4px solid var(--heritage-gold);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.modal-loading p, .modal-error p {
+    font-weight: 600;
+    color: var(--heritage-text-muted);
+}
+
+.modal-error i {
+    font-size: 48px;
+    color: var(--heritage-crimson);
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+    .modal-container {
+        max-height: 95vh;
+        border-radius: 0; /* Full screen-ish on mobile */
+    }
+    
+    .modal-header {
+        padding: 16px 20px;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+    }
+    
+    .modal-body-content {
+        padding: 16px;
+    }
+    
+    .certificate-header {
+        gap: 12px;
+    }
+    
+    .cert-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .cert-name {
+        font-size: 1rem;
+    }
+}
+
+/* Staff Specific Table Cells Overrides */
 .staff-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: var(--heritage-bg); }
 .position-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(30, 64, 175, 0.1); color: #1e40af; border: 1px solid rgba(30, 64, 175, 0.2); text-transform: uppercase; letter-spacing: 0.5px; }
 .age-cell { text-align: center; font-weight: 600; color: var(--heritage-text); font-size: 14px; }
