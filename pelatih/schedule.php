@@ -397,18 +397,18 @@ $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) 
     <?php if (empty($challenges)): ?>
         <p style="text-align: center; color: var(--gray); padding: 20px;">Pertandingan tidak ditemukan.</p>
     <?php else: ?>
-        <div class="schedule-table-wrap">
+        <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th style="text-align:center;">Kode Pertandingan</th>
-                        <th style="text-align:center;">Tanggal</th>
-                        <th style="text-align:center;">Team</th>
-                        <th style="text-align:center;">Event</th>
-                        <th style="text-align:center;">Lokasi</th>
+                        <th>Kode Pertandingan</th>
+                        <th>Tanggal</th>
+                        <th>Team</th>
+                        <th>Event</th>
+                        <th>Lokasi</th>
                         <th style="text-align:center;">Skor</th>
-                        <th style="text-align:center;">Status</th>
-                        <th style="text-align:center;">Status Pertandingan</th>
+                        <th>Status</th>
+                        <th>Status Pertandingan</th>
                         <th style="text-align:center;">Aksi</th>
                     </tr>
                 </thead>
