@@ -343,9 +343,66 @@ try {
 
 /* Mobile View Adjustments for VS Card */
 @media (max-width: 768px) {
-    .vs-card { flex-direction: column; gap: 40px; }
-    .vs-divider { padding: 0; }
-    .score-text { font-size: 3rem; }
+    .main { padding: 20px !important; }
+    
+    .dashboard-hero { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        text-align: left;
+        padding-bottom: 24px;
+        margin-bottom: 32px;
+    }
+    
+    .hero-title { font-size: 2.2rem; }
+    
+    .hero-actions { 
+        width: 100%; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 12px; 
+    }
+    
+    .hero-actions .btn-premium { 
+        width: 100%; 
+        justify-content: center; 
+    }
+
+    .info-card { padding: 24px; margin-bottom: 24px; border-radius: 20px; }
+    
+    .vs-card { 
+        padding: 32px 16px; 
+        flex-direction: column; 
+        gap: 24px; 
+    }
+    
+    .vs-divider { padding: 0; gap: 10px; }
+    
+    .team-logo-wrap { width: 100px; height: 100px; margin-bottom: 12px; }
+    
+    .team-name { font-size: 1.25rem; }
+    
+    .vs-circle { width: 50px; height: 50px; font-size: 1.1rem; }
+    
+    .score-text { font-size: 2.5rem; }
+    
+    .info-grid { gap: 20px; grid-template-columns: 1fr; }
+    
+    .info-item { padding-bottom: 15px; }
+    
+    .info-value { font-size: 1rem; }
+    
+    .section-title { font-size: 1.5rem; }
+    
+    .timeline-item { gap: 15px; }
+    
+    .timeline-icon { width: 36px; height: 36px; font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+    .hero-title { font-size: 1.8rem; }
+    .score-text { font-size: 2rem; }
+    .team-logo-wrap { width: 80px; height: 80px; }
+    .info-card { padding: 20px; }
 }
 </style>
 </head>
