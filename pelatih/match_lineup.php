@@ -484,421 +484,775 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<div class="lineup-page">
-    <div class="card lineup-shell">
-        <div class="lineup-hero">
-            <div class="lineup-hero__copy">
-                <span class="lineup-hero__eyebrow">Pengaturan Susunan Pemain</span>
-                <h2 class="lineup-hero__title">
-                    <?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?>
-                    <span class="lineup-hero__vs">vs</span>
-                    <?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?>
-                </h2>
-                <div class="lineup-hero__meta">
-                    <span class="lineup-pill">
-                        <i class="fas fa-trophy"></i>
-                        <?php echo htmlspecialchars($challenge['event_name'] ?? ($challenge['sport_type'] ?? '-')); ?>
-                    </span>
-                    <span class="lineup-pill">
-                        <i class="fas fa-layer-group"></i>
-                        Kategori: <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
-                    </span>
-                    <span class="lineup-pill">
-                        <i class="fas fa-hashtag"></i>
-                        Match <?php echo (int)$challenge_id; ?>
-                    </span>
-                </div>
-            </div>
-            <a href="schedule.php" class="btn-secondary lineup-back-btn">
-                <i class="fas fa-arrow-left"></i> Kembali
+<style>
+    :root {
+        --heritage-bg: #f8f7f4;
+        --heritage-card: #ffffff;
+        --heritage-border: #e5e1da;
+        --heritage-text: #1e1b4b;
+        --heritage-text-muted: #6b7280;
+        --heritage-accent: #064e3b;
+        --heritage-gold: #b45309;
+        --heritage-crimson: #991b1b;
+        --font-display: 'Bricolage Grotesque', sans-serif;
+        --font-body: 'Plus Jakarta Sans', sans-serif;
+        --soft-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+        --glow-shadow: 0 0 40px rgba(6, 78, 59, 0.08);
+    }
+
+    .main {
+        background: var(--heritage-bg) !important;
+        background-image: radial-gradient(#e5e1da 0.5px, transparent 0.5px) !important;
+        background-size: 24px 24px !important;
+        color: var(--heritage-text);
+        font-family: var(--font-body);
+        padding: 40px !important;
+    }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Editorial Hero */
+    .dashboard-hero {
+        margin-bottom: 32px;
+        border-bottom: 2px solid var(--heritage-text);
+        padding-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .hero-label {
+        color: var(--heritage-gold);
+        font-family: var(--font-display);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--heritage-text);
+        margin: 0;
+        line-height: 1;
+        letter-spacing: -0.04em;
+    }
+
+    .hero-description {
+        color: var(--heritage-text-muted);
+        font-size: 1rem;
+        line-height: 1.5;
+        margin: 8px 0 0 0;
+        max-width: 600px;
+    }
+
+    /* Match Context Card */
+    .match-context-card {
+        background: white;
+        border: 1px solid var(--heritage-border);
+        border-radius: 24px;
+        padding: 24px;
+        margin-bottom: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--soft-shadow);
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .match-teams {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .match-team-name {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--heritage-text);
+    }
+
+    .match-vs {
+        font-family: var(--font-display);
+        font-weight: 900;
+        color: var(--heritage-gold);
+        font-size: 1.2rem;
+        background: var(--heritage-bg);
+        padding: 8px 12px;
+        border-radius: 12px;
+    }
+
+    .match-meta-badges {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 99px;
+        background: #f3f4f6;
+        color: var(--heritage-text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .meta-badge i {
+        color: var(--heritage-text);
+    }
+
+    /* Cards */
+    .heritage-card {
+        background: var(--heritage-card);
+        border: 1px solid var(--heritage-border);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--soft-shadow);
+        margin-bottom: 24px;
+    }
+
+    .card-header {
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--heritage-border);
+        padding-bottom: 16px;
+    }
+
+    .card-title {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--heritage-text);
+        margin: 0;
+    }
+
+    .card-subtitle {
+        font-size: 0.9rem;
+        color: var(--heritage-text-muted);
+        margin: 4px 0 0 0;
+    }
+
+    /* Form Elements */
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--heritage-border);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: var(--heritage-text);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(30, 27, 75, 0.1);
+    }
+
+    .btn-primary {
+        background: var(--heritage-text);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 27, 75, 0.2);
+    }
+    
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: var(--heritage-text);
+        border: 1px solid var(--heritage-border);
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+        background: #f3f4f6;
+    }
+
+    /* Custom Checkbox Group (Uniforms & Staff) */
+    .checkbox-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .checkbox-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: white;
+        border: 1px solid var(--heritage-border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .checkbox-option:hover {
+        border-color: var(--heritage-text);
+        background: #fafafa;
+    }
+    
+    .checkbox-option:has(input:checked) {
+        border-color: var(--heritage-accent);
+        background: #f0fdf4;
+    }
+
+    .checkbox-option input:checked + span {
+        font-weight: 700;
+        color: var(--heritage-accent);
+    }
+
+    /* Tabs */
+    .tabs-nav {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        background: #f3f4f6;
+        padding: 6px;
+        border-radius: 16px;
+        width: fit-content;
+    }
+
+    .tab-btn {
+        padding: 10px 24px;
+        border-radius: 12px;
+        border: none;
+        background: transparent;
+        color: var(--heritage-text-muted);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        background: white;
+        color: var(--heritage-text);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Table */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .heritage-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .heritage-table th {
+        text-align: left;
+        padding: 16px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--heritage-text-muted);
+        border-bottom: 2px solid var(--heritage-border);
+        font-weight: 700;
+    }
+
+    .heritage-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--heritage-border);
+        vertical-align: middle;
+        background: white;
+    }
+
+    .heritage-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .heritage-table tr:hover td {
+        background: #fafafa;
+    }
+
+    .player-jersey {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        background: var(--heritage-text);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .player-name {
+        font-weight: 600;
+        color: var(--heritage-text);
+    }
+
+    .player-pos {
+        color: var(--heritage-text-muted);
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-ok { background: #d1fae5; color: #064e3b; }
+    .status-bad { background: #fee2e2; color: #991b1b; }
+    .status-suspend { background: #fef3c7; color: #92400e; }
+
+    .alert {
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-success { background: #d1fae5; color: #064e3b; border: 1px solid #a7f3d0; }
+    .alert-warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    
+    /* Code Snippet Styles in Alert */
+    code {
+        background: rgba(0,0,0,0.06);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+
+    /* Filter Grid */
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        align-items: end;
+    }
+
+    /* Floating Save Bar for Mobile/Desktop */
+    .save-bar {
+        position: sticky;
+        bottom: 20px;
+        background: var(--heritage-text);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        margin-top: 32px;
+        z-index: 100;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-hero {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .match-context-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 16px;
+        }
+        .match-teams {
+            flex-direction: column;
+            gap: 12px;
+        }
+        .save-bar {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+        }
+        .save-bar button {
+            width: 100%;
+            justify-content: center;
+        }
+        .tabs-nav {
+            width: 100%;
+            overflow-x: auto;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <header class="dashboard-hero">
+        <div class="hero-content">
+            <span class="hero-label">Matchday Management</span>
+            <h1 class="hero-title">Atur Lineup</h1>
+            <p class="hero-description">Tentukan susunan pemain, staff, dan seragam untuk pertandingan ini.</p>
+        </div>
+        <div class="hero-actions">
+            <a href="schedule.php" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Kembali ke Jadwal
             </a>
         </div>
+    </header>
 
-        <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger lineup-alert lineup-alert--danger">
-                <i class="fas fa-circle-exclamation"></i>
-                <span><?php echo $error_message; ?></span>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="alert alert-success lineup-alert lineup-alert--success">
-                <i class="fas fa-circle-check"></i>
-                <span><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></span>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!$has_lineups_half_column): ?>
-            <div class="alert alert-warning lineup-alert lineup-alert--warning">
-                <i class="fas fa-triangle-exclamation"></i>
-                <span>Simpan lineup dinonaktifkan sampai migrasi database dijalankan: <code>migrations/migration_add_half_column_to_lineups.sql</code></span>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!empty($suspended_players_map)): ?>
-            <div class="alert lineup-alert lineup-alert--warning">
-                <i class="fas fa-user-slash"></i>
-                <span><?php echo count($suspended_players_map); ?> pemain sedang suspend dan tidak bisa dipilih sampai masa suspend selesai.</span>
-            </div>
-        <?php endif; ?>
-
-        <?php if (!$has_match_staff_assignments_table): ?>
-            <div class="alert lineup-alert lineup-alert--warning">
-                <i class="fas fa-user-clock"></i>
-                <span>Fitur assignment staff belum aktif. Jalankan migrasi: <code>migrations/migration_create_match_staff_assignments.sql</code></span>
-            </div>
-        <?php elseif (!$has_match_staff_half_column): ?>
-            <div class="alert lineup-alert lineup-alert--warning">
-                <i class="fas fa-user-clock"></i>
-                <span>Assignment staff masih mode lama (tanpa babak). Jalankan migrasi: <code>migrations/migration_add_half_to_match_staff_assignments.sql</code></span>
-            </div>
-        <?php endif; ?>
-
-        <div class="lineup-filter-panel">
-            <form method="GET" class="lineup-filter-form">
-                <input type="hidden" name="id" value="<?php echo (int)$challenge_id; ?>">
-                <div class="lineup-filter-grid">
-                    <div class="lineup-filter-group">
-                        <label>Event Pertandingan</label>
-                        <select name="event" class="form-control" disabled>
-                            <option value="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>" selected>
-                                <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
-                            </option>
-                        </select>
-                        <input type="hidden" name="event" value="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>">
-                    </div>
-                    <div class="lineup-filter-group">
-                        <label>Posisi</label>
-                        <select name="position" class="form-control">
-                            <option value="">Semua Posisi</option>
-                            <?php foreach ($position_options as $pos_value => $pos_label): ?>
-                                <option value="<?php echo htmlspecialchars($pos_value); ?>" <?php echo $filter_position === $pos_value ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($pos_label); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="lineup-filter-group">
-                        <label>Nama / Nomor Punggung</label>
-                        <input type="text" name="q" class="form-control" placeholder="Cari nama atau nomor..." value="<?php echo htmlspecialchars($filter_search); ?>">
-                    </div>
-                    <div class="lineup-filter-actions">
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-filter"></i> Filter
-                        </button>
-                        <a href="match_lineup.php?id=<?php echo (int)$challenge_id; ?>" class="btn-secondary">Reset</a>
-                    </div>
-                </div>
-            </form>
+    <?php if (isset($error_message)): ?>
+        <div class="alert alert-danger">
+            <i class="fas fa-circle-exclamation"></i>
+            <span><?php echo $error_message; ?></span>
         </div>
+    <?php endif; ?>
 
-        <form method="POST" action="" class="lineup-form">
-            <div class="lineup-uniform-panel">
-                <div class="lineup-uniform-panel__head">
-                    <h4>Pilihan Baju Tim</h4>
-                    <p>Pilih warna kostum yang dipakai di pertandingan ini (boleh lebih dari satu).</p>
-                </div>
-                <?php if (!empty($uniform_options)): ?>
-                    <div class="lineup-uniform-options">
-                        <?php foreach ($uniform_options as $uniform_choice): ?>
-                            <?php $is_checked = in_array($uniform_choice, $selected_uniform_choices, true); ?>
-                            <label class="lineup-uniform-option">
-                                <input
-                                    type="checkbox"
-                                    name="uniform_choices[]"
-                                    value="<?php echo htmlspecialchars($uniform_choice); ?>"
-                                    class="form-check-input"
-                                    <?php echo $is_checked ? 'checked' : ''; ?>
-                                >
-                                <span><?php echo htmlspecialchars($uniform_choice); ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php if (!$has_uniform_choice_column): ?>
-                        <div class="lineup-uniform-hint">
-                            Pilihan kostum tampil, tapi belum tersimpan permanen. Jalankan migrasi: <code>migrations/migration_add_uniform_choice_columns_to_challenges.sql</code>
-                        </div>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <div class="lineup-uniform-hint">
-                        Warna kostum belum diisi di data tim.
-                    </div>
-                <?php endif; ?>
+    <?php if (isset($_SESSION['success_message'])): ?>
+        <div class="alert alert-success">
+            <i class="fas fa-circle-check"></i>
+            <span><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></span>
+        </div>
+    <?php endif; ?>
+
+    <!-- Match Context -->
+    <div class="match-context-card">
+        <div class="match-teams">
+            <span class="match-team-name"><?php echo htmlspecialchars($challenge['challenger_name'] ?? ''); ?></span>
+            <span class="match-vs">VS</span>
+            <span class="match-team-name"><?php echo htmlspecialchars($challenge['opponent_name'] ?? ''); ?></span>
+        </div>
+        <div class="match-meta-badges">
+            <div class="meta-badge">
+                <i class="fas fa-trophy"></i>
+                <?php echo htmlspecialchars($challenge['event_name'] ?? ($challenge['sport_type'] ?? '-')); ?>
+            </div>
+            <div class="meta-badge">
+                <i class="fas fa-hashtag"></i>
+                Match #<?php echo (int)$challenge_id; ?>
+            </div>
+        </div>
+    </div>
+
+    <?php if (!$has_lineups_half_column): ?>
+        <div class="alert alert-warning">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>Simpan lineup dinonaktifkan sampai migrasi database dijalankan: <code>migrations/migration_add_half_column_to_lineups.sql</code></span>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($suspended_players_map)): ?>
+        <div class="alert alert-warning">
+            <i class="fas fa-user-slash"></i>
+            <span><?php echo count($suspended_players_map); ?> pemain sedang suspend dan tidak bisa dipilih.</span>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (!$has_match_staff_assignments_table): ?>
+        <div class="alert alert-warning">
+            <i class="fas fa-user-clock"></i>
+            <span>Fitur assignment staff belum aktif. Jalankan migrasi: <code>migrations/migration_create_match_staff_assignments.sql</code></span>
+        </div>
+    <?php elseif (!$has_match_staff_half_column): ?>
+        <div class="alert alert-warning">
+            <i class="fas fa-user-clock"></i>
+            <span>Assignment staff masih mode lama (tanpa babak). Jalankan migrasi: <code>migrations/migration_add_half_to_match_staff_assignments.sql</code></span>
+        </div>
+    <?php endif; ?>
+
+    <!-- Filter Section -->
+    <div class="heritage-card">
+        <div class="card-header">
+            <h3 class="card-title">Filter Pemain</h3>
+            <p class="card-subtitle">Cari pemain berdasarkan posisi atau nama.</p>
+        </div>
+        <form method="GET" class="filter-grid">
+            <input type="hidden" name="id" value="<?php echo (int)$challenge_id; ?>">
+            
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Event</label>
+                <select name="event" class="form-control" disabled style="background: #f3f4f6;">
+                    <option selected><?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?></option>
+                </select>
+                <input type="hidden" name="event" value="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>">
             </div>
 
-            <div class="lineup-staff-panel">
-                <div class="lineup-staff-panel__head">
-                    <h4>Staff Bertugas di Match Ini</h4>
-                    <p>Pilih staff resmi tim yang hadir/bertugas. Data ini akan dipakai untuk histori staff pada halaman publik.</p>
-                </div>
-                <?php if (empty($team_staffs)): ?>
-                    <div class="lineup-staff-hint">
-                        Belum ada staff aktif pada tim ini.
-                    </div>
-                <?php elseif (!$has_match_staff_assignments_table): ?>
-                    <div class="lineup-staff-hint">
-                        Simpan assignment staff dinonaktifkan sampai migrasi dijalankan.
-                    </div>
-                <?php elseif ($has_match_staff_half_column): ?>
-                    <div class="lineup-staff-tabs" role="tablist" aria-label="Pilihan babak staff">
-                        <button type="button" class="lineup-staff-tab-btn active" onclick="openStaffTab(event, 'staff-half1')">Staff Babak 1</button>
-                        <button type="button" class="lineup-staff-tab-btn" onclick="openStaffTab(event, 'staff-half2')">Staff Babak 2</button>
-                    </div>
-
-                    <div id="staff-half1" class="lineup-staff-tab-content active">
-                        <div class="lineup-staff-grid">
-                            <?php foreach ($team_staffs as $staff_row): ?>
-                                <?php
-                                    $sid = (int)($staff_row['id'] ?? 0);
-                                    $sname = trim((string)($staff_row['name'] ?? ''));
-                                    $srole = trim((string)($staff_row['position'] ?? ''));
-                                    $is_assigned = isset($current_staff_ids_h1[$sid]);
-                                ?>
-                                <label class="lineup-staff-option">
-                                    <input
-                                        type="checkbox"
-                                        name="assigned_staff_h1[]"
-                                        value="<?php echo $sid; ?>"
-                                        class="form-check-input"
-                                        <?php echo $is_assigned ? 'checked' : ''; ?>
-                                    >
-                                    <span class="lineup-staff-option__name"><?php echo htmlspecialchars($sname); ?></span>
-                                    <small class="lineup-staff-option__role"><?php echo htmlspecialchars($srole !== '' ? $srole : '-'); ?></small>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <div id="staff-half2" class="lineup-staff-tab-content">
-                        <div class="lineup-staff-grid">
-                            <?php foreach ($team_staffs as $staff_row): ?>
-                                <?php
-                                    $sid = (int)($staff_row['id'] ?? 0);
-                                    $sname = trim((string)($staff_row['name'] ?? ''));
-                                    $srole = trim((string)($staff_row['position'] ?? ''));
-                                    $is_assigned = isset($current_staff_ids_h2[$sid]);
-                                ?>
-                                <label class="lineup-staff-option">
-                                    <input
-                                        type="checkbox"
-                                        name="assigned_staff_h2[]"
-                                        value="<?php echo $sid; ?>"
-                                        class="form-check-input"
-                                        <?php echo $is_assigned ? 'checked' : ''; ?>
-                                    >
-                                    <span class="lineup-staff-option__name"><?php echo htmlspecialchars($sname); ?></span>
-                                    <small class="lineup-staff-option__role"><?php echo htmlspecialchars($srole !== '' ? $srole : '-'); ?></small>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <div class="lineup-staff-grid">
-                        <?php foreach ($team_staffs as $staff_row): ?>
-                            <?php
-                                $sid = (int)($staff_row['id'] ?? 0);
-                                $sname = trim((string)($staff_row['name'] ?? ''));
-                                $srole = trim((string)($staff_row['position'] ?? ''));
-                                $is_assigned = isset($current_staff_ids[$sid]);
-                            ?>
-                            <label class="lineup-staff-option">
-                                <input
-                                    type="checkbox"
-                                    name="assigned_staff[]"
-                                    value="<?php echo $sid; ?>"
-                                    class="form-check-input"
-                                    <?php echo $is_assigned ? 'checked' : ''; ?>
-                                >
-                                <span class="lineup-staff-option__name"><?php echo htmlspecialchars($sname); ?></span>
-                                <small class="lineup-staff-option__role"><?php echo htmlspecialchars($srole !== '' ? $srole : '-'); ?></small>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Posisi</label>
+                <select name="position" class="form-control">
+                    <option value="">Semua Posisi</option>
+                    <?php foreach ($position_options as $pos_value => $pos_label): ?>
+                        <option value="<?php echo htmlspecialchars($pos_value); ?>" <?php echo $filter_position === $pos_value ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($pos_label); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
-            <div class="lineup-tabs" role="tablist" aria-label="Pilihan babak lineup">
-                <button type="button" class="lineup-tab-btn active" onclick="openTab(event, 'half1')">Babak 1</button>
-                <button type="button" class="lineup-tab-btn" onclick="openTab(event, 'half2')">Babak 2</button>
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Cari</label>
+                <input type="text" name="q" class="form-control" placeholder="Nama atau No Punggung..." value="<?php echo htmlspecialchars($filter_search); ?>">
             </div>
 
-            <div id="half1" class="lineup-tab-content active">
-                <div class="lineup-tab-header">
-                    <h4>Lineup Babak 1</h4>
-                    <p>Pilih pemain yang tampil, lalu tandai siapa yang menjadi starter.</p>
-                </div>
-                <div class="lineup-table-wrap">
-                    <table class="data-table lineup-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 72px;">Main</th>
-                                <th style="width: 72px;">Starter</th>
-                                <th style="width: 88px;">No</th>
-                                <th>Nama</th>
-                                <th style="width: 140px;">Posisi</th>
-                                <th style="width: 180px;">Event</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($players as $player):
-                                $suspend_until = $suspended_players_map[(int)$player['id']] ?? '';
-                                $is_suspended = $suspend_until !== '';
-                                $is_selected = !$is_suspended && isset($current_lineup_h1[$player['id']]);
-                                $is_starting = $is_selected && $current_lineup_h1[$player['id']] == 1;
-                                $is_valid = (normalizeTextKey($player['sport_type'] ?? '') === normalizeTextKey($challenge['sport_type'] ?? ''));
-                            ?>
-                                <tr class="<?php echo !$is_valid ? 'lineup-row-invalid' : ''; ?> <?php echo $is_suspended ? 'lineup-row-suspended' : ''; ?>">
-                                    <td class="lineup-cell-center">
-                                        <input
-                                            type="checkbox"
-                                            name="players_h1[]"
-                                            value="<?php echo (int)$player['id']; ?>"
-                                            class="form-check-input lineup-checkbox player-select-h1"
-                                            data-id="<?php echo (int)$player['id']; ?>"
-                                            <?php echo $is_selected ? 'checked' : ''; ?>
-                                            <?php echo !$is_valid ? 'disabled' : ''; ?>
-                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
-                                        >
-                                    </td>
-                                    <td class="lineup-cell-center">
-                                        <input
-                                            type="checkbox"
-                                            name="starters_h1[<?php echo (int)$player['id']; ?>]"
-                                            value="1"
-                                            class="form-check-input lineup-checkbox starter-select-h1"
-                                            id="starter-h1-<?php echo (int)$player['id']; ?>"
-                                            <?php echo $is_starting ? 'checked' : ''; ?>
-                                            <?php echo !$is_selected ? 'disabled' : ''; ?>
-                                            <?php echo !$is_valid ? 'disabled' : ''; ?>
-                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
-                                        >
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-primary lineup-jersey"><?php echo htmlspecialchars($player['jersey_number'] ?? '-'); ?></span>
-                                    </td>
-                                    <td>
-                                        <span class="lineup-player-name <?php echo $is_suspended ? 'lineup-player-name--suspended' : ''; ?>">
-                                            <?php echo htmlspecialchars($player['name'] ?? ''); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
-                                    <td>
-                                        <?php if ($is_suspended): ?>
-                                            <span class="badge lineup-event-badge lineup-event-badge--suspended">
-                                                Suspend s/d <?php echo htmlspecialchars(date('d M Y', strtotime($suspend_until))); ?>
-                                            </span>
-                                        <?php elseif ($is_valid): ?>
-                                            <span class="badge badge-success lineup-event-badge lineup-event-badge--ok">Sesuai</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-danger lineup-event-badge lineup-event-badge--invalid">Beda Kategori</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="half2" class="lineup-tab-content">
-                <div class="lineup-tab-header">
-                    <h4>Lineup Babak 2</h4>
-                    <p>Pilih susunan pemain untuk babak kedua pertandingan.</p>
-                </div>
-                <div class="lineup-table-wrap">
-                    <table class="data-table lineup-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 72px;">Main</th>
-                                <th style="width: 72px;">Starter</th>
-                                <th style="width: 88px;">No</th>
-                                <th>Nama</th>
-                                <th style="width: 140px;">Posisi</th>
-                                <th style="width: 180px;">Event</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($players as $player):
-                                $suspend_until = $suspended_players_map[(int)$player['id']] ?? '';
-                                $is_suspended = $suspend_until !== '';
-                                $is_selected = !$is_suspended && isset($current_lineup_h2[$player['id']]);
-                                $is_starting = $is_selected && $current_lineup_h2[$player['id']] == 1;
-                                $is_valid = (normalizeTextKey($player['sport_type'] ?? '') === normalizeTextKey($challenge['sport_type'] ?? ''));
-                            ?>
-                                <tr class="<?php echo !$is_valid ? 'lineup-row-invalid' : ''; ?> <?php echo $is_suspended ? 'lineup-row-suspended' : ''; ?>">
-                                    <td class="lineup-cell-center">
-                                        <input
-                                            type="checkbox"
-                                            name="players_h2[]"
-                                            value="<?php echo (int)$player['id']; ?>"
-                                            class="form-check-input lineup-checkbox player-select-h2"
-                                            data-id="<?php echo (int)$player['id']; ?>"
-                                            <?php echo $is_selected ? 'checked' : ''; ?>
-                                            <?php echo !$is_valid ? 'disabled' : ''; ?>
-                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
-                                        >
-                                    </td>
-                                    <td class="lineup-cell-center">
-                                        <input
-                                            type="checkbox"
-                                            name="starters_h2[<?php echo (int)$player['id']; ?>]"
-                                            value="1"
-                                            class="form-check-input lineup-checkbox starter-select-h2"
-                                            id="starter-h2-<?php echo (int)$player['id']; ?>"
-                                            <?php echo $is_starting ? 'checked' : ''; ?>
-                                            <?php echo !$is_selected ? 'disabled' : ''; ?>
-                                            <?php echo !$is_valid ? 'disabled' : ''; ?>
-                                            <?php echo $is_suspended ? 'disabled' : ''; ?>
-                                        >
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-primary lineup-jersey"><?php echo htmlspecialchars($player['jersey_number'] ?? '-'); ?></span>
-                                    </td>
-                                    <td>
-                                        <span class="lineup-player-name <?php echo $is_suspended ? 'lineup-player-name--suspended' : ''; ?>">
-                                            <?php echo htmlspecialchars($player['name'] ?? ''); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($player['position'] ?? ''); ?></td>
-                                    <td>
-                                        <?php if ($is_suspended): ?>
-                                            <span class="badge lineup-event-badge lineup-event-badge--suspended">
-                                                Suspend s/d <?php echo htmlspecialchars(date('d M Y', strtotime($suspend_until))); ?>
-                                            </span>
-                                        <?php elseif ($is_valid): ?>
-                                            <span class="badge badge-success lineup-event-badge lineup-event-badge--ok">Sesuai</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-danger lineup-event-badge lineup-event-badge--invalid">Beda Kategori</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="form-actions lineup-actions">
-                <button type="submit" class="btn-primary lineup-save-btn" <?php echo !$has_lineups_half_column ? 'disabled title="Migrasi database belum dijalankan"' : ''; ?>>
-                    <i class="fas fa-save"></i> Simpan Lineup
+            <div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; height: 42px;">
+                    <i class="fas fa-filter"></i> Terapkan
                 </button>
             </div>
         </form>
     </div>
+
+    <form method="POST" action="">
+        
+        <!-- Uniforms & Staff Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            <!-- Uniforms -->
+            <div class="heritage-card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <h3 class="card-title">Kostum Tim</h3>
+                    <p class="card-subtitle">Pilih warna jersey yang digunakan.</p>
+                </div>
+                <?php if (!empty($uniform_options)): ?>
+                    <div class="checkbox-grid">
+                        <?php foreach ($uniform_options as $uniform_choice): ?>
+                            <?php $is_checked = in_array($uniform_choice, $selected_uniform_choices, true); ?>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="uniform_choices[]" value="<?php echo htmlspecialchars($uniform_choice); ?>" <?php echo $is_checked ? 'checked' : ''; ?>>
+                                <span><?php echo htmlspecialchars($uniform_choice); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <p class="text-muted">Warna kostum belum diatur di data tim.</p>
+                <?php endif; ?>
+                <?php if (!$has_uniform_choice_column): ?>
+                    <div style="margin-top: 12px; font-size: 0.8rem; color: var(--heritage-text-muted);">
+                        Pilihan kostum tampil, tapi belum tersimpan permanen. Jalankan migrasi: <code>migrations/migration_add_uniform_choice_columns_to_challenges.sql</code>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Staff -->
+            <div class="heritage-card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <h3 class="card-title">Official Team</h3>
+                    <p class="card-subtitle">Staff yang bertugas di bench.</p>
+                </div>
+                
+                <?php if ($has_match_staff_half_column): ?>
+                    <div class="tabs-nav">
+                        <button type="button" class="tab-btn active" onclick="openStaffTab(event, 'staff-half1')">Babak 1</button>
+                        <button type="button" class="tab-btn" onclick="openStaffTab(event, 'staff-half2')">Babak 2</button>
+                    </div>
+
+                    <div id="staff-half1" class="tab-content active lineup-staff-tab-content">
+                        <div class="checkbox-grid">
+                            <?php foreach ($team_staffs as $staff_row): 
+                                $sid = (int)$staff_row['id'];
+                                $is_assigned = isset($current_staff_ids_h1[$sid]);
+                            ?>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" name="assigned_staff_h1[]" value="<?php echo $sid; ?>" <?php echo $is_assigned ? 'checked' : ''; ?>>
+                                    <span><?php echo htmlspecialchars($staff_row['name']); ?> <small style="color: var(--heritage-text-muted);">(<?php echo htmlspecialchars($staff_row['position'] ?: '-'); ?>)</small></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <div id="staff-half2" class="tab-content lineup-staff-tab-content">
+                        <div class="checkbox-grid">
+                            <?php foreach ($team_staffs as $staff_row): 
+                                $sid = (int)$staff_row['id'];
+                                $is_assigned = isset($current_staff_ids_h2[$sid]);
+                            ?>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" name="assigned_staff_h2[]" value="<?php echo $sid; ?>" <?php echo $is_assigned ? 'checked' : ''; ?>>
+                                    <span><?php echo htmlspecialchars($staff_row['name']); ?> <small style="color: var(--heritage-text-muted);">(<?php echo htmlspecialchars($staff_row['position'] ?: '-'); ?>)</small></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="checkbox-grid">
+                        <?php foreach ($team_staffs as $staff_row): 
+                             $sid = (int)$staff_row['id'];
+                             $is_assigned = isset($current_staff_ids[$sid]);
+                        ?>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="assigned_staff[]" value="<?php echo $sid; ?>" <?php echo $is_assigned ? 'checked' : ''; ?>>
+                                <span><?php echo htmlspecialchars($staff_row['name']); ?> <small style="color: var(--heritage-text-muted);">(<?php echo htmlspecialchars($staff_row['position'] ?: '-'); ?>)</small></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Lineup Table -->
+        <div class="heritage-card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <h3 class="card-title">Susunan Pemain</h3>
+                    <p class="card-subtitle">Tentukan starter dan pemain cadangan.</p>
+                </div>
+                <div class="tabs-nav" style="margin: 0;">
+                    <button type="button" class="tab-btn active" onclick="openTab(event, 'half1')">Babak 1</button>
+                    <button type="button" class="tab-btn" onclick="openTab(event, 'half2')">Babak 2</button>
+                </div>
+            </div>
+
+            <?php foreach (['half1' => 1, 'half2' => 2] as $tab_id => $half_num): 
+                $current_lineup = ($half_num === 1) ? $current_lineup_h1 : $current_lineup_h2;
+                $input_players = ($half_num === 1) ? 'players_h1[]' : 'players_h2[]';
+                $input_starters = ($half_num === 1) ? 'starters_h1' : 'starters_h2';
+                $check_class = ($half_num === 1) ? 'player-select-h1' : 'player-select-h2';
+                $starter_class = ($half_num === 1) ? 'starter-select-h1' : 'starter-select-h2';
+            ?>
+                <div id="<?php echo $tab_id; ?>" class="tab-content lineup-tab-content <?php echo ($half_num === 1) ? 'active' : ''; ?>">
+                    <div class="table-container">
+                        <table class="heritage-table">
+                            <thead>
+                                <tr>
+                                    <th width="50" style="text-align: center;">Main</th>
+                                    <th width="50" style="text-align: center;">Starter</th>
+                                    <th width="60">No</th>
+                                    <th>Nama Pemain</th>
+                                    <th>Posisi</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($players as $player): 
+                                    $pid = (int)$player['id'];
+                                    $suspend_until = $suspended_players_map[$pid] ?? '';
+                                    $is_suspended = $suspend_until !== '';
+                                    $is_selected = !$is_suspended && isset($current_lineup[$pid]);
+                                    $is_starting = $is_selected && $current_lineup[$pid] == 1;
+                                    $is_valid = (normalizeTextKey($player['sport_type'] ?? '') === normalizeTextKey($challenge['sport_type'] ?? ''));
+                                    
+                                    if (!$is_valid) $status_class = 'status-bad';
+                                    elseif ($is_suspended) $status_class = 'status-suspend';
+                                    else $status_class = 'status-ok';
+                                ?>
+                                    <tr style="<?php echo $is_suspended || !$is_valid ? 'background: #f9fafb; opacity: 0.7;' : ''; ?>">
+                                        <td style="text-align: center;">
+                                            <input type="checkbox" 
+                                                   name="<?php echo $input_players; ?>" 
+                                                   value="<?php echo $pid; ?>" 
+                                                   class="<?php echo $check_class; ?>" 
+                                                   data-id="<?php echo $pid; ?>"
+                                                   <?php echo $is_selected ? 'checked' : ''; ?>
+                                                   <?php echo !$is_valid || $is_suspended ? 'disabled' : ''; ?>
+                                                   style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--heritage-accent);">
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <input type="checkbox" 
+                                                   name="<?php echo $input_starters; ?>[<?php echo $pid; ?>]" 
+                                                   value="1" 
+                                                   class="<?php echo $starter_class; ?>" 
+                                                   id="starter-h<?php echo $half_num; ?>-<?php echo $pid; ?>"
+                                                   <?php echo $is_starting ? 'checked' : ''; ?>
+                                                   <?php echo !$is_selected ? 'disabled' : ''; ?>
+                                                   style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--heritage-gold);">
+                                        </td>
+                                        <td>
+                                            <span class="player-jersey"><?php echo htmlspecialchars($player['jersey_number'] ?? '-'); ?></span>
+                                        </td>
+                                        <td>
+                                            <div class="player-name"><?php echo htmlspecialchars($player['name']); ?></div>
+                                        </td>
+                                        <td>
+                                            <div class="player-pos"><?php echo htmlspecialchars($player['position']); ?></div>
+                                        </td>
+                                        <td>
+                                            <?php if ($is_suspended): ?>
+                                                <span class="status-badge status-suspend">Suspend <?php echo date('d/m', strtotime($suspend_until)); ?></span>
+                                            <?php elseif (!$is_valid): ?>
+                                                <span class="status-badge status-bad">Beda Event</span>
+                                            <?php else: ?>
+                                                <span class="status-badge status-ok">Ready</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <div class="save-bar">
+            <div>
+                <strong style="display: block; font-size: 1.1rem;">Siap Bertanding?</strong>
+                <span style="font-size: 0.9rem; opacity: 0.8;">Pastikan formasi sudah sesuai sebelum kick-off.</span>
+            </div>
+            <button type="submit" class="btn-primary" style="background: white; color: var(--heritage-text); padding: 12px 32px;" <?php echo !$has_lineups_half_column ? 'disabled' : ''; ?>>
+                <i class="fas fa-save"></i> Simpan Lineup
+            </button>
+        </div>
+    </form>
 </div>
 
 <script>
 function openTab(evt, tabName) {
     var tabContent = document.getElementsByClassName('lineup-tab-content');
-    var tabButtons = document.getElementsByClassName('lineup-tab-btn');
-    var i;
+    var container = evt.currentTarget.parentNode;
+    var buttons = container.getElementsByClassName('tab-btn');
 
-    for (i = 0; i < tabContent.length; i++) {
+    for (var i = 0; i < tabContent.length; i++) {
         tabContent[i].classList.remove('active');
     }
-
-    for (i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].classList.remove('active');
+    
+    // Deactivate all buttons in this specific container
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
     }
 
     document.getElementById(tabName).classList.add('active');
@@ -907,15 +1261,15 @@ function openTab(evt, tabName) {
 
 function openStaffTab(evt, tabName) {
     var tabContent = document.getElementsByClassName('lineup-staff-tab-content');
-    var tabButtons = document.getElementsByClassName('lineup-staff-tab-btn');
-    var i;
-
-    for (i = 0; i < tabContent.length; i++) {
+    var container = evt.currentTarget.parentNode;
+    var buttons = container.getElementsByClassName('tab-btn');
+    
+    for (var i = 0; i < tabContent.length; i++) {
         tabContent[i].classList.remove('active');
     }
-
-    for (i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].classList.remove('active');
+    
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
     }
 
     document.getElementById(tabName).classList.add('active');
@@ -946,677 +1300,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-<style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
-
-.lineup-page {
-    --lineup-panel-border: #dbe4f2;
-    --lineup-surface-soft: #f5f9ff;
-    --lineup-shadow-soft: 0 18px 36px rgba(12, 39, 89, 0.08);
-}
-
-.lineup-page .lineup-shell {
-    position: relative;
-    border: 1px solid #e5ebf5;
-    box-shadow: var(--lineup-shadow-soft);
-    overflow: hidden;
-    background:
-        radial-gradient(1200px 480px at 0% -20%, rgba(76, 201, 240, 0.13), rgba(76, 201, 240, 0)),
-        radial-gradient(880px 420px at 100% -10%, rgba(255, 215, 0, 0.16), rgba(255, 215, 0, 0)),
-        #ffffff;
-}
-
-.lineup-uniform-panel {
-    margin: 0 0 18px;
-    padding: 16px 18px;
-    border: 1px solid #d8e3f3;
-    border-radius: 14px;
-    background: #f5f9ff;
-}
-
-.lineup-uniform-panel__head h4 {
-    margin: 0;
-    font-size: 1.02rem;
-    color: #112f66;
-}
-
-.lineup-uniform-panel__head p {
-    margin: 4px 0 0;
-    font-size: 0.9rem;
-    color: #566782;
-}
-
-.lineup-uniform-options {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.lineup-uniform-option {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid #c9d7ee;
-    background: #ffffff;
-    color: #1f2f47;
-    font-size: 0.9rem;
-}
-
-.lineup-uniform-option input[type="checkbox"] {
-    margin: 0;
-}
-
-.lineup-uniform-hint {
-    margin-top: 10px;
-    font-size: 0.84rem;
-    color: #4d5d75;
-}
-
-.lineup-staff-panel {
-    margin: 0 0 18px;
-    padding: 16px 18px;
-    border: 1px solid #d8e3f3;
-    border-radius: 14px;
-    background: #f9fbff;
-}
-
-.lineup-staff-panel__head h4 {
-    margin: 0;
-    font-size: 1.02rem;
-    color: #112f66;
-}
-
-.lineup-staff-panel__head p {
-    margin: 4px 0 0;
-    font-size: 0.9rem;
-    color: #566782;
-}
-
-.lineup-staff-grid {
-    margin-top: 12px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 10px;
-}
-
-.lineup-staff-tabs {
-    display: inline-grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    margin: 12px 0;
-    padding: 6px;
-    border-radius: 12px;
-    background: #edf2fb;
-    border: 1px solid #d7e0ef;
-    width: min(380px, 100%);
-}
-
-.lineup-staff-tab-btn {
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    padding: 9px 12px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #45556d;
-    background: transparent;
-    transition: all 0.2s ease;
-}
-
-.lineup-staff-tab-btn:hover {
-    color: #132d60;
-    transform: translateY(-1px);
-}
-
-.lineup-staff-tab-btn.active {
-    color: #0a2463;
-    background: #ffffff;
-    box-shadow: 0 4px 10px rgba(14, 44, 98, 0.12);
-}
-
-.lineup-staff-tab-content {
-    display: none;
-}
-
-.lineup-staff-tab-content.active {
-    display: block;
-    animation: lineupFadeIn 0.28s ease;
-}
-
-.lineup-staff-option {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid #d6e1f3;
-    background: #ffffff;
-    color: #1f2f47;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.lineup-staff-option:hover {
-    transform: translateY(-1px);
-    border-color: #bdd0ed;
-    box-shadow: 0 8px 18px rgba(10, 36, 99, 0.12);
-}
-
-.lineup-staff-option input[type="checkbox"] {
-    align-self: flex-start;
-    margin: 0 0 6px;
-}
-
-.lineup-staff-option__name {
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.lineup-staff-option__role {
-    color: #5d6f8d;
-    text-transform: capitalize;
-}
-
-.lineup-staff-hint {
-    margin-top: 10px;
-    font-size: 0.84rem;
-    color: #4d5d75;
-}
-
-.lineup-hero {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 20px;
-    padding: 22px;
-    border-radius: 18px;
-    background: linear-gradient(128deg, #0a2463 0%, #113577 48%, #1f5ea4 100%);
-    color: #ffffff;
-    overflow: hidden;
-}
-
-.lineup-hero::after {
-    content: '';
-    position: absolute;
-    right: -72px;
-    top: -68px;
-    width: 210px;
-    height: 210px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
-    pointer-events: none;
-}
-
-.lineup-hero__copy {
-    position: relative;
-    z-index: 1;
-}
-
-.lineup-hero__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.88);
-}
-
-.lineup-hero__title {
-    margin: 0;
-    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
-    line-height: 1.28;
-    font-weight: 800;
-    max-width: 760px;
-}
-
-.lineup-hero__vs {
-    margin: 0 8px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.72);
-}
-
-.lineup-hero__meta {
-    margin-top: 14px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.lineup-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.12);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.lineup-back-btn {
-    align-self: flex-start;
-    white-space: nowrap;
-    border: 1px solid rgba(255, 255, 255, 0.38);
-    background: rgba(255, 255, 255, 0.14);
-    color: #ffffff;
-    padding: 10px 14px;
-    border-radius: 12px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
-.lineup-back-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
-    color: #ffffff;
-    transform: translateY(-1px);
-}
-
-.lineup-alert {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-    padding: 13px 14px;
-    border-radius: 13px;
-    border: 1px solid transparent;
-    font-size: 13px;
-    line-height: 1.45;
-}
-
-.lineup-alert i {
-    margin-top: 2px;
-}
-
-.lineup-alert--danger {
-    color: #8d1f1f;
-    background: #fff1f1;
-    border-color: #ffd3d3;
-}
-
-.lineup-alert--success {
-    color: #1f6a30;
-    background: #effcf1;
-    border-color: #ccefd2;
-}
-
-.lineup-alert--warning {
-    color: #865a09;
-    background: #fff8e8;
-    border-color: #ffe3a6;
-}
-
-.lineup-filter-panel {
-    margin-bottom: 18px;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1px solid var(--lineup-panel-border);
-    background: linear-gradient(180deg, #ffffff 0%, var(--lineup-surface-soft) 100%);
-}
-
-.lineup-filter-grid {
-    display: grid;
-    grid-template-columns: minmax(240px, 1.25fr) minmax(170px, 0.7fr) minmax(230px, 1fr) auto;
-    gap: 12px;
-    align-items: end;
-}
-
-.lineup-filter-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: #2f3a4a;
-}
-
-.lineup-filter-form .form-control {
-    width: 100%;
-    height: 44px;
-    border-radius: 12px;
-    border: 1px solid #d2ddeb;
-    background: #ffffff;
-    padding: 10px 12px;
-    font-size: 14px;
-    color: #1f2937;
-    transition: all 0.2s ease;
-}
-
-.lineup-filter-form .form-control:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.12);
-}
-
-.lineup-filter-form .form-control:disabled {
-    background: #eff4fb;
-    color: #41556f;
-    cursor: not-allowed;
-}
-
-.lineup-filter-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.lineup-filter-actions .btn-primary,
-.lineup-filter-actions .btn-secondary {
-    height: 44px;
-    padding: 0 15px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.lineup-filter-actions .btn-secondary {
-    border: 1px solid #d0dced;
-    color: #233448;
-    background: #ffffff;
-}
-
-.lineup-filter-actions .btn-secondary:hover {
-    background: #eef3fb;
-}
-
-.lineup-tabs {
-    display: inline-grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    margin: 6px 0 16px;
-    padding: 6px;
-    border-radius: 14px;
-    background: #edf2fb;
-    border: 1px solid #d7e0ef;
-    width: min(420px, 100%);
-}
-
-.lineup-tab-btn {
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #45556d;
-    background: transparent;
-    transition: all 0.2s ease;
-}
-
-.lineup-tab-btn:hover {
-    color: #132d60;
-}
-
-.lineup-tab-btn.active {
-    color: #0a2463;
-    background: #ffffff;
-    box-shadow: 0 4px 10px rgba(14, 44, 98, 0.12);
-}
-
-.lineup-tab-content {
-    display: none;
-}
-
-.lineup-tab-content.active {
-    display: block;
-    animation: lineupFadeIn 0.28s ease;
-}
-
-.lineup-tab-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.lineup-tab-header h4 {
-    margin: 0;
-    color: #102e67;
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.lineup-tab-header p {
-    margin: 0;
-    color: #5b6b83;
-    font-size: 13px;
-}
-
-.lineup-table-wrap {
-    border: 1px solid #d6e1f1;
-    border-radius: 16px;
-    overflow-x: auto;
-    background: #ffffff;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
-.lineup-table {
-    min-width: 760px;
-}
-
-.lineup-table thead {
-    background: linear-gradient(135deg, #0a2463, #133f85);
-}
-
-.lineup-table th {
-    border-bottom: 2px solid rgba(255, 255, 255, 0.22);
-    font-size: 12px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-}
-
-.lineup-table td {
-    padding: 13px 15px;
-}
-
-.lineup-table tbody tr {
-    border-bottom: 1px solid #edf2fa;
-}
-
-.lineup-table tbody tr:hover {
-    background: #f7faff;
-}
-
-.lineup-row-invalid {
-    opacity: 0.6;
-    background: repeating-linear-gradient(
-        -45deg,
-        rgba(234, 241, 252, 0.55),
-        rgba(234, 241, 252, 0.55) 8px,
-        rgba(248, 251, 255, 0.55) 8px,
-        rgba(248, 251, 255, 0.55) 16px
-    );
-}
-
-.lineup-row-suspended {
-    background: #fff7ed;
-}
-
-.lineup-cell-center {
-    text-align: center;
-}
-
-.lineup-checkbox {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--primary);
-}
-
-.lineup-jersey {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    min-height: 34px;
-    border-radius: 999px;
-    background: linear-gradient(145deg, #0a2463, #174d99);
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 700;
-    box-shadow: 0 4px 10px rgba(9, 34, 87, 0.24);
-}
-
-.lineup-player-name {
-    font-weight: 700;
-    color: #0f203f;
-}
-
-.lineup-player-name--suspended {
-    color: #92400e;
-    text-decoration: line-through;
-    pointer-events: none;
-}
-
-.lineup-event-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-}
-
-.lineup-event-badge--ok {
-    color: #1f6a30;
-    background: #e7f7eb;
-}
-
-.lineup-event-badge--invalid {
-    color: #8f2626;
-    background: #ffe9e9;
-}
-
-.lineup-event-badge--suspended {
-    color: #9a3412;
-    background: #ffedd5;
-}
-
-.lineup-actions {
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px dashed #d0dcef;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.lineup-save-btn {
-    min-width: 200px;
-    padding: 11px 20px;
-    border-radius: 12px;
-}
-
-.lineup-save-btn[disabled] {
-    opacity: 0.55;
-    cursor: not-allowed;
-    transform: none;
-}
-
-@keyframes lineupFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@media (max-width: 1080px) {
-    .lineup-filter-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .lineup-filter-actions {
-        grid-column: span 2;
-        justify-content: flex-start;
-    }
-}
-
-@media (max-width: 860px) {
-    .lineup-hero {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .lineup-back-btn {
-        align-self: stretch;
-        justify-content: center;
-    }
-
-    .lineup-tab-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-
-@media (max-width: 640px) {
-    .lineup-page .lineup-shell {
-        padding: 18px 14px;
-    }
-
-    .lineup-hero {
-        padding: 18px 14px;
-        border-radius: 14px;
-    }
-
-    .lineup-filter-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .lineup-filter-actions {
-        grid-column: auto;
-    }
-
-    .lineup-filter-actions .btn-primary,
-    .lineup-filter-actions .btn-secondary,
-    .lineup-save-btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .lineup-actions {
-        justify-content: stretch;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .lineup-tab-content.active {
-        animation: none;
-    }
-
-    .lineup-staff-tab-content.active {
-        animation: none;
-    }
-
-    .lineup-back-btn,
-    .lineup-tab-btn,
-    .lineup-staff-tab-btn,
-    .lineup-filter-form .form-control {
-        transition: none;
-    }
-}
-</style>
-
 <?php require_once 'includes/footer.php'; ?>
