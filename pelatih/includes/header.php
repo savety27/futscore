@@ -15,7 +15,7 @@ $pelatih_name = $_SESSION['admin_fullname'] ?? 'Pelatih';
 $team_id = $_SESSION['team_id'] ?? 0;
 $current_dir = basename(dirname($_SERVER['SCRIPT_NAME']));
 $path_prefix = in_array($current_dir, ['players', 'teams', 'staff']) ? '../' : '';
-$team_name = 'Alvetrix';
+$team_name = '';
 $team_logo = '';
 
 if ($team_id && isset($conn)) {
