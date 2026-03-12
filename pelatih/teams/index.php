@@ -3,8 +3,9 @@ $page_title = 'Daftar Team';
 $current_page = 'team';
 require_once '../config/database.php';
 require_once '../includes/header.php';
-
-// Handle search
+?>
+<link rel="stylesheet" href="css/teams.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/teams.css'); ?>">
+<?php
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
@@ -70,37 +71,57 @@ try {
 $team_export_url = 'export.php' . ($search !== '' ? '?' . http_build_query(['search' => $search]) : '');
 ?>
 
-<div class="page-header">
-    <div class="page-title-wrap">
-        <h1 class="page-title"><i class="fas fa-shield-alt"></i> Direktori Team</h1>
-        <p class="page-subtitle">Lihat profil team, jumlah pemain, staf, dan riwayat pertandingan dalam satu halaman.</p>
-    </div>
-    <div class="page-summary">
-        <span class="summary-pill"><i class="fas fa-users"></i> <?php echo (int)$total_data; ?> Team</span>
-    </div>
-</div>
+<div class="teams-container">
+    <!-- Editorial Header -->
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Direktori</span>
+            <h1 class="hero-title">Direktori Team</h1>
+            <p class="hero-description">Lihat profil team, jumlah pemain, staf, dan riwayat pertandingan dalam satu halaman.</p>
+        </div>
+        <div class="hero-actions">
+            <span class="summary-pill"><i class="fas fa-users"></i> <?php echo (int)$total_data; ?> Team Terdaftar</span>
+        </div>
+    </header>
 
-<div class="card">
-    <div class="section-header">
-        <h2 class="section-title">Daftar Team</h2>
-        <div class="section-actions">
-            <a href="<?php echo htmlspecialchars($team_export_url); ?>" class="btn-export">
-                <i class="fas fa-download"></i> Export Excel
-            </a>
+    <div class="filter-container reveal d-1">
+        <div class="teams-filter-card">
+            <form action="" method="GET" class="teams-filter-form">
+                <div class="filter-group">
+                    <label>Pencarian</label>
+                    <div class="teams-search-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari nama atau alias team..." value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                </div>
+                <div class="teams-filter-actions" style="margin-top: auto;">
+                    <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Cari</button>
+                    <a href="./" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="search-bar" style="margin-bottom: 20px;">
-        <form action="" method="GET">
-            <input type="text" name="search" placeholder="Cari team..." value="<?php echo htmlspecialchars($search); ?>">
-            <button type="submit"><i class="fas fa-search"></i></button>
-        </form>
-    </div>
+    <div class="reveal d-2">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">Daftar Team</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="section-actions">
+                <a href="<?php echo htmlspecialchars($team_export_url); ?>" class="btn-premium btn-export">
+                    <i class="fas fa-download"></i> Export Excel
+                </a>
+            </div>
+        </div>
 
     <?php if (empty($teams)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">Team tidak ditemukan.</p>
+        <div class="empty-state">
+            <i class="fas fa-shield-alt"></i>
+            <p>Team tidak ditemukan.</p>
+        </div>
     <?php else: ?>
-        <div class="team-table-wrap">
+        <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -129,7 +150,9 @@ $team_export_url = 'export.php' . ($search !== '' ? '?' . http_build_query(['sea
                                 </div>
                             <?php endif; ?>
                         </td>
-                        <td class="team-name-cell"><?php echo htmlspecialchars($team['name'] ?? ''); ?></td>
+                        <td class="name-cell">
+                            <strong><?php echo htmlspecialchars($team['name'] ?? ''); ?></strong>
+                        </td>
                         <td class="alias-cell"><?php echo htmlspecialchars($team['alias'] ?? ''); ?></td>
                         <td class="coach-cell"><?php echo htmlspecialchars($team['coach'] ?? ''); ?></td>
                         <td>
@@ -162,273 +185,50 @@ $team_export_url = 'export.php' . ($search !== '' ? '?' . http_build_query(['sea
                 </tbody>
             </table>
         </div>
-
         <!-- Pagination -->
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">&laquo; Seb</a>
+                <a href="?page=1&search=<?php echo urlencode($search); ?>" class="page-link" title="Halaman Pertama">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Sebelumnya">
+                    <i class="fas fa-angle-left"></i>
+                </a>
             <?php endif; ?>
             
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $page + 2);
+            
+            if ($start_page > 1): ?>
+                <span class="page-dots">...</span>
+            <?php endif; ?>
+            
+            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
+                    <?php echo $i; ?>
+                </a>
             <?php endfor; ?>
             
+            <?php if ($end_page < $total_pages): ?>
+                <span class="page-dots">...</span>
+            <?php endif; ?>
+            
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link">Sel &raquo;</a>
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Berikutnya">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Halaman Terakhir">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
 
     <?php endif; ?>
+    </div>
 </div>
 
-<style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.page-title-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    line-height: 1.15;
-}
-
-.page-title i {
-    color: var(--secondary);
-}
-
-.page-subtitle {
-    margin: 0;
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.summary-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: #eef5ff;
-    color: var(--primary);
-    border: 1px solid #dbeafe;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.section-header {
-    margin-bottom: 16px;
-}
-
-.team-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 14px;
-}
-
-/* Clickable count styling */
-.count-link {
-    text-decoration: none;
-    color: inherit;
-    display: inline-block;
-    transition: all 0.3s ease;
-}
-
-.count-cell {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 40px;
-    text-align: center;
-}
-
-.count-cell.players {
-    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-    color: #1565c0;
-    border: 2px solid transparent;
-}
-
-.count-cell.staff {
-    background: linear-gradient(135deg, #f3e5f5, #e1bee7);
-    color: #6a1b9a;
-}
-
-.count-cell.matches {
-    background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
-    color: #00897b;
-}
-
-.count-link:hover .count-cell.players {
-    background: linear-gradient(135deg, #2196F3, #1976D2);
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-    border-color: #1976D2;
-}
-
-.count-link:hover .count-cell.staff {
-    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
-}
-
-.count-link:hover .count-cell.matches {
-    background: linear-gradient(135deg, #009688, #00796b);
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 150, 136, 0.4);
-} 
-
-.count-link:active .count-cell.players,
-.count-link:active .count-cell.staff,
-.count-link:active .count-cell.matches {
-    transform: scale(0.95);
-}
-
-/* Make it clear it's clickable with cursor */
-.count-link {
-    cursor: pointer;
-}
-
-/* Stronger row hover effect for team table */
-.data-table tbody tr {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    position: relative;
-    will-change: transform;
-}
-
-.data-table tbody tr:hover,
-.data-table tbody tr:focus-within {
-    background: #eef5ff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
-}
-
-@media (max-width: 768px) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
-    }
-}
-
-/* Page-specific responsiveness */
-@media (max-width: 992px) {
-    .data-table {
-        min-width: 900px;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 10px 12px;
-        font-size: 13px;
-    }
-
-    .team-logo {
-        width: 44px;
-        height: 44px;
-    }
-
-    .count-cell {
-        padding: 6px 12px;
-        min-width: 36px;
-        font-size: 13px;
-    }
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        padding: 18px;
-        border-radius: 16px;
-    }
-
-    .page-title {
-        font-size: 23px;
-    }
-
-    .card {
-        padding: 16px 12px;
-    }
-
-    .search-bar {
-        margin-bottom: 14px !important;
-    }
-
-    .pagination {
-        gap: 6px;
-    }
-
-    .page-link {
-        padding: 8px 12px;
-        font-size: 13px;
-        min-width: 40px;
-        text-align: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .data-table {
-        min-width: 820px;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 9px 10px;
-        font-size: 12px;
-    }
-
-    .team-logo {
-        width: 38px;
-        height: 38px;
-    }
-
-    .count-cell {
-        padding: 5px 10px;
-        min-width: 32px;
-        font-size: 12px;
-    }
-}
-
-/* Avoid jumpy hover effects on touch devices */
-@media (hover: none) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: none;
-        box-shadow: none;
-        background: #f8f9fa;
-    }
-}
-</style>
 
 <?php require_once '../includes/footer.php'; ?>
