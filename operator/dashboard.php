@@ -389,7 +389,7 @@ require_once __DIR__ . '/includes/header.php';
         border-color: var(--heritage-accent);
         box-shadow: 0 16px 32px rgba(0,0,0,0.08);
     }
-    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
     .card-label { font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--heritage-text-muted); }
     .card-value { font-family: var(--font-display); font-size: 2.25rem; font-weight: 800; line-height: 1; color: var(--heritage-text); }
     .card-icon { font-size: 1.2rem; color: var(--heritage-accent); opacity: 0.4; }
@@ -397,6 +397,12 @@ require_once __DIR__ . '/includes/header.php';
     .section-header { display: flex; align-items: center; gap: 24px; margin-bottom: 32px; }
     .section-title { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--heritage-text); margin: 0; }
     .section-line { height: 2px; background: var(--heritage-border); flex: 1; }
+
+    @media (max-width: 768px) {
+        .section-header { flex-direction: column; text-align: center; gap: 12px; }
+        .section-line { width: 60px; height: 3px; background: var(--heritage-gold); flex: none; margin: 0 auto; }
+        .section-title { font-size: 1.75rem; }
+    }
 
     .match-hero-card { background: white; border: 1px solid var(--heritage-border); border-radius: 40px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.05); margin-bottom: 48px; }
     .match-hero-content { padding: 64px 48px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; background: radial-gradient(circle at center, #ffffff 0%, #fdfcfb 100%); position: relative; }
@@ -421,7 +427,7 @@ require_once __DIR__ . '/includes/header.php';
     .dossier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 32px; }
     .dossier-item { background: white; border: 1px solid var(--heritage-border); border-radius: 20px; padding: 20px; }
     .dossier-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--heritage-text-muted); margin-bottom: 8px; display: block; }
-    .dossier-value { font-size: 0.95rem; font-weight: 700; color: var(--heritage-text); }
+    .dossier-value { font-size: 0.95rem; font-weight: 700; color: var(--heritage-text); overflow-wrap: break-word; }
 
     .empty-state { text-align: center; padding: 60px 40px; background: white; border: 2px dashed var(--heritage-border); border-radius: 32px; }
     .empty-state i { font-size: 2.5rem; color: var(--heritage-border); margin-bottom: 20px; }
@@ -436,6 +442,37 @@ require_once __DIR__ . '/includes/header.php';
         .vs-line { display: none; }
         .match-hero-footer { grid-template-columns: 1fr; }
         .dossier-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+        .main { padding: 20px 16px !important; }
+        .hero-title { font-size: 2.25rem; }
+        .hero-description { font-size: 1rem; }
+        .stats-main-grid { gap: 16px; }
+        .heritage-card { border-radius: 20px; padding: 16px; }
+        .card-value { font-size: 1.75rem; }
+        .match-hero-content { padding: 32px 16px; }
+        .team-logo-large { width: 100px; height: 100px; padding: 16px; }
+        .team-name-large { font-size: 1.25rem; }
+        .vs-text { width: 45px; height: 40px; font-size: 1.1rem; }
+    }
+
+    @media (max-width: 600px) {
+        .dossier-grid { grid-template-columns: 1fr; gap: 16px; }
+        .dossier-item { padding: 20px; border-radius: 20px; text-align: center; }
+        .dossier-label { font-size: 0.75rem; }
+        .dossier-value { font-size: 1.1rem; }
+    }
+
+    @media (max-width: 480px) {
+        .hero-title { font-size: 1.8rem; }
+        .event-identity-card { padding: 32px 20px; }
+        .event-poster-main { width: 100px; height: 100px; }
+        .event-name-display { font-size: 1.45rem; }
+        .stats-main-grid { grid-template-columns: 1fr; }
+        .heritage-card[style*="grid-column: span 2"] { grid-column: 1 / -1 !important; }
+        .match-hero-footer { padding: 24px 20px; gap: 20px; }
+        .match-info-value { font-size: 0.95rem; }
     }
 </style>
 
