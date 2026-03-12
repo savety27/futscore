@@ -217,7 +217,7 @@ $position_labels = [
                             <div class="doc-preview" style="margin-top: 12px; margin-bottom: 12px;">
                                 <img src="<?php echo htmlspecialchars($file_path); ?>" 
                                      alt="<?php echo htmlspecialchars($cert['certificate_name']); ?>"
-                                     onclick="window.open('<?php echo htmlspecialchars($file_path); ?>', '_blank')">
+                                     onclick="openCertificateModal('<?php echo htmlspecialchars($file_path); ?>', '<?php echo addslashes(htmlspecialchars($cert['certificate_name'])); ?>')">
                             </div>
                         <?php endif; ?>
                         
@@ -240,6 +240,117 @@ function showDefaultPhoto(imgElement) {
     let defaultPhoto = imgElement.nextElementSibling;
     if (defaultPhoto && defaultPhoto.classList.contains('default-photo')) defaultPhoto.style.display = 'flex';
 }
+
+function openCertificateModal(src, caption) {
+    const modal = document.getElementById('certificateImageModal');
+    const modalImg = document.getElementById('modalEnlargedImage');
+    const captionText = document.getElementById('modalImageCaption');
+    
+    if (modal && modalImg && captionText) {
+        modal.classList.add('show');
+        modalImg.src = src;
+        captionText.innerText = caption;
+        document.body.style.overflow = 'hidden'; 
+    }
+}
+
+function closeCertificateModal() {
+    const modal = document.getElementById('certificateImageModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('certificateImageModal');
+    if (modal) {
+        modal.onclick = function(e) {
+            if (e.target !== document.getElementById('modalEnlargedImage')) {
+                closeCertificateModal();
+            }
+        };
+        const closeBtn = modal.querySelector('.image-modal-close');
+        if (closeBtn) closeBtn.onclick = closeCertificateModal;
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeCertificateModal();
+    });
+});
 </script>
+
+<style>
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.image-modal.show {
+    display: flex;
+    opacity: 1;
+}
+.image-modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 80vh;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    object-fit: contain;
+}
+.image-modal.show .image-modal-content {
+    transform: scale(1);
+}
+.image-modal-caption {
+    margin-top: 20px;
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 90%;
+}
+.image-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+    z-index: 10000;
+}
+.image-modal-close:hover {
+    color: #FFD700;
+}
+.doc-preview img {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.doc-preview img:hover {
+    transform: scale(1.02);
+}
+</style>
+
+<div id="certificateImageModal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <img class="image-modal-content" id="modalEnlargedImage">
+    <div id="modalImageCaption" class="image-modal-caption"></div>
+</div>
+
 
 <?php require_once '../includes/footer.php'; ?>

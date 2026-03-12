@@ -307,12 +307,46 @@ async function downloadPlayerScreenshot() {
     printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
 
     try {
-        const canvas = await html2canvas(target, { backgroundColor: '#f8f7f4', scale: 2, useCORS: true });
+        const canvas = await html2canvas(target, { 
+            backgroundColor: '#f8f7f4', 
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+            onclone: (clonedDoc) => {
+                // Force visibility for all reveal elements
+                clonedDoc.querySelectorAll('.reveal').forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'none';
+                    el.style.animation = 'none';
+                    el.style.visibility = 'visible';
+                });
+
+                // Ensure skill bars are full width and transitions are disabled
+                clonedDoc.querySelectorAll('.skill-fill').forEach(bar => {
+                    bar.style.transition = 'none';
+                });
+
+                // Hide action buttons in the screenshot
+                const actions = clonedDoc.querySelector('.hero-actions');
+                if (actions) actions.style.display = 'none';
+
+                // Remove sidebar margin/constraints for a clean full-width screenshot
+                const main = clonedDoc.querySelector('.main');
+                if (main) {
+                    main.style.setProperty('margin-left', '0', 'important');
+                    main.style.setProperty('width', '100%', 'important');
+                    main.style.setProperty('padding', '40px', 'important');
+                }
+            }
+        });
         const link = document.createElement('a');
         link.download = 'player-<?php echo (int)$player['id']; ?>-profile.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-    } catch (error) { alert('Failed to generate screenshot.'); } 
+    } catch (error) { 
+        console.error('Screenshot Error:', error);
+        alert('Failed to generate screenshot.'); 
+    } 
     finally { printBtn.disabled = false; printBtn.innerHTML = originalText; }
 }
 </script>

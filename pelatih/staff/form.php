@@ -341,9 +341,11 @@ if ($is_edit) {
                                 <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
                                     <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="file-upload-input certificate-file-input" 
                                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
-                                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                                    <div class="file-upload-icon-wrapper">
+                                        <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                                    </div>
                                     <div class="file-upload-text">Klik untuk upload sertifikat</div>
-                                    <div class="file-upload-subtext" style="display:none;">JPG, PNG, PDF, DOCX | Maks: 10MB</div>
+                                    <div class="file-upload-subtext">JPG, PNG, PDF, DOCX (Maks 10MB)</div>
                                 </div>
                             </div>
                         </div>
@@ -351,7 +353,7 @@ if ($is_edit) {
                 </div>
                 
                 <button type="button" class="btn btn-secondary" onclick="addCertificateField()" style="margin-top:20px; width:100%; justify-content:center;">
-                    <i class="fas fa-plus"></i> Form Sertifikat Lainnya
+                    <i class="fas fa-plus-circle"></i> Tambah Form Sertifikat Lainnya
                 </button>
             </div>
             
@@ -462,34 +464,35 @@ function addCertificateField() {
     
     newField.innerHTML = `
         <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
-            <button type="button" onclick="this.closest('.certificate-upload-item').remove()" style="background:none; border:none; color:var(--heritage-crimson); cursor:pointer; font-weight:700; font-size:0.85rem;">
-                <i class="fas fa-trash"></i> Hapus Form
+            <button type="button" onclick="this.closest('.certificate-upload-item').remove()" style="background:none; border:none; color:var(--heritage-crimson); cursor:pointer; font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:6px;">
+                <i class="fas fa-trash-alt"></i> Hapus Form
             </button>
         </div>
         <div class="form-grid">
             <div class="form-group">
                 <label class="form-label"><span>Nama Sertifikat</span></label>
-                <input type="text" name="\${namePrefix}[]" class="form-control" placeholder="Contoh: Lisensi C AFC">
+                <input type="text" name="${namePrefix}[]" class="form-control" placeholder="Contoh: Lisensi C AFC">
             </div>
             <div class="form-group">
                 <label class="form-label"><span>Penerbit</span></label>
-                <input type="text" name="\${authPrefix}[]" class="form-control" placeholder="Contoh: PSSI">
+                <input type="text" name="${authPrefix}[]" class="form-control" placeholder="Contoh: PSSI">
             </div>
             <div class="form-group">
                 <label class="form-label"><span>Tanggal Terbit</span></label>
-                <input type="date" name="\${datePrefix}[]" class="form-control">
+                <input type="date" name="${datePrefix}[]" class="form-control">
             </div>
             <div class="form-group">
                 <label class="form-label">
                     <span>File Bukti</span>
-                    <span class="note">Maks 10MB</span>
                 </label>
                 <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
-                    <input type="file" name="\${certPrefix}[]" class="file-upload-input certificate-file-input" 
+                    <input type="file" name="${certPrefix}[]" class="file-upload-input certificate-file-input" 
                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
-                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                    <div class="file-upload-icon-wrapper">
+                        <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                    </div>
                     <div class="file-upload-text">Klik untuk upload sertifikat</div>
-                    <div class="file-upload-subtext" style="display:none;">JPG, PNG, PDF, DOCX | Maks: 10MB</div>
+                    <div class="file-upload-subtext">JPG, PNG, PDF, DOCX (Maks 10MB)</div>
                 </div>
             </div>
         </div>
@@ -517,14 +520,21 @@ function initCertificateUpload(fileInput) {
         clearIndicator();
         uploadContainer.classList.add('has-file');
         if (uploadText) {
-            uploadText.textContent = `File dipilih: ${fileName}`;
+            uploadText.textContent = fileName;
         }
 
         const indicator = document.createElement('div');
         indicator.className = 'file-selected-indicator';
         indicator.innerHTML = '<i class="fas fa-check"></i>';
-        indicator.title = `File dipilih: ${fileName}`;
+        indicator.title = `File: ${fileName}`;
         uploadContainer.appendChild(indicator);
+        
+        // Scale animation on icon
+        const icon = uploadContainer.querySelector('.file-upload-icon');
+        if (icon) {
+            icon.style.transform = 'scale(1.2)';
+            setTimeout(() => { icon.style.transform = ''; }, 300);
+        }
     }
 
     function resetState() {
