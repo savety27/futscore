@@ -669,7 +669,7 @@ function getCompletedChallenges($limit = 10) {
 /**
  * Mendapatkan tantangan terbaru (untuk card section)
  */
-  function getLatestChallenges($limit = 5) {
+  function getLatestChallenges($limit = null) {
       global $db;
       $conn = $db->getConnection();
       
@@ -681,10 +681,14 @@ function getCompletedChallenges($limit = 10) {
               LEFT JOIN venues v ON c.venue_id = v.id
               WHERE DATE(c.challenge_date) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 2 DAY)
                 AND LOWER(COALESCE(c.status, '')) <> 'open'
-              ORDER BY c.challenge_date DESC 
-              LIMIT ?";
+              ORDER BY c.challenge_date DESC";
+    if ($limit !== null) {
+        $sql .= " LIMIT ?";
+    }
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $limit);
+    if ($limit !== null) {
+        $stmt->bind_param("i", $limit);
+    }
     $stmt->execute();
     $result = $stmt->get_result();
     
