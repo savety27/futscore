@@ -66,791 +66,423 @@ if ($is_edit) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - Area Pelatih</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .main {
-            background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .section-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-section {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .form-section:last-of-type {
-            border-bottom: none;
-        }
-        
-        .section-subtitle {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .form-grid.full-width {
-            grid-template-columns: 1fr;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-size: 14px;
-        }
-        
-        .required {
-            color: var(--danger);
-        }
-        
-        .form-input, .form-select, .form-textarea {
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
-            transition: all 0.3s;
-            font-family: inherit;
-        }
-        
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-        }
-        
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        .file-upload-container {
-            border: 2px dashed #ddd;
-            border-radius: 10px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .file-upload-container:hover {
-            border-color: var(--primary);
-            background: rgba(10, 36, 99, 0.02);
-        }
-
-        .file-upload-container.has-file {
-            border-color: var(--success);
-            border-style: solid;
-            background: rgba(46, 125, 50, 0.04);
-            position: relative;
-        }
-
-        .file-upload-container.has-file .file-upload-icon,
-        .file-upload-container.has-file .file-upload-text {
-            color: var(--success);
-        }
-
-        .file-selected-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--success);
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-        }
-        
-        .file-upload-input {
-            display: none;
-        }
-        
-        .file-upload-icon {
-            font-size: 48px;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        
-        .file-upload-text {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-        
-        .file-upload-subtext {
-            font-size: 13px;
-            color: var(--gray);
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        
-        .checkbox-group label {
-            cursor: pointer;
-            margin: 0;
-            font-weight: 500;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
-        }
-        
-        .btn {
-            padding: 12px 30px;
-            border-radius: 10px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            text-decoration: none;
-            font-size: 15px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(10, 36, 99, 0.3);
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            background: #5a6268;
-        }
-
-        /* Match back-button style with player_form.php */
-        .btn-back-model {
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-size: 16px;
-            background: #f8f9fa;
-            color: var(--dark);
-            border: 2px solid #e1e5eb;
-            box-shadow: none;
-        }
-
-        .btn-back-model:hover {
-            transform: none;
-            background: #e9ecef;
-            border-color: #ced4da;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        
-        .error-message {
-            background: rgba(211, 47, 47, 0.1);
-            border-left: 4px solid var(--danger);
-            color: var(--danger);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .current-photo {
-            max-width: 200px;
-            border-radius: 10px;
-            margin-top: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        
-        .certificate-list {
-            margin-top: 20px;
-        }
-        
-        .certificate-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .certificate-info {
-            flex: 1;
-        }
-        
-        .certificate-name {
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-        
-        .certificate-meta {
-            font-size: 13px;
-            color: var(--gray);
-        }
-        
-        .add-certificate-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 15px;
-        }
-        
-        .photo-preview-container {
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .photo-preview-container.active {
-            display: block;
-        }
-        
-        .new-photo-preview {
-            max-width: 200px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            border: 3px solid var(--success);
-        }
-        
-        .preview-label {
-            font-size: 14px;
-            color: var(--success);
-            font-weight: 600;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .file-upload-small {
-            padding: 0 16px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-align: left;
-        }
-        
-        .file-upload-small .file-upload-icon {
-            font-size: 20px;
-            margin-bottom: 0;
-        }
-        
-        .file-upload-small .file-upload-text {
-            font-size: 14px;
-            margin-bottom: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .file-upload-small .file-upload-subtext {
-            display: none;
-        }
-        
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../players/css/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/../players/css/player_form.css'); ?>">
 </head>
 <body>
 
-<div class="card">
-    <div class="section-header">
-        <h2 class="section-title">
+<div class="container">
+    <header class="header reveal">
+        <h1>
             <i class="fas <?php echo $is_edit ? 'fa-edit' : 'fa-plus-circle'; ?>"></i>
             <?php echo $is_edit ? 'Edit Staf Team' : 'Tambah Staf Team Baru'; ?>
-        </h2>
-        <a href="index.php" class="btn btn-secondary btn-back-model">
+        </h1>
+        <a href="index.php" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
-    </div>
+    </header>
     
     <?php if (isset($_SESSION['error_message'])): ?>
-    <div class="error-message">
+    <div class="alert alert-danger reveal">
         <i class="fas fa-exclamation-circle"></i>
-        <?php 
-        echo $_SESSION['error_message']; 
-        unset($_SESSION['error_message']);
-        ?>
+        <span><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></span>
     </div>
     <?php endif; ?>
     
-    <form method="POST" action="actions.php" enctype="multipart/form-data">
-        <input type="hidden" name="action" value="<?php echo $is_edit ? 'edit' : 'add'; ?>">
-        <?php if ($is_edit): ?>
-        <input type="hidden" name="id" value="<?php echo $staff_id; ?>">
-        <?php endif; ?>
-        
-        <!-- Basic Information -->
-        <div class="form-section">
-            <div class="section-subtitle">
-                <i class="fas fa-info-circle"></i>
-                Informasi Dasar
-            </div>
+    <div class="form-container">
+        <form method="POST" action="actions.php" enctype="multipart/form-data" id="staffForm">
+            <input type="hidden" name="action" value="<?php echo $is_edit ? 'edit' : 'add'; ?>">
+            <?php if ($is_edit): ?>
+            <input type="hidden" name="id" value="<?php echo $staff_id; ?>">
+            <?php endif; ?>
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">
-                        Nama Lengkap <span class="required">*</span>
-                    </label>
-                    <input type="text" name="name" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['name']); ?>" 
-                           required>
-                </div>
+            <!-- Basic Information -->
+            <div class="form-section reveal d-1">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Informasi Dasar
+                </h2>
                 
-                <div class="form-group">
-                    <label class="form-label">
-                        Jabatan <span class="required">*</span>
-                    </label>
-                    <select name="position" class="form-select" required>
-                        <option value="">Pilih Jabatan</option>
-                        <option value="manager" <?php echo $staff_data['position'] == 'manager' ? 'selected' : ''; ?>>Manager</option>
-                        <option value="headcoach" <?php echo $staff_data['position'] == 'headcoach' ? 'selected' : ''; ?>>Head Coach</option>
-                        <option value="coach" <?php echo $staff_data['position'] == 'coach' ? 'selected' : ''; ?>>Assistant Coach</option>
-                        <option value="goalkeeper_coach" <?php echo $staff_data['position'] == 'goalkeeper_coach' ? 'selected' : ''; ?>>Goalkeeper Coach</option>
-                        <option value="medic" <?php echo $staff_data['position'] == 'medic' ? 'selected' : ''; ?>>Medic</option>
-           <option value="official" <?php echo $staff_data['position'] == 'official' ? 'selected' : ''; ?>>Official</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['email']); ?>" 
-                           placeholder="email@example.com">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">No. Telepon</label>
-                    <input type="tel" name="phone" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['phone']); ?>" 
-                           placeholder="08123456789">
-                </div>
-            </div>
-            
-            <!-- Photo Upload -->
-            <div class="form-group">
-                <label class="form-label">Foto Profil</label>
-                <?php if ($is_edit && !empty($staff_data['photo'])): ?>
-                    <img src="../../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
-                         class="current-photo" alt="Current Photo">
-                    <div class="checkbox-group" style="margin-top: 10px;">
-                        <input type="checkbox" name="delete_photo" id="delete_photo" value="1">
-                        <label for="delete_photo">Hapus foto saat ini</label>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required-field">Nama Lengkap</span>
+                            <span class="note">Wajib</span>
+                        </label>
+                        <input type="text" name="name" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['name']); ?>" 
+                               placeholder="Masukkan nama lengkap" required>
                     </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span class="required-field">Jabatan</span>
+                            <span class="note">Wajib</span>
+                        </label>
+                        <select name="position" class="form-control" required>
+                            <option value="">Pilih Jabatan</option>
+                            <option value="manager" <?php echo $staff_data['position'] == 'manager' ? 'selected' : ''; ?>>Manager</option>
+                            <option value="headcoach" <?php echo $staff_data['position'] == 'headcoach' ? 'selected' : ''; ?>>Head Coach</option>
+                            <option value="coach" <?php echo $staff_data['position'] == 'coach' ? 'selected' : ''; ?>>Assistant Coach</option>
+                            <option value="goalkeeper_coach" <?php echo $staff_data['position'] == 'goalkeeper_coach' ? 'selected' : ''; ?>>Goalkeeper Coach</option>
+                            <option value="medic" <?php echo $staff_data['position'] == 'medic' ? 'selected' : ''; ?>>Medic</option>
+                            <option value="official" <?php echo $staff_data['position'] == 'official' ? 'selected' : ''; ?>>Official</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Email</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="email" name="email" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['email']); ?>" 
+                               placeholder="email@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>No. Telepon</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="tel" name="phone" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['phone']); ?>" 
+                               placeholder="08123456789">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="form-section reveal d-2">
+                <h2 class="section-title">
+                    <i class="fas fa-address-card"></i>
+                    Data Pribadi
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Tempat Lahir</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="text" name="birth_place" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['birth_place']); ?>"
+                               placeholder="Masukkan tempat lahir">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Tanggal Lahir</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="date" name="birth_date" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['birth_date']); ?>"
+                               max="<?php echo date('Y-m-d'); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Alamat Lengkap</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="text" name="address" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['address']); ?>"
+                               placeholder="Masukkan alamat lengkap">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Kota</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="text" name="city" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['city']); ?>"
+                               placeholder="Masukkan kota">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Provinsi</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="text" name="province" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['province']); ?>"
+                               placeholder="Masukkan provinsi">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Kode Pos</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="text" name="postal_code" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['postal_code']); ?>"
+                               placeholder="Masukkan kode pos">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span>Negara</span>
+                            <span class="note">Opsional</span>
+                        </label>
+                        <input type="text" name="country" class="form-control" 
+                               value="<?php echo htmlspecialchars($staff_data['country']); ?>"
+                               placeholder="Masukkan negara">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photo Section -->
+            <div class="form-section reveal d-3">
+                <h2 class="section-title">
+                    <i class="fas fa-camera"></i>
+                    Foto Profil
+                </h2>
+                
+                <div class="document-upload-grid" style="grid-template-columns: 1fr; max-width: 500px; margin: 0 auto;">
+                    <div class="form-group hero-upload">
+                        <?php if ($is_edit && !empty($staff_data['photo'])): ?>
+                            <div class="file-item">
+                                <img src="../../<?php echo htmlspecialchars($staff_data['photo']); ?>" alt="Current Photo">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; font-size: 0.85rem;">Foto Tersimpan</div>
+                                    <div style="font-size: 0.7rem; color: var(--heritage-text-muted); line-height: 1.2;">Klik upload di bawah untuk mengganti</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px; margin-bottom: 20px;">
+                                <input type="checkbox" name="delete_photo" id="delete_photo" value="1" style="width: auto; height: auto;">
+                                <label for="delete_photo" style="font-size: 0.9rem; color: var(--heritage-text-muted); cursor: pointer; margin: 0;">Hapus foto saat ini</label>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="file-upload" id="photoUpload">
+                            <div class="upload-icon-wrapper">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="upload-text">
+                                <span class="upload-title">Pilih Foto Profil Baru</span>
+                                <span class="upload-hint">JPG, PNG (Maksimal 5MB)</span>
+                            </div>
+                            <div class="btn-select">Pilih File</div>
+                            <input type="file" name="photo" id="photoFile" accept="image/*">
+                        </div>
+                        <div class="file-preview" id="photoPreview"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificates Section -->
+            <div class="form-section reveal d-4">
+                 <h2 class="section-title">
+                    <i class="fas fa-certificate"></i>
+                    Dokumen Sertifikat Kepelatihan
+                </h2>
+
+                <?php if ($is_edit && !empty($certificates)): ?>
+                <div style="margin-bottom: 24px;">
+                    <span class="form-label" style="display:block; margin-bottom:12px;">Sertifikat yang Ada</span>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                        <?php foreach ($certificates as $cert): ?>
+                        <div style="background: white; border: 1px solid var(--heritage-border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                            <div>
+                                <div style="font-weight: 700; color: var(--heritage-text);"><?php echo htmlspecialchars($cert['certificate_name']); ?></div>
+                                <div style="font-size: 0.85rem; color: var(--heritage-text-muted); margin-top:4px;">
+                                    <?php if (!empty($cert['issuing_authority'])): ?>
+                                        Penerbit: <?php echo htmlspecialchars($cert['issuing_authority']); ?>
+                                    <?php endif; ?>
+                                    <?php if (!empty($cert['issue_date'])): ?>
+                                        <br>Tanggal: <?php echo date('d M Y', strtotime($cert['issue_date'])); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--heritage-border);">
+                                <input type="checkbox" name="delete_certificates[]" 
+                                       value="<?php echo $cert['id']; ?>" 
+                                       id="cert_<?php echo $cert['id']; ?>"
+                                       style="width:auto; height:auto; cursor:pointer;">
+                                <label for="cert_<?php echo $cert['id']; ?>" style="color:var(--heritage-crimson); font-size:0.85rem; font-weight:700; cursor:pointer; margin:0;">Hapus Sertifikat</label>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
                 <?php endif; ?>
-                <div id="photoUploadContainer" class="file-upload-container" onclick="document.getElementById('photo').click()">
-                    <input type="file" id="photo" name="photo" class="file-upload-input" 
-                           accept="image/jpeg,image/png,image/gif">
-                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                    <div class="file-upload-text">Klik untuk upload foto<?php echo $is_edit ? ' baru' : ''; ?></div>
-                    <div class="file-upload-subtext">Format: JPG, PNG, GIF | Maks: 5MB</div>
-                </div>
                 
-                <!-- Preview for newly selected photo -->
-                <div id="photoPreviewContainer" class="photo-preview-container">
-                    <div class="preview-label">
-                        <i class="fas fa-image"></i>
-                        Preview Foto Baru:
-                    </div>
-                    <img id="photoPreview" class="new-photo-preview" alt="Preview">
-                </div>
-            </div>
-        </div>
-        
-        <!-- Personal Information -->
-        <div class="form-section">
-            <div class="section-subtitle">
-                <i class="fas fa-address-card"></i>
-                Data Pribadi
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Tempat Lahir</label>
-                    <input type="text" name="birth_place" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['birth_place']); ?>">
-                </div>
+                <span class="form-label" style="display:block; margin-bottom:12px;"><?php echo $is_edit ? 'Tambah Sertifikat Baru' : 'Sertifikat (Opsional)'; ?></span>
                 
-                <div class="form-group">
-                    <label class="form-label">Tanggal Lahir</label>
-                    <input type="date" name="birth_date" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['birth_date']); ?>">
-                </div>
-            </div>
-            
-            <div class="form-grid full-width">
-                <div class="form-group">
-                    <label class="form-label">Alamat</label>
-                    <textarea name="address" class="form-textarea"><?php echo htmlspecialchars($staff_data['address']); ?></textarea>
-                </div>
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Kota</label>
-                    <input type="text" name="city" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['city']); ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Provinsi</label>
-                    <input type="text" name="province" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['province']); ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Kode Pos</label>
-                    <input type="text" name="postal_code" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['postal_code']); ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Negara</label>
-                    <input type="text" name="country" class="form-input" 
-                           value="<?php echo htmlspecialchars($staff_data['country']); ?>">
-                </div>
-            </div>
-        </div>
-        
-        <!-- Certificates Section -->
-        <?php if ($is_edit && !empty($certificates)): ?>
-        <div class="form-section">
-            <div class="section-subtitle">
-                <i class="fas fa-certificate"></i>
-                Sertifikat yang Ada
-            </div>
-            
-            <div class="certificate-list">
-                <?php foreach ($certificates as $cert): ?>
-                <div class="certificate-item">
-                    <div class="certificate-info">
-                        <div class="certificate-name"><?php echo htmlspecialchars($cert['certificate_name']); ?></div>
-                        <div class="certificate-meta">
-                            <?php if (!empty($cert['issuing_authority'])): ?>
-                                Penerbit: <?php echo htmlspecialchars($cert['issuing_authority']); ?>
-                            <?php endif; ?>
-                            <?php if (!empty($cert['issue_date'])): ?>
-                                | Tanggal: <?php echo date('d/m/Y', strtotime($cert['issue_date'])); ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" name="delete_certificates[]" 
-                               value="<?php echo $cert['id']; ?>" 
-                               id="cert_<?php echo $cert['id']; ?>">
-                        <label for="cert_<?php echo $cert['id']; ?>">Hapus</label>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <?php endif; ?>
-        
-        <!-- Add New Certificates -->
-        <div class="form-section">
-            <div class="section-subtitle">
-                <i class="fas fa-certificate"></i>
-                <?php echo $is_edit ? 'Tambah Sertifikat Baru' : 'Sertifikat'; ?>
-            </div>
-            
-            <div id="certificateContainer">
-                <div class="certificate-upload-item">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Nama Sertifikat</label>
-                            <input type="text" name="<?php echo $is_edit ? 'new_certificate_name' : 'certificate_name'; ?>[]" class="form-input">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Penerbit</label>
-                            <input type="text" name="<?php echo $is_edit ? 'new_certificate_authority' : 'certificate_authority'; ?>[]" class="form-input">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Tanggal Terbit</label>
-                            <input type="date" name="<?php echo $is_edit ? 'new_certificate_date' : 'certificate_date'; ?>[]" class="form-input">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">File Sertifikat</label>
-                            <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
-                                <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="file-upload-input certificate-file-input" 
-                                       accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
-                                <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                                <div class="file-upload-text">Klik untuk upload sertifikat</div>
-                                <div class="file-upload-subtext">JPG, PNG, PDF, DOC, DOCX | Maks: 10MB</div>
+                <div id="certificateContainer" style="display: flex; flex-direction: column; gap: 24px;">
+                    <div class="certificate-upload-item" style="background: white; border: 1px solid var(--heritage-border); border-radius: 16px; padding: 24px; box-shadow: var(--soft-shadow);">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span>Nama Sertifikat</span>
+                                </label>
+                                <input type="text" name="<?php echo $is_edit ? 'new_certificate_name' : 'certificate_name'; ?>[]" class="form-control" placeholder="Contoh: Lisensi C AFC">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span>Penerbit</span>
+                                </label>
+                                <input type="text" name="<?php echo $is_edit ? 'new_certificate_authority' : 'certificate_authority'; ?>[]" class="form-control" placeholder="Contoh: PSSI">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span>Tanggal Terbit</span>
+                                </label>
+                                <input type="date" name="<?php echo $is_edit ? 'new_certificate_date' : 'certificate_date'; ?>[]" class="form-control">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <span>File Bukti</span>
+                                    <span class="note">Maks 10MB</span>
+                                </label>
+                                <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="padding: 9px; cursor: pointer;">
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <button type="button" class="btn-premium btn-outline" onclick="addCertificateField()" style="margin-top:20px; width:100%; justify-content:center;">
+                    <i class="fas fa-plus"></i> Form Sertifikat Lainnya
+                </button>
             </div>
             
-            <button type="button" class="add-certificate-btn" onclick="addCertificateField()">
-                <i class="fas fa-plus"></i> Tambah Sertifikat Lainnya
-            </button>
-        </div>
-        
-        <!-- Status -->
-        <div class="form-section">
-            <div class="checkbox-group">
-                <input type="checkbox" name="is_active" id="is_active" value="1" 
-                       <?php echo ($staff_data['is_active'] ?? 1) ? 'checked' : ''; ?>>
-                <label for="is_active">Staff Aktif</label>
+            <!-- Status Section -->
+            <div class="form-section reveal d-5">
+                <h2 class="section-title">
+                    <i class="fas fa-check-circle"></i>
+                    Status Keanggotaan
+                </h2>
+                <div class="form-group">
+                    <div class="status-active-container">
+                        <input type="checkbox" id="is_active" name="is_active" value="1" <?php echo ($staff_data['is_active'] ?? 1) ? 'checked' : ''; ?> class="status-checkbox">
+                        <div class="status-info">
+                            <label for="is_active" class="status-label">Staff Aktif</label>
+                            <div class="status-description">Staff aktif akan tercantum dalam kepengurusan klub resmi.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <!-- Form Actions -->
-        <div class="form-actions">
-            <a href="index.php" class="btn btn-secondary btn-back-model">
-                <i class="fas fa-times"></i> Batal
-            </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> <?php echo $is_edit ? 'Update Staff' : 'Tambah Staff'; ?>
-            </button>
-        </div>
-    </form>
+            
+            <!-- Form Actions -->
+            <div class="form-actions reveal d-6">
+                <a href="index.php" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Batalkan
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> <?php echo $is_edit ? 'Perbarui Data Staff' : 'Simpan Staff'; ?>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
-// Photo preview handler
-document.getElementById('photo').addEventListener('change', function(e) {
-    const file = this.files[0];
-    const uploadContainer = document.getElementById('photoUploadContainer');
-    const uploadText = uploadContainer.querySelector('.file-upload-text');
-    const previewContainer = document.getElementById('photoPreviewContainer');
-    const preview = document.getElementById('photoPreview');
-    const defaultUploadText = 'Klik untuk upload foto';
-    
-    function clearSelectedIndicator() {
-        const indicator = uploadContainer.querySelector('.file-selected-indicator');
-        if (indicator) {
-            indicator.remove();
-        }
-    }
-    
-    function markAsSelected(fileName) {
-        clearSelectedIndicator();
-        uploadContainer.classList.add('has-file');
-        uploadText.textContent = `File dipilih: ${fileName}`;
-        
-        const indicator = document.createElement('div');
-        indicator.className = 'file-selected-indicator';
-        indicator.innerHTML = '<i class="fas fa-check"></i>';
-        indicator.title = `File dipilih: ${fileName}`;
-        uploadContainer.appendChild(indicator);
-    }
-    
-    function resetUploadState() {
-        clearSelectedIndicator();
-        uploadContainer.classList.remove('has-file');
-        uploadText.textContent = defaultUploadText;
-    }
-    
-    if (file) {
-        // Check file size (5MB max)
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('Ukuran file terlalu besar! Maksimal 5MB');
-            this.value = '';
-            previewContainer.classList.remove('active');
-            resetUploadState();
-            return;
-        }
-        
-        // Check file type
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!validTypes.includes(file.type)) {
-            alert('Format file tidak valid! Gunakan JPG, PNG, atau GIF');
-            this.value = '';
-            previewContainer.classList.remove('active');
-            resetUploadState();
-            return;
-        }
-        
-        markAsSelected(file.name);
+document.addEventListener('DOMContentLoaded', function() {
+    // Basic file upload handling for Profile Photo
+    const photoUpload = document.getElementById('photoUpload');
+    const photoFile = document.getElementById('photoFile');
+    const photoPreview = document.getElementById('photoPreview');
 
-        // Show preview
+    if (photoUpload && photoFile) {
+        photoUpload.addEventListener('click', () => photoFile.click());
+        photoUpload.addEventListener('dragover', (e) => { e.preventDefault(); photoUpload.classList.add('dragover'); });
+        photoUpload.addEventListener('dragleave', () => photoUpload.classList.remove('dragover'));
+        photoUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            photoUpload.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                photoFile.files = e.dataTransfer.files;
+                handlePhotoPreview(photoFile.files[0]);
+            }
+        });
+
+        photoFile.addEventListener('change', (e) => {
+            if (e.target.files.length) handlePhotoPreview(e.target.files[0]);
+        });
+    }
+
+    function handlePhotoPreview(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Harap pilih file gambar untuk profil!');
+            photoFile.value = '';
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran file terlalu besar! Maksimal 5MB.');
+            photoFile.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
-            preview.src = e.target.result;
-            previewContainer.classList.add('active');
+            photoPreview.innerHTML = `
+                <div class="file-item">
+                    <img src="${e.target.result}" alt="Preview">
+                    <div>
+                        <div style="font-weight:700; font-size: 0.85rem">${file.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--heritage-text-muted);">${formatFileSize(file.size)}</div>
+                    </div>
+                </div>`;
         };
         reader.readAsDataURL(file);
-    } else {
-        previewContainer.classList.remove('active');
-        resetUploadState();
     }
-});
 
-// Prevent file input click from bubbling to container
-document.getElementById('photo').addEventListener('click', function(e) {
-    e.stopPropagation();
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
 });
 
 function addCertificateField() {
     const container = document.getElementById('certificateContainer');
     const isEdit = <?php echo $is_edit ? 'true' : 'false'; ?>;
-    const namePrefix = isEdit ? 'new_certificate' : 'certificate';
+    const namePrefix = isEdit ? 'new_certificate_name' : 'certificate_name';
+    const authPrefix = isEdit ? 'new_certificate_authority' : 'certificate_authority';
+    const datePrefix = isEdit ? 'new_certificate_date' : 'certificate_date';
     const certPrefix = isEdit ? 'new_certificates' : 'certificates';
     
     const newField = document.createElement('div');
     newField.className = 'certificate-upload-item';
-    newField.style.marginTop = '20px';
-    newField.style.paddingTop = '20px';
-    newField.style.borderTop = '2px dashed #ddd';
+    newField.style.background = 'white';
+    newField.style.border = '1px solid var(--heritage-border)';
+    newField.style.borderRadius = '16px';
+    newField.style.padding = '24px';
+    newField.style.boxShadow = 'var(--soft-shadow)';
+    
     newField.innerHTML = `
+        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+            <button type="button" onclick="this.closest('.certificate-upload-item').remove()" style="background:none; border:none; color:var(--heritage-crimson); cursor:pointer; font-weight:700; font-size:0.85rem;">
+                <i class="fas fa-trash"></i> Hapus Form
+            </button>
+        </div>
         <div class="form-grid">
             <div class="form-group">
-                <label class="form-label">Nama Sertifikat</label>
-                <input type="text" name="${namePrefix}_name[]" class="form-input">
+                <label class="form-label"><span>Nama Sertifikat</span></label>
+                <input type="text" name="\${namePrefix}[]" class="form-control" placeholder="Contoh: Lisensi C AFC">
             </div>
-            
             <div class="form-group">
-                <label class="form-label">Penerbit</label>
-                <input type="text" name="${namePrefix}_authority[]" class="form-input">
+                <label class="form-label"><span>Penerbit</span></label>
+                <input type="text" name="\${authPrefix}[]" class="form-control" placeholder="Contoh: PSSI">
             </div>
-            
             <div class="form-group">
-                <label class="form-label">Tanggal Terbit</label>
-                <input type="date" name="${namePrefix}_date[]" class="form-input">
+                <label class="form-label"><span>Tanggal Terbit</span></label>
+                <input type="date" name="\${datePrefix}[]" class="form-control">
             </div>
-            
             <div class="form-group">
-                <label class="form-label">File Sertifikat</label>
-                <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
-                    <input type="file" name="${certPrefix}[]" class="file-upload-input certificate-file-input" 
-                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
-                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                    <div class="file-upload-text">Klik untuk upload sertifikat</div>
-                    <div class="file-upload-subtext">JPG, PNG, PDF, DOC, DOCX | Maks: 10MB</div>
-                </div>
+                <label class="form-label">
+                    <span>File Bukti</span>
+                    <span class="note">Maks 10MB</span>
+                </label>
+                <input type="file" name="\${certPrefix}[]" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="padding: 9px; cursor: pointer;">
             </div>
         </div>
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="margin-top: 10px;">
-            <i class="fas fa-trash"></i> Hapus Form Ini
-        </button>
     `;
-    
     container.appendChild(newField);
-    const newInput = newField.querySelector('.certificate-file-input');
-    if (newInput) {
-        initCertificateUpload(newInput);
-    }
-}
-
-function initCertificateUpload(fileInput) {
-    const uploadContainer = fileInput.closest('.file-upload-container');
-    if (!uploadContainer) return;
-
-    const uploadText = uploadContainer.querySelector('.file-upload-text');
-    const defaultText = 'Klik untuk upload sertifikat';
-
-    function clearIndicator() {
-        const indicator = uploadContainer.querySelector('.file-selected-indicator');
-        if (indicator) indicator.remove();
-    }
-
-    function markSelected(fileName) {
-        clearIndicator();
-        uploadContainer.classList.add('has-file');
         if (uploadText) {
             uploadText.textContent = `File dipilih: ${fileName}`;
         }
