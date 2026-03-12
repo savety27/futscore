@@ -131,103 +131,110 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
 };
 ?>
 
-<div class="page-header">
-    <div class="page-title-wrap">
-        <h1 class="page-title"><i class="fas fa-user-tie"></i> Direktori Staf Team</h1>
-        <p class="page-subtitle">Kelola data staf, cek status aktif, dan lihat sertifikat tiap anggota tim.</p>
-    </div>
-    <div class="page-summary">
-        <span class="summary-pill"><i class="fas fa-users-cog"></i> <?php echo (int)$total_data; ?> Staf</span>
-    </div>
-</div>
+<link rel="stylesheet" href="css/staff.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/staff.css'); ?>">
 
-<!-- Modal untuk menampilkan sertifikat -->
-<div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8);">
-    <div class="modal-content" style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 80%; max-width: 600px; position: relative;">
-        <span class="close-modal" style="position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: var(--danger);">&times;</span>
-        <h3 id="modalTitle" style="color: var(--primary); margin-bottom: 20px;">Sertifikat</h3>
-        <div id="certificatesList" style="max-height: 400px; overflow-y: auto;">
-            <!-- Daftar sertifikat akan dimuat di sini -->
+<div class="teams-container">
+    <!-- Editorial Header -->
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Direktori</span>
+            <h1 class="hero-title">Direktori Staf Team</h1>
+            <p class="hero-description">Kelola data staf, cek status aktif, dan lihat sertifikat tiap anggota tim.</p>
         </div>
-    </div>
-</div>
+        <div class="hero-actions">
+            <span class="summary-pill"><i class="fas fa-users-cog"></i> <?php echo (int)$total_data; ?> Staf</span>
+        </div>
+    </header>
 
-<div class="card">
-    <?php if (isset($_SESSION['success_message'])): ?>
-    <div class="success-message">
-        <i class="fas fa-check-circle"></i>
-        <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
-    </div>
-    <?php endif; ?>
-    
-    <?php if (isset($_SESSION['error_message'])): ?>
-    <div class="error-message">
-        <i class="fas fa-exclamation-circle"></i>
-        <?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
-    </div>
-    <?php endif; ?>
-    
-    <div class="section-header">
-        <h2 class="section-title">Daftar Staf Team</h2>
-        <div class="section-actions">
-            <a href="form.php" class="btn-primary">
-                <i class="fas fa-plus"></i> Tambah Staf Baru
-            </a>
-            <a href="<?php echo htmlspecialchars($team_staff_export_url); ?>" class="btn-export">
-                <i class="fas fa-download"></i> Export Excel
-            </a>
+    <!-- Modal untuk menampilkan sertifikat -->
+    <div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="modal-content" style="background-color: var(--heritage-card); margin: 5% auto; padding: 30px; border-radius: 24px; width: 90%; max-width: 600px; position: relative; border: 1px solid var(--heritage-border); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <span class="close-modal" style="position: absolute; right: 24px; top: 20px; font-size: 28px; cursor: pointer; color: var(--heritage-crimson); transition: transform 0.2s;">&times;</span>
+            <h3 id="modalTitle" style="color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 24px;">Sertifikat</h3>
+            <div id="certificatesList" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+                <!-- Daftar sertifikat akan dimuat di sini -->
+            </div>
         </div>
     </div>
 
-    <div class="filter-container">
-        <div class="staff-filter-card">
-            <form action="" method="GET" class="staff-filter-form">
-                <div class="staff-search-group">
-                    <i class="fas fa-search"></i>
-                    <input
-                        type="text"
-                        name="search"
-                        class="staff-search-input"
-                        placeholder="Cari nama, email, telepon, jabatan, atau team..."
-                        value="<?php echo htmlspecialchars($search); ?>"
-                    >
+    <!-- Filters container -->
+    <div class="filter-container reveal d-1">
+        <?php if (isset($_SESSION['success_message'])): ?>
+        <div class="message-alert">
+            <i class="fas fa-check-circle" style="color: #4CAF50;"></i>
+            <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_SESSION['error_message'])): ?>
+        <div class="message-alert" style="border-left-color: var(--heritage-crimson);">
+            <i class="fas fa-exclamation-circle" style="color: var(--heritage-crimson);"></i>
+            <?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
+        </div>
+        <?php endif; ?>
+
+        <div class="teams-filter-card">
+            <form action="" method="GET" class="teams-filter-form">
+                <div class="filter-group">
+                    <label>Pencarian</label>
+                    <div class="teams-search-group">
+                        <i class="fas fa-search"></i>
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari nama, email, telepon, jabatan..." value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Status Aktif</label>
+                    <div class="teams-search-group">
+                        <i class="fas fa-filter"></i>
+                        <select name="active" class="teams-search-input" style="padding-left: 44px; appearance: none; cursor: pointer;">
+                            <option value="">Semua Status</option>
+                            <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
+                            <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Non-Aktif</option>
+                        </select>
+                    </div>
                 </div>
 
-                <select name="active" class="staff-filter-select">
-                    <option value="">Semua Status</option>
-                    <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
-                    <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Non-Aktif</option>
-                </select>
-
-                <div class="staff-filter-actions">
-                    <button type="submit" class="btn-filter">
-                        <i class="fas fa-filter"></i> Terapkan
-                    </button>
-                    <?php if ($search !== '' || $filter_active !== ''): ?>
-                        <a href="index.php" class="clear-filter-btn">
-                            <i class="fas fa-times"></i> Reset
-                        </a>
-                    <?php endif; ?>
+                <div class="teams-filter-actions" style="margin-top: auto;">
+                    <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Terapkan</button>
+                    <a href="index.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
                 </div>
             </form>
         </div>
     </div>
 
+    <div class="reveal d-2">
+        <div class="section-header">
+            <div class="section-title-wrap">
+                <h2 class="section-title">Daftar Staf</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="section-actions" style="display: flex; gap: 12px;">
+                <a href="form.php" class="btn-premium" style="background: var(--heritage-accent); color: white; border: none;">
+                    <i class="fas fa-plus"></i> Tambah Staf Baru
+                </a>
+                <a href="<?php echo htmlspecialchars($team_staff_export_url); ?>" class="btn-premium btn-export">
+                    <i class="fas fa-download"></i> Export Excel
+                </a>
+            </div>
+        </div>
+
     <?php if (empty($staff_list)): ?>
-        <p style="text-align: center; color: var(--gray); padding: 20px;">Staf tidak ditemukan.</p>
+        <div class="empty-state">
+            <i class="fas fa-user-tie"></i>
+            <p>Staf tidak ditemukan.</p>
+        </div>
     <?php else: ?>
-        <div style="overflow-x: auto;">
+        <div class="table-responsive">
             <table class="data-table">
-                                <thead>
+                <thead>
                     <tr>
-                        <th class="photo-cell">Foto</th>
-                        <th>Nama</th>
-                        <th>Team</th>
-                        <th style="text-align: center;">Jabatan</th>
+                        <th class="logo-cell">Foto</th>
+                        <th>Nama Staf</th>
+                        <th>Jabatan</th>
                         <th style="text-align: center;">Umur</th>
                         <th style="text-align: center;">Sertifikat</th>
-                        <th style="text-align: center;">Status</th>
-                        <th style="text-align: center;">Aksi</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -257,64 +264,65 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                         }
                     ?>
                     <tr>
-                         <td>
+                         <td class="logo-cell">
+                            <div class="player-photo">
                             <?php if (!empty($staff_photo_url)): ?>
                                 <img src="<?php echo htmlspecialchars($staff_photo_url); ?>" 
                                      alt="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" 
-                                     class="staff-photo"
                                      onerror="this.onerror=null; this.src='../images/staff/default-staff.png'">
                             <?php else: ?>
-                                <div class="staff-photo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-user-tie" style="color: #999; font-size: 24px;"></i>
+                                <div class="default-photo">
+                                    <i class="fas fa-user-tie"></i>
                                 </div>
                             <?php endif; ?>
+                            </div>
                         </td>
                         <td class="name-cell">
-                            <?php echo htmlspecialchars($staff['name'] ?? ''); ?>
-                            <div style="font-size: 11px; color: var(--gray); font-weight: normal;"><?php echo htmlspecialchars($staff['email'] ?? ''); ?></div>
+                            <a href="view.php?id=<?php echo $staff['id']; ?>" class="player-name-link" title="Lihat detail">
+                                <strong><?php echo htmlspecialchars($staff['name'] ?? ''); ?></strong>
+                                <span class="player-click-hint">Lihat Profil &rarr;</span>
+                            </a>
+                            <div class="player-info">
+                                <small><i class="fas fa-envelope"></i> <?php echo htmlspecialchars($staff['email'] ?? '-'); ?></small>
+                                <small><i class="fas fa-phone"></i> <?php echo htmlspecialchars($staff['phone'] ?? '-'); ?></small>
+                            </div>
                         </td>
-                        <td class="team-cell"><?php echo htmlspecialchars($staff['team_name'] ?? ''); ?></td>
-                        <td class="position-cell">
-                            <span class="position-badge"><?php echo htmlspecialchars($staff['position'] ?? ''); ?></span>
-                        </td>
-                        <td class="age-cell"><?php echo $staff['age']; ?></td>
-                        <td class="certificate-cell">
-                            <a href="javascript:void(0);" 
-                            class="view-certificates" 
-                            data-staff-id="<?php echo $staff['id']; ?>"
-                            data-staff-name="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>"
-                            style="text-decoration: none;">
-                                <span class="certificate-count clickable" style="cursor: pointer; position: relative; padding-right: 20px;">
-                        <?php echo $staff['certificate_count']; ?> Sertifikat
-                                <span style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%);">▶</span>
+                        <td>
+                            <span class="position-badge" data-position="<?php echo htmlspecialchars(substr($staff['position'] ?? '', 0, 1)); ?>">
+                                <?php echo htmlspecialchars($staff['position'] ?? ''); ?>
                             </span>
+                        </td>
+                        <td class="age-cell"><?php echo $staff['age']; ?> Thn</td>
+                        <td style="text-align: center;">
+                            <a href="javascript:void(0);" class="view-certificates count-link" data-staff-id="<?php echo $staff['id']; ?>" data-staff-name="<?php echo htmlspecialchars($staff['name'] ?? ''); ?>" title="Lihat Sertifikat">
+                                <span class="count-cell matches" style="display:inline-flex; align-items:center; gap:6px;">
+                                    <?php echo $staff['certificate_count']; ?> <i class="fas fa-certificate" style="font-size: 11px; opacity:0.8;"></i>
+                                </span>
                             </a>
                         </td>
-                        <td class="status-cell" style="text-align: center;">
+                        <td>
                             <?php if ($staff['is_active']): ?>
-                                <span class="badge badge-success">Aktif</span>
+                                <span class="status-badge active"><i class="fas fa-check-circle"></i> Aktif</span>
                             <?php else: ?>
-                                <span class="badge badge-danger">Non-Aktif</span>
+                                <span class="status-badge inactive"><i class="fas fa-times-circle"></i> Non-Aktif</span>
                             <?php endif; ?>
                         </td>
-                        <td class="action-cell" style="text-align: center;">
-                            <a href="view.php?id=<?php echo $staff['id']; ?>" 
-                               class="btn-action btn-view" 
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="form.php?id=<?php echo $staff['id']; ?>" 
-                               class="btn-action btn-edit" 
-                               title="Edit Staf">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="actions.php" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus staf ini?');">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="id" value="<?php echo $staff['id']; ?>">
-                                <button type="submit" class="btn-action btn-delete" title="Hapus Staf">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <a href="view.php?id=<?php echo $staff['id']; ?>" class="btn-primary btn-sm btn-view" title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="form.php?id=<?php echo $staff['id']; ?>" class="btn-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="actions.php" method="POST" class="delete-form" onsubmit="return confirm('Apakah Anda yakin ingin menghapus staf ini?');">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="<?php echo $staff['id']; ?>">
+                                    <button type="submit" class="btn-primary btn" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -326,24 +334,47 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="<?php echo htmlspecialchars($build_page_url($page - 1)); ?>" class="page-link">&laquo; Seb</a>
+                <a href="<?php echo htmlspecialchars($build_page_url(1)); ?>" class="page-link" title="Halaman Pertama">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="<?php echo htmlspecialchars($build_page_url($page - 1)); ?>" class="page-link" title="Sebelumnya">
+                    <i class="fas fa-angle-left"></i>
+                </a>
             <?php endif; ?>
             
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="<?php echo htmlspecialchars($build_page_url($i)); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $page + 2);
+            
+            if ($start_page > 1): ?>
+                <span class="page-dots">...</span>
+            <?php endif; ?>
+            
+            <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <a href="<?php echo htmlspecialchars($build_page_url($i)); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
+                    <?php echo $i; ?>
+                </a>
             <?php endfor; ?>
             
+            <?php if ($end_page < $total_pages): ?>
+                <span class="page-dots">...</span>
+            <?php endif; ?>
+            
             <?php if ($page < $total_pages): ?>
-                <a href="<?php echo htmlspecialchars($build_page_url($page + 1)); ?>" class="page-link">Sel &raquo;</a>
+                <a href="<?php echo htmlspecialchars($build_page_url($page + 1)); ?>" class="page-link" title="Berikutnya">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="<?php echo htmlspecialchars($build_page_url($total_pages)); ?>" class="page-link" title="Halaman Terakhir">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
-
     <?php endif; ?>
+    </div>
 </div>
 
 <script>
-// JavaScript untuk menangani modal sertifikat
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('certificatesModal');
     const modalTitle = document.getElementById('modalTitle');
@@ -351,427 +382,66 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModal = document.querySelector('.close-modal');
     const viewCertificatesLinks = document.querySelectorAll('.view-certificates');
     
-    // Fungsi untuk menutup modal
     function closeCertificateModal() {
         modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // allow scroll
     }
     
-    // Event listener untuk tombol close
     closeModal.addEventListener('click', closeCertificateModal);
     
-    // Event listener untuk klik di luar modal
     window.addEventListener('click', function(event) {
         if (event.target === modal) {
             closeCertificateModal();
         }
     });
     
-    // Event listener untuk setiap link sertifikat
     viewCertificatesLinks.forEach(function(link) {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
             const staffId = this.getAttribute('data-staff-id');
             const staffName = this.getAttribute('data-staff-name');
             
-            // Set judul modal
             modalTitle.textContent = 'Sertifikat - ' + staffName;
             
-            // Tampilkan loading
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i><p>Memuat sertifikat...</p></div>';
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--heritage-gold);"></i><p style="margin-top: 16px; color: var(--heritage-text-muted); font-family: var(--font-body);">Memuat sertifikat...</p></div>';
             
-            // Tampilkan modal
             modal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // prevent scroll
             
-            // Load sertifikat via AJAX
             loadCertificates(staffId);
         });
     });
     
-    // Fungsi untuk memuat sertifikat via AJAX
     function loadCertificates(staffId) {
-        // Buat objek XMLHttpRequest
         const xhr = new XMLHttpRequest();
         xhr.open('GET', 'get_certificates.php?staff_id=' + staffId, true);
         
         xhr.onload = function() {
             if (xhr.status === 200) {
+                // Wrap response in heritage styled classes if needed, or get_certificates.php already does
                 certificatesList.innerHTML = xhr.responseText;
+                
+                // Add minor specific styling to children dynamically if needed
+                const items = certificatesList.querySelectorAll('.certificate-item');
+                items.forEach(item => {
+                    item.style.backgroundColor = 'var(--heritage-bg)';
+                    item.style.border = '1px solid var(--heritage-border)';
+                    item.style.borderRadius = '16px';
+                    item.style.padding = '20px';
+                    item.style.marginBottom = '16px';
+                });
             } else {
-                certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat sertifikat</p></div>';
+                certificatesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--heritage-crimson);"><i class="fas fa-exclamation-circle" style="font-size: 32px;"></i><p style="margin-top: 16px;">Gagal memuat sertifikat. Status: ' + xhr.status + '</p></div>';
             }
         };
         
         xhr.onerror = function() {
-            certificatesList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);"><i class="fas fa-exclamation-circle"></i><p>Kesalahan jaringan</p></div>';
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--heritage-crimson);"><i class="fas fa-wifi" style="font-size: 32px;"></i><p style="margin-top: 16px;">Kesalahan jaringan saat memuat data.</p></div>';
         };
         
         xhr.send();
     }
 });
-
 </script>
-
-<style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.page-title-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    line-height: 1.15;
-}
-
-.page-title i {
-    color: var(--secondary);
-}
-
-.page-subtitle {
-    margin: 0;
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.summary-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 999px;
-    background: #eef5ff;
-    color: var(--primary);
-    border: 1px solid #dbeafe;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.section-header {
-    margin-bottom: 16px;
-}
-
-.filter-container {
-    margin-bottom: 24px;
-}
-
-.staff-filter-card {
-    padding: 16px;
-    border: 1px solid #dbe5f3;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.06);
-}
-
-.staff-filter-form {
-    display: grid;
-    grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.6fr) auto;
-    gap: 12px;
-    align-items: center;
-}
-
-.staff-search-group {
-    position: relative;
-}
-
-.staff-search-group i {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    font-size: 14px;
-}
-
-.staff-search-input,
-.staff-filter-select {
-    width: 100%;
-    min-height: 46px;
-    border: 1px solid #d1d9e6;
-    border-radius: 12px;
-    background: #ffffff;
-    color: var(--dark);
-    font-size: 14px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.staff-search-input {
-    padding: 12px 14px 12px 44px;
-}
-
-.staff-filter-select {
-    padding: 12px 14px;
-}
-
-.staff-search-input:focus,
-.staff-filter-select:focus {
-    outline: none;
-    border-color: #60a5fa;
-    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18);
-}
-
-.staff-filter-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.btn-filter,
-.clear-filter-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 46px;
-    padding: 0 18px;
-    border-radius: 12px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.btn-filter {
-    border: none;
-    background: linear-gradient(135deg, var(--primary), #2563eb);
-    color: #ffffff;
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
-}
-
-.btn-filter:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
-}
-
-.clear-filter-btn {
-    border: 1px solid #d1d9e6;
-    background: #ffffff;
-    color: var(--gray);
-}
-
-.clear-filter-btn:hover {
-    border-color: #93c5fd;
-    color: var(--primary);
-    background: #eff6ff;
-}
-
-/* Styling untuk modal */
-.modal-content {
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Styling untuk daftar sertifikat */
-.certificate-item {
-    margin-bottom: 15px;
-    padding: 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    background: #f8f9fa;
-}
-
-.certificate-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    margin-top: 10px;
-    border: 2px solid #ddd;
-}
-
-.certificate-info {
-    margin-bottom: 10px;
-}
-
-.certificate-info h4 {
-    color: var(--primary);
-    margin-bottom: 5px;
-}
-
-.certificate-info p {
-    color: var(--gray);
-    font-size: 14px;
-    margin: 3px 0;
-}
-
-/* Action buttons */
-.btn-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px;
-    height: 35px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin: 0 5px;
-    font-size: 14px;
-}
-
-.btn-view {
-    background: #3b82f6;
-    color: white;
-    text-decoration: none;
-}
-
-.btn-view:hover {
-    background: #2563eb;
-    color: white;
-    transform: translateY(-2px);
-}
-
-.btn-edit {
-    background: #f59e0b;
-    color: white;
-    text-decoration: none;
-}
-
-.btn-edit:hover {
-    background: #d97706;
-    color: white;
-    transform: translateY(-2px);
-}
-
-.btn-delete {
-    background: #ef4444;
-    color: white;
-    border: none;
-}
-
-.btn-delete:hover {
-    background: #dc2626;
-    color: white;
-    transform: translateY(-2px);
-}
-
-
-@media (max-width: 768px) {
-    .page-header {
-        padding: 18px;
-        border-radius: 16px;
-    }
-
-    .page-title {
-        font-size: 23px;
-    }
-
-    .staff-filter-form {
-        grid-template-columns: 1fr;
-    }
-
-    .staff-filter-actions {
-        width: 100%;
-    }
-
-    .staff-filter-actions .btn-filter,
-    .staff-filter-actions .clear-filter-btn {
-        width: 100%;
-    }
-}
-
-/* Success and Error Messages */
-.success-message {
-    background: rgba(46, 125, 50, 0.1);
-    border-left: 4px solid var(--success);
-    color: var(--success);
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-}
-
-.error-message {
-    background: rgba(211, 47, 47, 0.1);
-    border-left: 4px solid var(--danger);
-    color: var(--danger);
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-}
-
-/* Badge styles */
-.badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.badge-success {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success);
-}
-
-.badge-danger {
-    background: rgba(211, 47, 47, 0.1);
-    color: var(--danger);
-}
-
-/* Hover batas baris tabel */
-.data-table tbody tr {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    position: relative;
-    will-change: transform;
-}
-
-.data-table tbody tr:hover,
-.data-table tbody tr:focus-within {
-    background: #eef5ff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
-}
-
-@media (max-width: 768px) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
-    }
-}
-
-@media (hover: none) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: none;
-        box-shadow: none;
-        background: #f8f9fa;
-    }
-}
-</style>
 
 <?php require_once '../includes/footer.php'; ?>
