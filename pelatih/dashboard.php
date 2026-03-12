@@ -135,6 +135,7 @@ if ($team_id) {
                 c.id,
                 c.challenge_date,
                 c.winner_team_id,
+                c.winner_type,
                 c.challenger_id,
                 c.opponent_id,
                 c.challenger_score,
@@ -164,14 +165,23 @@ if ($team_id) {
 
             // Determine result
             if ($cm['winner_team_id'] == $team_id) {
-                $result = 'Menang';
-                $cumulative += 3; // Win = +3
+                if (($cm['winner_type'] ?? '') === 'penalty') {
+                    $result = 'Menang Penalti';
+                    $cumulative += 2;
+                } else {
+                    $result = 'Menang';
+                    $cumulative += 3;
+                }
             } elseif ($cm['winner_team_id'] === null || $cm['winner_team_id'] == 0) {
                 $result = 'Seri';
-                $cumulative += 1; // Draw = +1
+                $cumulative += 1;
             } else {
-                $result = 'Kalah';
-                // Loss = no change
+                if (($cm['winner_type'] ?? '') === 'penalty') {
+                    $result = 'Kalah Penalti';
+                    $cumulative += 1;
+                } else {
+                    $result = 'Kalah';
+                }
             }
 
             $opp = ($cm['challenger_id'] == $team_id)
@@ -1112,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 borderWidth: 2.5,
                 pointBackgroundColor: chartValues.map((v, i) => {
                     const t = chartTooltips[i];
-                    if (t.result === 'Menang') return '#6ee7b7';
+                    if (t.result.includes('Menang')) return '#6ee7b7';
                     if (t.result === 'Seri')   return '#fbbf24';
                     return '#f87171';
                 }),
