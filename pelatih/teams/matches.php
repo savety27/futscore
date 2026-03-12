@@ -3,7 +3,9 @@ $page_title = 'Riwayat Pertandingan Team';
 $current_page = 'team';
 require_once '../config/database.php';
 require_once '../includes/header.php';
-
+?>
+<link rel="stylesheet" href="css/teams.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/teams.css'); ?>">
+<?php
 $team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
 $team_info = null;
 
@@ -91,20 +93,26 @@ try {
 }
 ?>
 
-<div class="card">
-    <div class="section-header">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <?php if (!empty($team_info['logo'])): ?>
-                <img src="../../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
-            <?php endif; ?>
-            <div>
-                <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Riwayat Pertandingan</span></h2>
+<div class="teams-container">
+    <header class="dashboard-hero reveal">
+        <div class="hero-content">
+            <span class="hero-label">Pertandingan Team</span>
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 16px;">
+                <?php if (!empty($team_info['logo'])): ?>
+                    <img src="../../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--heritage-border);" onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
+                <?php endif; ?>
+                <h1 class="hero-title" style="margin: 0;"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?></h1>
             </div>
+            <p class="hero-description">Riwayat lengkap pertandingan yang diikuti oleh tim ini.</p>
         </div>
-        <a href="index.php" class="btn-secondary btn-back-refined">
-            <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
-        </a>
-    </div>
+        <div class="hero-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+            <a href="index.php" class="btn-premium btn-export" style="background: white;">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
+            </a>
+        </div>
+    </header>
+
+    <div class="reveal d-2">
 
     <?php if (empty($matches)): ?>
         <div class="empty-state">
@@ -191,101 +199,59 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>" class="page-link">&laquo; Seb</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=1"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>"><i class="fas fa-angle-left"></i></a>
             <?php endif; ?>
             
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
-            <?php endfor; ?>
+            <?php
+            $start_page = max(1, $page - 2);
+            $end_page = min($total_pages, $page + 2);
+            
+            if ($start_page > 1) {
+                echo '<span class="pagination-dots">...</span>';
+            }
+            
+            for ($i = $start_page; $i <= $end_page; $i++): ?>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+            <?php endfor; 
+            
+            if ($end_page < $total_pages) {
+                echo '<span class="pagination-dots">...</span>';
+            }
+            ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>" class="page-link">Sel &raquo;</a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>"><i class="fas fa-angle-right"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>"><i class="fas fa-angle-double-right"></i></a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
 
     <?php endif; ?>
+    </div>
 </div>
 
 <style>
-.main {
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-}
+/* Specific matches styles overriding the teams stylesheet if needed */
+.score-badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 14px; min-width: 65px; letter-spacing: 0.5px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+.score-badge.win { background: linear-gradient(135deg, #10b981, #059669); color: white; border: 1px solid rgba(16, 185, 129, 0.4); }
+.score-badge.loss { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: 1px solid rgba(239, 68, 68, 0.4); }
+.score-badge.draw { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: 1px solid rgba(245, 158, 11, 0.4); }
+.score-badge.neutral { background: var(--heritage-bg); color: var(--heritage-text); border: 1px solid var(--heritage-border); }
 
-/* Reused & New Styles */
-.empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
-.empty-state i { font-size: 48px; margin-bottom: 20px; color: #ddd; }
-.btn-secondary { background: #e0e0e0; color: #333; padding: 8px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; }
-.btn-secondary:hover { background: #d5d5d5; color: #000; }
-.btn-back-refined {
-    background: #ffffff;
-    color: #334155;
-    border: 1px solid #d3dcea;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    box-shadow: 0 6px 14px rgba(10, 36, 99, 0.08);
-}
-.btn-back-refined:hover {
-    background: #f2f6fc;
-    color: #0f172a;
-    transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.12);
-}
+.status-match { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 5px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+.status-match.completed { color: #059669; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); }
+.status-match.scheduled { color: #2563eb; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); }
+.status-match.live { color: #dc2626; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); animation: pulse 2s infinite; }
 
-.data-table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; }
-.data-table thead { background: linear-gradient(135deg, var(--primary), #1a365d); }
-.data-table th { padding: 15px 12px; text-align: left; font-weight: 600; color: white; border: none; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-.data-table td { padding: 15px 12px; vertical-align: middle; border-bottom: 1px solid #f0f0f0; }
-.data-table tbody tr {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-    position: relative;
-    will-change: transform;
-}
-.data-table tbody tr:hover,
-.data-table tbody tr:focus-within {
-    background: #eef5ff;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(10, 36, 99, 0.18), 0 0 0 1px rgba(76, 138, 255, 0.35);
-    z-index: 2;
-}
-
-.score-badge { display: inline-block; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; min-width: 60px; text-align: center; }
-.score-badge.win { background: #4CAF50; color: white; }
-.score-badge.loss { background: #F44336; color: white; }
-.score-badge.draw { background: #FF9800; color: white; }
-.score-badge.neutral { background: #e0e0e0; color: #555; }
-
-.status-match { font-size: 11px; text-transform: uppercase; font-weight: 600; padding: 4px 8px; border-radius: 4px; }
-.status-match.completed { color: #4CAF50; background: #e8f5e9; }
-.status-match.scheduled { color: #2196F3; background: #e3f2fd; }
-.status-match.live { color: #F44336; background: #ffebee; animation: pulse 2s infinite; }
-
-.btn-view { display: inline-block; padding: 6px 12px; background: var(--primary); color: white; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; transition: transform 0.2s; }
-.btn-view:hover { transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-
-@media (max-width: 768px) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(10, 36, 99, 0.14), 0 0 0 1px rgba(76, 138, 255, 0.28);
-    }
-}
-
-@media (hover: none) {
-    .data-table tbody tr:hover,
-    .data-table tbody tr:focus-within {
-        transform: none;
-        box-shadow: none;
-        background: #f8f9fa;
-    }
-}
+.btn-view { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(15, 23, 42, 0.05); color: #0f172a; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 600; transition: all 0.2s ease; border: 1px solid rgba(15, 23, 42, 0.1); }
+.btn-view:hover { background: rgba(15, 23, 42, 0.1); transform: translateY(-1px); color: #0f172a; border-color: rgba(15, 23, 42, 0.2); }
+.btn-view i { opacity: 0.7; }
 
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
+    0% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 </style>
 
