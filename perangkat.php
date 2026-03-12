@@ -1754,6 +1754,22 @@ $pageTitle = "Perangkat Pertandingan";
     <div class="image-title" id="imageTitle"></div>
 </div>
 
+<!-- Match History Modal -->
+<div class="match-history-modal" id="perangkatHistoryModal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="match-history-content" role="document">
+        <div class="match-history-header">
+            <div>
+                <h3><i class="fas fa-chart-line"></i> <span id="perangkatHistoryName">Riwayat Match</span></h3>
+                <div class="match-history-meta" id="perangkatHistoryMeta">-</div>
+            </div>
+            <button type="button" class="match-history-close" id="perangkatHistoryClose" aria-label="Tutup riwayat"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="match-history-body" id="perangkatHistoryBody">
+            <div class="match-history-loading"><i class="fas fa-spinner fa-spin"></i> Memuat riwayat...</div>
+        </div>
+    </div>
+</div>
+
 <div class="dashboard-wrapper">
 <?php 
 $currentPage = 'perangkat';
@@ -2141,5 +2157,6 @@ include 'includes/sidebar.php';
         const SITE_URL = '<?php echo SITE_URL; ?>';
     </script>
     <script src="<?php echo SITE_URL; ?>/js/script.js?v=<?php echo getAssetVersion('/js/script.js'); ?>"></script>
+    <script src="<?php echo SITE_URL; ?>/assets/js/perangkat-profile.js?v=<?php echo getAssetVersion('/assets/js/perangkat-profile.js'); ?>"></script>
     </body>
 </html>
