@@ -366,7 +366,8 @@ include 'includes/sidebar.php';
                                    target="_blank" class="share-btn whatsapp">
                                     <i class="fab fa-whatsapp"></i>
                                 </a>
-                                <a href="mailto:?subject=<?php echo urlencode($news['judul']); ?>&body=<?php echo urlencode('Baca artikel ini: ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>" 
+                                <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;su=<?php echo urlencode($news['judul']); ?>&amp;body=<?php echo urlencode('Baca artikel ini: ' . SITE_URL . '/news.php?slug=' . $news['slug']); ?>&amp;tf=1" 
+                                   target="_blank"
                                    class="share-btn email">
                                     <i class="fas fa-envelope"></i>
                                 </a>
