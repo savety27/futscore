@@ -706,7 +706,7 @@ if ($team_id) {
         .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .match-hero-content { 
             grid-template-columns: 1fr;
-            gap: 40px;
+            gap: 24px;
             padding: 48px 24px;
         }
         .vs-line { display: none; }
@@ -720,6 +720,7 @@ if ($team_id) {
     }
 
     @media (max-width: 768px) {
+        .dashboard-container { overflow-x: hidden; }
         .main { padding: 16px !important; }
         .hero-title { font-size: 2.25rem; }
         .hero-description { font-size: 1rem; }
@@ -731,7 +732,13 @@ if ($team_id) {
             gap: 16px;
         }
         
-        .team-identity-card { padding: 24px 16px; border-radius: 20px; }
+        .team-side-column { 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 0; 
+        }
+
+        .team-identity-card { padding: 32px 16px; border-radius: 20px; }
         .team-identity-card .top {
             width: 100%;
             display: flex;
@@ -741,33 +748,32 @@ if ($team_id) {
         }
         .team-logo-main { width: 96px; height: 96px; margin: 0 auto 16px auto; }
         .team-name-display { font-size: 1.25rem; }
-        .team-status-badge { padding: 4px 8px; font-size: 0.7rem; line-height: 1.2; text-align: center; }
-        .team-status-badge { align-self: center; }
+        .team-status-badge { padding: 4px 8px; font-size: 0.7rem; line-height: 1.2; text-align: center; align-self: center; }
         .team-status-badge span { width: 6px !important; height: 6px !important; }
 
         .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .quick-action-card { min-height: 88px; }
         
         .stats-main-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-        .heritage-card { border-radius: 18px; padding: 16px; }
-        .heritage-card[style*="grid-column: span 2"] { grid-column: span 1 !important; }
+        .heritage-card { border-radius: 18px; padding: 16px; min-width: 0; }
+        .heritage-card[style*="grid-column: span 2"] { grid-column: span 2 !important; }
         .stats-main-grid .card-label { font-size: 0.65rem; }
         .stats-main-grid .card-value { font-size: 1.6rem; }
         
         .section-title { font-size: 1.5rem; }
         .match-hero-content { 
-            grid-template-columns: 1fr auto 1fr;
+            grid-template-columns: 1fr;
             gap: 16px;
             padding: 32px 16px;
         }
         .team-focus { gap: 12px; }
         .team-logo-large { width: 76px; height: 76px; padding: 10px; border-radius: 18px; }
         .team-name-large { font-size: 0.95rem; }
-        .vs-text { width: 40px; height: 40px; font-size: 0.95rem; }
+        .vs-text { width: 40px; height: 40px; font-size: 0.95rem; margin: 0 auto; }
         
         .today-section .section-header { margin-bottom: 14px; }
         .today-grid { grid-template-columns: 1fr; gap: 12px; }
-        .schedule-card { padding: 16px; }
+        .schedule-card { padding: 16px; min-width: 0; }
         .schedule-time { font-size: 1rem; }
         .schedule-teams { font-size: 0.95rem; }
         .schedule-meta { font-size: 0.75rem; }
@@ -775,35 +781,37 @@ if ($team_id) {
         .match-hero-footer { 
             padding: 20px 22px;
             gap: 16px;
-            grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
-            column-gap: 18px;
-            row-gap: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .match-hero-footer .match-info-box:nth-child(2) { text-align: right; }
-        .match-hero-footer .match-info-box:nth-child(3) { grid-column: 1 / -1; }
+        .match-hero-footer .match-info-box { text-align: center !important; width: 100%; }
         .match-info-label { font-size: 0.65rem; letter-spacing: 0.08em; }
         .match-info-value { font-size: 0.95rem; }
-        
-        .match-hero-content { padding: 32px 16px; }
-        .vs-text { width: 40px; height: 40px; font-size: 0.95rem; }
     }
 
     @media (max-width: 480px) {
+        .main { padding: 12px !important; }
         .hero-title { font-size: 1.85rem; }
+        .team-identity-card { padding: 24px 12px; }
         .team-logo-main { width: 72px; height: 72px; }
         .team-name-display { font-size: 1.1rem; }
-        .team-status-badge { font-size: 0.65rem; padding: 4px 6px; }
+        .team-status-badge { font-size: 0.65rem; padding: 4px 6px; margin-top: 8px; }
         .card-value { font-size: 1.5rem; }
+        
+        .quick-actions-grid { grid-template-columns: 1fr; }
+
+        .stats-main-grid { grid-template-columns: 1fr; }
+        .heritage-card[style*="grid-column: span 2"] { grid-column: 1 / -1 !important; }
+
         .match-hero-content { padding: 28px 12px; gap: 12px; }
         .team-logo-large { width: 64px; height: 64px; padding: 8px; border-radius: 16px; }
         .team-name-large { font-size: 0.85rem; }
         .vs-text { width: 34px; height: 34px; font-size: 0.85rem; }
+
         .match-hero-footer { 
             padding: 16px 18px;
             gap: 12px;
-            grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
-            column-gap: 14px;
-            row-gap: 10px;
         }
         .match-info-label { font-size: 0.6rem; }
         .match-info-value { font-size: 0.85rem; }
