@@ -168,7 +168,7 @@ try {
                     <div class="info-label"><i class="fas fa-phone"></i> Kontak</div>
                     <div class="info-value"><?php echo !empty($player['phone']) ? htmlspecialchars($player['phone']) : '-'; ?></div>
                 </div>
-                <div class="info-item" style="grid-column: span 2;">
+                <div class="info-item info-item-full">
                     <div class="info-label"><i class="fas fa-map-marker-alt"></i> Alamat</div>
                     <div class="info-value">
                         <?php 
@@ -191,7 +191,7 @@ try {
         </div>
 
         <div class="skills-container">
-            <div class="info-grid" style="margin-bottom: 40px;">
+            <div class="info-grid skills-meta">
                 <div class="info-item">
                     <div class="info-label"><i class="fas fa-football-ball"></i> Kaki Dominan</div>
                     <div class="info-value"><?php echo !empty($player['dominant_foot']) ? htmlspecialchars($player['dominant_foot']) : '-'; ?></div>
