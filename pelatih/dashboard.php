@@ -628,8 +628,6 @@ if ($team_id) {
 
     @media (max-width: 1024px) {
         .stats-grid-wrapper { grid-template-columns: 1fr; }
-        .team-side-column { display: flex; flex-direction: column; gap: 24px; }
-        .team-logo-main { margin-left: 0; }
         .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .match-hero-content { 
             grid-template-columns: 1fr;
@@ -658,35 +656,82 @@ if ($team_id) {
             gap: 16px;
         }
         
-        .team-identity-card { padding: 40px 24px; border-radius: 24px; }
-        .team-name-display { font-size: 1.75rem; }
-        .team-status-badge { padding: 4px 10px; font-size: 0.75rem; }
+        .team-identity-card { padding: 24px 16px; border-radius: 20px; }
+        .team-identity-card .top {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .team-logo-main { width: 96px; height: 96px; margin-left: 0; margin-bottom: 16px; }
+        .team-name-display { font-size: 1.25rem; }
+        .team-status-badge { padding: 4px 8px; font-size: 0.7rem; line-height: 1.2; text-align: center; }
+        .team-status-badge { align-self: center; }
         .team-status-badge span { width: 6px !important; height: 6px !important; }
 
-        .quick-actions-grid { grid-template-columns: 1fr; }
-        .quick-action-card { min-height: 96px; }
+        .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .quick-action-card { min-height: 88px; }
         
-        .stats-main-grid { grid-template-columns: 1fr; gap: 16px; }
-        .heritage-card { border-radius: 20px; padding: 20px; }
+        .stats-main-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .heritage-card { border-radius: 18px; padding: 16px; }
         .heritage-card[style*="grid-column: span 2"] { grid-column: span 1 !important; }
+        .stats-main-grid .card-label { font-size: 0.65rem; }
+        .stats-main-grid .card-value { font-size: 1.6rem; }
         
         .section-title { font-size: 1.5rem; }
-        .team-logo-large { width: 100px; height: 100px; padding: 16px; border-radius: 24px; }
-        .team-name-large { font-size: 1.25rem; }
+        .match-hero-content { 
+            grid-template-columns: 1fr auto 1fr;
+            gap: 16px;
+            padding: 32px 16px;
+        }
+        .team-focus { gap: 12px; }
+        .team-logo-large { width: 76px; height: 76px; padding: 10px; border-radius: 18px; }
+        .team-name-large { font-size: 0.95rem; }
+        .vs-text { width: 40px; height: 40px; font-size: 0.95rem; }
         
-        .today-grid { grid-template-columns: 1fr; }
-        .schedule-card { padding: 20px; }
+        .today-section .section-header { margin-bottom: 14px; }
+        .today-grid { grid-template-columns: 1fr; gap: 12px; }
+        .schedule-card { padding: 16px; }
+        .schedule-time { font-size: 1rem; }
+        .schedule-teams { font-size: 0.95rem; }
+        .schedule-meta { font-size: 0.75rem; }
+
+        .match-hero-footer { 
+            padding: 20px 22px;
+            gap: 16px;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+            column-gap: 18px;
+            row-gap: 12px;
+        }
+        .match-hero-footer .match-info-box:nth-child(2) { text-align: right; }
+        .match-hero-footer .match-info-box:nth-child(3) { grid-column: 1 / -1; }
+        .match-info-label { font-size: 0.65rem; letter-spacing: 0.08em; }
+        .match-info-value { font-size: 0.95rem; }
         
-        .match-hero-content { padding: 40px 16px; }
-        .vs-text { width: 50px; height: 50px; font-size: 1.1rem; }
+        .match-hero-content { padding: 32px 16px; }
+        .vs-text { width: 40px; height: 40px; font-size: 0.95rem; }
     }
 
     @media (max-width: 480px) {
         .hero-title { font-size: 1.85rem; }
-        .team-logo-main { width: 60px; height: 60px; }
-        .card-value { font-size: 1.85rem; }
-        .match-hero-content { padding: 40px 16px; }
-        .vs-text { width: 60px; height: 60px; font-size: 1.25rem; }
+        .team-logo-main { width: 72px; height: 72px; }
+        .team-name-display { font-size: 1.1rem; }
+        .team-status-badge { font-size: 0.65rem; padding: 4px 6px; }
+        .card-value { font-size: 1.5rem; }
+        .match-hero-content { padding: 28px 12px; gap: 12px; }
+        .team-logo-large { width: 64px; height: 64px; padding: 8px; border-radius: 16px; }
+        .team-name-large { font-size: 0.85rem; }
+        .vs-text { width: 34px; height: 34px; font-size: 0.85rem; }
+        .match-hero-footer { 
+            padding: 16px 18px;
+            gap: 12px;
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+            column-gap: 14px;
+            row-gap: 10px;
+        }
+        .match-info-label { font-size: 0.6rem; }
+        .match-info-value { font-size: 0.85rem; }
     }
 </style>
 
@@ -890,9 +935,9 @@ if ($team_id) {
     </section>
 
     <!-- Schedule Mini -->
-    <section class="reveal" style="animation-delay: 0.8s; margin-top: 64px;">
+    <section class="reveal today-section" style="animation-delay: 0.8s; margin-top: 64px;">
         <div class="section-header">
-            <h2 class="section-title">Jadwal Hari Ini</h2>
+            <h2 class="section-title" >Jadwal Hari Ini</h2>
             <div class="section-line"></div>
         </div>
 
