@@ -1,8 +1,8 @@
 <?php
 $page_title = 'Tambah Staf Team';
 $current_page = 'team_staff';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 // Initialize variables
 $errors = [];
@@ -14,7 +14,7 @@ $staff_id = $is_edit ? (int)$_GET['id'] : 0;
 // Coaches can only add. Edit is restricted to admin.
 if ($is_edit) {
     $_SESSION['error_message'] = 'Aksi edit staf hanya dapat dilakukan oleh admin.';
-    header("Location: team_staff.php");
+    header("Location: index.php");
     exit;
 }
 
@@ -31,7 +31,7 @@ if ($is_edit) {
         
         if (!$staff_data) {
             $_SESSION['error_message'] = 'Staff tidak ditemukan atau akses ditolak.';
-            header("Location: team_staff.php");
+            header("Location: index.php");
             exit;
         }
         
@@ -42,7 +42,7 @@ if ($is_edit) {
         
     } catch (PDOException $e) {
         $_SESSION['error_message'] = 'Error: ' .  $e->getMessage();
-        header("Location: team_staff.php");
+        header("Location: index.php");
         exit;
     }
 } else {
@@ -462,7 +462,7 @@ if ($is_edit) {
             <i class="fas <?php echo $is_edit ? 'fa-edit' : 'fa-plus-circle'; ?>"></i>
             <?php echo $is_edit ? 'Edit Staf Team' : 'Tambah Staf Team Baru'; ?>
         </h2>
-        <a href="team_staff.php" class="btn btn-secondary btn-back-model">
+        <a href="index.php" class="btn btn-secondary btn-back-model">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
     </div>
@@ -477,7 +477,7 @@ if ($is_edit) {
     </div>
     <?php endif; ?>
     
-    <form method="POST" action="staff_actions.php" enctype="multipart/form-data">
+    <form method="POST" action="actions.php" enctype="multipart/form-data">
         <input type="hidden" name="action" value="<?php echo $is_edit ? 'edit' : 'add'; ?>">
         <?php if ($is_edit): ?>
         <input type="hidden" name="id" value="<?php echo $staff_id; ?>">
@@ -534,7 +534,7 @@ if ($is_edit) {
             <div class="form-group">
                 <label class="form-label">Foto Profil</label>
                 <?php if ($is_edit && !empty($staff_data['photo'])): ?>
-                    <img src="../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
+                    <img src="../../<?php echo htmlspecialchars($staff_data['photo']); ?>" 
                          class="current-photo" alt="Current Photo">
                     <div class="checkbox-group" style="margin-top: 10px;">
                         <input type="checkbox" name="delete_photo" id="delete_photo" value="1">
@@ -704,7 +704,7 @@ if ($is_edit) {
         
         <!-- Form Actions -->
         <div class="form-actions">
-            <a href="team_staff.php" class="btn btn-secondary btn-back-model">
+            <a href="index.php" class="btn btn-secondary btn-back-model">
                 <i class="fas fa-times"></i> Batal
             </a>
             <button type="submit" class="btn btn-primary">
@@ -888,4 +888,4 @@ function initCertificateUpload(fileInput) {
 document.querySelectorAll('.certificate-file-input').forEach(initCertificateUpload);
 </script>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

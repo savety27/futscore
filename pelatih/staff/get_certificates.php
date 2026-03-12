@@ -1,5 +1,5 @@
 <?php
-require_once 'config/database.php';
+require_once '../config/database.php';
 
 // Pastikan staff_id dikirim
 if (!isset($_GET['staff_id']) || empty($_GET['staff_id'])) {
@@ -33,10 +33,10 @@ try {
             
             // Tampilkan gambar sertifikat
             $certificate_file = basename($cert['certificate_file']);
-            echo '<img src="../uploads/certificates/' . $certificate_file . '" 
+            echo '<img src="../../uploads/certificates/' . $certificate_file . '" 
                   alt="' . htmlspecialchars($cert['certificate_name'] ?? '') . '" 
                   class="certificate-image"
-                  onerror="this.onerror=null; this.src=\'../images/default-certificate.png\'">';
+                  onerror="this.onerror=null; this.src=\'../../images/default-certificate.png\'">';
             echo '</div>';
         }
     }

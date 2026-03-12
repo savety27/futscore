@@ -1,8 +1,8 @@
 <?php
 $page_title = 'Daftar Team';
 $current_page = 'team';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -67,7 +67,7 @@ try {
     echo "Error: " . $e->getMessage();
 }
 
-$team_export_url = 'team_export.php' . ($search !== '' ? '?' . http_build_query(['search' => $search]) : '');
+$team_export_url = 'export.php' . ($search !== '' ? '?' . http_build_query(['search' => $search]) : '');
 ?>
 
 <div class="page-header">
@@ -119,10 +119,10 @@ $team_export_url = 'team_export.php' . ($search !== '' ? '?' . http_build_query(
                     <tr>
                         <td class="logo-cell">
                             <?php if (!empty($team['logo'])): ?>
-                                <img src="../images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
+                                <img src="../../images/teams/<?php echo htmlspecialchars($team['logo'] ?? ''); ?>" 
                                 alt="<?php echo htmlspecialchars($team['name'] ?? ''); ?>"  
                                 class="team-logo"
-                                onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                                onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
                             <?php else: ?>
                                 <div class="team-logo" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-shield-alt" style="color: #999; font-size: 24px;"></i>
@@ -133,17 +133,17 @@ $team_export_url = 'team_export.php' . ($search !== '' ? '?' . http_build_query(
                         <td class="alias-cell"><?php echo htmlspecialchars($team['alias'] ?? ''); ?></td>
                         <td class="coach-cell"><?php echo htmlspecialchars($team['coach'] ?? ''); ?></td>
                         <td>
-                            <a href="team_players.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['player_count']; ?> pemain">
+                            <a href="players.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['player_count']; ?> pemain">
                                 <span class="count-cell players"><?php echo $team['player_count']; ?></span>
                             </a>
                         </td>
                         <td>
-                            <a href="team_staff_view.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['staff_count']; ?> staf">
+                            <a href="staff_view.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['staff_count']; ?> staf">
                                 <span class="count-cell staff"><?php echo $team['staff_count']; ?></span>
                             </a>
                         </td>
                         <td>
-                            <a href="team_matches.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['match_count']; ?> pertandingan">
+                            <a href="matches.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['match_count']; ?> pertandingan">
                                 <span class="count-cell matches"><?php echo $team['match_count']; ?></span>
                             </a>
                         </td>
@@ -431,4 +431,4 @@ $team_export_url = 'team_export.php' . ($search !== '' ? '?' . http_build_query(
 }
 </style>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

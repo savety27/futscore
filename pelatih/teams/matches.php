@@ -1,8 +1,8 @@
 <?php
 $page_title = 'Riwayat Pertandingan Team';
 $current_page = 'team';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 $team_id = isset($_GET['team_id']) ? (int)$_GET['team_id'] : 0;
 $team_info = null;
@@ -15,8 +15,8 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='team.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
-    require_once 'includes/footer.php';
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
+    require_once '../includes/footer.php';
     exit;
 }
 
@@ -95,13 +95,13 @@ try {
     <div class="section-header">
         <div style="display: flex; align-items: center; gap: 15px;">
             <?php if (!empty($team_info['logo'])): ?>
-                <img src="../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                <img src="../../images/teams/<?php echo $team_info['logo']; ?>" alt="Logo" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
             <?php endif; ?>
             <div>
                 <h2 class="section-title"><?php echo htmlspecialchars($team_info['name'] ?? ''); ?> <span style="font-weight: normal; font-size: 0.8em; color: var(--gray);">Riwayat Pertandingan</span></h2>
             </div>
         </div>
-        <a href="team.php" class="btn-secondary btn-back-refined">
+        <a href="index.php" class="btn-secondary btn-back-refined">
             <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
         </a>
     </div>
@@ -158,7 +158,7 @@ try {
                         </td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <img src="../images/teams/<?php echo $opponent_logo; ?>" alt="Opponent" style="width: 30px; height: 30px; border-radius: 50%; object-fit: contain; background: #eee;" onerror="this.onerror=null; this.src='../images/teams/default-team.png'">
+                                <img src="../../images/teams/<?php echo $opponent_logo; ?>" alt="Opponent" style="width: 30px; height: 30px; border-radius: 50%; object-fit: contain; background: #eee;" onerror="this.onerror=null; this.src='../../images/teams/default-team.png'">
                                 <span><?php echo htmlspecialchars($opponent_name ?? ''); ?></span>
                             </div>
                         </td>
@@ -177,7 +177,7 @@ try {
                             </span>
                         </td>
                         <td style="text-align: center;">
-                            <a href="../match.php?id=<?php echo $match['id']; ?>&source=challenge<?php echo ((int)($match['event_id'] ?? 0) > 0) ? '&event_id=' . (int)$match['event_id'] : ''; ?>" class="btn-view" target="_blank" title="Lihat Detail Pertandingan & Lineup">
+                            <a href="../../match.php?id=<?php echo $match['id']; ?>&source=challenge<?php echo ((int)($match['event_id'] ?? 0) > 0) ? '&event_id=' . (int)$match['event_id'] : ''; ?>" class="btn-view" target="_blank" title="Lihat Detail Pertandingan & Lineup">
                                 <i class="fas fa-eye"></i> Detail
                             </a>
                         </td>
@@ -289,4 +289,4 @@ try {
 }
 </style>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>

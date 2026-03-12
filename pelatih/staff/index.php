@@ -1,8 +1,8 @@
 <?php
 $page_title = 'Daftar Staf Team';
 $current_page = 'team_staff';
-require_once 'config/database.php';
-require_once 'includes/header.php';
+require_once '../config/database.php';
+require_once '../includes/header.php';
 
 // Handle filters
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -123,7 +123,7 @@ if ($filter_active !== '') {
     $filter_query_params['active'] = $filter_active;
 }
 
-$team_staff_export_url = 'team_staff_export.php' . (!empty($filter_query_params) ? '?' . http_build_query($filter_query_params) : '');
+$team_staff_export_url = 'export.php' . (!empty($filter_query_params) ? '?' . http_build_query($filter_query_params) : '');
 $build_page_url = function(int $page) use ($filter_query_params): string {
     $params = $filter_query_params;
     $params['page'] = $page;
@@ -170,7 +170,7 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
     <div class="section-header">
         <h2 class="section-title">Daftar Staf Team</h2>
         <div class="section-actions">
-            <a href="staff_form.php" class="btn-primary">
+            <a href="form.php" class="btn-primary">
                 <i class="fas fa-plus"></i> Tambah Staf Baru
             </a>
             <a href="<?php echo htmlspecialchars($team_staff_export_url); ?>" class="btn-export">
@@ -204,7 +204,7 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                         <i class="fas fa-filter"></i> Terapkan
                     </button>
                     <?php if ($search !== '' || $filter_active !== ''): ?>
-                        <a href="team_staff.php" class="clear-filter-btn">
+                        <a href="index.php" class="clear-filter-btn">
                             <i class="fas fa-times"></i> Reset
                         </a>
                     <?php endif; ?>
@@ -298,7 +298,7 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                             <?php endif; ?>
                         </td>
                         <td class="action-cell" style="text-align: center;">
-                            <a href="staff_view.php?id=<?php echo $staff['id']; ?>" 
+                            <a href="view.php?id=<?php echo $staff['id']; ?>" 
                                class="btn-action btn-view" 
                                title="Lihat Detail">
                                 <i class="fas fa-eye"></i>
@@ -738,4 +738,4 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
-<?php require_once 'includes/footer.php'; ?>
+<?php require_once '../includes/footer.php'; ?>
