@@ -15,6 +15,9 @@ $ongoing = 0;
 $next_match = null;
 $matches_needing_lineup = 0;
 $upcoming_matches_h7 = 0;
+$chart_labels   = [];
+$chart_values   = [];
+$chart_tooltips = [];
 
 if ($team_id) {
     try {
@@ -124,6 +127,74 @@ if ($team_id) {
         $stmt->execute([$team_id, $team_id]);
         $upcoming_matches_h7 = $stmt->fetchColumn();
 
+        // Get last 30 days completed matches for performance chart
+        $chart_start = date('Y-m-d', strtotime('today'));
+        $chart_end   = date('Y-m-d', strtotime('+29 days'));
+        $stmt = $conn->prepare("
+            SELECT 
+                c.id,
+                c.challenge_date,
+                c.winner_team_id,
+                c.challenger_id,
+                c.opponent_id,
+                c.challenger_score,
+                c.opponent_score,
+                t1.name AS challenger_name,
+                t2.name AS opponent_name
+            FROM challenges c
+            JOIN teams t1 ON c.challenger_id = t1.id
+            JOIN teams t2 ON c.opponent_id = t2.id
+            WHERE c.status = 'completed'
+              AND (c.challenger_id = ? OR c.opponent_id = ?)
+              AND c.challenge_date >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+              AND c.challenge_date <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            ORDER BY c.challenge_date ASC
+        ");
+        $stmt->execute([$team_id, $team_id]);
+        $chart_matches_raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Build cumulative performance series
+        $chart_labels = [];
+        $chart_values = [];
+        $chart_tooltips = [];
+        $cumulative = 0;
+        foreach ($chart_matches_raw as $cm) {
+            $match_dt = new DateTime($cm['challenge_date']);
+            $label = $match_dt->format('d/m');
+
+            // Determine result
+            if ($cm['winner_team_id'] == $team_id) {
+                $result = 'Menang';
+                $cumulative += 3; // Win = +3
+            } elseif ($cm['winner_team_id'] === null || $cm['winner_team_id'] == 0) {
+                $result = 'Seri';
+                $cumulative += 1; // Draw = +1
+            } else {
+                $result = 'Kalah';
+                // Loss = no change
+            }
+
+            $opp = ($cm['challenger_id'] == $team_id)
+                ? $cm['opponent_name']
+                : $cm['challenger_name'];
+
+            $score_c = $cm['challenger_score'] ?? '-';
+            $score_o = $cm['opponent_score'] ?? '-';
+            $score_str = ($cm['challenger_id'] == $team_id)
+                ? "$score_c - $score_o"
+                : "$score_o - $score_c";
+
+            $chart_labels[]   = $label;
+            $chart_values[]   = $cumulative;
+            $chart_tooltips[] = [
+                'date'   => $match_dt->format('d M Y'),
+                'opp'    => $opp,
+                'result' => $result,
+                'score'  => $score_str,
+                'pts'    => $cumulative,
+            ];
+        }
+
     } catch (PDOException $e) {
         $player_count = 0;
         $staff_count = 0;
@@ -134,6 +205,10 @@ if ($team_id) {
         $today_matches = [];
         $team_name = 'Unknown Team';
         $team_logo = null;
+        $chart_matches_raw = [];
+        $chart_labels = [];
+        $chart_values = [];
+        $chart_tooltips = [];
     }
 }
 ?>
@@ -856,17 +931,41 @@ if ($team_id) {
                 <div class="card-value" style="color: var(--heritage-gold);" data-count="<?php echo (int)$ongoing; ?>"><?php echo (int)$ongoing; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Sedang Berlangsung</div>
             </div>
-            <div class="heritage-card reveal d-5" style="grid-column: span 2; background: var(--heritage-text); color: white;">
-                <div class="card-meta">
-                    <span class="card-label" style="color: rgba(255,255,255,0.6);">Win Rate</span>
-                    <i class="fas fa-chart-line card-icon" style="color: white; opacity: 1;"></i>
+            <!-- Performance Chart Card (replaces Win Rate) -->
+            <div class="heritage-card reveal d-5 perf-chart-card" style="grid-column: span 2; background: var(--heritage-text); color: white; padding: 28px 28px 20px; position: relative;">
+                <div class="card-meta" style="margin-bottom: 12px;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span class="card-label" style="color: rgba(255,255,255,0.55);">Performa Tim</span>
+                        <span style="font-family: var(--font-display); font-size:1.1rem; font-weight:700; color:white; letter-spacing:-0.02em;">30 Hari Terakhir</span>
+                    </div>
+                    <div style="display:flex; gap:16px; align-items:center;">
+                        <?php
+                            $total_games = $wins + $losses + $draws;
+                            $win_rate = $total_games > 0 ? round(($wins / $total_games) * 100) : 0;
+                        ?>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.7rem; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:.06em;">Win Rate</div>
+                            <div style="font-family:var(--font-display); font-size:1.4rem; font-weight:800; color:#6ee7b7;"><?php echo $win_rate; ?>%</div>
+                        </div>
+                        <i class="fas fa-chart-line" style="color: rgba(255,255,255,0.3); font-size:1.1rem;"></i>
+                    </div>
                 </div>
-                <?php 
-                    $total_games = $wins + $losses + $draws;
-                    $win_rate = $total_games > 0 ? round(($wins / $total_games) * 100) : 0;
-                ?>
-                <div class="card-value" style="color: white;"><?php echo $win_rate; ?>%</div>
-                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 4px;">Efektivitas Strategi Tim</div>
+                <?php if (!empty($chart_values)): ?>
+                <div style="position:relative; height:140px; margin-top:8px;">
+                    <canvas id="perfChart"></canvas>
+                </div>
+                <div id="perfChartTooltip" style="
+                    position:absolute; pointer-events:none; display:none;
+                    background:rgba(255,255,255,0.97); color:#1e1b4b;
+                    border-radius:12px; padding:10px 14px;
+                    font-family:var(--font-body); font-size:0.8rem; font-weight:600;
+                    box-shadow:0 8px 24px rgba(0,0,0,0.18);
+                    white-space:nowrap; z-index:50; min-width:160px;
+                    border-left: 3px solid #064e3b;
+                "></div>
+                <?php else: ?>
+                <div style="height:120px; display:flex; align-items:center; justify-content:center; opacity:0.4; font-size:0.9rem;">Belum ada data pertandingan dalam 30 hari terakhir</div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -967,26 +1066,136 @@ if ($team_id) {
     </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // ── Counter animation ──────────────────────────────────────────────────
     const counters = document.querySelectorAll('.card-value[data-count]');
     counters.forEach((el) => {
         const target = parseInt(el.getAttribute('data-count'), 10);
         if (Number.isNaN(target)) return;
-
         const duration = 1200;
         const start = performance.now();
-
         function tick(now) {
             const progress = Math.min((now - start) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 4); // Quartic ease out
+            const eased = 1 - Math.pow(1 - progress, 4);
             el.textContent = Math.round(target * eased).toString();
             if (progress < 1) requestAnimationFrame(tick);
         }
-
         el.textContent = '0';
         requestAnimationFrame(tick);
     });
+
+    // ── Performance Chart ──────────────────────────────────────────────────
+    <?php if (!empty($chart_values)): ?>
+    const chartLabels   = <?php echo json_encode($chart_labels); ?>;
+    const chartValues   = <?php echo json_encode($chart_values); ?>;
+    const chartTooltips = <?php echo json_encode($chart_tooltips); ?>;
+
+    const ctx = document.getElementById('perfChart');
+    if (!ctx) return;
+
+    // Build gradient
+    const canvasCtx = ctx.getContext('2d');
+    const grad = canvasCtx.createLinearGradient(0, 0, 0, 140);
+    grad.addColorStop(0, 'rgba(110,231,183,0.30)');
+    grad.addColorStop(1, 'rgba(110,231,183,0.00)');
+
+    const perfChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Poin Kumulatif',
+                data: chartValues,
+                borderColor: '#6ee7b7',
+                borderWidth: 2.5,
+                pointBackgroundColor: chartValues.map((v, i) => {
+                    const t = chartTooltips[i];
+                    if (t.result === 'Menang') return '#6ee7b7';
+                    if (t.result === 'Seri')   return '#fbbf24';
+                    return '#f87171';
+                }),
+                pointBorderColor: '#1e1b4b',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHitRadius: 14,
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#6ee7b7',
+                pointHoverBorderWidth: 2.5,
+                fill: true,
+                backgroundColor: grad,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 1000, easing: 'easeOutQuart' },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false },
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false },
+                    ticks: {
+                        color: 'rgba(255,255,255,0.4)',
+                        font: { size: 10, family: "'Plus Jakarta Sans', sans-serif" },
+                    },
+                    border: { display: false },
+                },
+                y: {
+                    display: false,
+                    beginAtZero: true,
+                }
+            },
+        }
+    });
+
+    // Custom tooltip
+    const tooltipEl = document.getElementById('perfChartTooltip');
+    ctx.addEventListener('mousemove', function(e) {
+        const points = perfChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
+        if (points.length === 0) {
+            tooltipEl.style.display = 'none';
+            return;
+        }
+        const idx = points[0].index;
+        const t   = chartTooltips[idx];
+        const resultColor = t.result === 'Menang' ? '#059669' : (t.result === 'Seri' ? '#d97706' : '#dc2626');
+        const resultIcon  = t.result === 'Menang' ? '🏆' : (t.result === 'Seri' ? '🤝' : '💔');
+
+        tooltipEl.innerHTML = `
+            <div style="font-size:0.7rem; color:#6b7280; margin-bottom:4px;">${t.date}</div>
+            <div style="font-size:0.85rem; font-weight:700; color:#1e1b4b; margin-bottom:6px;">vs ${t.opp}</div>
+            <div style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
+                <span style="color:${resultColor}; font-weight:700;">${resultIcon} ${t.result}</span>
+                <span style="background:#f3f4f6; border-radius:6px; padding:2px 8px; font-weight:800; color:#1e1b4b; font-size:0.8rem;">${t.score}</span>
+            </div>
+            <div style="margin-top:6px; font-size:0.7rem; color:#9ca3af;">Poin kumulatif: <strong style="color:#064e3b;">${t.pts}</strong></div>
+        `;
+
+        // Position near cursor but inside chart card
+        const chartRect = ctx.getBoundingClientRect();
+        const cardRect  = tooltipEl.parentElement.getBoundingClientRect();
+        let left = (e.clientX - cardRect.left) + 12;
+        let top  = (e.clientY - cardRect.top)  - 20;
+        // Clamp right
+        tooltipEl.style.display = 'block';
+        const tw = tooltipEl.offsetWidth;
+        if (left + tw > cardRect.width - 10) left = left - tw - 24;
+        if (top < 0) top = 0;
+        tooltipEl.style.left = left + 'px';
+        tooltipEl.style.top  = top + 'px';
+    });
+
+    ctx.addEventListener('mouseleave', function() {
+        tooltipEl.style.display = 'none';
+    });
+    <?php endif; ?>
 });
 </script>
 
