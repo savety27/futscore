@@ -215,7 +215,14 @@ $db_status = $db ? "connected" : "disconnected";
             inset: 0;
             z-index: 0;
             overflow: hidden;
-            animation: bg-pulse 20s ease-in-out infinite;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .stadium-bg {
+                display: block;
+                animation: bg-pulse 20s ease-in-out infinite;
+            }
         }
         
         @keyframes bg-pulse {
@@ -376,7 +383,12 @@ $db_status = $db ? "connected" : "disconnected";
             padding: var(--space-lg);
             padding-top: env(safe-area-inset-top, var(--space-lg));
             padding-bottom: env(safe-area-inset-bottom, var(--space-lg));
-            animation: main-appear 0.6s var(--ease-out) 0.2s both;
+        }
+        
+        @media (min-width: 768px) {
+            .login-main {
+                animation: main-appear 0.6s var(--ease-out) 0.2s both;
+            }
         }
         
         @keyframes main-appear {
@@ -399,10 +411,16 @@ $db_status = $db ? "connected" : "disconnected";
             flex: 1;
             display: flex;
             flex-direction: column;
-            animation: card-rise 0.8s var(--ease-bounce) 0.3s forwards;
-            opacity: 0;
-            transform-style: preserve-3d;
-            perspective: 1000px;
+            opacity: 1;
+        }
+
+        @media (min-width: 768px) {
+            .login-card {
+                animation: card-rise 0.8s var(--ease-bounce) 0.3s forwards;
+                opacity: 0;
+                transform-style: preserve-3d;
+                perspective: 1000px;
+            }
         }
         
         @keyframes card-rise {
@@ -423,8 +441,14 @@ $db_status = $db ? "connected" : "disconnected";
         .brand {
             text-align: center;
             padding: var(--space-xl) 0;
-            animation: brand-reveal 0.6s var(--ease-out) 0.4s forwards;
-            opacity: 0;
+            opacity: 1;
+        }
+
+        @media (min-width: 768px) {
+            .brand {
+                animation: brand-reveal 0.6s var(--ease-out) 0.4s forwards;
+                opacity: 0;
+            }
         }
         
         @keyframes brand-reveal {
@@ -452,13 +476,19 @@ $db_status = $db ? "connected" : "disconnected";
             color: var(--accent-sky);
             margin-bottom: var(--space-md);
             position: relative;
-            box-shadow: 
-                0 0 30px var(--accent-blue-glow),
-                inset 0 0 20px rgba(255, 255, 255, 0.1);
-            animation: 
-                logo-pulse 3s ease-in-out infinite,
-                logo-rotate 20s linear infinite;
-            transform-style: preserve-3d;
+            box-shadow: 0 0 20px var(--accent-blue-glow);
+        }
+
+        @media (min-width: 768px) {
+            .logo-mark {
+                box-shadow: 
+                    0 0 30px var(--accent-blue-glow),
+                    inset 0 0 20px rgba(255, 255, 255, 0.1);
+                animation: 
+                    logo-pulse 3s ease-in-out infinite,
+                    logo-rotate 20s linear infinite;
+                transform-style: preserve-3d;
+            }
         }
         
         .logo-mark::before {
@@ -558,7 +588,12 @@ $db_status = $db ? "connected" : "disconnected";
             display: flex;
             flex-direction: column;
             justify-content: center;
-            animation: form-slide 0.8s var(--ease-out) 0.5s both;
+        }
+
+        @media (min-width: 768px) {
+            .form-container {
+                animation: form-slide 0.8s var(--ease-out) 0.5s both;
+            }
         }
         
         @keyframes form-slide {
@@ -593,8 +628,14 @@ $db_status = $db ? "connected" : "disconnected";
                 alert-shake 0.5s var(--ease-spring),
                 alert-fade-in 0.3s var(--ease-out);
             border-left: 4px solid;
-            backdrop-filter: blur(10px);
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        @media (min-width: 768px) {
+            .alert {
+                backdrop-filter: blur(10px);
+                background: rgba(30, 41, 59, 0.8);
+            }
         }
         
         @keyframes alert-fade-in {
@@ -652,9 +693,15 @@ $db_status = $db ? "connected" : "disconnected";
             display: flex;
             flex-direction: column;
             gap: var(--space-sm);
-            animation: field-reveal 0.5s var(--ease-out) forwards;
-            opacity: 0;
+            opacity: 1;
             transform-origin: center top;
+        }
+
+        @media (min-width: 768px) {
+            .form-group {
+                animation: field-reveal 0.5s var(--ease-out) forwards;
+                opacity: 0;
+            }
         }
         
         .form-group:nth-child(1) { animation-delay: 0.6s; }
@@ -720,7 +767,12 @@ $db_status = $db ? "connected" : "disconnected";
         
         .input-wrapper {
             position: relative;
-            animation: input-wrapper-glow 3s ease-in-out infinite alternate;
+        }
+
+        @media (min-width: 768px) {
+            .input-wrapper {
+                animation: input-wrapper-glow 3s ease-in-out infinite alternate;
+            }
         }
         
         @keyframes input-wrapper-glow {
@@ -737,7 +789,6 @@ $db_status = $db ? "connected" : "disconnected";
             padding: var(--space-md) var(--space-lg);
             padding-left: 3.5rem;
             background: rgba(71, 85, 105, 0.3);
-            backdrop-filter: blur(10px);
             border: 2px solid transparent;
             border-radius: var(--radius-md);
             font-family: var(--font-body);
@@ -746,14 +797,21 @@ $db_status = $db ? "connected" : "disconnected";
             transition: all 0.3s var(--ease-out);
             -webkit-appearance: none;
             appearance: none;
-            animation: input-shimmer 3s ease-in-out infinite;
-            background-image: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.05),
-                transparent
-            );
-            background-size: 200% 100%;
+            background-image: none;
+        }
+
+        @media (min-width: 768px) {
+            .form-input {
+                backdrop-filter: blur(10px);
+                animation: input-shimmer 3s ease-in-out infinite;
+                background-image: linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.05),
+                    transparent
+                );
+                background-size: 200% 100%;
+            }
         }
         
         @keyframes input-shimmer {
@@ -855,11 +913,24 @@ $db_status = $db ? "connected" : "disconnected";
         
         .password-notes {
             padding: var(--space-sm) var(--space-md);
-            background: rgba(51, 65, 85, 0.5);
+            background: rgba(51, 65, 85, 0.85);
             border-radius: var(--radius-sm);
             border-left: 3px solid var(--accent-teal);
-            animation: notes-appear 0.6s var(--ease-out) 0.9s both;
-            backdrop-filter: blur(5px);
+        }
+
+        @media (min-width: 768px) {
+            .password-notes {
+                background: rgba(51, 65, 85, 0.5);
+                backdrop-filter: blur(5px);
+                animation: notes-appear 0.6s var(--ease-out) 0.9s both;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .password-notes {
+                background: rgba(51, 65, 85, 0.5);
+                backdrop-filter: blur(5px);
+            }
         }
         
         @keyframes notes-appear {
@@ -920,7 +991,7 @@ $db_status = $db ? "connected" : "disconnected";
             align-items: center;
             gap: var(--space-sm);
             padding: var(--space-sm) var(--space-md);
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.95);
             border-radius: var(--radius-sm);
             color: var(--error-red);
             font-size: 0.8125rem;
@@ -928,8 +999,14 @@ $db_status = $db ? "connected" : "disconnected";
             animation: 
                 caps-warn-shake 0.4s var(--ease-spring),
                 caps-warn-pulse 1s ease-in-out infinite alternate;
-            backdrop-filter: blur(5px);
             border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .caps-warning {
+                background: rgba(239, 68, 68, 0.15);
+                backdrop-filter: blur(5px);
+            }
         }
         
         @keyframes caps-warn-pulse {
@@ -1311,15 +1388,21 @@ $db_status = $db ? "connected" : "disconnected";
             align-items: center;
             gap: var(--space-sm);
             padding: var(--space-sm) var(--space-lg);
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30, 41, 59, 0.95);
             border-radius: var(--radius-full);
             font-size: 0.75rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            backdrop-filter: blur(10px);
             border: 1px solid rgba(56, 189, 248, 0.2);
             animation: indicator-pulse 2s ease-in-out infinite;
+        }
+
+        @media (min-width: 768px) {
+            .db-indicator {
+                background: rgba(30, 41, 59, 0.8);
+                backdrop-filter: blur(10px);
+            }
         }
         
         @keyframes indicator-pulse {
@@ -2050,22 +2133,24 @@ $db_status = $db ? "connected" : "disconnected";
                 });
             });
             
-            // Add parallax effect on mouse move
-            document.addEventListener('mousemove', (e) => {
-                const x = (e.clientX / window.innerWidth - 0.5) * 10;
-                const y = (e.clientY / window.innerHeight - 0.5) * 10;
-                
-                const particles = document.querySelector('.particles');
-                const gridLines = document.querySelector('.grid-lines');
-                
-                if (particles) {
-                    particles.style.transform = `translate(${x}px, ${y}px)`;
-                }
-                
-                if (gridLines) {
-                    gridLines.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
-                }
-            });
+            // Add parallax effect on mouse move (Desktop Only)
+            if (window.matchMedia('(pointer: fine)').matches) {
+                document.addEventListener('mousemove', (e) => {
+                    const x = (e.clientX / window.innerWidth - 0.5) * 10;
+                    const y = (e.clientY / window.innerHeight - 0.5) * 10;
+                    
+                    const particles = document.querySelector('.particles');
+                    const gridLines = document.querySelector('.grid-lines');
+                    
+                    if (particles) {
+                        particles.style.transform = `translate(${x}px, ${y}px)`;
+                    }
+                    
+                    if (gridLines) {
+                        gridLines.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
+                    }
+                });
+            }
         });
     </script>
 </body>
