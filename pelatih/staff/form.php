@@ -338,13 +338,19 @@ if ($is_edit) {
                                     <span>File Bukti</span>
                                     <span class="note">Maks 10MB</span>
                                 </label>
-                                <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="padding: 9px; cursor: pointer;">
+                                <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
+                                    <input type="file" name="<?php echo $is_edit ? 'new_certificates' : 'certificates'; ?>[]" class="file-upload-input certificate-file-input" 
+                                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
+                                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                                    <div class="file-upload-text">Klik untuk upload sertifikat</div>
+                                    <div class="file-upload-subtext" style="display:none;">JPG, PNG, PDF, DOCX | Maks: 10MB</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <button type="button" class="btn-premium btn-outline" onclick="addCertificateField()" style="margin-top:20px; width:100%; justify-content:center;">
+                <button type="button" class="btn btn-secondary" onclick="addCertificateField()" style="margin-top:20px; width:100%; justify-content:center;">
                     <i class="fas fa-plus"></i> Form Sertifikat Lainnya
                 </button>
             </div>
@@ -478,11 +484,38 @@ function addCertificateField() {
                     <span>File Bukti</span>
                     <span class="note">Maks 10MB</span>
                 </label>
-                <input type="file" name="\${certPrefix}[]" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="padding: 9px; cursor: pointer;">
+                <div class="file-upload-container file-upload-small" onclick="this.querySelector('input[type=file]').click()">
+                    <input type="file" name="\${certPrefix}[]" class="file-upload-input certificate-file-input" 
+                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" onclick="event.stopPropagation()">
+                    <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                    <div class="file-upload-text">Klik untuk upload sertifikat</div>
+                    <div class="file-upload-subtext" style="display:none;">JPG, PNG, PDF, DOCX | Maks: 10MB</div>
+                </div>
             </div>
         </div>
     `;
     container.appendChild(newField);
+    const newInput = newField.querySelector('.certificate-file-input');
+    if (newInput) {
+        initCertificateUpload(newInput);
+    }
+}
+
+function initCertificateUpload(fileInput) {
+    const uploadContainer = fileInput.closest('.file-upload-container');
+    if (!uploadContainer) return;
+
+    const uploadText = uploadContainer.querySelector('.file-upload-text');
+    const defaultText = 'Klik untuk upload sertifikat';
+
+    function clearIndicator() {
+        const indicator = uploadContainer.querySelector('.file-selected-indicator');
+        if (indicator) indicator.remove();
+    }
+
+    function markSelected(fileName) {
+        clearIndicator();
+        uploadContainer.classList.add('has-file');
         if (uploadText) {
             uploadText.textContent = `File dipilih: ${fileName}`;
         }
