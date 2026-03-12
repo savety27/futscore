@@ -9,7 +9,7 @@ $extraStyles = [
 require_once 'includes/header.php';
 
 // Get data from database
-$latestChallenges = getLatestChallenges(5);
+$latestChallenges = getLatestChallenges();
 $scheduledMatches = getScheduledChallenges(5);
 $completedMatches = getCompletedChallenges(5);
 $newPlayers = getPlayers(5);
@@ -62,9 +62,14 @@ include 'includes/sidebar.php';
     
     <div class="match-cards-container">
         <div class="match-cards-scroll">
-            <?php 
-            foreach ($latestChallenges as $match): 
-            ?>
+            <?php if (empty($latestChallenges)): ?>
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h4>Tidak ada pertandingan dalam 3 hari ini</h4>
+                <p>Silakan cek kembali nanti untuk update pertandingan terbaru.</p>
+            </div>
+            <?php else: ?>
+            <?php foreach ($latestChallenges as $match): ?>
             <div class="match-card-wrapper">
                 <div class="match-card" data-match-id="<?php echo $match['id']; ?>">
                     <div class="match-header">
@@ -123,6 +128,7 @@ include 'includes/sidebar.php';
                 </div>
             </div>
             <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>

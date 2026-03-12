@@ -47,13 +47,6 @@ $events_table_exists = adminHasTable($conn, 'events');
 $can_join_event_name = $challenge_has_event_id && $events_table_exists;
 $goals_has_half_column = adminHasColumn($conn, 'goals', 'half');
 
-// Ensure winner_type column exists in challenges table
-try {
-    if (!adminHasColumn($conn, 'challenges', 'winner_type')) {
-        $conn->exec("ALTER TABLE challenges ADD COLUMN winner_type ENUM('normal','penalty') NULL DEFAULT NULL AFTER winner_team_id");
-    }
-} catch (PDOException $e) { /* ignore if already exists */ }
-
 
 // Get admin info
 $admin_name = $_SESSION['admin_fullname'] ?? $_SESSION['admin_username'] ?? 'Admin';
@@ -165,7 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
     $form_data = [
         'challenger_score' => intval($_POST['challenger_score'] ?? 0),
         'opponent_score' => intval($_POST['opponent_score'] ?? 0),
-        'winner_type' => in_array(trim($_POST['winner_type'] ?? 'normal'), ['normal', 'penalty']) ? trim($_POST['winner_type'] ?? 'normal') : 'normal',
         'match_status' => trim($_POST['match_status'] ?? 'completed'),
         'match_duration' => trim($_POST['match_duration'] ?? '90'),
         'match_notes' => trim($_POST['match_notes'] ?? ''),
@@ -221,16 +213,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
                 break;
             }
         }
-    }    // Determine winner
-    $winner_team_id = null;
-    $penalty_winner_post = isset($_POST['penalty_winner']) ? (int)$_POST['penalty_winner'] : 0;
+    }
     
+    // Determine winner
+    $winner_team_id = null;
     if ($form_data['challenger_score'] > $form_data['opponent_score']) {
         $winner_team_id = $challenge_data['challenger_id'];
     } elseif ($form_data['opponent_score'] > $form_data['challenger_score']) {
         $winner_team_id = $challenge_data['opponent_id'];
-    } elseif ($form_data['winner_type'] === 'penalty' && $penalty_winner_post > 0) {
-        $winner_team_id = $penalty_winner_post;
     }
     
     // If no errors, update database
@@ -245,11 +235,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
                 $new_status = 'completed';
             }
             
-            $stmt = $conn->prepare("                UPDATE challenges SET 
+            $stmt = $conn->prepare("
+                UPDATE challenges SET 
                     challenger_score = ?, 
                     opponent_score = ?, 
                     winner_team_id = ?, 
-                    winner_type = ?,
                     status = ?,
                     match_status = ?, 
                     match_duration = ?, 
@@ -257,11 +247,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $has_valid_csrf) {
                     result_entered_at = NOW(),
                     updated_at = NOW()
                 WHERE id = ?
-            ");            $stmt->execute([
+            ");
+            
+            $stmt->execute([
                 $form_data['challenger_score'],
                 $form_data['opponent_score'],
                 $winner_team_id,
-                $form_data['winner_type'],
                 $new_status,
                 $form_data['match_status'],
                 $form_data['match_duration'],
@@ -1187,41 +1178,12 @@ body {
                                     <span class="error"><?php echo $errors['opponent_score']; ?></span>
                                 <?php endif; ?>
                             </div>
-                        </div>                        <!-- Result Preview -->
+                        </div>
+                        
+                        <!-- Result Preview -->
                         <div class="result-preview" id="resultPreview">
                             <!-- Filled by JavaScript -->
                         </div>
-
-                        <!-- Panel Penalti (Muncul saat Seri) -->
-                        <div id="penaltyPanel" style="display:none; margin-top:20px; background:#fff8e1; border:2px solid #f59e0b; border-radius:14px; padding:20px 24px;">
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-                                <span style="font-size:1.3rem;">🅿️</span>
-                                <strong style="color:#92400e; font-size:15px;">Penyelesaian Penalti</strong>
-                                <span style="font-size:12px; color:#b45309; margin-left:4px;">(skor waktu normal imbang — siapa pemenang adu penalti?)</span>
-                            </div>
-                            <input type="hidden" name="winner_type" id="winnerTypeInput" value="<?php echo htmlspecialchars($form_data['winner_type'] ?? $challenge_data['winner_type'] ?? 'normal'); ?>">
-                            <input type="hidden" name="penalty_winner" id="penaltyWinnerInput" value="">
-                            
-                            <div style="display:flex; gap:14px; flex-wrap:wrap;">
-                                <button type="button" id="btnPenWinChallenger"
-                                    style="flex:1; min-width:160px; padding:14px 10px; border-radius:12px; border:2px solid #e5e7eb; background:#fff; font-weight:700; font-size:14px; cursor:pointer; transition:all .2s;"
-                                    data-team="<?php echo (int)($challenge_data['challenger_id'] ?? 0); ?>">
-                                    🏆 <?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?> Menang Penalti
-                                </button>
-                                <button type="button" id="btnPenNoDraw"
-                                    style="flex:0 0 auto; padding:14px 18px; border-radius:12px; border:2px solid #e5e7eb; background:#fff; font-weight:600; font-size:13px; cursor:pointer; color:#6b7280; transition:all .2s;">
-                                    ✖ Tidak ada penalti (Seri biasa)
-                                </button>
-                                <button type="button" id="btnPenWinOpponent"
-                                    style="flex:1; min-width:160px; padding:14px 10px; border-radius:12px; border:2px solid #e5e7eb; background:#fff; font-weight:700; font-size:14px; cursor:pointer; transition:all .2s;"
-                                    data-team="<?php echo (int)($challenge_data['opponent_id'] ?? 0); ?>">
-                                    🏆 <?php echo htmlspecialchars($challenge_data['opponent_name'] ?? ''); ?> Menang Penalti
-                                </button>
-                            </div>
-                            <div id="penaltyResultLabel" style="margin-top:12px; font-size:13px; color:#92400e; font-weight:600; min-height:20px;"></div>
-                        </div>
-
-                        <input type="hidden" name="winner_type" id="winnerTypeNormal" value="normal">
                     </div>
                 </div>
 
@@ -1338,117 +1300,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function updatePreview() {
         if (!cScore || !oScore || !preview) return;
         const cs = parseInt(cScore.value) || 0;
-        const os = parseInt(oScore.value) || 0;        const penPanel = document.getElementById('penaltyPanel');
-        const winTypeInput = document.getElementById('winnerTypeInput');
-        const winTypeNormal = document.getElementById('winnerTypeNormal');
-        const penWinnerInput = document.getElementById('penaltyWinnerInput');
+        const os = parseInt(oScore.value) || 0;
         
-        if (winTypeInput) winTypeInput.disabled = false;
-        if (winTypeNormal) winTypeNormal.disabled = true;
-
+        let txt = '';
         if (cs > os) {
-            if (penPanel) penPanel.style.display = 'none';
-            if (winTypeInput) { winTypeInput.value = 'normal'; winTypeInput.disabled = true; }
-            if (winTypeNormal) { winTypeNormal.value = 'normal'; winTypeNormal.disabled = false; }
-            if (penWinnerInput) penWinnerInput.value = '';
-            preview.innerHTML = `<span style="color:#059669;">🏆 ${cName} <strong>Menang</strong></span>`;
+            txt = `${cName} Menang`;
         } else if (os > cs) {
-            if (penPanel) penPanel.style.display = 'none';
-            if (winTypeInput) { winTypeInput.value = 'normal'; winTypeInput.disabled = true; }
-            if (winTypeNormal) { winTypeNormal.value = 'normal'; winTypeNormal.disabled = false; }
-            if (penWinnerInput) penWinnerInput.value = '';
-            preview.innerHTML = `<span style="color:#059669;">🏆 ${oName} <strong>Menang</strong></span>`;
+            txt = `${oName} Menang`;
         } else {
-            // Draw
-            if (penPanel) penPanel.style.display = 'block';
-            if (winTypeNormal) winTypeNormal.disabled = true;
-            
-            const pw = penWinnerInput ? penWinnerInput.value : '';
-            if (pw && winTypeInput && winTypeInput.value === 'penalty') {
-                const winName = (parseInt(pw) === <?php echo json_encode((int)($challenge_data['challenger_id'] ?? 0)); ?>) ? cName : oName;
-                preview.innerHTML = `<span style="color:#d97706;">🅿️ ${winName} <strong>Menang Penalti</strong></span>`;
-            } else {
-                preview.innerHTML = `<span style="color:#6b7280;">⚖️ <strong>Seri (Draw)</strong></span>`;
-            }
+            txt = 'Seri (Draw)';
         }
-    }    if (cScore) cScore.addEventListener('input', updatePreview);
-    if (oScore) oScore.addEventListener('input', updatePreview);
+        preview.textContent = txt;
+    }
     
-    // Penalty Button Listeners
-    const btnPenChallenger = document.getElementById('btnPenWinChallenger');
-    const btnPenOpponent = document.getElementById('btnPenWinOpponent');
-    const btnNoDraw = document.getElementById('btnPenNoDraw');
-    const penLabel = document.getElementById('penaltyResultLabel');
-    const penWinnerInput = document.getElementById('penaltyWinnerInput');
-    const winTypeInput = document.getElementById('winnerTypeInput');
-    const winTypeNormal = document.getElementById('winnerTypeNormal');
-
-    function selectPenBtn(btn, color) {
-        if (!btnPenChallenger) return;
-        [btnPenChallenger, btnPenOpponent, btnNoDraw].forEach(b => {
-             b.style.background = '#fff';
-             b.style.borderColor = '#e5e7eb';
-             b.style.color = '';
-        });
-        btn.style.background = color;
-        btn.style.borderColor = color;
-        btn.style.color = '#fff';
-    }
-
-    const cId = <?php echo json_encode((int)($challenge_data['challenger_id'] ?? 0)); ?>;
-    const oId = <?php echo json_encode((int)($challenge_data['opponent_id'] ?? 0)); ?>;
-
-    if (btnPenChallenger) {
-        btnPenChallenger.addEventListener('click', function() {
-            selectPenBtn(this, '#059669');
-            penWinnerInput.value = cId;
-            winTypeInput.value = 'penalty';
-            if (winTypeNormal) winTypeNormal.disabled = true;
-            if (penLabel) penLabel.innerHTML = `✅ <strong>${cName}</strong> menang penalti.`;
-            updatePreview();
-        });
-    }
-    if (btnPenOpponent) {
-        btnPenOpponent.addEventListener('click', function() {
-            selectPenBtn(this, '#059669');
-            penWinnerInput.value = oId;
-            winTypeInput.value = 'penalty';
-            if (winTypeNormal) winTypeNormal.disabled = true;
-            if (penLabel) penLabel.innerHTML = `✅ <strong>${oName}</strong> menang penalti.`;
-            updatePreview();
-        });
-    }
-    if (btnNoDraw) {
-        btnNoDraw.addEventListener('click', function() {
-            selectPenBtn(this, '#6b7280');
-            penWinnerInput.value = '';
-            winTypeInput.value = 'normal';
-            if (penLabel) penLabel.innerHTML = `⚖️ Hasil: <strong>Seri biasa</strong>.`;
-            updatePreview();
-        });
-    }
-
-    // Load DB saved penalty state
-    const savedWinnerType = <?php echo json_encode($challenge_data['winner_type'] ?? 'normal'); ?>;
-    const savedWinnerId = <?php echo json_encode((int)($challenge_data['winner_team_id'] ?? 0)); ?>;
-    const savedCS = <?php echo json_encode((int)($challenge_data['challenger_score'] ?? 0)); ?>;
-    const savedOS = <?php echo json_encode((int)($challenge_data['opponent_score'] ?? 0)); ?>;
-
-    if (savedWinnerType === 'penalty' && savedCS === savedOS && savedWinnerId > 0) {
-        if (penWinnerInput) penWinnerInput.value = savedWinnerId;
-        if (winTypeInput) winTypeInput.value = 'penalty';
-        const winBtn = savedWinnerId == cId ? btnPenChallenger : btnPenOpponent;
-        if (winBtn) {
-            selectPenBtn(winBtn, '#059669');
-            const winName = savedWinnerId == cId ? cName : oName;
-            if (penLabel) penLabel.innerHTML = `✅ <strong>${winName}</strong> menang penalti.`;
-        }
-    } else {
-        if (savedCS === savedOS && savedCS !== null && savedOS !== null) {
-            if (btnNoDraw && savedWinnerType !== 'penalty') selectPenBtn(btnNoDraw, '#6b7280');
-        }
-    }
-
+    if (cScore) cScore.addEventListener('input', updatePreview);
+    if (oScore) oScore.addEventListener('input', updatePreview);
     updatePreview();
 
     // Goal Scorers Logic
