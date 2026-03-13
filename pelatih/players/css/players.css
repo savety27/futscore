@@ -122,8 +122,9 @@
 }
 
 .data-table tbody tr:hover {
-    background: #fdfcfb;
+    background: #ffedd5;
     transform: translateX(4px);
+    box-shadow: inset 5px 0 0 #f97316, 0 0 0 1px rgba(249, 115, 22, 0.32);
 }
 
 .data-table td {

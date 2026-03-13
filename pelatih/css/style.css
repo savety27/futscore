@@ -396,7 +396,8 @@ body {
 }
 
 .data-table tbody tr:hover {
-    background: #f8f9fa;
+    background: #ffedd5;
+    box-shadow: inset 5px 0 0 #f97316, 0 0 0 1px rgba(249, 115, 22, 0.32);
 }
 
 .data-table td {
