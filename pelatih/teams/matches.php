@@ -132,11 +132,12 @@ $total_pages = 1;
 $matches = [];
 
 try {
-    // Get distinct sport types for filter
-    $sport_types = [];
-    $sport_stmt = $conn->prepare("SELECT DISTINCT sport_type FROM challenges WHERE (challenger_id = ? OR opponent_id = ?) AND (status = 'accepted' OR status = 'completed') AND sport_type IS NOT NULL AND sport_type <> '' ORDER BY sport_type ASC");
-    $sport_stmt->execute([$team_id, $team_id]);
-    $sport_types = $sport_stmt->fetchAll(PDO::FETCH_COLUMN);
+    // Fixed sport types for filter (per request)
+    $sport_types = [
+        'LIGA AAFI BATAM U-13 PUTRA 2026',
+        'LIGA AAFI BATAM U-16 PUTRA 2026',
+        'LIGA AAFI BATAM U-16 PUTRI 2026',
+    ];
 
     // Count
     $stmt = $conn->prepare($count_query);
@@ -188,9 +189,9 @@ try {
     <div class="reveal d-2">
         <div class="filter-container">
             <div class="teams-filter-card">
-                <form action="" method="GET" style="display: flex; gap: 15px; width: 100%; align-items: center; flex-wrap: wrap;">
+                <form action="" method="GET" class="teams-inline-filter" style="flex-wrap: wrap;">
                     <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
-                    <div style="flex: 1; position: relative; min-width: 220px;">
+                    <div class="filter-input-wrapper" style="min-width: 220px;">
                         <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--heritage-text); opacity: 0.5;"></i>
                         <input type="text" name="search" class="teams-search-input" placeholder="Cari event, lawan, status, atau lokasi..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>

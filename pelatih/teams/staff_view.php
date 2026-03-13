@@ -141,9 +141,9 @@ try {
     <div class="reveal d-2">
         <div class="filter-container">
             <div class="teams-filter-card">
-                <form action="" method="GET" style="display: flex; gap: 15px; width: 100%; align-items: center;">
+                <form action="" method="GET" class="teams-inline-filter">
                     <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
-                    <div style="flex: 1; position: relative;">
+                    <div class="filter-input-wrapper">
                         <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--heritage-text); opacity: 0.5;"></i>
                         <input type="text" name="search" class="teams-search-input" placeholder="Cari staf berdasarkan nama, jabatan..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>

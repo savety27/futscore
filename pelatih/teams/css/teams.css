@@ -960,7 +960,7 @@
     background: #fdfcfb;
     border: 1px solid var(--heritage-border);
     border-radius: 16px;
-    padding: 0 20px 0 16px;
+    padding: 0 44px 0 16px;
     font-family: var(--font-body);
     font-size: 1rem;
     color: var(--heritage-text);
@@ -1001,6 +1001,23 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* Matches page: category label bigger + wrap to 2 lines */
+#matchSportSelect .schedule-custom-select-trigger {
+    font-size: 1rem !important;
+}
+
+#matchSportSelect .schedule-custom-select-text {
+    white-space: normal;
+    line-height: 1.2;
+}
+
+#matchSportSelect .schedule-custom-option {
+    font-size: 1rem !important;
+    white-space: normal;
+    line-height: 1.2;
+}
+
 
 .schedule-custom-select-trigger .select-icon-right {
     position: absolute;
@@ -1075,6 +1092,20 @@
     display: flex;
     gap: 12px;
     justify-self: end;
+}
+
+/* Generic inline filter form (used in team players/staff/matches pages) */
+.teams-inline-filter {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.teams-inline-filter .filter-input-wrapper {
+    flex: 1;
+    position: relative;
 }
 
 .btn-filter, .clear-filter-btn {
@@ -1293,5 +1324,110 @@
     
     .custom-tooltip {
         width: 280px;
+    }
+
+    /* Mobile adjustments for team filters */
+    .teams-filter-card {
+        padding: 24px 16px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+    }
+
+    .teams-filter-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .teams-filter-actions {
+        justify-self: stretch;
+        flex-direction: column;
+        margin-top: 0;
+    }
+
+    .teams-filter-actions .btn-filter,
+    .teams-filter-actions .clear-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Inline filter (players/staff/matches) stack vertically on mobile */
+    .teams-inline-filter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .teams-inline-filter > div {
+        width: 100%;
+        min-width: 0 !important;
+    }
+
+    .teams-inline-filter .btn-premium,
+    .teams-inline-filter .btn-export {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .teams-inline-filter .teams-search-input {
+        font-size: 0.9rem;
+    }
+
+    .teams-inline-filter .teams-search-input::placeholder {
+        font-size: 0.82rem;
+    }
+
+    /* Allow long option labels to wrap in custom selects on small screens */
+    .schedule-custom-select-trigger {
+        font-size: 0.9rem;
+        padding-left: 12px;
+        padding-right: 40px;
+        align-items: center;
+        height: 48px;
+    }
+
+    .schedule-custom-select-text {
+        white-space: normal;
+        line-height: 1.1;
+    }
+
+    /* Mobile: let dropdown push content instead of overlapping */
+    .schedule-custom-select-menu {
+        position: static;
+        margin-top: 6px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .schedule-custom-option {
+        padding-right: 40px;
+    }
+
+    /* Match category: allow 2-line label on mobile */
+    #matchSportSelect .schedule-custom-select-text {
+        white-space: normal;
+        line-height: 1.1;
+    }
+
+    #matchSportSelect .schedule-custom-select-trigger {
+        font-size: 0.9rem;
+    }
+
+    #matchSportSelect .schedule-custom-option,
+    #matchStatusSelect .schedule-custom-option {
+        font-size: 0.9rem;
+        white-space: normal;
+        line-height: 1.1;
+    }
+
+    .schedule-custom-select-label {
+        align-items: center;
+        gap: 0;
+    }
+
+    .schedule-custom-select-label i {
+        margin-right: 10px;
+    }
+
+    .filter-group.status-filter {
+        max-width: 100%;
     }
 }
