@@ -1994,21 +1994,6 @@ $pageTitle = "Staff List";
                         <?php endif; ?>
                     </section>
 
-                    <?php if ($staff_detail): ?>
-                        <div class="player-history-panel" id="staffHistoryPanel" data-staff-id="<?php echo (int)$staff_detail['id']; ?>" data-staff-name="<?php echo htmlspecialchars((string)($staff_detail['name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" data-staff-team="<?php echo htmlspecialchars((string)($staff_detail['team_name'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <button type="button" class="player-history-toggle" id="staffHistoryTogglePanel" aria-expanded="false" aria-controls="staffHistoryContent">
-                                <span class="player-history-toggle-label">
-                                    <i class="fas fa-chart-line"></i> Riwayat Match Staff
-                                </span>
-                                <i class="fas fa-chevron-down player-history-toggle-icon" aria-hidden="true"></i>
-                            </button>
-                            <div class="player-history-content" id="staffHistoryContent">
-                                <div class="history-loading">
-                                    <i class="fas fa-spinner"></i> Klik tombol di atas untuk melihat riwayat pertandingan.
-                                </div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
                 <?php endif; ?>
 
                 <div class="filter-card staff-filter-card">
