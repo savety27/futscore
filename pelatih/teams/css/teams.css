@@ -1200,8 +1200,7 @@
 .d-3 { animation-delay: 0.3s; }
 
 .data-table tbody tr {
-    animation: fadeIn 0.5s ease-out;
-    animation-fill-mode: both;
+    animation: none;
 }
 
 .data-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
