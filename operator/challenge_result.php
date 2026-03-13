@@ -603,17 +603,87 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 @media (max-width: 1024px) {
     .goal-entry-row {
         grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 15px;
     }
     .btn-remove-goal {
         grid-column: span 2;
         width: 100%;
+        margin-top: 8px;
     }
 }
 
 @media (max-width: 768px) {
-    .form-container { padding: 25px; }
-    .score-input-container { gap: 30px; }
-    .score-input { width: 90px; height: 90px; font-size: 2.5rem; }
+    .form-container { 
+        padding: 20px; 
+        border-radius: 20px;
+    }
+    .score-section {
+        padding: 24px 15px;
+    }
+    .score-input-container { 
+        gap: 20px; 
+        flex-direction: column;
+    }
+    .vs-symbol {
+        order: 2;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+        margin: 10px 0;
+    }
+    .team-score-box {
+        min-width: unset;
+        width: 100%;
+    }
+    .team-score-box:first-child { order: 1; }
+    .team-score-box:last-child { order: 3; }
+    
+    .team-logo-medium {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 12px;
+    }
+    .score-input { 
+        width: 80px; 
+        height: 80px; 
+        font-size: 2.2rem; 
+        border-radius: 16px;
+    }
+    .team-name {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    .result-preview {
+        font-size: 1.2rem;
+        margin-top: 20px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+    
+    .form-actions {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    .form-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .goal-entry-row {
+        grid-template-columns: 1fr;
+    }
+    .btn-remove-goal {
+        grid-column: span 1;
+    }
+    .section-title {
+        font-size: 1.5rem;
+    }
 }
 </style>
 </head>
