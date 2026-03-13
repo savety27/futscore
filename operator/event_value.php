@@ -138,22 +138,24 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
     if ($eventId <= 0) return [];
 
     if ($categoryName !== '') {
+        // Find teams associated with this specific category.
+        // We include challenges where event_id is NULL as a fallback if the category name matches.
         $sql = "SELECT DISTINCT t.id, t.name
                 FROM teams t
                 INNER JOIN (
-                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
+                    SELECT challenger_id AS team_id FROM challenges 
+                    WHERE (event_id = ? OR event_id IS NULL) AND sport_type = ? AND status IN ('accepted', 'completed')
                     UNION
-                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
+                    SELECT opponent_id AS team_id FROM challenges 
+                    WHERE (event_id = ? OR event_id IS NULL) AND sport_type = ? AND status IN ('accepted', 'completed')
                     UNION
-                    SELECT te.team_id
-                    FROM team_events te
-                    INNER JOIN events e ON e.name = te.event_name
-                    WHERE e.id = ? AND te.event_name = ?
+                    SELECT team_id FROM team_events WHERE event_name = ?
                 ) src ON src.team_id = t.id
                 ORDER BY t.name ASC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$eventId, $categoryName, $eventId, $categoryName, $eventId, $categoryName]);
+        $stmt->execute([$eventId, $categoryName, $eventId, $categoryName, $categoryName]);
     } else {
+        // Find all teams associated with this event group.
         $sql = "SELECT DISTINCT t.id, t.name 
                 FROM teams t 
                 INNER JOIN (
@@ -161,7 +163,10 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
                     UNION 
                     SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND status IN ('accepted', 'completed')
                     UNION 
-                    SELECT te.team_id FROM team_events te INNER JOIN events e ON e.name = te.event_name WHERE e.id = ?
+                    SELECT te.team_id 
+                    FROM team_events te 
+                    INNER JOIN events e ON (te.event_name = e.name OR te.event_name LIKE CONCAT(e.name, ' %'))
+                    WHERE e.id = ?
                 ) src ON src.team_id = t.id 
                 ORDER BY t.name ASC";
         $stmt = $conn->prepare($sql);
@@ -1008,363 +1013,11 @@ if ($eventId > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Value</title>
+    <title>Event Value - Area Operator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
-    <style>
-        :root {
-            --primary: #0f2744;
-            --secondary: #f59e0b;
-            --accent: #3b82f6;
-            --danger: #ef4444;
-            --dark: #1e293b;
-            --gray: #64748b;
-            --sidebar-bg: linear-gradient(180deg, #0a1628 0%, #0f2744 100%);
-            --card-shadow: 0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -2px rgba(0,0,0,.03);
-            --premium-shadow: 0 20px 25px -5px rgba(0,0,0,.08), 0 10px 10px -5px rgba(0,0,0,.04);
-            --transition: cubic-bezier(.4,0,.2,1) .3s
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box
-        }
-        body {
-            font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
-            color: var(--dark)
-        }
-        .wrapper {
-            display: flex;
-            min-height: 100vh
-        }
-
-        .main {
-            margin-left: 280px;
-            flex: 1;
-            padding: 28px
-        }
-        .topbar,
-        .page-header,
-        .form-container {
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: var(--card-shadow)
-        }
-        .topbar {
-            padding: 18px 22px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 22px
-        }
-        .greeting h1 {
-            color: var(--primary);
-            font-size: 26px
-        }
-        .greeting p {
-            color: var(--gray);
-            font-size: 14px
-        }
-        .logout-btn {
-            display: inline-flex;
-            gap: 10px;
-            align-items: center;
-            background: linear-gradient(135deg, var(--danger), #b91c1c);
-            color: #fff;
-            text-decoration: none;
-            padding: 12px 28px;
-            border-radius: 12px;
-            font-weight: 600
-        }
-        .page-header {
-            margin-bottom: 22px;
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px
-        }
-        .page-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--primary);
-            font-size: 25px
-        }
-        .btn {
-            border: none;
-            border-radius: 10px;
-            padding: 11px 18px;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #fff
-        }
-        .btn-secondary {
-            background: #6b7280;
-            color: #fff
-        }
-        .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px
-        }
-        .alert-danger {
-            background: rgba(211,47,47,.1);
-            border-left: 4px solid #ef4444;
-            color: #b91c1c
-        }
-        .alert-success {
-            background: rgba(16,185,129,.12);
-            border-left: 4px solid #10b981;
-            color: #047857
-        }
-        .form-container {
-            padding: 26px;
-            margin-bottom: 22px
-        }
-        .form-section {
-            margin-bottom: 26px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid #e5e7eb
-        }
-        .form-section:last-child {
-            border-bottom: none;
-            margin-bottom: 0
-        }
-        .section-title {
-            color: var(--primary);
-            font-size: 19px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px
-        }
-        .form-grid {
-            display: grid;
-            gap: 16px;
-            grid-template-columns: repeat(4, minmax(0, 1fr))
-        }
-        .form-grid-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr))
-        }
-        .form-grid-3 {
-            grid-template-columns: repeat(3, minmax(0, 1fr))
-        }
-        .form-group {
-            margin-bottom: 10px
-        }
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 7px
-        }
-        .form-input,
-        .form-select {
-            width: 100%;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 11px 14px;
-            font-size: 15px;
-            background: #f8fafc
-        }
-        .form-input:focus,
-        .form-select:focus {
-            border-color: var(--accent);
-            outline: none
-        }
-        .form-actions {
-            margin-top: 10px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px
-        }
-        .form-note {
-            color: var(--gray);
-            font-size: 13px;
-            margin-top: 10px
-        }
-        .table-container {
-            background: rgba(255,255,255,.95);
-            border-radius: 18px;
-            overflow-x: auto;
-            box-shadow: var(--premium-shadow);
-            margin-top: 14px
-        }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 900px
-        }
-        .data-table thead {
-            background: linear-gradient(135deg, var(--primary), #1a365d);
-            color: #fff
-        }
-        .data-table th,
-        .data-table td {
-            padding: 10px;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;
-            text-align: center
-        }
-        .data-table th:nth-child(2),
-        .data-table td:nth-child(2),
-        .data-table th:first-child,
-        .data-table td:first-child {
-            text-align: left
-        }
-        .card-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 22px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 0 8px;
-            border: 1px solid transparent
-        }
-        .card-badge.red { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
-        .card-badge.yellow { background: #fef9c3; color: #a16207; border-color: #fde68a; }
-        .card-badge.green { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-        .match-seq {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px
-        }
-        .match-pill {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 24px;
-            height: 20px;
-            border-radius: 5px;
-            padding: 0 5px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #fff
-        }
-        .match-pill.win { background: #16a34a; }
-        .match-pill.lose { background: #dc2626; }
-        .match-pill.draw { background: #d97706; }
-        .match-builder {
-            border: 1px solid #dbe5f3;
-            border-radius: 10px;
-            background: #ffffff;
-            padding: 10px
-        }
-        .match-builder-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 8px
-        }
-        .match-token-btn {
-            border: 1px solid transparent;
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            color: #fff
-        }
-        .match-token-btn.win { background: #16a34a; }
-        .match-token-btn.lose { background: #dc2626; }
-        .match-token-btn.draw { background: #d97706; }
-        .match-token-btn.neutral {
-            background: #475569;
-            border-color: #334155
-        }
-        .match-builder-preview {
-            min-height: 26px;
-            align-items: center
-        }
-        .match-placeholder {
-            color: #64748b;
-            font-size: 12px
-        }
-        .badge-pill {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700
-        }
-        .badge-ok {
-            background: rgba(16,185,129,.15);
-            color: #047857
-        }
-        .badge-ban {
-            background: rgba(239,68,68,.15);
-            color: #b91c1c
-        }
-        @media(max-width: 900px) {
-            .main {
-                margin-left: 0;
-                width: 100%;
-                padding: 16px
-            }
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px
-            }
-            .user-actions {
-                width: 100%;
-                display: flex;
-                justify-content: flex-end
-            }
-            .page-header {
-                flex-direction: column;
-                align-items: center
-            }
-            .page-title {
-                width: 100%;
-                justify-content: center;
-                text-align: center
-            }
-            .page-header .btn {
-                width: 100%;
-                justify-content: center
-            }
-            .form-grid,
-            .form-grid-2,
-            .form-grid-3 {
-                grid-template-columns: 1fr
-            }
-            .form-actions {
-                flex-direction: column
-            }
-            .form-actions .btn {
-                width: 100%;
-                justify-content: center
-            }
-        }
-        @media(max-width: 480px) {
-            .logout-btn {
-                background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
-                border: none;
-                padding: 10px 20px;
-                font-size: 14px;
-                gap: 10px;
-                box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2)
-            }
-            .btn { font-size: 14px }
-        }
-</style>
+    <link rel="stylesheet" href="css/event_value.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/event_value.css'); ?>">
 </head>
 <body>
     <div class="menu-overlay"></div>
@@ -1376,68 +1029,74 @@ if ($eventId > 0) {
         <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
         <div class="main">
-            <div class="topbar">
+            <!-- TOPBAR -->
+            <div class="topbar reveal">
                 <div class="greeting">
                     <h1>Event Value 🗓️</h1>
                     <p>Kelola klasemen, poin, kartu team dan disiplin pemain.</p>
                 </div>
                 <div class="user-actions">
-                    <a href="../operator/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+                    <a href="../operator/logout.php" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Keluar
+                    </a>
                 </div>
             </div>
 
-            <div class="page-header">
-                <div class="page-title">
-                    <i class="fas fa-list-ol"></i> 
-                    <span>Manajemen Nilai Event</span>
-                </div>
-                <a href="event.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
-            </div>
+            <div class="event-hub">
+                <!-- Editorial Header -->
+                <header class="dashboard-hero reveal d-1">
+                    <div class="hero-content">
+                        <span class="hero-label">Manajemen Kompetisi</span>
+                        <h1 class="hero-title">Direktori Nilai</h1>
+                        <p class="hero-description">Kelola klasemen, akumulasi kartu, dan status suspend pemain untuk event <strong><?php echo htmlspecialchars($operator_event_name); ?></strong>.</p>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="event.php" class="btn-premium btn-cancel">
+                            <i class="fas fa-arrow-left"></i> Kembali ke Hub
+                        </a>
+                    </div>
+                </header>
 
-            <?php if (!empty($success)): ?>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i>
-                    <span><?php echo htmlspecialchars($success); ?></span>
-                </div>
-            <?php endif; ?>
+                <?php if (!empty($success)): ?>
+                    <div class="alert alert-success reveal d-1">
+                        <i class="fas fa-check-circle"></i>
+                        <span><?php echo htmlspecialchars($success); ?></span>
+                    </div>
+                <?php endif; ?>
 
-            <?php foreach ($errors as $error): ?>
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span><?php echo htmlspecialchars($error); ?></span>
-                </div>
-            <?php endforeach; ?>
+                <?php foreach ($errors as $error): ?>
+                    <div class="alert alert-danger reveal d-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span><?php echo htmlspecialchars($error); ?></span>
+                    </div>
+                <?php endforeach; ?>
 
-            <?php if ($operator_read_only): ?>
-                <div class="alert alert-danger">
-                    <i class="fas fa-lock"></i>
-                    <span>Event Anda sedang non-aktif. Mode operator hanya lihat data.</span>
-                </div>
-            <?php endif; ?>
+                <?php if ($operator_read_only): ?>
+                    <div class="alert alert-danger reveal d-1">
+                        <i class="fas fa-lock"></i>
+                        <span>Event Anda sedang non-aktif. Mode operator hanya lihat data.</span>
+                    </div>
+                <?php endif; ?>
 
-            <div class="form-container">
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-calendar-alt"></i> Pilih Event
+                <!-- SELECTION CARD -->
+                <div class="heritage-card reveal d-2">
+                    <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                        <i class="fas fa-filter" style="color: var(--heritage-gold);"></i> Filter Data
                     </div>
                     <form method="get">
                         <div class="form-grid form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Event</label>
+                                <label>Pilih Event</label>
                                 <select class="form-select" name="event_id" onchange="this.form.submit()" disabled>
                                     <option value="">
                                         <?php echo $eventId > 0 ? 'Event Operator' : 'Event belum ditetapkan'; ?>
                                     </option>
-                                    <?php foreach ($events as $event): ?>
-                                        <option value="<?php echo (int)$event['id']; ?>" <?php echo $eventId === (int)$event['id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($event['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
                                 </select>
                                 <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Kategori</label>
+                                <label>Pilih Kategori</label>
                                 <select class="form-select" name="sport_type" onchange="this.form.submit()">
                                     <option value="">Pilih Kategori</option>
                                     <?php foreach ($event_types as $eventType): ?>
@@ -1451,12 +1110,16 @@ if ($eventId > 0) {
                     </form>
                 </div>
 
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-trophy"></i> Input Nilai Team
+                <!-- INPUT NILAI TEAM -->
+                <div class="heritage-card reveal d-2">
+                    <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                        <i class="fas fa-trophy" style="color: var(--heritage-gold);"></i> Input Nilai Team
                     </div>
                     <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
-                        <div class="form-note">Pilih Event dan Kategori dulu untuk mengisi nilai team.</div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih Event dan Kategori dulu untuk mengisi nilai team.</span>
+                        </div>
                     <?php else: ?>
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
@@ -1464,9 +1127,9 @@ if ($eventId > 0) {
                         <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
                         <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
 
-                        <div class="form-grid">
+                        <div class="form-grid form-grid-4">
                             <div class="form-group">
-                                <label class="form-label">Team</label>
+                                <label>Pilih Team</label>
                                 <select class="form-select" name="team_id" id="team_id_select" required>
                                     <option value="">Pilih team</option>
                                     <?php foreach ($teams as $team): ?>
@@ -1477,87 +1140,85 @@ if ($eventId > 0) {
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">TM (Otomatis)</label>
+                                <label>TM (Otomatis)</label>
                                 <input class="form-input" type="number" id="team_mn" name="mn" min="0" value="0" readonly>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">M</label>
-                                <input class="form-input" type="number" id="team_m" name="m" min="0" value="0" required>
+                                <label>Poin (Otomatis)</label>
+                                <input class="form-input" type="number" id="team_points_preview" value="0" readonly>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">MP</label>
-                                <input class="form-input" type="number" id="team_mp" name="mp" min="0" value="0" required>
+                                <label>W (Win)</label>
+                                <input class="form-input" type="number" id="team_m" name="m" min="0" value="0" required>
                             </div>
                         </div>
 
-                        <div class="form-grid">
+                        <div class="form-grid form-grid-4" style="margin-top: 16px;">
                             <div class="form-group">
-                                <label class="form-label">S</label>
+                                <label>WP (Win Penalty)</label>
+                                <input class="form-input" type="number" id="team_mp" name="mp" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label>D (Draw)</label>
                                 <input class="form-input" type="number" id="team_s" name="s" min="0" value="0" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">KP</label>
+                                <label>LP (Lose Penalty)</label>
                                 <input class="form-input" type="number" id="team_kp" name="kp" min="0" value="0" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">K</label>
+                                <label>L (Lose)</label>
                                 <input class="form-input" type="number" id="team_k" name="k" min="0" value="0" required>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
+                        <div class="form-grid form-grid-2" style="margin-top: 16px;">
                             <div class="form-group">
-                                <label class="form-label">GM</label>
+                                <label>GM (Gol Memasukkan)</label>
                                 <input class="form-input" type="number" id="team_gm" name="gm" min="0" value="0" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">GK</label>
+                                <label>GK (Gol Kemasukan)</label>
                                 <input class="form-input" type="number" id="team_gk" name="gk" min="0" value="0" required>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Poin (Otomatis)</label>
-                                <input class="form-input" type="number" id="team_points_preview" value="0" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Input Match (Klik Kotak)</label>
-                                <input type="hidden" name="match_history" id="match_history_input" value="<?php echo htmlspecialchars((string)($_POST['match_history'] ?? '')); ?>">
-                                <div class="match-builder">
-                                    <div class="match-builder-actions">
-                                        <button type="button" class="match-token-btn win" data-token="W">+ W</button>
-                                        <button type="button" class="match-token-btn win" data-token="WP">+ WP</button>
-                                        <button type="button" class="match-token-btn draw" data-token="D">+ D</button>
-                                        <button type="button" class="match-token-btn lose" data-token="LP">+ LP</button>
-                                        <button type="button" class="match-token-btn lose" data-token="L">+ L</button>
-                                        <button type="button" class="match-token-btn neutral" id="match_undo_btn">Undo</button>
-                                        <button type="button" class="match-token-btn neutral" id="match_reset_btn">Reset</button>
-                                    </div>
-                                    <div class="match-seq match-builder-preview" id="match_builder_preview"></div>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Input Match Sequence (Klik Kotak)</label>
+                            <input type="hidden" name="match_history" id="match_history_input" value="<?php echo htmlspecialchars((string)($_POST['match_history'] ?? '')); ?>">
+                            <div class="match-builder">
+                                <div class="match-builder-actions">
+                                    <button type="button" class="match-token-btn win" data-token="W">+ W</button>
+                                    <button type="button" class="match-token-btn win" data-token="WP">+ WP</button>
+                                    <button type="button" class="match-token-btn draw" data-token="D">+ D</button>
+                                    <button type="button" class="match-token-btn lose" data-token="LP">+ LP</button>
+                                    <button type="button" class="match-token-btn lose" data-token="L">+ L</button>
+                                    <button type="button" class="match-token-btn neutral" id="match_undo_btn">Undo</button>
+                                    <button type="button" class="match-token-btn neutral" id="match_reset_btn">Reset</button>
                                 </div>
+                                <div class="match-seq match-builder-preview" id="match_builder_preview" style="margin-top: 10px; padding: 10px; background: #fdfcfb; border-radius: 12px; border: 1px solid var(--heritage-border); min-height: 48px;"></div>
                             </div>
                         </div>
 
-                        <div class="form-note">
-                            Rumus poin: <strong>P = (M × 3) + (MP × 2) + (KP × 1)</strong>.
-                        </div>
-                        <div class="form-note">
-                            TM otomatis: <strong>M + MP + S + KP + K</strong>. Kode match: W (win), WP (win penalty), D (draw), LP (lose penalty), L (lose).
-                        </div>
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Nilai Team</button>
+                            <?php if (!$operator_read_only): ?>
+                                <button class="btn-premium btn-save" type="submit"><i class="fas fa-save"></i> Simpan Nilai Team</button>
+                            <?php endif; ?>
                         </div>
                     </form>
                     <?php endif; ?>
                 </div>
 
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-id-card"></i> Input Kartu Player
+                <!-- INPUT KARTU PLAYER -->
+                <div class="heritage-card reveal d-2">
+                    <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                        <i class="fas fa-id-card" style="color: var(--heritage-gold);"></i> Input Kartu Pemain
                     </div>
                     <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
-                        <div class="form-note">Pilih Event dan Kategori dulu untuk input kartu pemain.</div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih Event dan Kategori dulu untuk input kartu pemain.</span>
+                        </div>
                     <?php else: ?>
                     <form method="post">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
@@ -1567,7 +1228,7 @@ if ($eventId > 0) {
 
                         <div class="form-grid form-grid-2">
                             <div class="form-group">
-                                <label class="form-label">Team</label>
+                                <label>Pilih Team</label>
                                 <select class="form-select" id="player_team_id" name="player_team_id" required>
                                     <option value="">Pilih team</option>
                                     <?php foreach ($teams as $team): ?>
@@ -1578,7 +1239,7 @@ if ($eventId > 0) {
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Pemain</label>
+                                <label>Pilih Pemain</label>
                                 <select class="form-select" id="player_id" name="player_id" required>
                                     <option value="">Pilih pemain</option>
                                     <?php foreach ($players as $player): ?>
@@ -1589,37 +1250,40 @@ if ($eventId > 0) {
                                 </select>
                             </div>
                         </div>
-                        <div class="form-grid form-grid-3">
+                        <div class="form-grid form-grid-3" style="margin-top: 16px;">
                             <div class="form-group">
-                                <label class="form-label">Kartu Kuning (Tambahan)</label>
+                                <label>🟨 Kuning (Tambahan)</label>
                                 <input class="form-input" type="number" name="player_yellow_cards" min="0" value="0" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Kartu Merah (Tambahan)</label>
+                                <label>🟥 Merah (Tambahan)</label>
                                 <input class="form-input" type="number" name="player_red_cards" min="0" value="0" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Kartu Hijau (Tambahan)</label>
+                                <label>🟩 Hijau (Tambahan)</label>
                                 <input class="form-input" type="number" name="player_green_cards" min="0" value="0" required>
                             </div>
                         </div>
 
-                        <div class="form-note">
-                            Aturan: setiap akumulasi 2 kartu kuning, pemain suspend 1 minggu. Setelah lewat, status kembali boleh main.
-                        </div>
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Kartu Pemain</button>
+                            <?php if (!$operator_read_only): ?>
+                                <button class="btn-premium btn-save" type="submit"><i class="fas fa-save"></i> Simpan Kartu</button>
+                            <?php endif; ?>
                         </div>
                     </form>
                     <?php endif; ?>
                 </div>
 
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-pen-to-square"></i> Edit Nilai Team
+                <!-- EDIT NILAI TEAM PANEL -->
+                <div class="heritage-card reveal d-2">
+                    <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                        <i class="fas fa-edit" style="color: var(--heritage-gold);"></i> Edit Nilai Team
                     </div>
                     <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
-                        <div class="form-note">Pilih Event dan Kategori dulu untuk edit nilai team.</div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih Event dan Kategori dulu untuk edit nilai team.</span>
+                        </div>
                     <?php else: ?>
                         <div id="team-edit-panel" style="display:none;">
                             <form method="post">
@@ -1630,24 +1294,26 @@ if ($eventId > 0) {
                                 <input type="hidden" name="row_id" id="edit_row_id" value="">
                                 <input type="hidden" name="team_id" id="edit_team_id" value="">
 
-                                <div class="form-note" id="edit_team_title" style="margin-bottom:10px; font-weight:700; color:var(--primary);"></div>
-                                <div class="form-grid">
-                                    <div class="form-group"><label class="form-label">TM (Otomatis)</label><input class="form-input" type="number" id="edit_mn" value="0" readonly></div>
-                                    <div class="form-group"><label class="form-label">M</label><input class="form-input" type="number" id="edit_m" name="m" min="0" value="0" required></div>
-                                    <div class="form-group"><label class="form-label">MP</label><input class="form-input" type="number" id="edit_mp" name="mp" min="0" value="0" required></div>
-                                    <div class="form-group"><label class="form-label">S</label><input class="form-input" type="number" id="edit_s" name="s" min="0" value="0" required></div>
-                                    <div class="form-group"><label class="form-label">KP</label><input class="form-input" type="number" id="edit_kp" name="kp" min="0" value="0" required></div>
-                                    <div class="form-group"><label class="form-label">K</label><input class="form-input" type="number" id="edit_k" name="k" min="0" value="0" required></div>
+                                <div class="alert alert-success" id="edit_team_title" style="margin-bottom: 24px; font-weight: 700;"></div>
+                                
+                                <div class="form-grid form-grid-4">
+                                    <div class="form-group"><label>TM (Auto)</label><input class="form-input" type="number" id="edit_mn" value="0" readonly></div>
+                                    <div class="form-group"><label>Poin (Auto)</label><input class="form-input" type="number" id="edit_points" value="0" readonly></div>
+                                    <div class="form-group"><label>M</label><input class="form-input" type="number" id="edit_m" name="m" min="0" value="0" required></div>
+                                    <div class="form-group"><label>MP</label><input class="form-input" type="number" id="edit_mp" name="mp" min="0" value="0" required></div>
                                 </div>
-                                <div class="form-grid form-grid-2">
-                                    <div class="form-group"><label class="form-label">GM</label><input class="form-input" type="number" id="edit_gm" name="gm" min="0" value="0" required></div>
-                                    <div class="form-group"><label class="form-label">GK</label><input class="form-input" type="number" id="edit_gk" name="gk" min="0" value="0" required></div>
+                                <div class="form-grid form-grid-4" style="margin-top: 16px;">
+                                    <div class="form-group"><label>S</label><input class="form-input" type="number" id="edit_s" name="s" min="0" value="0" required></div>
+                                    <div class="form-group"><label>KP</label><input class="form-input" type="number" id="edit_kp" name="kp" min="0" value="0" required></div>
+                                    <div class="form-group"><label>K</label><input class="form-input" type="number" id="edit_k" name="k" min="0" value="0" required></div>
                                 </div>
-                                <div class="form-grid form-grid-2">
-                                    <div class="form-group"><label class="form-label">Poin (Otomatis)</label><input class="form-input" type="number" id="edit_points" value="0" readonly></div>
+                                <div class="form-grid form-grid-2" style="margin-top: 16px;">
+                                    <div class="form-group"><label>GM</label><input class="form-input" type="number" id="edit_gm" name="gm" min="0" value="0" required></div>
+                                    <div class="form-group"><label>GK</label><input class="form-input" type="number" id="edit_gk" name="gk" min="0" value="0" required></div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Input Match (Klik Kotak)</label>
+
+                                <div class="form-group" style="margin-top: 16px;">
+                                    <label>Edit Match Sequence (Klik Kotak)</label>
                                     <input type="hidden" name="match_history" id="edit_match_history_input" value="">
                                     <div class="match-builder">
                                         <div class="match-builder-actions">
@@ -1659,41 +1325,51 @@ if ($eventId > 0) {
                                             <button type="button" class="match-token-btn neutral" id="edit_match_undo_btn">Undo</button>
                                             <button type="button" class="match-token-btn neutral" id="edit_match_reset_btn">Reset</button>
                                         </div>
-                                        <div class="match-seq match-builder-preview" id="edit_match_builder_preview"></div>
+                                        <div class="match-seq match-builder-preview" id="edit_match_builder_preview" style="margin-top: 10px; padding: 10px; background: #fdfcfb; border-radius: 12px; border: 1px solid var(--heritage-border); min-height: 48px;"></div>
                                     </div>
                                 </div>
+
                                 <div class="form-actions">
-                                    <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Update Nilai Team</button>
-                                    <button class="btn btn-secondary" type="button" id="edit_cancel_btn"><i class="fas fa-xmark"></i> Batal</button>
+                                    <button class="btn-premium btn-save" type="submit"><i class="fas fa-save"></i> Update Nilai</button>
+                                    <button class="btn-premium btn-cancel" type="button" id="edit_cancel_btn"><i class="fas fa-xmark"></i> Batal</button>
                                 </div>
                             </form>
                         </div>
-                        <div id="team-edit-empty" class="form-note">Klik tombol <strong>Edit</strong> pada tabel klasemen untuk memperbaiki data team.</div>
+                        <div id="team-edit-empty" class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Klik tombol <strong>Edit</strong> pada tabel klasemen untuk memperbaiki data team.</span>
+                        </div>
                     <?php endif; ?>
                 </div>
 
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-table"></i> Klasemen Event
+                <!-- KLASEMEN EVENT TABLE -->
+                <div class="reveal d-3">
+                    <div class="section-header">
+                        <div class="section-title-wrap">
+                            <h2 class="section-title">Klasemen Event</h2>
+                            <div class="section-line"></div>
+                        </div>
                     </div>
+
                     <?php if ($eventId <= 0): ?>
-                        <div class="form-note">Pilih Event untuk menampilkan klasemen per kategori.</div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih Event untuk menampilkan klasemen per kategori.</span>
+                        </div>
                     <?php elseif (empty($standingsByCategory)): ?>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <tbody>
-                                    <tr>
-                                        <td>Belum ada data klasemen untuk event ini.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="heritage-card" style="text-align: center; padding: 60px;">
+                            <i class="fas fa-trophy" style="font-size: 48px; opacity: 0.2; margin-bottom: 20px; display: block; color: var(--heritage-gold);"></i>
+                            <h3>Belum Ada Data Klasemen</h3>
+                            <p>Silakan input nilai team menggunakan form di atas.</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($standingsByCategory as $group): ?>
-                            <div class="form-note" style="margin: 0 0 10px 0; font-size: 15px; font-weight: 700; color: var(--primary);">
-                                <?php echo htmlspecialchars($group['title'] ?? 'Klasemen Event'); ?>
+                            <div class="section-title-wrap" style="margin-bottom: 20px;">
+                                <h3 style="font-family: var(--font-display); font-weight: 800; color: var(--heritage-gold); font-size: 1.25rem;">
+                                    <?php echo htmlspecialchars($group['title'] ?? 'Klasemen Category'); ?>
+                                </h3>
                             </div>
-                            <div class="table-container" style="margin-bottom: 14px;">
+                            <div class="table-responsive">
                                 <table class="data-table">
                                     <thead>
                                         <tr>
@@ -1710,7 +1386,7 @@ if ($eventId > 0) {
                                             <th>P</th>
                                             <th>KLS</th>
                                             <th>Match</th>
-                                            <th>Aksi</th>
+                                            <?php if (!$operator_read_only): ?><th>Aksi</th><?php endif; ?>
                                             <th>🟥</th>
                                             <th>🟨</th>
                                             <th>🟩</th>
@@ -1719,7 +1395,7 @@ if ($eventId > 0) {
                                     <tbody>
                                         <?php foreach (($group['rows'] ?? []) as $row): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($row['team_name']); ?></td>
+                                                <td style="text-align: left; font-weight: 700; color: var(--heritage-text);"><?php echo htmlspecialchars($row['team_name']); ?></td>
                                                 <td><?php echo (int)$row['mn']; ?></td>
                                                 <td><?php echo (int)$row['m']; ?></td>
                                                 <td><?php echo (int)$row['mp']; ?></td>
@@ -1728,15 +1404,15 @@ if ($eventId > 0) {
                                                 <td><?php echo (int)$row['k']; ?></td>
                                                 <td><?php echo (int)$row['gm']; ?></td>
                                                 <td><?php echo (int)$row['gk']; ?></td>
-                                                <td><?php echo (int)$row['sg']; ?></td>
-                                                <td><strong><?php echo (int)$row['points']; ?></strong></td>
-                                                <td><?php echo (int)($row['display_kls'] ?? $row['kls'] ?? 0); ?></td>
+                                                <td><strong><?php echo (int)$row['sg']; ?></strong></td>
+                                                <td><span class="card-badge" style="background: var(--heritage-text); color: white; width: 40px; height: 30px; border-radius: 8px; font-size: 1rem;"><?php echo (int)$row['points']; ?></span></td>
+                                                <td><strong>#<?php echo (int)($row['display_kls'] ?? $row['kls'] ?? 0); ?></strong></td>
                                                 <td><?php echo renderMatchHistoryBadges((string)($row['match_history'] ?? '')); ?></td>
+                                                <?php if (!$operator_read_only): ?>
                                                 <td>
                                                     <?php if (!empty($row['id'])): ?>
                                                         <button type="button"
-                                                            class="btn btn-secondary ev-edit-btn"
-                                                            style="padding:6px 10px; font-size:12px;"
+                                                            class="action-btn btn-edit ev-edit-btn"
                                                             data-row-id="<?php echo (int)$row['id']; ?>"
                                                             data-team-id="<?php echo (int)$row['team_id']; ?>"
                                                             data-team-name="<?php echo htmlspecialchars((string)$row['team_name'], ENT_QUOTES, 'UTF-8'); ?>"
@@ -1748,12 +1424,13 @@ if ($eventId > 0) {
                                                             data-gm="<?php echo (int)$row['gm']; ?>"
                                                             data-gk="<?php echo (int)$row['gk']; ?>"
                                                             data-history="<?php echo htmlspecialchars((string)($row['match_history'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
-                                                            Edit
+                                                            <i class="fas fa-edit"></i>
                                                         </button>
                                                     <?php else: ?>
-                                                        <span style="color:#94a3b8;">-</span>
+                                                        <span style="color:var(--heritage-border);">-</span>
                                                     <?php endif; ?>
                                                 </td>
+                                                <?php endif; ?>
                                                 <td><span class="card-badge red"><?php echo (int)$row['red_cards']; ?></span></td>
                                                 <td><span class="card-badge yellow"><?php echo (int)$row['yellow_cards']; ?></span></td>
                                                 <td><span class="card-badge green"><?php echo (int)$row['green_cards']; ?></span></td>
@@ -1766,12 +1443,16 @@ if ($eventId > 0) {
                     <?php endif; ?>
                 </div>
 
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-user-pen"></i> Edit Kartu Pemain
+                <!-- EDIT KARTU PEMAIN PANEL -->
+                <div class="heritage-card reveal d-3">
+                    <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                        <i class="fas fa-user-pen" style="color: var(--heritage-gold);"></i> Edit Kartu Pemain
                     </div>
                     <?php if ($eventId <= 0 || $selectedCategory === ''): ?>
-                        <div class="form-note">Pilih Event dan Kategori dulu untuk edit kartu pemain.</div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih Event dan Kategori dulu untuk edit kartu pemain.</span>
+                        </div>
                     <?php else: ?>
                         <div id="player-edit-panel" style="display:none;">
                             <form method="post">
@@ -1781,19 +1462,20 @@ if ($eventId > 0) {
                                 <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($selectedCategory); ?>">
                                 <input type="hidden" name="card_id" id="edit_card_id" value="">
 
-                                <div class="form-note" id="edit_player_title" style="margin-bottom:10px; font-weight:700; color:var(--primary);"></div>
+                                <div class="alert alert-success" id="edit_player_title" style="margin-bottom: 24px; font-weight: 700;"></div>
+                                
                                 <div class="form-grid form-grid-2">
                                     <div class="form-group">
-                                <label class="form-label">Team</label>
+                                        <label>Team</label>
                                         <select class="form-select" id="edit_player_team_id" name="player_team_id" required>
-                                    <option value="">Pilih team</option>
+                                            <option value="">Pilih team</option>
                                             <?php foreach ($teams as $team): ?>
                                                 <option value="<?php echo (int)$team['id']; ?>"><?php echo htmlspecialchars($team['name']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Pemain</label>
+                                        <label>Pemain</label>
                                         <select class="form-select" id="edit_player_id" name="player_id" required>
                                             <option value="">Pilih pemain</option>
                                             <?php foreach ($players as $player): ?>
@@ -1804,44 +1486,61 @@ if ($eventId > 0) {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="form-grid form-grid-3">
+                                <div class="form-grid form-grid-3" style="margin-top: 16px;">
                                     <div class="form-group">
-                                        <label class="form-label">Kartu Kuning (Total)</label>
+                                        <label>🟨 Kartu Kuning (Total)</label>
                                         <input class="form-input" type="number" id="edit_player_yellow_cards" name="player_yellow_cards" min="0" value="0" required>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Kartu Merah (Total)</label>
+                                        <label>🟥 Kartu Merah (Total)</label>
                                         <input class="form-input" type="number" id="edit_player_red_cards" name="player_red_cards" min="0" value="0" required>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Kartu Hijau (Total)</label>
+                                        <label>🟩 Kartu Hijau (Total)</label>
                                         <input class="form-input" type="number" id="edit_player_green_cards" name="player_green_cards" min="0" value="0" required>
                                     </div>
                                 </div>
                                 <div class="form-actions">
-                                    <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Update Kartu Pemain</button>
-                                    <button class="btn btn-secondary" type="button" id="edit_player_cancel_btn"><i class="fas fa-xmark"></i> Batal</button>
+                                    <button class="btn-premium btn-save" type="submit"><i class="fas fa-save"></i> Update Kartu</button>
+                                    <button class="btn-premium btn-cancel" type="button" id="edit_player_cancel_btn"><i class="fas fa-xmark"></i> Batal</button>
                                 </div>
                             </form>
                         </div>
-                        <div id="player-edit-empty" class="form-note">Klik tombol <strong>Edit</strong> pada tabel suspend pemain untuk memperbaiki data kartu.</div>
+                        <div id="player-edit-empty" class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Klik tombol <strong>Edit</strong> pada tabel suspend pemain untuk memperbaiki data kartu.</span>
+                        </div>
                     <?php endif; ?>
                 </div>
 
-                <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-user-shield"></i> Status Suspend Pemain
+                <!-- STATUS SUSPEND PEMAIN -->
+                <div class="reveal d-3">
+                    <div class="section-header">
+                        <div class="section-title-wrap">
+                            <h2 class="section-title">Status Suspend</h2>
+                            <div class="section-line"></div>
+                        </div>
                     </div>
+
                     <?php if ($eventId <= 0): ?>
-                        <div class="form-note">Pilih Event untuk melihat status suspend pemain per kategori.</div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Pilih Event untuk melihat status suspend pemain per kategori.</span>
+                        </div>
                     <?php elseif (empty($playerCardsByCategory)): ?>
-                        <div class="form-note">Belum ada data suspend pemain untuk event ini.</div>
+                        <div class="heritage-card" style="text-align: center; padding: 60px;">
+                            <i class="fas fa-user-shield" style="font-size: 48px; opacity: 0.2; margin-bottom: 20px; display: block; color: var(--heritage-gold);"></i>
+                            <h3>Belum Ada Data Suspend</h3>
+                            <p>Semua pemain dalam status aman.</p>
+                        </div>
                     <?php else: ?>
                         <?php foreach ($playerCardsByCategory as $categoryName => $rows): ?>
-                            <div class="form-note" style="margin: 0 0 10px 0; font-size: 15px; font-weight: 700; color: var(--primary);">
-                                Suspend <?php echo htmlspecialchars($categoryName); ?>
+                            <div class="section-title-wrap" style="margin-bottom: 20px;">
+                                <h3 style="font-family: var(--font-display); font-weight: 800; color: var(--heritage-gold); font-size: 1.25rem;">
+                                    Disiplin <?php echo htmlspecialchars($categoryName); ?>
+                                </h3>
                             </div>
-                            <div class="table-container" style="margin-bottom: 14px;">
+                            <div class="table-responsive">
                                 <table class="data-table">
                                     <thead>
                                         <tr>
@@ -1852,35 +1551,35 @@ if ($eventId > 0) {
                                             <th>Hijau</th>
                                             <th>Suspend Sampai</th>
                                             <th>Status</th>
-                                            <th>Aksi</th>
+                                            <?php if (!$operator_read_only): ?><th>Aksi</th><?php endif; ?>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($rows)): ?>
                                             <tr>
-                                                <td colspan="8">Belum ada data.</td>
+                                                <td colspan="<?php echo $operator_read_only ? 7 : 8; ?>" style="padding: 40px; color: var(--heritage-text-muted);">Belum ada data kartu di kategori ini.</td>
                                             </tr>
                                         <?php else: ?>
                                             <?php foreach ($rows as $row): ?>
                                                 <?php $isSuspended = !empty($row['suspension_until']) && $row['suspension_until'] >= date('Y-m-d'); ?>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($row['player_name']); ?></td>
-                                                    <td><?php echo htmlspecialchars($row['team_name']); ?></td>
+                                                    <td style="text-align: left; font-weight: 700; color: var(--heritage-text);"><?php echo htmlspecialchars($row['player_name']); ?></td>
+                                                    <td style="text-align: left;"><?php echo htmlspecialchars($row['team_name']); ?></td>
                                                     <td><span class="card-badge yellow"><?php echo (int)$row['yellow_cards']; ?></span></td>
                                                     <td><span class="card-badge red"><?php echo (int)$row['red_cards']; ?></span></td>
                                                     <td><span class="card-badge green"><?php echo (int)$row['green_cards']; ?></span></td>
-                                                    <td><?php echo !empty($row['suspension_until']) ? htmlspecialchars(date('d M Y', strtotime($row['suspension_until']))) : '-'; ?></td>
+                                                    <td><span style="font-family: var(--font-display); font-weight: 600; color: var(--heritage-text);"><?php echo !empty($row['suspension_until']) ? htmlspecialchars(date('d M Y', strtotime($row['suspension_until']))) : '-'; ?></span></td>
                                                     <td>
                                                         <?php if ($isSuspended): ?>
-                                                            <span class="badge-pill badge-ban">Tidak Boleh Main</span>
+                                                            <span class="card-badge red" style="width: auto; padding: 4px 12px; height: auto;">TIDAK BOLEH MAIN</span>
                                                         <?php else: ?>
-                                                            <span class="badge-pill badge-ok">Boleh Main</span>
+                                                            <span class="card-badge green" style="width: auto; padding: 4px 12px; height: auto;">BOLEH MAIN</span>
                                                         <?php endif; ?>
                                                     </td>
+                                                    <?php if (!$operator_read_only): ?>
                                                     <td>
                                                         <button type="button"
-                                                            class="btn btn-secondary ev-player-edit-btn"
-                                                            style="padding:6px 10px; font-size:12px;"
+                                                            class="action-btn btn-edit ev-player-edit-btn"
                                                             data-card-id="<?php echo (int)$row['id']; ?>"
                                                             data-team-id="<?php echo (int)$row['team_id']; ?>"
                                                             data-player-id="<?php echo (int)$row['player_id']; ?>"
@@ -1889,9 +1588,10 @@ if ($eventId > 0) {
                                                             data-yellow="<?php echo (int)$row['yellow_cards']; ?>"
                                                             data-red="<?php echo (int)$row['red_cards']; ?>"
                                                             data-green="<?php echo (int)$row['green_cards']; ?>">
-                                                            Edit
+                                                            <i class="fas fa-edit"></i>
                                                         </button>
                                                     </td>
+                                                    <?php endif; ?>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -1901,9 +1601,9 @@ if ($eventId > 0) {
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-            </div>
-        </div>
-    </div>
+            </div> <!-- .event-hub -->
+        </div> <!-- .main -->
+    </div> <!-- .wrapper -->
 
     <script>
         const teamValueMap = <?php echo json_encode($teamValueMap, JSON_UNESCAPED_UNICODE); ?>;

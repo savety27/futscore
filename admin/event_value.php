@@ -103,22 +103,24 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
     if ($eventId <= 0) return [];
 
     if ($categoryName !== '') {
+        // Find teams associated with this specific category.
+        // We include challenges where event_id is NULL as a fallback if the category name matches.
         $sql = "SELECT DISTINCT t.id, t.name
                 FROM teams t
                 INNER JOIN (
-                    SELECT challenger_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
+                    SELECT challenger_id AS team_id FROM challenges 
+                    WHERE (event_id = ? OR event_id IS NULL) AND sport_type = ? AND status IN ('accepted', 'completed')
                     UNION
-                    SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND sport_type = ? AND status IN ('accepted', 'completed')
+                    SELECT opponent_id AS team_id FROM challenges 
+                    WHERE (event_id = ? OR event_id IS NULL) AND sport_type = ? AND status IN ('accepted', 'completed')
                     UNION
-                    SELECT te.team_id
-                    FROM team_events te
-                    INNER JOIN events e ON e.name = te.event_name
-                    WHERE e.id = ? AND te.event_name = ?
+                    SELECT team_id FROM team_events WHERE event_name = ?
                 ) src ON src.team_id = t.id
                 ORDER BY t.name ASC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$eventId, $categoryName, $eventId, $categoryName, $eventId, $categoryName]);
+        $stmt->execute([$eventId, $categoryName, $eventId, $categoryName, $categoryName]);
     } else {
+        // Find all teams associated with this event group.
         $sql = "SELECT DISTINCT t.id, t.name 
                 FROM teams t 
                 INNER JOIN (
@@ -126,7 +128,10 @@ function loadEventTeams(PDO $conn, int $eventId, string $categoryName = ''): arr
                     UNION 
                     SELECT opponent_id AS team_id FROM challenges WHERE event_id = ? AND status IN ('accepted', 'completed')
                     UNION 
-                    SELECT te.team_id FROM team_events te INNER JOIN events e ON e.name = te.event_name WHERE e.id = ?
+                    SELECT te.team_id 
+                    FROM team_events te 
+                    INNER JOIN events e ON (te.event_name = e.name OR te.event_name LIKE CONCAT(e.name, ' %'))
+                    WHERE e.id = ?
                 ) src ON src.team_id = t.id 
                 ORDER BY t.name ASC";
         $stmt = $conn->prepare($sql);
