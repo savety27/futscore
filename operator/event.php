@@ -43,6 +43,7 @@ if ($operator_id > 0) {
 $page_title = 'Event Management';
 $current_page = 'event';
 $operator_event_name = $event_name !== '' ? $event_name : 'Event Operator';
+$operator_event_image = $event_image;
 $operator_read_only = ($event_id > 0 && !$event_is_active);
 
 $event_value_url = $event_id > 0 ? 'event_value.php?event_id=' . $event_id : '#';
