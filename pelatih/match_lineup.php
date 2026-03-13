@@ -658,9 +658,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .form-control:focus {
-        border-color: var(--heritage-text);
+        border-color: var(--heritage-gold);
         outline: none;
-        box-shadow: 0 0 0 3px rgba(30, 27, 75, 0.1);
+        box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.08);
+    }
+
+    /* Custom Select (match schedule style) */
+    .lineup-select-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .lineup-custom-select {
+        position: relative;
+        z-index: 50;
+    }
+
+    .lineup-custom-select-trigger {
+        width: 100%;
+        height: 42px;
+        background: #fdfcfb;
+        border: 1px solid var(--heritage-border);
+        border-radius: 12px;
+        padding: 0 14px;
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        color: var(--heritage-text);
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+
+    .lineup-custom-select-trigger:focus,
+    .lineup-custom-select.open .lineup-custom-select-trigger {
+        outline: none;
+        border-color: var(--heritage-gold);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.08);
+    }
+
+    .lineup-custom-select-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .lineup-custom-select-label i {
+        color: var(--heritage-text-muted);
+        font-size: 0.95rem;
+        flex: 0 0 auto;
+    }
+
+    .lineup-custom-select-text {
+        display: block;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .lineup-custom-select-trigger .select-icon-right {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--heritage-text-muted);
+        transition: transform 0.2s ease;
+    }
+
+    .lineup-custom-select.open .lineup-custom-select-trigger .select-icon-right {
+        transform: translateY(-50%) rotate(180deg);
+    }
+
+    .lineup-custom-select-menu {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 8px);
+        background: #ffffff;
+        border: 1px solid var(--heritage-border);
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        padding: 8px;
+        max-height: 240px;
+        overflow-y: auto;
+        z-index: 100;
+    }
+
+    .lineup-custom-select.open .lineup-custom-select-menu {
+        display: block;
+    }
+
+    .lineup-custom-option {
+        width: 100%;
+        text-align: left;
+        border: none;
+        background: transparent;
+        color: var(--heritage-text);
+        font-size: 0.95rem;
+        font-family: var(--font-body);
+        font-weight: 500;
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .lineup-custom-option:hover {
+        background: var(--heritage-bg);
+    }
+
+    .lineup-custom-option.active {
+        background: #fef3c7;
+        color: var(--heritage-gold);
+        font-weight: 700;
     }
 
     .btn-primary {
@@ -678,8 +796,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .btn-primary:hover {
+        background: var(--heritage-gold);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(30, 27, 75, 0.2);
+        box-shadow: 0 4px 12px rgba(180, 83, 9, 0.28);
+    }
+
+    .btn-primary.btn-white {
+        background: #ffffff;
+        color: var(--heritage-text);
+        border: 1px solid var(--heritage-border);
+    }
+
+    .btn-primary.btn-white:hover {
+        background: var(--heritage-gold);
+        color: #ffffff;
+        border-color: var(--heritage-gold);
     }
     
     .btn-primary:disabled {
@@ -704,7 +835,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .btn-secondary:hover {
-        background: #f3f4f6;
+        background: var(--heritage-gold);
+        color: #ffffff;
+        border-color: var(--heritage-gold);
     }
 
     /* Custom Checkbox Group (Uniforms & Staff) */
@@ -1023,14 +1156,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div>
                 <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Posisi</label>
-                <select name="position" class="form-control">
-                    <option value="">Semua Posisi</option>
-                    <?php foreach ($position_options as $pos_value => $pos_label): ?>
-                        <option value="<?php echo htmlspecialchars($pos_value); ?>" <?php echo $filter_position === $pos_value ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($pos_label); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="lineup-select-wrap">
+                    <div class="lineup-custom-select" id="lineupPositionSelect">
+                        <input type="hidden" name="position" id="lineupPositionValue" value="<?php echo htmlspecialchars($filter_position); ?>">
+                        <button type="button" class="lineup-custom-select-trigger" id="lineupPositionTrigger" aria-expanded="false">
+                            <span class="lineup-custom-select-label">
+                                <i class="fas fa-clipboard-list"></i>
+                                <span id="lineupPositionLabel" class="lineup-custom-select-text">
+                                    <?php
+                                    if ($filter_position !== '') {
+                                        echo htmlspecialchars($position_options[$filter_position] ?? $filter_position);
+                                    } else {
+                                        echo 'Semua Posisi';
+                                    }
+                                    ?>
+                                </span>
+                            </span>
+                            <i class="fas fa-chevron-down select-icon-right"></i>
+                        </button>
+                        <div class="lineup-custom-select-menu" id="lineupPositionMenu">
+                            <button type="button" class="lineup-custom-option <?php echo $filter_position === '' ? 'active' : ''; ?>" data-value="">Semua Posisi</button>
+                            <?php foreach ($position_options as $pos_value => $pos_label): ?>
+                                <button type="button" class="lineup-custom-option <?php echo $filter_position === $pos_value ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($pos_value); ?>">
+                                    <?php echo htmlspecialchars($pos_label); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -1230,7 +1383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <strong style="display: block; font-size: 1.1rem;">Siap Bertanding?</strong>
                 <span style="font-size: 0.9rem; opacity: 0.8;">Pastikan formasi sudah sesuai sebelum kick-off.</span>
             </div>
-            <button type="submit" class="btn-primary" style="background: white; color: var(--heritage-text); padding: 12px 32px;" <?php echo !$has_lineups_half_column ? 'disabled' : ''; ?>>
+            <button type="submit" class="btn-primary btn-white" style="padding: 12px 32px;" <?php echo !$has_lineups_half_column ? 'disabled' : ''; ?>>
                 <i class="fas fa-save"></i> Simpan Lineup
             </button>
         </div>
@@ -1238,6 +1391,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectRoot = document.getElementById('lineupPositionSelect');
+    if (!selectRoot) return;
+
+    const trigger = document.getElementById('lineupPositionTrigger');
+    const menu = document.getElementById('lineupPositionMenu');
+    const hiddenInput = document.getElementById('lineupPositionValue');
+    const label = document.getElementById('lineupPositionLabel');
+    const options = menu.querySelectorAll('.lineup-custom-option');
+
+    function closeMenu() {
+        selectRoot.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+        selectRoot.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    trigger.addEventListener('click', function() {
+        if (selectRoot.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            const value = opt.getAttribute('data-value') || '';
+            hiddenInput.value = value;
+            label.textContent = opt.textContent.trim();
+            options.forEach(function(o) { o.classList.remove('active'); });
+            opt.classList.add('active');
+            closeMenu();
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!selectRoot.contains(e.target)) {
+            closeMenu();
+        }
+    });
+});
+
 function openTab(evt, tabName) {
     var tabContent = document.getElementsByClassName('lineup-tab-content');
     var container = evt.currentTarget.parentNode;
