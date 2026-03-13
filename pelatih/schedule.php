@@ -29,6 +29,8 @@ if ($my_team_id == 0) {
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
 $result_filter = isset($_GET['result']) ? trim($_GET['result']) : ''; // menang | seri | kalah
+$day_filter = isset($_GET['day']) ? trim($_GET['day']) : ''; // today
+$lineup_filter = isset($_GET['lineup']) ? trim($_GET['lineup']) : ''; // needed
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -139,6 +141,22 @@ if (!empty($sport_filter)) {
     $count_query .= " AND c.sport_type = ?";
 }
 
+// Tambahkan kondisi untuk filter hari (matchday hari ini)
+if ($day_filter === 'today') {
+    $base_query .= " AND DATE(c.challenge_date) = CURDATE()";
+    $count_query .= " AND DATE(c.challenge_date) = CURDATE()";
+}
+
+// Tambahkan kondisi untuk filter lineup (butuh lineup)
+if ($lineup_filter === 'needed') {
+    $base_query .= " AND c.status = 'accepted' AND NOT EXISTS (
+        SELECT 1 FROM lineups l WHERE l.match_id = c.id AND l.team_id = ?
+    ) AND c.challenge_date >= CURDATE()";
+    $count_query .= " AND c.status = 'accepted' AND NOT EXISTS (
+        SELECT 1 FROM lineups l WHERE l.match_id = c.id AND l.team_id = ?
+    ) AND c.challenge_date >= CURDATE()";
+}
+
 // Tambahkan kondisi untuk filter hasil (menang/seri/kalah)
 if ($result_filter === 'menang') {
     $base_query  .= " AND c.status = 'completed' AND c.winner_team_id = ?";
@@ -156,6 +174,7 @@ $base_query .= " ORDER BY c.challenge_date DESC";
 $total_data = 0;
 $total_pages = 1;
 $challenges = [];
+$needs_lineup_ids = [];
 
 try {
     $filter_params = [$my_team_id, $my_team_id];
@@ -170,6 +189,9 @@ try {
     }
     if (!empty($sport_filter)) {
         $filter_params[] = $sport_filter;
+    }
+    if ($lineup_filter === 'needed') {
+        $filter_params[] = $my_team_id;
     }
     // result filter: menang & kalah need $my_team_id as extra param; seri needs none
     if ($result_filter === 'menang' || $result_filter === 'kalah') {
@@ -197,7 +219,33 @@ try {
     
     $stmt->execute();
     $challenges = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
+    // Ambil daftar match yang butuh lineup (sekali query, lalu tandai di array)
+    if (!empty($challenges)) {
+        $challenge_ids = array_map(function ($row) {
+            return (int)$row['id'];
+        }, $challenges);
+        $placeholders = implode(',', array_fill(0, count($challenge_ids), '?'));
+        $need_stmt = $conn->prepare("
+            SELECT c.id
+            FROM challenges c
+            WHERE c.id IN ($placeholders)
+              AND c.status = 'accepted'
+              AND c.challenge_date >= CURDATE()
+              AND NOT EXISTS (
+                  SELECT 1 FROM lineups l WHERE l.match_id = c.id AND l.team_id = ?
+              )
+        ");
+        $bind_index = 1;
+        foreach ($challenge_ids as $cid) {
+            $need_stmt->bindValue($bind_index++, $cid, PDO::PARAM_INT);
+        }
+        $need_stmt->bindValue($bind_index, $my_team_id, PDO::PARAM_INT);
+        $need_stmt->execute();
+        $needs_lineup_ids = $need_stmt->fetchAll(PDO::FETCH_COLUMN, 0);
+        $needs_lineup_ids = array_map('intval', $needs_lineup_ids ?: []);
+    }
+
     // Format tanggal dan waktu
     foreach ($challenges as &$challenge) {
         // Format challenge_date
@@ -213,6 +261,9 @@ try {
         // Set default logos jika kosong
         $challenge['challenger_logo'] = $challenge['challenger_logo'] ?: 'default-team.png';
         $challenge['opponent_logo'] = $challenge['opponent_logo'] ?: 'default-team.png';
+
+        // Tandai apakah butuh lineup
+        $challenge['needs_lineup'] = in_array((int)$challenge['id'], $needs_lineup_ids, true);
     }
     unset($challenge);
 
@@ -227,6 +278,12 @@ if ($search !== '') {
 if ($sport_filter !== '') {
     $schedule_export_params['sport'] = $sport_filter;
 }
+if ($day_filter !== '') {
+    $schedule_export_params['day'] = $day_filter;
+}
+if ($lineup_filter !== '') {
+    $schedule_export_params['lineup'] = $lineup_filter;
+}
 $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) ? '?' . http_build_query($schedule_export_params) : '');
 
 // Label for active result filter
@@ -234,8 +291,22 @@ $result_filter_labels = ['menang' => '🏆 Menang', 'seri' => '🤝 Seri', 'kala
 $result_filter_label = $result_filter_labels[$result_filter] ?? '';
 
 // Build reset URL preserving other filters but removing result
-$reset_result_params = array_filter(['search' => $search, 'sport' => $sport_filter]);
+$reset_result_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'day' => $day_filter, 'lineup' => $lineup_filter]);
 $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_build_query($reset_result_params) : '');
+
+// Label for active day filter
+$day_filter_label = $day_filter === 'today' ? 'Hari Ini' : '';
+
+// Build reset URL preserving other filters but removing day
+$reset_day_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'lineup' => $lineup_filter]);
+$reset_day_url = 'schedule.php' . (!empty($reset_day_params) ? '?' . http_build_query($reset_day_params) : '');
+
+// Label for active lineup filter
+$lineup_filter_label = $lineup_filter === 'needed' ? 'Butuh Lineup' : '';
+
+// Build reset URL preserving other filters but removing lineup
+$reset_lineup_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'day' => $day_filter]);
+$reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_build_query($reset_lineup_params) : '');
 ?>
 
 <link rel="stylesheet" href="css/schedule.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/schedule.css'); ?>">
@@ -321,6 +392,26 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
         </div>
     </div>
 
+    <?php if (!empty($day_filter) && !empty($day_filter_label)): ?>
+    <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #eff6ff; border: 1.5px solid #60a5fa; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #1e40af;">
+        <i class="fas fa-calendar-day"></i>
+        Menampilkan pertandingan: <strong><?php echo htmlspecialchars($day_filter_label); ?></strong>
+        <a href="<?php echo htmlspecialchars($reset_day_url); ?>" style="margin-left: auto; font-size: 0.82rem; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; text-decoration: none; border: 1px solid #93c5fd;">
+            <i class="fas fa-times"></i> Hapus Filter Ini
+        </a>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($lineup_filter) && !empty($lineup_filter_label)): ?>
+    <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #fff7ed; border: 1.5px solid #fb923c; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #9a3412;">
+        <i class="fas fa-users-cog"></i>
+        Menampilkan pertandingan: <strong><?php echo htmlspecialchars($lineup_filter_label); ?></strong>
+        <a href="<?php echo htmlspecialchars($reset_lineup_url); ?>" style="margin-left: auto; font-size: 0.82rem; background: #ffedd5; color: #9a3412; padding: 4px 12px; border-radius: 20px; text-decoration: none; border: 1px solid #fdba74;">
+            <i class="fas fa-times"></i> Hapus Filter Ini
+        </a>
+    </div>
+    <?php endif; ?>
+
     <?php if (!empty($result_filter) && !empty($result_filter_label)): ?>
     <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #f0faf5; border: 1.5px solid #10b981; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #065f46;">
         <i class="fas fa-filter"></i>
@@ -336,6 +427,12 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
             <form action="" method="GET" class="teams-filter-form">
                 <?php if (!empty($result_filter)): ?>
                 <input type="hidden" name="result" value="<?php echo htmlspecialchars($result_filter); ?>">
+                <?php endif; ?>
+                <?php if (!empty($day_filter)): ?>
+                <input type="hidden" name="day" value="<?php echo htmlspecialchars($day_filter); ?>">
+                <?php endif; ?>
+                <?php if (!empty($lineup_filter)): ?>
+                <input type="hidden" name="lineup" value="<?php echo htmlspecialchars($lineup_filter); ?>">
                 <?php endif; ?>
                 <div class="filter-group">
                     <label>Pencarian</label>
@@ -379,7 +476,7 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
                     <button type="submit" class="btn-filter">
                         <i class="fas fa-filter"></i> Terapkan
                     </button>
-                    <?php if (!empty($search) || !empty($sport_filter) || !empty($result_filter)): ?>
+                    <?php if (!empty($search) || !empty($sport_filter) || !empty($result_filter) || !empty($day_filter) || !empty($lineup_filter)): ?>
                     <a href="schedule.php" class="clear-filter-btn">
                         <i class="fas fa-times"></i> Reset
                     </a>
@@ -464,19 +561,21 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
                                 ($challenge['opponent_score'] !== null && $challenge['opponent_score'] !== '');
                             ?>
                             <?php if ($has_score): ?>
-                                <div style="font-weight: 700; font-size: 18px; text-align: center; color: var(--primary);">
-                                    <?php echo htmlspecialchars($challenge['challenger_score'] ?? 0); ?> - <?php echo htmlspecialchars($challenge['opponent_score'] ?? 0); ?>
-                                </div>
-                                <?php if (!empty($challenge['winner_team_id'])): ?>
-                                    <div style="font-size: 11px; color: var(--success); text-align: center; font-weight: 600;">
-                                        <?php 
-                                        $winner_name = ($challenge['winner_team_id'] == $challenge['challenger_id']) 
-                                            ? $challenge['challenger_name'] 
-                                            : $challenge['opponent_name'];
-                                        echo htmlspecialchars($winner_name ?? '');
-                                        ?>
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; line-height: 1.1;">
+                                    <div style="font-weight: 700; font-size: 14px; text-align: center; color: var(--primary);">
+                                        <?php echo htmlspecialchars($challenge['challenger_score'] ?? 0); ?> - <?php echo htmlspecialchars($challenge['opponent_score'] ?? 0); ?>
                                     </div>
-                                <?php endif; ?>
+                                    <?php if (!empty($challenge['winner_team_id'])): ?>
+                                        <div style="font-size: 11px; color: var(--success); text-align: center; font-weight: 600;">
+                                            <?php 
+                                            $winner_name = ($challenge['winner_team_id'] == $challenge['challenger_id']) 
+                                                ? $challenge['challenger_name'] 
+                                                : $challenge['opponent_name'];
+                                            echo htmlspecialchars($winner_name ?? '');
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             <?php else: ?>
                                 <span style="color: var(--gray); font-style: italic;">Belum dimainkan</span>
                             <?php endif; ?>
@@ -500,7 +599,7 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
                             <?php endif; ?>
                         </td>
                         <td style="text-align:center;">
-                            <?php if ($challenge['status'] === 'accepted' && ($my_team_id == $challenge['challenger_id'] || $my_team_id == $challenge['opponent_id'])): ?>
+                            <?php if (!empty($challenge['needs_lineup']) && ($my_team_id == $challenge['challenger_id'] || $my_team_id == $challenge['opponent_id'])): ?>
                             <a href="match_lineup.php?id=<?php echo $challenge['id']; ?>" class="btn-sm btn-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                                 <i class="fas fa-users-cog"></i> Lineup
                             </a>
@@ -518,10 +617,10 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=1&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Halaman Pertama">
+                <a href="?page=1&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Halaman Pertama">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Sebelumnya">
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Sebelumnya">
                     <i class="fas fa-angle-left"></i>
                 </a>
             <?php endif; ?>
@@ -535,7 +634,7 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
             <?php endif; ?>
             
             <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
                     <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
@@ -545,10 +644,10 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
             <?php endif; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Berikutnya">
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Berikutnya">
                     <i class="fas fa-angle-right"></i>
                 </a>
-                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>" class="page-link" title="Halaman Terakhir">
+                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Halaman Terakhir">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             <?php endif; ?>

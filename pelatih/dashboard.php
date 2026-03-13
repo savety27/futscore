@@ -942,7 +942,7 @@ if ($team_id) {
             </div>
 
             <div class="quick-actions-grid reveal d-2">
-                <a class="heritage-card quick-action-card" href="schedule.php" aria-label="Butuh Match Lineup" style="border-bottom: 3px solid var(--heritage-text);">
+                <a class="heritage-card quick-action-card" href="schedule.php?lineup=needed#daftar-jadwal-pertandingan" aria-label="Butuh Match Lineup" style="border-bottom: 3px solid var(--heritage-text);">
                     <div class="card-meta">
                         <span class="card-label">Match Lineup</span>
                         <i class="fas fa-users-cog card-icon" style="color: var(--heritage-text);"></i>
@@ -984,7 +984,7 @@ if ($team_id) {
                 <div class="card-value" data-count="<?php echo (int)$staff_count; ?>"><?php echo (int)$staff_count; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Ofisial Terverifikasi</div>
             </a>
-            <a class="heritage-card reveal d-4 heritage-card-link" href="schedule.php" aria-label="Jadwal Pertandingan">
+            <a class="heritage-card reveal d-4 heritage-card-link" href="schedule.php?day=today#daftar-jadwal-pertandingan" aria-label="Jadwal Pertandingan">
                 <div class="card-meta">
                     <span class="card-label">Matchday</span>
                     <i class="fas fa-calendar-check card-icon"></i>
