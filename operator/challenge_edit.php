@@ -525,10 +525,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     box-shadow: var(--soft-shadow);
 }
 
+@media screen and (max-width: 768px) {
+    .form-container {
+        padding: 24px 20px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+    }
+}
+
 .form-section {
     margin-bottom: 40px;
     padding-bottom: 30px;
     border-bottom: 1px solid var(--heritage-border);
+}
+
+@media screen and (max-width: 768px) {
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+    }
 }
 
 .form-section:last-child {
@@ -546,6 +561,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+@media screen and (max-width: 768px) {
+    .section-title {
+        font-size: 1.15rem;
+        margin-bottom: 20px;
+    }
 }
 
 .section-title i {
@@ -587,6 +609,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     color: var(--heritage-text);
     background: #fdfcfb;
     transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
@@ -613,6 +636,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     overflow: hidden;
 }
 
+@media screen and (max-width: 768px) {
+    .vs-display {
+        padding: 30px 20px;
+        margin: 20px 0;
+        border-radius: 20px;
+    }
+}
+
 .vs-display::before {
     content: "MATCHUP";
     position: absolute;
@@ -625,6 +656,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     color: rgba(0,0,0,0.02);
     z-index: 0;
     white-space: nowrap;
+}
+
+@media screen and (max-width: 768px) {
+    .vs-display::before {
+        font-size: 3rem;
+    }
 }
 
 .vs-title {
@@ -658,6 +695,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     font-weight: 800;
     color: var(--heritage-text);
     margin: 0;
+}
+
+@media screen and (max-width: 768px) {
+    .team-box h4 {
+        font-size: 1.25rem;
+    }
 }
 
 .vs-symbol {
@@ -701,6 +744,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     border-top: 1px solid var(--heritage-border);
 }
 
+@media screen and (max-width: 768px) {
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 24px;
+    }
+    .form-actions .btn-premium {
+        width: 100%;
+        justify-content: center;
+        padding: 16px;
+    }
+}
+
 .error {
     color: var(--heritage-crimson);
     font-size: 0.8rem;
@@ -713,8 +770,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     border-color: var(--heritage-crimson) !important;
 }
 
+/* Dashboard Hero Mobile Refinements */
 @media screen and (max-width: 768px) {
-    .form-grid { grid-template-columns: 1fr; }
+    .dashboard-hero {
+        padding-bottom: 24px;
+        margin-bottom: 32px;
+    }
+    .hero-title {
+        font-size: 2.5rem !important;
+        margin-bottom: 12px !important;
+    }
+    .hero-description {
+        font-size: 1rem !important;
+    }
+    .hero-actions {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+        align-items: flex-start !important;
+    }
+    .hero-actions .btn-premium {
+        width: 100%;
+        margin-right: 0 !important;
+        justify-content: center;
+    }
+    .status-badge-large {
+        width: fit-content;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; gap: 16px; }
     .team-vs-container { flex-direction: column; gap: 20px; }
     .vs-symbol { width: 50px; height: 50px; font-size: 1.75rem; }
     .vs-display::before { font-size: 4rem; }
