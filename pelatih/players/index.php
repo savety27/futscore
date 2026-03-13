@@ -85,10 +85,11 @@ if ($team_id) {
         }
 
         if ($filter_search !== '') {
-            $where[] = "(name LIKE :search_name OR jersey_number LIKE :search_jersey)";
+            $where[] = "(name LIKE :search_name OR jersey_number LIKE :search_jersey OR position LIKE :search_position)";
             $search_like = '%' . $filter_search . '%';
             $params[':search_name'] = $search_like;
             $params[':search_jersey'] = $search_like;
+            $params[':search_position'] = $search_like;
         }
 
         if ($filter_status !== '') {

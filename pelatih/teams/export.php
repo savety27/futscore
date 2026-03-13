@@ -11,6 +11,7 @@ if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['admin_role'] ?? '') !== 
 require_once '../config/database.php';
 
 $search = trim((string)($_GET['search'] ?? ''));
+$filter_status = trim((string)($_GET['status'] ?? ''));
 
 function pelatihExportValue($value, string $fallback = '-'): string
 {
@@ -44,6 +45,11 @@ try {
         $searchTerm = '%' . $search . '%';
         $query .= " AND (t.name LIKE ? OR t.alias LIKE ? OR t.coach LIKE ? OR t.sport_type LIKE ?)";
         $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
+    }
+
+    if ($filter_status !== '') {
+        $query .= " AND t.is_active = ?";
+        $params[] = $filter_status === 'active' ? 1 : 0;
     }
 
     $query .= " ORDER BY t.created_at DESC";
