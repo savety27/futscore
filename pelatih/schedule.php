@@ -210,49 +210,6 @@ try {
             $challenge['formatted_time'] = '-';
         }
         
-        // Format match status badge color
-        $challenge['match_status_badge'] = 'gray';
-        if (!empty($challenge['match_status'])) {
-            switch(strtolower($challenge['match_status'])) {
-                case 'completed':
-                    $challenge['match_status_badge'] = 'success';
-                    break;
-                case 'scheduled':
-                    $challenge['match_status_badge'] = 'primary';
-                    break;
-                case 'cancelled':
-                case 'abandoned':
-                    $challenge['match_status_badge'] = 'danger';
-                    break;
-                case 'postponed':
-                    $challenge['match_status_badge'] = 'warning';
-                    break;
-                default:
-                    $challenge['match_status_badge'] = 'gray';
-            }
-        }
-        
-        // Format status badge color
-        $challenge['status_badge'] = 'gray';
-        if (!empty($challenge['status'])) {
-            switch(strtolower($challenge['status'])) {
-                case 'accepted':
-                    $challenge['status_badge'] = 'success';
-                    break;
-                case 'open':
-                    $challenge['status_badge'] = 'primary';
-                    break;
-                case 'rejected':
-                    $challenge['status_badge'] = 'danger';
-                    break;
-                case 'expired':
-                    $challenge['status_badge'] = 'warning';
-                    break;
-                default:
-                    $challenge['status_badge'] = 'gray';
-            }
-        }
-        
         // Set default logos jika kosong
         $challenge['challenger_logo'] = $challenge['challenger_logo'] ?: 'default-team.png';
         $challenge['opponent_logo'] = $challenge['opponent_logo'] ?: 'default-team.png';
@@ -358,7 +315,7 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
     <div class="section-header">
         <h2 class="section-title">Daftar Jadwal Pertandingan</h2>
         <div class="section-actions">
-            <a href="<?php echo htmlspecialchars($schedule_export_url); ?>" class="btn-export">
+            <a href="<?php echo htmlspecialchars($schedule_export_url); ?>" class="btn-premium btn-export">
                 <i class="fas fa-download"></i> Export Excel
             </a>
         </div>
@@ -501,7 +458,12 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
                             <?php endif; ?>
                         </td>
                         <td>
-                            <?php if (!empty($challenge['challenger_score']) || !empty($challenge['opponent_score'])): ?>
+                            <?php
+                            $has_score =
+                                ($challenge['challenger_score'] !== null && $challenge['challenger_score'] !== '') ||
+                                ($challenge['opponent_score'] !== null && $challenge['opponent_score'] !== '');
+                            ?>
+                            <?php if ($has_score): ?>
                                 <div style="font-weight: 700; font-size: 18px; text-align: center; color: var(--primary);">
                                     <?php echo htmlspecialchars($challenge['challenger_score'] ?? 0); ?> - <?php echo htmlspecialchars($challenge['opponent_score'] ?? 0); ?>
                                 </div>
@@ -521,46 +483,20 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
                         </td>
                         <td>
                             <?php if (!empty($challenge['status'])): ?>
-                                <?php 
-                                $badge_class = '';
-                                switch($challenge['status_badge']) {
-                                    case 'success': $badge_class = 'background: #e8f5e9; color: var(--success);'; break;
-                                    case 'primary': $badge_class = 'background: #f0f7ff; color: var(--primary);'; break;
-                                    case 'danger': $badge_class = 'background: #ffebee; color: var(--danger);'; break;
-                                    case 'warning': $badge_class = 'background: #fff8e1; color: var(--warning);'; break;
-                                    default: $badge_class = 'background: #f5f5f5; color: var(--gray);';
-                                }
-                                ?>
-                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $badge_class; ?>">
-                                <?php 
-                                    $s_status = strtolower($challenge['status']);
-                                    $s_status_map = ['accepted' => 'Diterima', 'open' => 'Terbuka', 'rejected' => 'Ditolak', 'expired' => 'Kedaluwarsa'];
-                                    echo htmlspecialchars($s_status_map[$s_status ?? ''] ?? ucfirst($challenge['status'] ?? '')); 
-                                ?>
-                            </span>
-                        <?php endif; ?>
+                                <?php $status_class = 'status-' . strtolower($challenge['status']); ?>
+                                <span class="status-badge <?php echo htmlspecialchars($status_class); ?>">
+                                    <?php echo htmlspecialchars($challenge['status'] ?? ''); ?>
+                                </span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <?php if (!empty($challenge['match_status'])): ?>
-                                <?php 
-                                $match_badge_class = '';
-                                switch($challenge['match_status_badge']) {
-                                    case 'success': $match_badge_class = 'background: #e8f5e9; color: var(--success);'; break;
-                                    case 'primary': $match_badge_class = 'background: #f0f7ff; color: var(--primary);'; break;
-                                    case 'danger': $match_badge_class = 'background: #ffebee; color: var(--danger);'; break;
-                                    case 'warning': $match_badge_class = 'background: #fff8e1; color: var(--warning);'; break;
-                                    default: $match_badge_class = 'background: #f5f5f5; color: var(--gray);';
-                                }
-                                ?>
-                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; <?php echo $match_badge_class; ?>">
-                                    <?php 
-                                        $m_status = strtolower($challenge['match_status']);
-                                        $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'cancelled' => 'Dibatalkan', 'abandoned' => 'Dihentikan', 'postponed' => 'Ditunda'];
-                                        echo htmlspecialchars($m_status_map[$m_status ?? ''] ?? ucfirst($challenge['match_status'] ?? '')); 
-                                    ?>
+                                <?php $match_class = 'match-' . strtolower($challenge['match_status']); ?>
+                                <span class="match-badge <?php echo htmlspecialchars($match_class); ?>">
+                                    <?php echo htmlspecialchars($challenge['match_status'] ?? ''); ?>
                                 </span>
                             <?php else: ?>
-                                <span style="color: var(--gray); font-style: italic;">-</span>
+                                <span class="match-badge match-empty">Belum Mulai</span>
                             <?php endif; ?>
                         </td>
                         <td style="text-align:center;">
