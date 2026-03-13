@@ -236,7 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <!-- Summernote CSS -->
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 <style>
-    /* Specific overrides for Berita Heritage Design */
+    /* Heritage Design Overrides */
     .status-options {
         display: flex;
         gap: 16px;
@@ -278,45 +278,181 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         margin-bottom: 4px;
     }
 
-    /* File upload Heritage Design */
-    .file-upload-container {
+    /* PREMIUM MEDIA ATTACHMENT REDESIGN */
+    .media-upload-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .media-dropzone {
         background: #fff;
         border: 2px dashed var(--heritage-border);
-        border-radius: 28px;
-        padding: 48px 24px;
+        border-radius: 32px;
+        padding: 60px 30px;
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         position: relative;
-        box-shadow: var(--soft-shadow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
     }
-    .file-upload-container:hover {
+
+    .media-dropzone::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2003/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .media-dropzone:hover {
         border-color: var(--heritage-text);
+        background: var(--heritage-bg);
+        transform: translateY(-2px);
+    }
+
+    .media-dropzone.drag-over {
+        border-color: var(--heritage-gold);
         background: #fdfcfb;
+        box-shadow: 0 20px 40px rgba(180, 83, 9, 0.05);
     }
-    .file-upload-icon {
-        font-size: 3.5rem;
+
+    .media-dropzone.drag-over::before {
+        opacity: 0.03;
+    }
+
+    .upload-icon-circle {
+        width: 80px;
+        height: 80px;
+        background: var(--heritage-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: var(--heritage-text);
-        margin-bottom: 20px;
+        font-size: 2rem;
+        border: 1px solid var(--heritage-border);
+        transition: all 0.3s ease;
     }
-    .file-preview {
-        margin-top: 32px;
-        text-align: center;
-        animation: revealUp 0.6s ease-out;
+
+    .media-dropzone:hover .upload-icon-circle {
+        transform: scale(1.1) rotate(5deg);
+        background: #fff;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.05);
     }
-    .file-preview img {
-        max-width: 100%;
-        max-height: 350px;
-        border-radius: 24px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        border: 4px solid #fff;
+
+    .upload-prompt h3 {
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--heritage-text);
+        margin-bottom: 8px;
+        letter-spacing: -0.02em;
     }
-    .file-info {
-        margin-top: 16px;
+
+    .upload-prompt p {
+        color: var(--heritage-text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* Premium Preview Style */
+    .premium-preview-container {
+        display: none;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        position: relative;
+        animation: revealUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .polaroid-frame {
+        background: #fff;
+        padding: 16px 16px 60px 16px;
+        border-radius: 4px;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.12), 0 10px 20px rgba(0,0,0,0.05);
+        border: 1px solid var(--heritage-border);
+        transform: rotate(-1deg);
+        transition: transform 0.3s ease;
+    }
+
+    .polaroid-frame:hover {
+        transform: rotate(0deg) scale(1.02);
+    }
+
+    .preview-image-wrapper {
+        width: 100%;
+        aspect-ratio: 4/3;
+        overflow: hidden;
+        border-radius: 2px;
+        background: #f1f5f9;
+        position: relative;
+    }
+
+    .preview-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .media-toolbar {
+        position: absolute;
+        top: -20px;
+        right: -20px;
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+
+    .toolbar-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        font-size: 1.1rem;
+    }
+
+    .btn-replace { background: var(--heritage-text); color: #fff; }
+    .btn-remove { background: var(--heritage-crimson); color: #fff; }
+
+    .toolbar-btn:hover {
+        transform: scale(1.1);
+        filter: brightness(1.2);
+    }
+
+    .media-meta {
+        position: absolute;
+        bottom: 15px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         font-family: var(--font-display);
         font-weight: 700;
-        color: var(--heritage-text);
-        font-size: 0.95rem;
+        font-size: 0.85rem;
+        color: var(--heritage-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .file-upload-input {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0; cursor: pointer;
+        z-index: 5;
     }
 
     /* Character count enhancement */
@@ -341,23 +477,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     .note-editor.note-frame:focus-within {
         border-color: var(--heritage-text) !important;
-    }
-    .note-toolbar {
-        background: #f8f7f4 !important;
-        border-bottom: 1px solid var(--heritage-border) !important;
-        padding: 10px 15px !important;
-    }
-    .note-btn {
-        background: #fff !important;
-        border: 1px solid var(--heritage-border) !important;
-        border-radius: 8px !important;
-        padding: 5px 10px !important;
-    }
-    .note-editable {
-        padding: 24px !important;
-        font-family: var(--font-body) !important;
-        font-size: 1rem !important;
-        line-height: 1.6 !important;
     }
 </style>
 </head>
@@ -483,7 +602,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </div>
                     </div>
 
-                    <!-- Section 2: Featured Image -->
+                    <!-- Section 2: Featured Image REDESIGNED -->
                     <div class="form-section reveal d-2">
                         <h2 class="section-title">
                             <i class="fas fa-camera"></i>
@@ -491,19 +610,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </h2>
                         
                         <div class="form-group">
-                            <div class="file-upload-container" id="gambarUpload">
-                                <input type="file" 
-                                       id="gambar" 
-                                       name="gambar" 
-                                       class="file-upload-input"
-                                       accept="image/jpeg,image/png,image/gif,image/webp">
-                                <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
-                                <div style="font-family: var(--font-display); font-weight: 800; color: var(--heritage-text); font-size: 1.25rem; margin-bottom: 8px; letter-spacing: -0.01em;">Unggah Visual Berita</div>
-                                <div style="color: var(--heritage-text-muted); font-size: 0.95rem; font-weight: 500;">Klik atau tarik file ke sini (Format: JPG/PNG/WebP, Maks: 5MB)</div>
-                                
-                                <div class="file-preview" id="gambarPreview" style="display: none;">
-                                    <img id="gambarPreviewImg" src="" alt="Pratinjau Gambar">
-                                    <div class="file-info" id="gambarFileInfo"></div>
+                            <div class="media-upload-wrapper">
+                                <!-- Upload Prompt Area -->
+                                <div class="media-dropzone" id="mediaDropzone">
+                                    <input type="file" 
+                                           id="gambar" 
+                                           name="gambar" 
+                                           class="file-upload-input"
+                                           accept="image/jpeg,image/png,image/gif,image/webp">
+                                    
+                                    <div class="upload-icon-circle">
+                                        <i class="fas fa-camera-retro"></i>
+                                    </div>
+                                    
+                                    <div class="upload-prompt">
+                                        <h3>Lampirkan Visual Berita</h3>
+                                        <p>Klik atau seret file gambar ke area ini (Maks. 5MB)</p>
+                                    </div>
+                                </div>
+
+                                <!-- Premium Preview Area -->
+                                <div class="premium-preview-container" id="premiumPreview">
+                                    <div class="media-toolbar">
+                                        <button type="button" class="toolbar-btn btn-replace" onclick="document.getElementById('gambar').click()" title="Ganti Gambar">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                        <button type="button" class="toolbar-btn btn-remove" id="btnRemoveMedia" title="Hapus Gambar">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="polaroid-frame">
+                                        <div class="preview-image-wrapper">
+                                            <img id="premiumPreviewImg" src="" alt="Pratinjau Gambar">
+                                        </div>
+                                        <div class="media-meta">
+                                            <span id="metaFileName">filename.jpg</span>
+                                            <span id="metaFileSize">0.00 MB</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <?php if (isset($errors['gambar'])): ?>
@@ -600,9 +745,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const judulInput = document.getElementById('judul');
     const slugInput = document.getElementById('slug');
     const gambarInput = document.getElementById('gambar');
-    const gambarPreview = document.getElementById('gambarPreview');
-    const gambarPreviewImg = document.getElementById('gambarPreviewImg');
-    const gambarFileInfo = document.getElementById('gambarFileInfo');
+    const dropzone = document.getElementById('mediaDropzone');
+    const premiumPreview = document.getElementById('premiumPreview');
+    const premiumPreviewImg = document.getElementById('premiumPreviewImg');
+    const metaFileName = document.getElementById('metaFileName');
+    const metaFileSize = document.getElementById('metaFileSize');
+    const btnRemoveMedia = document.getElementById('btnRemoveMedia');
     let slugManuallyEdited = false;
 
     // Summernote Heritage Initialization
@@ -647,20 +795,70 @@ document.addEventListener('DOMContentLoaded', function() {
         slugManuallyEdited = this.value.trim() !== '';
     });
 
-    // Visual Media Handler
-    gambarInput.addEventListener('change', function() {
-        if (this.files && this.files[0]) {
-            const file = this.files[0];
+    // Visual Media Premium Handler
+    function handleFiles(files) {
+        if (files && files[0]) {
+            const file = files[0];
+            
+            // Check type and size
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                toastr.error('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                toastr.error('Ukuran file terlalu besar. Maksimal 5MB.');
+                return;
+            }
+
             const reader = new FileReader();
-            
             reader.onload = function(e) {
-                gambarPreviewImg.src = e.target.result;
-                gambarFileInfo.textContent = `${file.name} | ${(file.size / 1024 / 1024).toFixed(2)} MB`;
-                gambarPreview.style.display = 'block';
+                premiumPreviewImg.src = e.target.result;
+                metaFileName.textContent = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
+                metaFileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                
+                dropzone.style.display = 'none';
+                premiumPreview.style.display = 'block';
+                toastr.success('Gambar berhasil dilampirkan.');
             };
-            
             reader.readAsDataURL(file);
         }
+    }
+
+    gambarInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    // Drag & Drop interactions
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('drag-over');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('drag-over');
+        }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        gambarInput.files = files;
+        handleFiles(files);
+    }, false);
+
+    // Remove media
+    btnRemoveMedia.addEventListener('click', function() {
+        gambarInput.value = '';
+        premiumPreview.style.display = 'none';
+        dropzone.style.display = 'flex';
+        toastr.info('Gambar telah dilepas.');
     });
 
     // Reset with Heritage Confirmation
@@ -670,7 +868,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.getElementById('beritaForm').reset();
         $('#konten').summernote('code', '');
-        gambarPreview.style.display = 'none';
+        premiumPreview.style.display = 'none';
+        dropzone.style.display = 'flex';
         slugManuallyEdited = false;
         document.getElementById('judulCount').textContent = '0';
         document.getElementById('kontenCount').textContent = '0';
