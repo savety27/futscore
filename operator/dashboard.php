@@ -81,6 +81,10 @@ if ($operator_id > 0) {
     }
 }
 
+// Data untuk sidebar operator (mengikuti halaman challenge)
+$operator_event_name = $event_name !== '' ? $event_name : 'Event Operator';
+$operator_event_image = $event_image;
+
 if ($event_id > 0) {
     try {
         $stmt = $conn->prepare("SELECT COUNT(*) FROM challenges WHERE event_id = ?");

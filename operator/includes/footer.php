@@ -3,26 +3,48 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const menuToggle = document.querySelector('.mobile-menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.menu-overlay');
+    if (!sidebar) {
+        return;
+    }
 
-    if (menuToggle && sidebar && overlay) {
-        menuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-            document.body.classList.toggle('menu-open');
-        });
+    const toggles = document.querySelectorAll('.mobile-menu-toggle');
+    const overlays = document.querySelectorAll('.menu-overlay');
+    const menuLinks = document.querySelectorAll('.menu-link');
 
-        overlay.addEventListener('click', function() {
+    function setMenuOpen(isOpen) {
+        if (isOpen) {
+            sidebar.classList.add('active');
+            document.body.classList.add('menu-open');
+            overlays.forEach(o => o.classList.add('active'));
+        } else {
             sidebar.classList.remove('active');
             document.body.classList.remove('menu-open');
-        });
+            overlays.forEach(o => o.classList.remove('active'));
+        }
+    }
 
-        const menuLinks = document.querySelectorAll('.menu-link');
+    if (toggles.length > 0) {
+        toggles.forEach(function(toggle) {
+            toggle.addEventListener('click', function() {
+                const isOpen = !sidebar.classList.contains('active');
+                setMenuOpen(isOpen);
+            });
+        });
+    }
+
+    if (overlays.length > 0) {
+        overlays.forEach(function(overlay) {
+            overlay.addEventListener('click', function() {
+                setMenuOpen(false);
+            });
+        });
+    }
+
+    if (menuLinks.length > 0) {
         menuLinks.forEach(function(link) {
             link.addEventListener('click', function() {
-                sidebar.classList.remove('active');
-                document.body.classList.remove('menu-open');
+                setMenuOpen(false);
             });
         });
     }
