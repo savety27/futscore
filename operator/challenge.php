@@ -135,6 +135,7 @@ $operator_read_only = ($operator_event_id > 0 && !$operator_event_is_active);
 
 // Handle search
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$view = isset($_GET['view']) ? trim((string)$_GET['view']) : '';
 $selected_event_id = $operator_event_id;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
@@ -172,6 +173,12 @@ $count_query = "SELECT COUNT(*) as total
                 WHERE 1=1";
 $base_params = [];
 $count_params = [];
+
+// View presets (used by dashboard cards)
+if ($view === 'upcoming') {
+    $base_query  .= " AND c.status IN ('Accepted', 'Open') AND c.challenge_date >= NOW()";
+    $count_query .= " AND c.status IN ('Accepted', 'Open') AND c.challenge_date >= NOW()";
+}
 
 // Handle search condition
 if (!empty($search)) {
@@ -406,7 +413,7 @@ try {
         </div>
 
         <!-- CHALLENGE TABLE -->
-        <div class="table-responsive">
+        <div class="table-responsive" id="challengeTable">
             <table class="data-table" id="challengesTable">
                 <thead>
                     <tr>

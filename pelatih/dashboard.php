@@ -766,7 +766,7 @@ if ($team_id) {
         .stats-grid-wrapper { grid-template-columns: 1fr; }
         .quick-actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .match-hero-content { 
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
             gap: 24px;
             padding: 48px 24px;
         }
@@ -838,7 +838,7 @@ if ($team_id) {
         
         .section-title { font-size: 1.5rem; }
         .match-hero-content { 
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
             gap: 16px;
             padding: 32px 16px;
         }
@@ -890,7 +890,11 @@ if ($team_id) {
             box-shadow: 0 8px 16px rgba(17, 24, 39, 0.12) !important;
         }
 
-        .match-hero-content { padding: 28px 12px; gap: 12px; }
+        .match-hero-content { 
+            padding: 28px 12px; 
+            gap: 12px; 
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        }
         .team-logo-large { width: 64px; height: 64px; padding: 8px; border-radius: 16px; }
         .team-name-large { font-size: 0.85rem; }
         .vs-text { width: 34px; height: 34px; font-size: 0.85rem; }

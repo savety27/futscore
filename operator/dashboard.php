@@ -393,6 +393,16 @@ require_once __DIR__ . '/includes/header.php';
         border-color: var(--heritage-accent);
         box-shadow: 0 16px 32px rgba(0,0,0,0.08);
     }
+    .heritage-card-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+    .heritage-card-link:focus-visible {
+        outline: 3px solid rgba(15, 39, 68, 0.22);
+        outline-offset: 4px;
+        border-radius: 28px;
+    }
     .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
     .card-label { font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--heritage-text-muted); }
     .card-value { font-family: var(--font-display); font-size: 2.25rem; font-weight: 800; line-height: 1; color: var(--heritage-text); }
@@ -408,18 +418,114 @@ require_once __DIR__ . '/includes/header.php';
         .section-title { font-size: 1.75rem; }
     }
 
-    .match-hero-card { background: white; border: 1px solid var(--heritage-border); border-radius: 40px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.05); margin-bottom: 48px; }
-    .match-hero-content { padding: 64px 48px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; background: radial-gradient(circle at center, #ffffff 0%, #fdfcfb 100%); position: relative; }
-    .team-focus { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-    .team-logo-large { width: 140px; height: 140px; background: white; border-radius: 40px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.04); border: 1px solid var(--heritage-border); display: flex; align-items: center; justify-content: center; }
-    .team-name-large { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--heritage-text); }
-    .vs-emblem { padding: 20px; position: relative; }
-    .vs-text { font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; color: var(--heritage-gold); background: var(--heritage-bg); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--heritage-gold); z-index: 2; position: relative; }
-    .vs-line { position: absolute; top: 50%; left: -80px; right: -80px; height: 2px; background: linear-gradient(90deg, transparent, var(--heritage-border), transparent); z-index: 1; }
-    .match-hero-footer { background: var(--heritage-accent); padding: 32px 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .match-hero-card { 
+        background: white; 
+        border: 1px solid var(--heritage-border); 
+        border-radius: 40px; 
+        overflow: hidden; 
+        box-shadow: 0 30px 60px rgba(0,0,0,0.05); 
+        margin-bottom: 48px; 
+    }
+    .match-hero-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 40px;
+    }
+    .match-hero-link:focus-visible {
+        outline: 3px solid rgba(180, 83, 9, 0.35);
+        outline-offset: 4px;
+    }
+    .match-hero-link .match-hero-card {
+        cursor: pointer;
+    }
+    .match-hero-content { 
+        padding: 64px 48px; 
+        display: grid; 
+        grid-template-columns: 1fr auto 1fr; 
+        align-items: center; 
+        text-align: center; 
+        background: radial-gradient(circle at center, #ffffff 0%, #fdfcfb 100%); 
+        position: relative; 
+    }
+    .team-focus { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 24px; 
+    }
+    .team-logo-large { 
+        width: 160px; 
+        height: 160px; 
+        background: white; 
+        border-radius: 40px; 
+        padding: 24px; 
+        box-shadow: 0 20px 40px rgba(0,0,0,0.04); 
+        border: 1px solid var(--heritage-border); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        transition: transform 0.5s ease;
+    }
+    .match-hero-card:hover .team-logo-large {
+        transform: scale(1.05) rotate(2deg);
+    }
+    .team-name-large { 
+        font-family: var(--font-display); 
+        font-size: 1.75rem; 
+        font-weight: 800; 
+        margin: 0;
+        color: var(--heritage-text); 
+    }
+    .vs-emblem { 
+        padding: 20px; 
+        position: relative; 
+    }
+    .vs-text { 
+        font-family: var(--font-display); 
+        font-size: 1.5rem; 
+        font-weight: 900; 
+        color: var(--heritage-gold); 
+        background: var(--heritage-bg); 
+        width: 70px; 
+        height: 70px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 50%; 
+        border: 2px solid var(--heritage-gold); 
+        z-index: 2; 
+        position: relative; 
+    }
+    .vs-line { 
+        position: absolute; 
+        top: 50%; 
+        left: -100px; 
+        right: -100px; 
+        height: 2px; 
+        background: linear-gradient(90deg, transparent, var(--heritage-border), transparent); 
+        z-index: 1; 
+    }
+    .match-hero-footer { 
+        background: var(--heritage-accent); 
+        padding: 32px 48px; 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 32px; 
+    }
     .match-info-box { color: white; }
-    .match-info-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; color: rgba(255,255,255,0.5); }
-    .match-info-value { font-size: 1.1rem; font-weight: 600; }
+    .match-info-label { 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        letter-spacing: 0.1em; 
+        margin-bottom: 8px; 
+        color: rgba(255,255,255,0.5); 
+    }
+    .match-info-value { 
+        font-size: 1.15rem; 
+        font-weight: 600; 
+    }
 
     .today-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
     .schedule-card { background: white; border: 1px solid var(--heritage-border); border-radius: 24px; padding: 28px; transition: all 0.3s ease; }
@@ -442,9 +548,13 @@ require_once __DIR__ . '/includes/header.php';
 
     @media (max-width: 1024px) {
         .stats-grid-wrapper { grid-template-columns: 1fr; }
-        .match-hero-content { grid-template-columns: 1fr; gap: 32px; padding: 48px 24px; }
+        .match-hero-content { 
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); 
+            gap: 32px; 
+            padding: 48px 24px; 
+        }
         .vs-line { display: none; }
-        .match-hero-footer { grid-template-columns: 1fr; }
+        .match-hero-footer { grid-template-columns: 1fr; gap: 24px; padding: 32px 24px; }
         .dossier-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -455,10 +565,25 @@ require_once __DIR__ . '/includes/header.php';
         .stats-main-grid { gap: 16px; }
         .heritage-card { border-radius: 20px; padding: 16px; }
         .card-value { font-size: 1.75rem; }
-        .match-hero-content { padding: 32px 16px; }
-        .team-logo-large { width: 100px; height: 100px; padding: 16px; }
-        .team-name-large { font-size: 1.25rem; }
-        .vs-text { width: 45px; height: 40px; font-size: 1.1rem; }
+        .match-hero-content { 
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 16px;
+            padding: 32px 16px; 
+        }
+        .team-focus { gap: 12px; }
+        .team-logo-large { width: 100px; height: 100px; padding: 16px; border-radius: 24px; }
+        .team-name-large { font-size: 1.1rem; }
+        .vs-text { width: 45px; height: 40px; font-size: 1.1rem; margin: 0 auto; }
+        .match-hero-footer { 
+            padding: 20px 22px;
+            gap: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .match-hero-footer .match-info-box { text-align: center !important; width: 100%; }
+        .match-info-label { font-size: 0.65rem; letter-spacing: 0.08em; }
+        .match-info-value { font-size: 0.95rem; }
     }
 
     @media (max-width: 600px) {
@@ -475,8 +600,20 @@ require_once __DIR__ . '/includes/header.php';
         .event-name-display { font-size: 1.45rem; }
         .stats-main-grid { grid-template-columns: 1fr; }
         .heritage-card[style*="grid-column: span 2"] { grid-column: 1 / -1 !important; }
-        .match-hero-footer { padding: 24px 20px; gap: 20px; }
-        .match-info-value { font-size: 0.95rem; }
+        .match-hero-content { 
+            padding: 28px 12px; 
+            gap: 12px; 
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        }
+        .team-logo-large { width: 72px; height: 72px; padding: 10px; border-radius: 18px; }
+        .team-name-large { font-size: 0.9rem; }
+        .vs-text { width: 34px; height: 34px; font-size: 0.85rem; }
+        .match-hero-footer { 
+            padding: 16px 18px;
+            gap: 12px;
+        }
+        .match-info-label { font-size: 0.6rem; }
+        .match-info-value { font-size: 0.85rem; }
     }
 </style>
 
@@ -506,30 +643,30 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div class="stats-main-grid">
-            <div class="heritage-card reveal d-2">
+            <a class="heritage-card heritage-card-link reveal d-2" href="challenge.php#challengeTable" aria-label="Buka daftar challenge">
                 <div class="card-meta">
                     <span class="card-label">Total Challenge</span>
                     <i class="fas fa-futbol card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo $challenge_total; ?>"><?php echo $challenge_total; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Data Agregat Challenge</div>
-            </div>
-            <div class="heritage-card reveal d-3">
+            </a>
+            <a class="heritage-card heritage-card-link reveal d-3" href="challenge.php?view=upcoming#challengeTable" aria-label="Buka challenge mendatang">
                 <div class="card-meta">
                     <span class="card-label">Mendatang</span>
                     <i class="fas fa-hourglass-start card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo $challenge_upcoming; ?>"><?php echo $challenge_upcoming; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Challenge Belum Selesai</div>
-            </div>
-            <div class="heritage-card reveal d-2">
+            </a>
+            <a class="heritage-card heritage-card-link reveal d-2" href="berita.php" aria-label="Buka arsip berita">
                 <div class="card-meta">
                     <span class="card-label">Arsip Berita</span>
                     <i class="fas fa-newspaper card-icon"></i>
                 </div>
                 <div class="card-value" data-count="<?php echo $berita_total; ?>"><?php echo $berita_total; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Publikasi Terverifikasi</div>
-            </div>
+            </a>
             <div class="heritage-card reveal d-3" style="border-bottom: 3px solid var(--heritage-gold);">
                 <div class="card-meta">
                     <span class="card-label">Progres Event</span>
@@ -583,6 +720,7 @@ require_once __DIR__ . '/includes/header.php';
         <?php if ($next_match): 
             $match_date = new DateTime($next_match['challenge_date']);
         ?>
+            <a class="match-hero-link" href="challenge_view.php?id=<?php echo (int)($next_match['id'] ?? 0); ?>" aria-label="Buka detail challenge">
             <div class="match-hero-card">
                 <div class="match-hero-content">
                     <div class="team-focus">
@@ -595,10 +733,12 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                         <h3 class="team-name-large"><?php echo htmlspecialchars($next_match['team1_name']); ?></h3>
                     </div>
+
                     <div class="vs-emblem">
                         <div class="vs-line"></div>
                         <div class="vs-text">VS</div>
                     </div>
+
                     <div class="team-focus">
                         <div class="team-logo-large">
                             <?php if (!empty($next_match['team2_logo']) && file_exists(__DIR__ . '/../images/teams/' . $next_match['team2_logo'])): ?>
@@ -610,23 +750,23 @@ require_once __DIR__ . '/includes/header.php';
                         <h3 class="team-name-large"><?php echo htmlspecialchars($next_match['team2_name']); ?></h3>
                     </div>
                 </div>
+
                 <div class="match-hero-footer">
                     <div class="match-info-box">
-                        <div class="match-info-label">Kickoff Scheduled</div>
-                        <div class="match-info-value"><?php echo $match_date->format('l, d M Y | H:i'); ?> WIB</div>
+                        <div class="match-info-label"><i class="far fa-calendar-alt"></i> Tanggal</div>
+                        <div class="match-info-value"><?php echo $match_date->format('l, d M Y'); ?></div>
                     </div>
                     <div class="match-info-box">
-                        <div class="match-info-label">Operational Venue</div>
-                        <div class="match-info-value"><?php echo htmlspecialchars($next_match['venue_name'] ?: 'TBD'); ?></div>
+                        <div class="match-info-label"><i class="far fa-clock"></i> Kickoff</div>
+                        <div class="match-info-value"><?php echo $match_date->format('H:i'); ?> WIB</div>
                     </div>
-                    <div class="match-info-box" style="text-align: right;">
-                        <div class="match-info-label">Status</div>
-                        <div class="match-info-value" style="color: var(--heritage-gold); text-transform: uppercase; letter-spacing: 1px;">
-                            <?php echo htmlspecialchars($next_match['status']); ?>
-                        </div>
+                    <div class="match-info-box">
+                        <div class="match-info-label"><i class="fas fa-map-marker-alt"></i> Stadion</div>
+                        <div class="match-info-value"><?php echo htmlspecialchars($next_match['venue_name'] ?: 'TBD'); ?></div>
                     </div>
                 </div>
             </div>
+            </a>
         <?php else: ?>
             <div class="empty-state">
                 <i class="far fa-calendar-times"></i>
