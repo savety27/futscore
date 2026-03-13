@@ -1,0 +1,267 @@
+:root {
+    --heritage-bg: #f8f7f4;
+    --heritage-card: #ffffff;
+    --heritage-border: #e5e1da;
+    --heritage-text: #1e1b4b;
+    --heritage-text-muted: #6b7280;
+    --heritage-accent: #064e3b;
+    --heritage-gold: #b45309;
+    --heritage-crimson: #991b1b;
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --soft-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Page Specific Overrides for .main */
+.main {
+    background: var(--heritage-bg) !important;
+    background-image: radial-gradient(#e5e1da 0.5px, transparent 0.5px) !important;
+    background-size: 24px 24px !important;
+    color: var(--heritage-text);
+    font-family: var(--font-body);
+    padding: 40px 60px !important;
+    margin-left: 280px !important;
+    width: calc(100% - 280px) !important;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Heritage Topbar Style */
+.topbar {
+    background: var(--heritage-card) !important;
+    border: 1px solid var(--heritage-border) !important;
+    box-shadow: var(--soft-shadow) !important;
+    margin-bottom: 32px !important;
+    border-radius: 20px !important;
+    padding: 20px 25px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar .greeting h1 {
+    font-family: var(--font-display);
+    color: var(--heritage-text);
+    font-weight: 800;
+    font-size: 28px;
+    margin: 0;
+}
+
+.topbar .greeting p {
+    font-family: var(--font-body);
+    color: var(--heritage-text-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, var(--heritage-crimson) 0%, #B71C1C 100%);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
+}
+
+.logout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
+}
+
+/* Editorial Header */
+.dashboard-hero {
+    margin-bottom: 48px;
+    border-bottom: 2px solid var(--heritage-text);
+    padding-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.hero-content {
+    max-width: 800px;
+    flex-shrink: 1;
+}
+
+.hero-label {
+    color: var(--heritage-gold);
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.hero-title {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--heritage-text);
+    margin: 0 0 16px 0;
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.hero-description {
+    color: var(--heritage-text-muted);
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Event Hub Grid */
+.event-hub {
+    max-width: 1200px;
+    margin: 0;
+}
+
+.hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+}
+
+.hub-card {
+    background: var(--heritage-card);
+    border: 1px solid var(--heritage-border);
+    border-radius: 28px;
+    padding: 40px;
+    box-shadow: var(--soft-shadow);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.hub-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--heritage-gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+}
+
+.hub-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--heritage-gold);
+    box-shadow: 0 20px 40px rgba(180, 83, 9, 0.08);
+}
+
+.hub-card:hover::before {
+    transform: scaleX(1);
+}
+
+.hub-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: #fdfcfb;
+    border: 1px solid var(--heritage-border);
+    color: var(--heritage-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+}
+
+.hub-card:hover .hub-icon {
+    background: var(--heritage-gold);
+    color: white;
+    border-color: var(--heritage-gold);
+}
+
+.hub-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--heritage-text);
+    margin: 0 0 12px 0;
+}
+
+.hub-card p {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--heritage-text-muted);
+    line-height: 1.6;
+    margin: 0 0 24px 0;
+    flex-grow: 1;
+}
+
+.hub-link {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--heritage-gold);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.hub-card.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+/* Alerts */
+.hub-alert {
+    padding: 16px 24px;
+    margin-bottom: 32px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-body);
+    box-shadow: var(--soft-shadow);
+}
+
+.alert-danger { background: #fef2f2; color: var(--heritage-crimson); border-left: 4px solid var(--heritage-crimson); }
+.alert-warning { background: #fffbeb; color: var(--heritage-gold); border-left: 4px solid var(--heritage-gold); }
+
+/* Animations */
+@keyframes revealUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+    animation: revealUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    opacity: 0;
+}
+
+.d-1 { animation-delay: 0.1s; }
+.d-2 { animation-delay: 0.2s; }
+
+/* Responsive */
+@media screen and (max-width: 1024px) {
+    .main { margin-left: 240px !important; width: calc(100% - 240px) !important; padding: 30px !important; }
+    .hero-title { font-size: 2.75rem; }
+}
+
+@media screen and (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .hero-title { font-size: 2.25rem; }
+    .hub-grid { grid-template-columns: 1fr; }
+}
