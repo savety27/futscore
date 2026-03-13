@@ -86,7 +86,36 @@
     flex-wrap: wrap;
 }
 
-/* Buttons */
+/* Buttons (match staff form styling) */
+.players-container .btn {
+    padding: 14px 32px !important;
+    border-radius: 100px !important;
+    border: none !important;
+    font-family: var(--font-display) !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    text-decoration: none !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+.players-container .btn-secondary {
+    background: #fff !important;
+    color: var(--heritage-text) !important;
+    border: 1.5px solid var(--heritage-border) !important;
+}
+
+.players-container .btn-secondary:hover {
+    border-color: var(--heritage-gold) !important;
+    background: var(--heritage-gold) !important;
+    color: #fff !important;
+}
+
 .btn-premium {
     padding: 12px 24px;
     border-radius: 14px;
@@ -465,6 +494,11 @@
     .hero-actions .btn-premium { 
         justify-content: center; 
         padding: 10px 16px;
+    }
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
     }
     
     .section-header { margin-bottom: 24px; }

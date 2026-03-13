@@ -74,7 +74,7 @@ $position_labels = [
             <p class="hero-description">Profil lengkap staf, informasi personal, kontak, dan dokumen sertifikat kepelatihan.</p>
         </div>
         <div class="hero-actions">
-            <a href="index.php" class="btn-premium btn-outline">
+            <a href="index.php" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>

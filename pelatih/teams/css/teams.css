@@ -871,11 +871,13 @@
     padding: 32px;
     margin-bottom: 40px;
     box-shadow: var(--soft-shadow);
+    position: relative;
+    z-index: 2;
 }
 
 .filter-container {
     position: relative;
-    z-index: 200;
+    z-index: 2;
 }
 
 .teams-filter-form {
@@ -946,12 +948,11 @@
 .schedule-select-wrap {
     position: relative;
     width: 100%;
-    z-index: 5;
 }
 
 .schedule-custom-select {
     position: relative;
-    z-index: 200;
+    z-index: 3;
 }
 
 .schedule-custom-select-trigger {
@@ -1045,7 +1046,7 @@
     padding: 8px;
     max-height: 260px;
     overflow-y: auto;
-    z-index: 3002;
+    z-index: 4;
 }
 
 .schedule-custom-select.open .schedule-custom-select-menu {

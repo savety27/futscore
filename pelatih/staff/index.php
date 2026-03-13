@@ -179,7 +179,7 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                     <label>Pencarian</label>
                     <div class="teams-search-group">
                         <i class="fas fa-search"></i>
-                        <input type="text" name="search" class="teams-search-input" placeholder="Cari nama, email, telepon, jabatan..." value="<?php echo htmlspecialchars($search); ?>">
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari nama, email, telepon..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                 </div>
                 <div class="filter-group">
@@ -213,7 +213,7 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                 </div>
 
                 <div class="teams-filter-actions" style="margin-top: auto;">
-                    <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Terapkan</button>
+                    <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Cari</button>
                     <a href="index.php" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
                 </div>
             </form>
