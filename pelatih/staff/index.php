@@ -161,7 +161,7 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
     <div class="filter-container reveal d-1">
         <?php if (isset($_SESSION['success_message'])): ?>
         <div class="message-alert">
-            <i class="fas fa-check-circle" style="color: #4CAF50;"></i>
+            <i class="fas fa-check-circle"></i>
             <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
         </div>
         <?php endif; ?>

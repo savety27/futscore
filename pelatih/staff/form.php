@@ -522,6 +522,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function focusField(el) {
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof el.focus === 'function') el.focus();
+    }
+
+    const staffForm = document.getElementById('staffForm');
+    if (staffForm) {
+        staffForm.addEventListener('submit', function(e) {
+            const nameInput = document.querySelector('input[name="name"]');
+            const positionInput = document.getElementById('staffPositionValue');
+
+            const nameVal = nameInput ? nameInput.value.trim() : '';
+            const positionVal = positionInput ? positionInput.value.trim() : '';
+
+            if (!nameVal || !positionVal) {
+                e.preventDefault();
+                if (!nameVal) return focusField(nameInput);
+                return focusField(document.getElementById('staffPositionTrigger'));
+            }
+        });
+    }
+
     function handlePhotoPreview(file) {
         if (!file.type.startsWith('image/')) {
             showUploadError(photoUpload, 'Format file harus berupa gambar (JPEG, PNG, atau GIF)');

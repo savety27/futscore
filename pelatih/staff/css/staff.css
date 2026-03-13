@@ -402,6 +402,27 @@
 .position-badge[data-position*="M"] { border-color: var(--heritage-text); color: var(--heritage-text); }
 .position-badge[data-position*="F"], .position-badge[data-position*="S"] { border-color: var(--heritage-crimson); color: var(--heritage-crimson); }
 
+/* Certificate count hover (orange) */
+.count-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.count-cell.matches {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--heritage-border);
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.count-link:hover .count-cell.matches {
+    background: var(--heritage-gold);
+    color: #fff;
+    border-color: var(--heritage-gold);
+    box-shadow: 0 6px 14px rgba(180, 83, 9, 0.2);
+}
+
 /* Age Cell */
 .age-cell {
     font-weight: 600;
