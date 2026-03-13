@@ -17,13 +17,16 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-premium btn-export'>Kembali ke Daftar Team</a></div>";
     require_once '../includes/footer.php';
     exit;
 }
 
 // Update page title with team name
 $page_title = htmlspecialchars($team_info['name'] ?? '') . ' - Pemain';
+
+// Search function
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Pagination settings
 $players_per_page = 10;
@@ -37,8 +40,15 @@ $total_pages = 1;
 
 try {
     // Get total count (for specific team)
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM players WHERE team_id = ?");
-    $stmt->execute([$team_id]);
+    $count_query = "SELECT COUNT(*) as total FROM players WHERE team_id = ?";
+    $count_params = [$team_id];
+    if (!empty($search)) {
+        $count_query .= " AND (name LIKE ? OR position LIKE ? OR email LIKE ? OR phone LIKE ?)";
+        $search_term = "%{$search}%";
+        array_push($count_params, $search_term, $search_term, $search_term, $search_term);
+    }
+    $stmt = $conn->prepare($count_query);
+    $stmt->execute($count_params);
     $total_result = $stmt->fetch();
     $total_players = $total_result['total'];
     $total_pages = ceil($total_players / $players_per_page);
@@ -51,20 +61,28 @@ try {
     $offset = ($current_page_num - 1) * $players_per_page;
 
     // Get players with pagination
-    $stmt = $conn->prepare("SELECT 
+    $base_query = "SELECT 
         id, name, position, jersey_number, birth_date, gender, 
         height, weight, phone, email, status, photo,
         dribbling, technique, speed, juggling, shooting, 
         setplay_position, passing, control,
         TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) as age
         FROM players 
-        WHERE team_id = ? 
-        ORDER BY jersey_number ASC, name ASC
-        LIMIT ? OFFSET ?");
+        WHERE team_id = ? ";
+    $params = [$team_id];
+    if (!empty($search)) {
+        $base_query .= " AND (name LIKE ? OR position LIKE ? OR email LIKE ? OR phone LIKE ?) ";
+        $search_term = "%{$search}%";
+        array_push($params, $search_term, $search_term, $search_term, $search_term);
+    }
+    $base_query .= " ORDER BY jersey_number ASC, name ASC LIMIT ? OFFSET ?";
     
-    $stmt->bindValue(1, $team_id, PDO::PARAM_INT);
-    $stmt->bindValue(2, $players_per_page, PDO::PARAM_INT);
-    $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+    $stmt = $conn->prepare($base_query);
+    foreach ($params as $i => $val) {
+        $stmt->bindValue($i + 1, $val);
+    }
+    $stmt->bindValue(count($params) + 1, $players_per_page, PDO::PARAM_INT);
+    $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
     $stmt->execute();
     
     $players = $stmt->fetchAll();
@@ -87,13 +105,32 @@ try {
             <p class="hero-description">Kelola roster dan pantau profil pemain tim ini secara komprehensif.</p>
         </div>
         <div class="hero-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-            <a href="index.php" class="btn-premium btn-export" style="background: white;">
+            <a href="index.php" class="btn-premium btn-export">
                 <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
             </a>
         </div>
     </header>
 
     <div class="reveal d-2">
+        <div class="filter-container">
+            <div class="teams-filter-card">
+                <form action="" method="GET" style="display: flex; gap: 15px; width: 100%; align-items: center;">
+                    <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
+                    <div style="flex: 1; position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--heritage-text); opacity: 0.5;"></i>
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari pemain berdasarkan nama, posisi..." value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    <button type="submit" class="btn-premium">
+                        <i class="fas fa-search"></i> Cari
+                    </button>
+                    <?php if(!empty($search)): ?>
+                        <a href="?team_id=<?php echo $team_id; ?>" class="btn-premium btn-export">
+                            <i class="fas fa-times"></i> Reset
+                        </a>
+                    <?php endif; ?>
+                </form>
+            </div>
+        </div>
 
     <?php if (empty($players)): ?>
         <div class="empty-state">
@@ -268,10 +305,10 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($current_page_num > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=1" class="page-link" title="Halaman Pertama">
+                <a href="?team_id=<?php echo $team_id; ?>&page=1&search=<?php echo urlencode($search); ?>" class="page-link" title="Halaman Pertama">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num - 1; ?>" class="page-link" title="Sebelumnya">
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Sebelumnya">
                     <i class="fas fa-angle-left"></i>
                 </a>
             <?php endif; ?>
@@ -285,7 +322,7 @@ try {
             <?php endif; ?>
             
             <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>" 
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
                    class="page-link <?php echo $i == $current_page_num ? 'active' : ''; ?>">
                     <?php echo $i; ?>
                 </a>
@@ -296,10 +333,10 @@ try {
             <?php endif; ?>
             
             <?php if ($current_page_num < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num + 1; ?>" class="page-link" title="Berikutnya">
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $current_page_num + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Berikutnya">
                     <i class="fas fa-angle-right"></i>
                 </a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>" class="page-link" title="Halaman Terakhir">
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Halaman Terakhir">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             <?php endif; ?>

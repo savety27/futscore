@@ -143,22 +143,30 @@
 
 .certificate-details .detail-row {
     display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
     font-size: 0.9rem;
+}
+
+.certificate-details {
+    background: var(--heritage-bg);
+    border: 1px solid var(--heritage-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
 }
 
 .certificate-details .detail-label {
     color: var(--heritage-text-muted);
-    font-weight: 600;
-    white-space: nowrap;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.72rem;
 }
 
 .certificate-details .detail-value {
     color: var(--heritage-text);
-    text-align: right;
-    word-break: break-word;
+    font-weight: 600;
 }
 
 .certificate-preview {

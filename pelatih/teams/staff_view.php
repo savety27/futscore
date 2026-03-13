@@ -17,7 +17,7 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-premium btn-export'>Kembali ke Daftar Team</a></div>";
     require_once '../includes/footer.php';
     exit;
 }
@@ -110,21 +110,12 @@ try {
 }
 ?>
 
-<!-- Modal untuk menampilkan sertifikat (Reused) -->
-<div id="certificatesModal" class="modal-overlay" style="display: none;">
-    <div class="modal-container reveal d-1">
-        <header class="modal-header">
-            <div class="header-content">
-                <i class="fas fa-medal header-icon"></i>
-                <h3 id="modalTitle" class="modal-title">Sertifikat Staf</h3>
-            </div>
-            <button class="close-modal-btn" aria-label="Tutup Modal">
-                <i class="fas fa-times"></i>
-            </button>
-        </header>
-        <div class="modal-body-content">
-            <div id="certificatesList" class="certificates-list-wrapper"></div>
-        </div>
+<!-- Modal untuk menampilkan sertifikat -->
+<div id="certificatesModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+    <div class="modal-content" style="background-color: var(--heritage-card); margin: 5% auto; padding: 30px; border-radius: 24px; width: 90%; max-width: 600px; position: relative; border: 1px solid var(--heritage-border); box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <span class="close-modal" style="position: absolute; right: 24px; top: 20px; font-size: 28px; cursor: pointer; color: var(--heritage-crimson); transition: transform 0.2s;">&times;</span>
+        <h3 id="modalTitle" style="color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; margin-bottom: 24px;">Sertifikat</h3>
+        <div id="certificatesList" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;"></div>
     </div>
 </div>
 
@@ -141,7 +132,7 @@ try {
             <p class="hero-description">Kelola dan pantau profil staf tim ini secara komprehensif.</p>
         </div>
         <div class="hero-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-            <a href="index.php" class="btn-premium btn-export" style="background: white;">
+            <a href="index.php" class="btn-premium btn-export">
                 <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
             </a>
         </div>
@@ -154,13 +145,13 @@ try {
                     <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
                     <div style="flex: 1; position: relative;">
                         <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--heritage-text); opacity: 0.5;"></i>
-                        <input type="text" name="search" class="teams-search-input" placeholder="Cari staf berdasarkan nama, posisi, dll..." value="<?php echo htmlspecialchars($search); ?>">
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari staf berdasarkan nama, jabatan..." value="<?php echo htmlspecialchars($search); ?>">
                     </div>
                     <button type="submit" class="btn-premium">
                         <i class="fas fa-search"></i> Cari
                     </button>
                     <?php if(!empty($search)): ?>
-                        <a href="?team_id=<?php echo $team_id; ?>" class="btn-premium" style="background: white; color: var(--heritage-text);">
+                        <a href="?team_id=<?php echo $team_id; ?>" class="btn-premium btn-export">
                             <i class="fas fa-times"></i> Reset
                         </a>
                     <?php endif; ?>
@@ -231,8 +222,8 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=1&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-double-left"></i></a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-left"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=1&search=<?php echo urlencode($search); ?>" class="page-link" title="Halaman Pertama"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Sebelumnya"><i class="fas fa-angle-left"></i></a>
             <?php endif; ?>
             
             <?php
@@ -240,21 +231,21 @@ try {
             $end_page = min($total_pages, $page + 2);
             
             if ($start_page > 1) {
-                echo '<span class="pagination-dots">...</span>';
+                echo '<span class="page-dots">...</span>';
             }
             
             for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
             <?php endfor; 
             
             if ($end_page < $total_pages) {
-                echo '<span class="pagination-dots">...</span>';
+                echo '<span class="page-dots">...</span>';
             }
             ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-right"></i></a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>"><i class="fas fa-angle-double-right"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Berikutnya"><i class="fas fa-angle-right"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>" class="page-link" title="Halaman Terakhir"><i class="fas fa-angle-double-right"></i></a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -264,26 +255,16 @@ try {
 </div>
 
 <script>
-// JavaScript for Certificates Modal
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('certificatesModal');
     const modalTitle = document.getElementById('modalTitle');
     const certificatesList = document.getElementById('certificatesList');
-    const closeModal = document.querySelector('.close-modal-btn');
+    const closeModal = document.querySelector('.close-modal');
     const viewCertificatesLinks = document.querySelectorAll('.view-certificates');
     
-    function openModal() {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevent scroll
-    }
-
     function closeCertificateModal() {
-        modal.classList.add('fade-out');
-        setTimeout(() => {
-            modal.style.display = 'none';
-            modal.classList.remove('fade-out');
-            document.body.style.overflow = '';
-        }, 300);
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
     }
     
     closeModal.addEventListener('click', closeCertificateModal);
@@ -301,12 +282,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             modalTitle.textContent = 'Sertifikat - ' + staffName;
             certificatesList.innerHTML = `
-                <div class="modal-loading">
-                    <div class="loader-spinner"></div>
-                    <p>Mencari sertifikat untuk ${staffName}...</p>
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--heritage-gold);"></i>
+                    <p style="margin-top: 16px; color: var(--heritage-text-muted); font-family: var(--font-body);">Memuat sertifikat...</p>
                 </div>
             `;
-            openModal();
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
             loadCertificates(staffId);
         });
     });
@@ -318,19 +300,13 @@ document.addEventListener('DOMContentLoaded', function() {
         xhr.onload = function() {
             if (xhr.status === 200) {
                 certificatesList.innerHTML = xhr.responseText;
-                // Add staggered animation to loaded items
-                const items = certificatesList.querySelectorAll('.certificate-card');
-                items.forEach((item, index) => {
-                    item.style.animationDelay = (index * 0.1) + 's';
-                    item.classList.add('reveal', 'd-1');
-                });
             } else {
-                certificatesList.innerHTML = '<div class="modal-error"><i class="fas fa-exclamation-circle"></i><p>Gagal memuat sertifikat. Silakan coba lagi nanti.</p></div>';
+                certificatesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--heritage-crimson);"><i class="fas fa-exclamation-circle" style="font-size: 32px;"></i><p style="margin-top: 16px;">Gagal memuat sertifikat. Status: ' + xhr.status + '</p></div>';
             }
         };
         
         xhr.onerror = function() {
-            certificatesList.innerHTML = '<div class="modal-error"><i class="fas fa-wifi"></i><p>Kesalahan jaringan. Pastikan koneksi internet Anda stabil.</p></div>';
+            certificatesList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--heritage-crimson);"><i class="fas fa-wifi" style="font-size: 32px;"></i><p style="margin-top: 16px;">Kesalahan jaringan saat memuat data.</p></div>';
         };
         
         xhr.send();
@@ -339,341 +315,34 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-/* Modern Modal Overlay with Glassmorphism */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.modal-overlay.fade-out {
-    opacity: 0;
-    transition: opacity 0.3s ease-in;
-}
-
-/* Modal Container */
-.modal-container {
-    background: white;
-    width: 100%;
-    max-width: 640px;
-    max-height: 90vh;
-    border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Modal Header */
-.modal-header {
-    padding: 24px;
-    border-bottom: 1px solid var(--heritage-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: white;
-    z-index: 10;
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.header-icon {
-    font-size: 1.5rem;
-    color: var(--heritage-gold);
-}
-
-.modal-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--heritage-text);
-    letter-spacing: -0.02em;
-}
-
-.close-modal-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    border: none;
-    background: var(--heritage-bg);
-    color: var(--heritage-text-muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.close-modal-btn:hover {
-    background: var(--heritage-crimson);
-    color: white;
-    transform: rotate(90deg);
-}
-
-/* Modal Body */
-.modal-body-content {
-    padding: 24px;
-    overflow-y: auto;
-    flex: 1;
-    background: #fdfcfb;
-}
-
-/* Custom Scrollbar for Modal Body */
-.modal-body-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-body-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.modal-body-content::-webkit-scrollbar-thumb {
-    background: var(--heritage-border);
-    border-radius: 3px;
-}
-
-.modal-body-content::-webkit-scrollbar-thumb:hover {
-    background: var(--heritage-gold);
-}
-
-/* Certificates Grid & Cards */
-.certificates-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.certificate-card {
-    background: white;
-    border-radius: 20px;
-    border: 1px solid var(--heritage-border);
-    padding: 20px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.certificate-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
-    border-color: var(--heritage-gold);
-}
-
-.certificate-header {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.cert-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: rgba(180, 83, 9, 0.1);
-    color: var(--heritage-gold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    flex-shrink: 0;
-}
-
-.cert-title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.cert-name {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--heritage-text);
-}
-
-.cert-date {
-    font-size: 0.875rem;
-    color: var(--heritage-text-muted);
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.certificate-details {
-    margin-bottom: 16px;
-    background: var(--heritage-bg);
-    padding: 12px 16px;
-    border-radius: 12px;
-}
-
-.detail-row {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.detail-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--heritage-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.detail-value {
-    font-weight: 600;
-    color: var(--heritage-text);
-    font-size: 0.95rem;
-}
-
-.certificate-preview {
-    position: relative;
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--heritage-border);
-    background: #f1f5f9;
-}
-
-.certificate-image {
-    width: 100%;
-    display: block;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.preview-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(30, 27, 75, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(2px);
-}
-
-.certificate-preview:hover .preview-overlay {
-    opacity: 1;
-}
-
-.certificate-preview:hover .certificate-image {
-    transform: scale(1.05);
-}
-
-.btn-view-full {
-    background: white;
-    color: var(--heritage-text);
-    padding: 10px 20px;
-    border-radius: 100px;
-    font-weight: 700;
-    font-size: 0.875rem;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transform: translateY(10px);
-    transition: all 0.3s ease;
-}
-
-.certificate-preview:hover .btn-view-full {
-    transform: translateY(0);
-}
-
-/* Modal Loading & Error States */
-.modal-loading, .modal-error {
-    text-align: center;
-    padding: 60px 20px;
-}
-
-.loader-spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--heritage-border);
-    border-top: 4px solid var(--heritage-gold);
-    border-radius: 50%;
-    margin: 0 auto 20px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.modal-loading p, .modal-error p {
-    font-weight: 600;
-    color: var(--heritage-text-muted);
-}
-
-.modal-error i {
-    font-size: 48px;
-    color: var(--heritage-crimson);
-    margin-bottom: 16px;
-    opacity: 0.5;
-}
-
-/* Mobile Adjustments */
-@media (max-width: 640px) {
-    .modal-container {
-        max-height: 95vh;
-        border-radius: 0; /* Full screen-ish on mobile */
-    }
-    
-    .modal-header {
-        padding: 16px 20px;
-    }
-    
-    .modal-title {
-        font-size: 1.25rem;
-    }
-    
-    .modal-body-content {
-        padding: 16px;
-    }
-    
-    .certificate-header {
-        gap: 12px;
-    }
-    
-    .cert-icon-wrapper {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .cert-name {
-        font-size: 1rem;
-    }
-}
-
 /* Staff Specific Table Cells Overrides */
 .staff-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: var(--heritage-bg); }
 .position-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(30, 64, 175, 0.1); color: #1e40af; border: 1px solid rgba(30, 64, 175, 0.2); text-transform: uppercase; letter-spacing: 0.5px; }
 .age-cell { text-align: center; font-weight: 600; color: var(--heritage-text); font-size: 14px; }
 .certificate-cell { text-align: center; }
 .certificate-count { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); transition: all 0.3s ease; }
-.certificate-count.clickable:hover { transform: translateY(-2px); background: rgba(16, 185, 129, 0.15); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
+.certificate-count.clickable:hover { transform: translateY(-2px); background: var(--heritage-gold); color: #fff; border-color: var(--heritage-gold); box-shadow: 0 4px 12px rgba(180, 83, 9, 0.2); }
 .certificate-count[style*="background: #eee"] { background: var(--heritage-bg) !important; color: #64748b !important; border-color: var(--heritage-border) !important; font-weight: 500; }
+
+/* Certificate Modal Layout (Match Staff Index) */
+#certificatesList { max-height: 60vh; overflow-y: auto; padding-right: 10px; }
+.certificates-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.certificate-card { background: #fff; border: 1px solid var(--heritage-border); border-radius: 16px; padding: 20px; }
+.certificate-header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.cert-icon-wrapper { width: 40px; height: 40px; border-radius: 12px; background: rgba(180, 83, 9, 0.12); color: var(--heritage-gold); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex: 0 0 auto; }
+.cert-title-group { min-width: 0; }
+.cert-name { margin: 0 0 4px 0; font-family: var(--font-display); font-weight: 800; font-size: 1rem; color: var(--heritage-text); word-break: break-word; }
+.cert-date { font-size: 0.85rem; color: var(--heritage-text-muted); }
+.certificate-details { background: var(--heritage-bg); border: 1px solid var(--heritage-border); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; }
+.certificate-details .detail-row { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+.certificate-details .detail-label { color: var(--heritage-text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.72rem; }
+.certificate-details .detail-value { color: var(--heritage-text); font-weight: 600; }
+.certificate-preview { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid var(--heritage-border); position: relative; background: #fff; }
+.certificate-image { display: block; width: 100%; height: auto; max-width: 100%; }
+.preview-overlay { position: absolute; inset: auto 0 0 0; padding: 10px; background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.55)); display: flex; justify-content: flex-end; }
+.btn-view-full { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(255,255,255,0.92); color: var(--heritage-text); border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 0.8rem; }
+.btn-view-full:hover { background: var(--heritage-gold); color: #fff; }
+
 </style>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -17,13 +17,38 @@ if ($team_id) {
 }
 
 if (!$team_info) {
-    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-secondary'>Kembali ke Daftar Team</a></div>";
+    echo "<div class='card'><div class='alert alert-danger'>Team tidak ditemukan.</div><a href='index.php' class='btn-premium btn-export'>Kembali ke Daftar Team</a></div>";
     require_once '../includes/footer.php';
     exit;
 }
 
 // Update page title
 $page_title = htmlspecialchars($team_info['name'] ?? '') . ' - Pertandingan';
+
+// Search
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+// Filters
+$filter_sport = isset($_GET['sport']) ? trim((string)$_GET['sport']) : '';
+$filter_status = isset($_GET['status']) ? trim((string)$_GET['status']) : '';
+
+// Status labels (match schedule.php)
+$status_labels = [
+    'open' => 'Open',
+    'accepted' => 'Accepted',
+    'rejected' => 'Rejected',
+    'expired' => 'Expired',
+    'completed' => 'Completed',
+];
+$match_labels = [
+    'scheduled' => 'Terjadwal',
+    'coming_soon' => 'Segera',
+    'live' => 'Langsung',
+    'ongoing' => 'Berlangsung',
+    'postponed' => 'Ditunda',
+    'completed' => 'Selesai',
+    'cancelled' => 'Dibatalkan',
+    'abandoned' => 'Dihentikan',
+];
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -53,10 +78,51 @@ $base_query = "SELECT c.*,
     LEFT JOIN teams t1 ON c.challenger_id = t1.id
     LEFT JOIN teams t2 ON c.opponent_id = t2.id
     LEFT JOIN venues v ON c.venue_id = v.id
-    WHERE (c.challenger_id = ? OR c.opponent_id = ?)
-    AND (c.status = 'accepted' OR c.status = 'completed')";
+    WHERE (c.challenger_id = ? OR c.opponent_id = ?)";
 
-$count_query = "SELECT COUNT(*) as total FROM challenges WHERE (challenger_id = ? OR opponent_id = ?) AND (status = 'accepted' OR status = 'completed')";
+$count_query = "SELECT COUNT(*) as total 
+    FROM challenges c
+    {$event_join}
+    LEFT JOIN teams t1 ON c.challenger_id = t1.id
+    LEFT JOIN teams t2 ON c.opponent_id = t2.id
+    LEFT JOIN venues v ON c.venue_id = v.id
+    WHERE (c.challenger_id = ? OR c.opponent_id = ?)";
+
+$params = [$team_id, $team_id];
+$count_params = [$team_id, $team_id];
+
+// Status filter (show all by default)
+if ($filter_status !== '') {
+    if (in_array($filter_status, ['open', 'accepted', 'rejected', 'expired', 'completed'], true)) {
+        $base_query .= " AND c.status = ? ";
+        $count_query .= " AND c.status = ? ";
+        $params[] = $filter_status;
+        $count_params[] = $filter_status;
+    }
+}
+
+// Filter: sport type (kategori)
+if ($filter_sport !== '') {
+    $base_query .= " AND c.sport_type = ? ";
+    $count_query .= " AND c.sport_type = ? ";
+    $params[] = $filter_sport;
+    $count_params[] = $filter_sport;
+}
+
+if (!empty($search)) {
+    $search_term = "%{$search}%";
+    $search_conditions = " AND (t1.name LIKE ? OR t2.name LIKE ? OR c.sport_type LIKE ? OR c.match_status LIKE ? OR c.status LIKE ? OR v.name LIKE ?";
+    $search_params = [$search_term, $search_term, $search_term, $search_term, $search_term, $search_term];
+    if ($can_join_event_name) {
+        $search_conditions .= " OR e.name LIKE ?";
+        $search_params[] = $search_term;
+    }
+    $search_conditions .= ")";
+    $base_query .= $search_conditions;
+    $count_query .= $search_conditions;
+    array_push($params, ...$search_params);
+    array_push($count_params, ...$search_params);
+}
 
 // Add ordering
 $base_query .= " ORDER BY c.challenge_date DESC";
@@ -66,9 +132,15 @@ $total_pages = 1;
 $matches = [];
 
 try {
+    // Get distinct sport types for filter
+    $sport_types = [];
+    $sport_stmt = $conn->prepare("SELECT DISTINCT sport_type FROM challenges WHERE (challenger_id = ? OR opponent_id = ?) AND (status = 'accepted' OR status = 'completed') AND sport_type IS NOT NULL AND sport_type <> '' ORDER BY sport_type ASC");
+    $sport_stmt->execute([$team_id, $team_id]);
+    $sport_types = $sport_stmt->fetchAll(PDO::FETCH_COLUMN);
+
     // Count
     $stmt = $conn->prepare($count_query);
-    $stmt->execute([$team_id, $team_id]);
+    $stmt->execute($count_params);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $total_data = $result['total'];
     $total_pages = ceil($total_data / $limit);
@@ -81,10 +153,11 @@ try {
     // Fetch Data
     $query = $base_query . " LIMIT ? OFFSET ?";
     $stmt = $conn->prepare($query);
-    $stmt->bindValue(1, $team_id, PDO::PARAM_INT);
-    $stmt->bindValue(2, $team_id, PDO::PARAM_INT);
-    $stmt->bindValue(3, $limit, PDO::PARAM_INT);
-    $stmt->bindValue(4, $offset, PDO::PARAM_INT);
+    foreach ($params as $i => $val) {
+        $stmt->bindValue($i + 1, $val);
+    }
+    $stmt->bindValue(count($params) + 1, $limit, PDO::PARAM_INT);
+    $stmt->bindValue(count($params) + 2, $offset, PDO::PARAM_INT);
     $stmt->execute();
     $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -106,13 +179,80 @@ try {
             <p class="hero-description">Riwayat lengkap pertandingan yang diikuti oleh tim ini.</p>
         </div>
         <div class="hero-actions" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-            <a href="index.php" class="btn-premium btn-export" style="background: white;">
+            <a href="index.php" class="btn-premium btn-export">
                 <i class="fas fa-arrow-left"></i> Kembali ke Daftar Team
             </a>
         </div>
     </header>
 
     <div class="reveal d-2">
+        <div class="filter-container">
+            <div class="teams-filter-card">
+                <form action="" method="GET" style="display: flex; gap: 15px; width: 100%; align-items: center; flex-wrap: wrap;">
+                    <input type="hidden" name="team_id" value="<?php echo $team_id; ?>">
+                    <div style="flex: 1; position: relative; min-width: 220px;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--heritage-text); opacity: 0.5;"></i>
+                        <input type="text" name="search" class="teams-search-input" placeholder="Cari event, lawan, status, atau lokasi..." value="<?php echo htmlspecialchars($search); ?>">
+                    </div>
+                    <div style="min-width: 220px;">
+                        <div class="schedule-select-wrap">
+                            <div class="schedule-custom-select" id="matchSportSelect">
+                                <input type="hidden" name="sport" id="matchSportValue" value="<?php echo htmlspecialchars($filter_sport); ?>">
+                                <button type="button" class="schedule-custom-select-trigger" id="matchSportTrigger" aria-expanded="false">
+                                    <span class="schedule-custom-select-label">
+                                        <i class="fas fa-futbol"></i>
+                                        <span id="matchSportLabel" class="schedule-custom-select-text">
+                                            <?php echo $filter_sport !== '' ? htmlspecialchars($filter_sport) : 'Semua Kategori'; ?>
+                                        </span>
+                                    </span>
+                                    <i class="fas fa-chevron-down select-icon-right"></i>
+                                </button>
+                                <div class="schedule-custom-select-menu" id="matchSportMenu">
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_sport === '' ? 'active' : ''; ?>" data-value="">Semua Kategori</button>
+                                    <?php foreach ($sport_types as $sport): ?>
+                                        <button type="button" class="schedule-custom-option <?php echo $filter_sport === $sport ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($sport); ?>">
+                                            <?php echo htmlspecialchars($sport); ?>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="min-width: 220px;">
+                        <div class="schedule-select-wrap">
+                            <div class="schedule-custom-select" id="matchStatusSelect">
+                                <input type="hidden" name="status" id="matchStatusValue" value="<?php echo htmlspecialchars($filter_status); ?>">
+                                <button type="button" class="schedule-custom-select-trigger" id="matchStatusTrigger" aria-expanded="false">
+                                    <span class="schedule-custom-select-label">
+                                        <i class="fas fa-filter"></i>
+                                        <span id="matchStatusLabel" class="schedule-custom-select-text">
+                                            <?php echo $filter_status !== '' ? htmlspecialchars($status_labels[$filter_status] ?? $filter_status) : 'Semua Status'; ?>
+                                        </span>
+                                    </span>
+                                    <i class="fas fa-chevron-down select-icon-right"></i>
+                                </button>
+                                <div class="schedule-custom-select-menu" id="matchStatusMenu">
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === '' ? 'active' : ''; ?>" data-value="">Semua Status</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === 'open' ? 'active' : ''; ?>" data-value="open"><?php echo $status_labels['open']; ?></button>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === 'accepted' ? 'active' : ''; ?>" data-value="accepted"><?php echo $status_labels['accepted']; ?></button>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === 'rejected' ? 'active' : ''; ?>" data-value="rejected"><?php echo $status_labels['rejected']; ?></button>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === 'expired' ? 'active' : ''; ?>" data-value="expired"><?php echo $status_labels['expired']; ?></button>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === 'completed' ? 'active' : ''; ?>" data-value="completed"><?php echo $status_labels['completed']; ?></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-premium">
+                        <i class="fas fa-search"></i> Cari
+                    </button>
+                    <?php if(!empty($search) || $filter_sport !== '' || $filter_status !== ''): ?>
+                        <a href="?team_id=<?php echo $team_id; ?>" class="btn-premium btn-export">
+                            <i class="fas fa-times"></i> Reset
+                        </a>
+                    <?php endif; ?>
+                </form>
+            </div>
+        </div>
 
     <?php if (empty($matches)): ?>
         <div class="empty-state">
@@ -176,13 +316,12 @@ try {
                             </span>
                         </td>
                         <td style="text-align: center;">
-                            <span class="status-match <?php echo $match['match_status'] ?: strtolower($match['status']); ?>">
-                                <?php 
-                                    $m_status = $match['match_status'] ?: $match['status'];
-                                    $m_status_map = ['completed' => 'Selesai', 'scheduled' => 'Terjadwal', 'live' => 'Langsung', 'accepted' => 'Diterima'];
-                                    echo $m_status_map[$m_status ?? ''] ?? ucfirst($m_status ?? ''); 
-                                ?>
-                            </span>
+                            <?php if (!empty($match['status'])): ?>
+                                <?php $status_class = 'status-' . strtolower($match['status']); ?>
+                                <span class="status-badge <?php echo htmlspecialchars($status_class); ?>">
+                                    <?php echo htmlspecialchars($status_labels[$match['status']] ?? $match['status']); ?>
+                                </span>
+                            <?php endif; ?>
                         </td>
                         <td style="text-align: center;">
                             <a href="../../match.php?id=<?php echo $match['id']; ?>&source=challenge<?php echo ((int)($match['event_id'] ?? 0) > 0) ? '&event_id=' . (int)$match['event_id'] : ''; ?>" class="btn-view" target="_blank" title="Lihat Detail Pertandingan & Lineup">
@@ -199,8 +338,8 @@ try {
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=1"><i class="fas fa-angle-double-left"></i></a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>"><i class="fas fa-angle-left"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=1&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($filter_sport); ?>&status=<?php echo urlencode($filter_status); ?>" class="page-link" title="Halaman Pertama"><i class="fas fa-angle-double-left"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($filter_sport); ?>&status=<?php echo urlencode($filter_status); ?>" class="page-link" title="Sebelumnya"><i class="fas fa-angle-left"></i></a>
             <?php endif; ?>
             
             <?php
@@ -208,21 +347,21 @@ try {
             $end_page = min($total_pages, $page + 2);
             
             if ($start_page > 1) {
-                echo '<span class="pagination-dots">...</span>';
+                echo '<span class="page-dots">...</span>';
             }
             
             for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>" class="<?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($filter_sport); ?>&status=<?php echo urlencode($filter_status); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>"><?php echo $i; ?></a>
             <?php endfor; 
             
             if ($end_page < $total_pages) {
-                echo '<span class="pagination-dots">...</span>';
+                echo '<span class="page-dots">...</span>';
             }
             ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>"><i class="fas fa-angle-right"></i></a>
-                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>"><i class="fas fa-angle-double-right"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($filter_sport); ?>&status=<?php echo urlencode($filter_status); ?>" class="page-link" title="Berikutnya"><i class="fas fa-angle-right"></i></a>
+                <a href="?team_id=<?php echo $team_id; ?>&page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($filter_sport); ?>&status=<?php echo urlencode($filter_status); ?>" class="page-link" title="Halaman Terakhir"><i class="fas fa-angle-double-right"></i></a>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -254,5 +393,57 @@ try {
     100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function initCustomSelect(rootId, triggerId, menuId, valueId, labelId) {
+        const selectRoot = document.getElementById(rootId);
+        if (!selectRoot) return;
+        const trigger = document.getElementById(triggerId);
+        const menu = document.getElementById(menuId);
+        const hiddenInput = document.getElementById(valueId);
+        const label = document.getElementById(labelId);
+        const options = menu.querySelectorAll('.schedule-custom-option');
+
+        function closeMenu() {
+            selectRoot.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function openMenu() {
+            selectRoot.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+
+        trigger.addEventListener('click', function() {
+            if (selectRoot.classList.contains('open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        options.forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                const value = opt.getAttribute('data-value') || '';
+                hiddenInput.value = value;
+                label.textContent = opt.textContent.trim();
+                options.forEach(function(o) { o.classList.remove('active'); });
+                opt.classList.add('active');
+                closeMenu();
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!selectRoot.contains(e.target)) {
+                closeMenu();
+            }
+        });
+    }
+
+    initCustomSelect('matchSportSelect', 'matchSportTrigger', 'matchSportMenu', 'matchSportValue', 'matchSportLabel');
+    initCustomSelect('matchStatusSelect', 'matchStatusTrigger', 'matchStatusMenu', 'matchStatusValue', 'matchStatusLabel');
+});
+</script>
 
 <?php require_once '../includes/footer.php'; ?>
