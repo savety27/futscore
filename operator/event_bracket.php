@@ -112,45 +112,6 @@ function hasColumnPDO(PDO $conn, string $table, string $column): bool
     return (int)$stmt->fetchColumn() > 0;
 }
 
-function validateBracketChallengeId(PDO $conn, int $challengeId, int $eventId, string $category, int $teamA, int $teamB): bool
-{
-    if ($challengeId <= 0) {
-        return false;
-    }
-
-    $hasEventIdColumn = hasColumnPDO($conn, 'challenges', 'event_id');
-    if ($hasEventIdColumn && $eventId > 0) {
-        $sql = "SELECT id
-                FROM challenges
-                WHERE id = ?
-                  AND event_id = ?
-                  AND sport_type = ?
-                  AND (
-                      (challenger_id = ? AND opponent_id = ?)
-                      OR
-                      (challenger_id = ? AND opponent_id = ?)
-                  )
-                LIMIT 1";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$challengeId, $eventId, $category, $teamA, $teamB, $teamB, $teamA]);
-    } else {
-        $sql = "SELECT id
-                FROM challenges
-                WHERE id = ?
-                  AND sport_type = ?
-                  AND (
-                      (challenger_id = ? AND opponent_id = ?)
-                      OR
-                      (challenger_id = ? AND opponent_id = ?)
-                  )
-                LIMIT 1";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$challengeId, $category, $teamA, $teamB, $teamB, $teamA]);
-    }
-
-    return (bool)$stmt->fetch(PDO::FETCH_ASSOC);
-}
-
 function findBracketChallengeIdAuto(PDO $conn, int $eventId, string $category, int $teamA, int $teamB, ?int $scoreA = null, ?int $scoreB = null): int
 {
     if ($teamA <= 0 || $teamB <= 0 || trim($category) === '') {
@@ -630,842 +591,577 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Event Bracket</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
-<style>
-:root { --primary:#0f2744; --secondary:#f59e0b; --accent:#3b82f6; --danger:#ef4444; --dark:#1e293b; --gray:#64748b; --sidebar-bg:linear-gradient(180deg, #0a1628 0%, #0f2744 100%); --ok:#16a34a; --warn:#dc2626; --card:#ffffff; --card-shadow:0 10px 15px -3px rgba(0,0,0,.05), 0 4px 6px -2px rgba(0,0,0,.03); }
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:'Plus Jakarta Sans','Segoe UI',sans-serif; background:linear-gradient(180deg,#eaf6ff 0%,#f4fbff 100%); color:#1e293b; }
-.main { margin-left:280px; width:calc(100% - 280px); padding:28px; }
-.topbar,.page-header,.panel { background:#fff; border-radius:18px; box-shadow:var(--card-shadow); }
-.topbar { padding:18px 22px; margin-bottom:22px; display:flex; justify-content:space-between; align-items:center; }
-.greeting h1 { color:var(--primary); font-size:26px; }
-.greeting p { color:var(--gray); font-size:14px; }
-.user-actions { display:flex; align-items:center; gap:10px; }
-.logout-btn {
-  display:inline-flex;
-  gap:10px;
-  align-items:center;
-  background:linear-gradient(135deg, var(--danger), #b91c1c);
-  color:#fff;
-  text-decoration:none;
-  padding:12px 28px;
-  border-radius:12px;
-  font-weight:600;
-}
-.page-header { margin-bottom:22px; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; gap:14px; }
-.page-title { display:flex; align-items:center; gap:10px; color:var(--primary); font-size:25px; }
-.action-buttons { display:flex; gap:10px; flex-wrap:wrap; }
-.btn { border:none; border-radius:10px; padding:11px 18px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
-.btn-primary { background:linear-gradient(135deg,var(--primary),var(--accent)); color:#fff; }
-.btn-secondary { background:#6b7280; color:#fff; }
-.btn-danger { background:#b91c1c; color:#fff; }
-.btn-sm { padding:8px 12px; font-size:13px; }
-.panel { padding:18px; margin-bottom:16px; }
-.panel-title { font-size:18px; color:var(--primary); margin-bottom:12px; font-weight:800; }
-.grid { display:grid; gap:12px; }
-.grid-2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
-.grid-4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
-.form-group label { display:block; font-size:13px; margin-bottom:6px; font-weight:700; }
-.form-control { width:100%; height:40px; border:1px solid #dbe5f3; border-radius:10px; padding:0 10px; }
-.section-divider { border-top:1px solid #e2e8f0; margin:14px 0; padding-top:14px; }
-.alert { padding:11px 13px; border-radius:10px; font-size:13px; margin-bottom:10px; }
-.alert-success { background:#dcfce7; color:#166534; }
-.alert-danger { background:#fee2e2; color:#991b1b; }
-.muted { color:var(--gray); font-size:12px; }
-.bracket-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.match-box { border:1px solid #dbe5f3; border-radius:12px; padding:12px; background:#f8fbff; }
-.match-title { font-size:14px; font-weight:800; color:var(--primary); margin-bottom:8px; }
-.match-row { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px dashed #dbe5f3; }
-.match-row:last-child { border-bottom:none; }
-.score-pill { min-width:24px; text-align:center; font-weight:800; }
-.rank-list { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:10px; }
-.rank-item { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; font-size:13px; }
-.rank-item strong { display:block; color:var(--primary); margin-bottom:4px; }
-.diagram-wrap {
-  background:radial-gradient(circle at 20% 0%, #f8fbff 0%, #eef4fb 48%, #e9f1f9 100%);
-  border:1px solid #dbe5f3;
-  border-radius:16px;
-  padding:22px;
-}
-.diagram-title {
-  font-size:24px;
-  font-weight:800;
-  color:#334155;
-  margin-bottom:6px;
-}
-.diagram-note {
-  color:#64748b;
-  font-size:12px;
-  margin-bottom:14px;
-}
-.diagram-canvas {
-  position:relative;
-  min-height:540px;
-  transition:transform .25s ease;
-  perspective:1200px;
-  transform-style:preserve-3d;
-}
-.d-match {
-  position:absolute;
-  width:260px;
-  background:#fff;
-  border:1px solid #d1d5db;
-  border-radius:10px;
-  overflow:visible;
-  box-shadow:0 10px 20px rgba(15,39,68,.08);
-  opacity:0;
-  transform:translateY(10px) scale(.98);
-  animation:bracketNodeIn .45s ease-out forwards, nodeFloat 4.5s ease-in-out infinite;
-  transition:transform .24s ease, box-shadow .24s ease, border-color .24s ease, filter .24s ease;
-  transform-origin:center center;
-  will-change:transform, box-shadow, filter;
-  z-index:1;
-  backface-visibility:hidden;
-}
-.d-match::after {
-  content:'';
-  position:absolute;
-  inset:0;
-  border-radius:10px;
-  pointer-events:none;
-  background:linear-gradient(110deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.18) 40%, rgba(255,255,255,0) 70%);
-  transform:translateX(-140%);
-  opacity:0;
-  mix-blend-mode:normal;
-}
-.d-match:hover::after {
-  opacity:.55;
-  animation:nodeShine .65s ease-out forwards;
-}
-.d-row {
-  display:grid;
-  grid-template-columns: 1fr 40px;
-  border-bottom:1px solid #e5e7eb;
-  cursor:pointer;
-  transition:background .2s ease, box-shadow .2s ease, color .2s ease;
-}
-.d-row:last-child { border-bottom:none; }
-.d-row.win {
-  background:linear-gradient(90deg,#0ea5e9 0%, #2563eb 100%);
-  color:#ffffff;
-}
-.d-row.lose { background:#e5e7eb; }
-.d-name {
-  padding:8px 10px;
-  font-size:15px;
-}
-.d-team {
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-}
-.d-team-logo {
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  object-fit:cover;
-  background:#ffffff;
-  border:1px solid rgba(148,163,184,.7);
-  flex-shrink:0;
-}
-.d-team-logo-placeholder {
-  display:inline-block;
-  background:#cbd5e1;
-}
-.d-team-name {
-  line-height:1.2;
-}
-.d-score {
-  text-align:center;
-  padding:8px 0;
-  font-weight:800;
-  font-size:22px;
-}
-.d-score.green { color:#16a34a; }
-.d-score.red { color:#b91c1c; }
-.d-row.win .d-score.green { color:#ffffff; }
-.d-rank {
-  position:absolute;
-  right:-62px;
-  top:8px;
-  width:52px;
-  text-align:center;
-  color:#fff;
-  font-size:12px;
-  font-weight:800;
-  border-radius:6px;
-  padding:4px 0;
-  box-shadow:0 8px 14px rgba(15,39,68,.18);
-  z-index:3;
-  opacity:0;
-  animation:bracketNodeIn .45s ease-out forwards;
-  transition:transform .22s ease, box-shadow .22s ease, filter .22s ease;
-}
-.d-rank.second { top:44px; background:#6b7280; }
-.d-rank.first { background:#2563eb; }
-.d-rank.second { background:#334155; }
-.d-rank.third { background:#0f766e; }
-.d-rank.fourth { background:#7c2d12; top:44px; }
-.d-line {
-  position:absolute;
-  border-color:#cbd5e1;
-  border-style:solid;
-  border-width:0;
-  opacity:0;
-  transform-origin:left center;
-  animation:lineDraw .55s ease-out forwards, bracketLinePulse 2.4s ease-in-out infinite;
-  transition:filter .25s ease, border-color .25s ease, opacity .25s ease;
-}
-.d-line.gold { border-color:#2563eb; }
-@keyframes bracketNodeIn {
-  from { opacity:0; transform:translateY(10px) scale(.98); }
-  to { opacity:1; transform:translateY(0) scale(1); }
-}
-@keyframes bracketLineIn {
-  from { opacity:0; }
-  to { opacity:1; }
-}
-@keyframes lineDraw {
-  0% { opacity:0; transform:scaleX(0); }
-  100% { opacity:1; transform:scaleX(1); }
-}
-@keyframes bracketLinePulse {
-  0% { filter: drop-shadow(0 0 0 rgba(37,99,235,.0)); }
-  50% { filter: drop-shadow(0 0 5px rgba(37,99,235,.35)); }
-  100% { filter: drop-shadow(0 0 0 rgba(37,99,235,.0)); }
-}
-@keyframes winnerGlow {
-  0% { box-shadow: inset 0 0 0 rgba(255,255,255,0); }
-  50% { box-shadow: inset 0 0 18px rgba(255,255,255,.14); }
-  100% { box-shadow: inset 0 0 0 rgba(255,255,255,0); }
-}
-.d-rank {
-  animation:bracketNodeIn .45s ease-out forwards, rankPulse 2.8s ease-in-out infinite;
-}
-@keyframes nodeFloat {
-  0% { transform:translateY(0) scale(1); }
-  50% { transform:translateY(-2px) scale(1); }
-  100% { transform:translateY(0) scale(1); }
-}
-@keyframes nodeShine {
-  from { transform:translateX(-140%); }
-  to { transform:translateX(140%); }
-}
-@keyframes rankPulse {
-  0% { filter:brightness(1); }
-  50% { filter:brightness(1.08); }
-  100% { filter:brightness(1); }
-}
-.d-row.win {
-  animation:winnerGlow 2.8s ease-in-out infinite;
-}
-.d-row.linked-highlight {
-  background:linear-gradient(90deg,#166534 0%, #15803d 45%, #16a34a 100%) !important;
-  color:#ffffff !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.22), 0 0 0 2px rgba(22,163,74,.36);
-}
-.d-row.linked-highlight .d-score {
-  color:#ffffff !important;
-}
-.d-match:hover {
-  transform:translateY(-8px) translateZ(60px) scale(1.08);
-  transition:transform .22s ease;
-  z-index:12;
-}
-.diagram-canvas:hover .d-line {
-  border-color:#60a5fa;
-  filter:drop-shadow(0 0 8px rgba(37,99,235,.35));
-}
-.diagram-canvas:hover .d-line.gold {
-  border-color:#1d4ed8;
-  filter:drop-shadow(0 0 10px rgba(29,78,216,.45));
-}
-.diagram-canvas:hover .d-match {
-  filter:saturate(1.05);
-}
-.diagram-canvas .d-match:hover {
-  border-color:#60a5fa;
-  border-width:5px;
-  box-shadow:0 20px 34px rgba(15,39,68,.2);
-  filter:saturate(1.08);
-}
-.diagram-canvas .d-match:hover .d-name {
-  letter-spacing:.2px;
-}
-.diagram-canvas .d-match:hover .d-score {
-  transform:scale(1.08);
-  transition:transform .2s ease;
-}
-.diagram-canvas .d-match:hover .d-rank {
-  transform:translateX(3px) scale(1.06);
-  box-shadow:0 12px 20px rgba(15,39,68,.24);
-  filter:brightness(1.08);
-}
-.diagram-canvas .d-match:hover .d-row.lose {
-  background:#cbd5e1;
-}
-@media (max-width: 1100px) {
-  .diagram-canvas { min-height: unset; display:grid; gap:12px; }
-  .d-match { position:static; width:100%; }
-  .d-line, .d-rank { display:none; }
-}
-@media (max-width: 900px) {
-  .main { margin-left:0; width:100%; padding:16px; }
-  .grid-2,.grid-4,.bracket-grid,.rank-list { grid-template-columns:1fr; }
-  .topbar { flex-direction:column; align-items:flex-start; gap:12px; }
-  .user-actions { width:100%; display:flex; justify-content:flex-end; }
-  .page-header { flex-direction:column; align-items:center; }
-  .page-title { width:100%; justify-content:center; text-align:center; }
-  .page-header .action-buttons { width:100%; flex-direction:column; }
-  .page-header .action-buttons .btn { width:100%; justify-content:center; }
-}
-@media (max-width: 480px) {
-  .btn { font-size:14px; }
-  .logout-btn {
-    background:linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
-    border:none;
-    padding:10px 20px;
-    font-size:14px;
-    gap:10px;
-    box-shadow:0 5px 15px rgba(211, 47, 47, 0.2);
-  }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Bracket - Area Operator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
+    <link rel="stylesheet" href="css/event_bracket.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/event_bracket.css'); ?>">
 </head>
 <body>
-<div class="menu-overlay"></div>
-<button class="mobile-menu-toggle" aria-label="Toggle menu">
-    <i class="fas fa-bars"></i>
-</button>
+    <div class="menu-overlay"></div>
+    <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
 
-<div class="wrapper">
-    <?php include __DIR__ . '/includes/sidebar.php'; ?>
-    <div class="main">
-        <div class="topbar">
-            <div class="greeting">
-                <h1>Event Bracket 🗓️</h1>
-                <p>Mode 4 tim: Semifinal, Final, dan perebutan juara 3.</p>
-            </div>
-            <div class="user-actions">
-                <a href="../operator/logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
-            </div>
-        </div>
-
-        <div class="page-header">
-            <div class="page-title"><i class="fas fa-diagram-project"></i> <span>Kelola Bracket Event</span></div>
-            <div class="action-buttons">
-                <a href="event.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali</a>
-            </div>
-        </div>
-
-        <?php if ($success !== ''): ?>
-            <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
-        <?php endif; ?>
-        <?php foreach ($errors as $error): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-        <?php endforeach; ?>
-        <?php if ($operator_read_only): ?>
-            <div class="alert alert-danger">Event Anda sedang non-aktif. Mode operator hanya lihat data.</div>
-        <?php endif; ?>
-
-        <div class="panel">
-            <div class="panel-title">Pilih Event & Kategori</div>
-            <form method="get" class="grid grid-2">
-                <div class="form-group">
-                    <label>Event</label>
-                    <select class="form-control" name="event_id" onchange="this.form.submit()" disabled>
-                        <option value=""><?php echo $eventId > 0 ? 'Event Operator' : 'Event belum ditetapkan'; ?></option>
-                        <?php foreach ($events as $event): ?>
-                            <option value="<?php echo (int)$event['id']; ?>" <?php echo $eventId === (int)$event['id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars((string)($event['name'] ?? '-')); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+    <div class="wrapper">
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
+        
+        <div class="main">
+            <!-- TOPBAR -->
+            <div class="topbar reveal">
+                <div class="greeting">
+                    <h1>Event Bracket 🗓️</h1>
+                    <p>Mode 4 tim: Semifinal, Final, dan perebutan juara 3.</p>
                 </div>
-                <div class="form-group">
-                    <label>Kategori</label>
-                    <select class="form-control" name="sport_type" onchange="this.form.submit()">
-                        <option value="">Pilih Kategori</option>
-                        <?php foreach ($categories as $category): ?>
-                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $selectedCategory === $category ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                <div class="user-actions">
+                    <a href="../operator/logout.php" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Keluar
+                    </a>
                 </div>
-            </form>
-        </div>
-
-        <?php if ($eventId <= 0): ?>
-            <div class="panel"><p class="muted">Pilih event dan kategori dulu.</p></div>
-        <?php elseif ($effectiveCategory === ''): ?>
-            <div class="panel">
-                <div class="panel-title">Preview Semua Kategori</div>
-                <?php if (empty($specificCategories)): ?>
-                    <p class="muted">Belum ada kategori spesifik untuk event ini.</p>
-                <?php else: ?>
-                    <p class="muted" style="margin-bottom:12px;">Mode Liga menampilkan semua kategori. Klik kategori untuk edit bracket.</p>
-                    <?php foreach ($allBracketViews as $view): ?>
-                        <?php
-                        $vCategory = (string)$view['category'];
-                        $vTeamMap = (array)$view['teamMap'];
-                        $vTeamLogoMap = (array)$view['teamLogoMap'];
-                        $vSf1Team1 = (int)$view['sf1Team1'];
-                        $vSf1Team2 = (int)$view['sf1Team2'];
-                        $vSf2Team1 = (int)$view['sf2Team1'];
-                        $vSf2Team2 = (int)$view['sf2Team2'];
-                        $vSf1Score1 = $view['sf1Score1'];
-                        $vSf1Score2 = $view['sf1Score2'];
-                        $vSf2Score1 = $view['sf2Score1'];
-                        $vSf2Score2 = $view['sf2Score2'];
-                        $vFinalScore1 = $view['finalScore1'];
-                        $vFinalScore2 = $view['finalScore2'];
-                        $vThirdScore1 = $view['thirdScore1'];
-                        $vThirdScore2 = $view['thirdScore2'];
-                        $vSf1Outcome = (array)$view['sf1Outcome'];
-                        $vSf2Outcome = (array)$view['sf2Outcome'];
-                        $vFinalTeam1 = (int)$view['finalTeam1'];
-                        $vFinalTeam2 = (int)$view['finalTeam2'];
-                        $vThirdTeam1 = (int)$view['thirdTeam1'];
-                        $vThirdTeam2 = (int)$view['thirdTeam2'];
-                        $vFinalOutcome = (array)$view['finalOutcome'];
-                        $vThirdOutcome = (array)$view['thirdOutcome'];
-                        $vSf1Done = ((string)($vSf1Outcome['status'] ?? '') === 'done');
-                        $vSf2Done = ((string)($vSf2Outcome['status'] ?? '') === 'done');
-                        $vFinalDone = ((string)($vFinalOutcome['status'] ?? '') === 'done');
-                        $vThirdDone = ((string)($vThirdOutcome['status'] ?? '') === 'done');
-
-                        $vFinalTopRankText = '1st';
-                        $vFinalBottomRankText = '2nd';
-                        if ($vFinalDone && (int)($vFinalOutcome['winner'] ?? 0) === $vFinalTeam2) {
-                            $vFinalTopRankText = '2nd';
-                            $vFinalBottomRankText = '1st';
-                        }
-                        $vThirdTopRankText = '3rd';
-                        $vThirdBottomRankText = '4th';
-                        if ($vThirdDone && (int)($vThirdOutcome['winner'] ?? 0) === $vThirdTeam2) {
-                            $vThirdTopRankText = '4th';
-                            $vThirdBottomRankText = '3rd';
-                        }
-                        ?>
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin:8px 0 10px;">
-                            <div class="match-title" style="margin:0;"><?php echo htmlspecialchars($vCategory); ?></div>
-                            <a class="btn btn-secondary btn-sm" href="event_bracket.php?event_id=<?php echo (int)$eventId; ?>&sport_type=<?php echo urlencode($vCategory); ?>">
-                                Kelola
-                            </a>
-                        </div>
-                        <div class="diagram-wrap" style="margin-bottom:16px;">
-                            <div class="diagram-title" style="font-size:20px;"><?php echo htmlspecialchars($vCategory); ?> - Bracket</div>
-                            <div class="diagram-note">Preview bracket kategori ini.</div>
-                            <div class="diagram-canvas">
-                                <div class="d-match" style="left:10px; top:48px; animation-delay:.05s;">
-                                    <div class="d-row <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vSf1Team1; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf1Team1); ?></div>
-                                        <div class="d-score <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team1 ? 'green' : 'red'; ?>"><?php echo $vSf1Score1 !== null ? (int)$vSf1Score1 : '-'; ?></div>
-                                    </div>
-                                    <div class="d-row <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vSf1Team2; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf1Team2); ?></div>
-                                        <div class="d-score <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team2 ? 'green' : 'red'; ?>"><?php echo $vSf1Score2 !== null ? (int)$vSf1Score2 : '-'; ?></div>
-                                    </div>
-                                </div>
-                                <div class="d-match" style="left:10px; top:240px; animation-delay:.15s;">
-                                    <div class="d-row <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vSf2Team1; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf2Team1); ?></div>
-                                        <div class="d-score <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team1 ? 'green' : 'red'; ?>"><?php echo $vSf2Score1 !== null ? (int)$vSf2Score1 : '-'; ?></div>
-                                    </div>
-                                    <div class="d-row <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vSf2Team2; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf2Team2); ?></div>
-                                        <div class="d-score <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team2 ? 'green' : 'red'; ?>"><?php echo $vSf2Score2 !== null ? (int)$vSf2Score2 : '-'; ?></div>
-                                    </div>
-                                </div>
-                                <div class="d-match" style="left:460px; top:145px; animation-delay:.25s;">
-                                    <div class="d-row <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vFinalTeam1; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vFinalTeam1); ?></div>
-                                        <div class="d-score <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam1 ? 'green' : 'red'; ?>"><?php echo $vFinalScore1 !== null ? (int)$vFinalScore1 : '-'; ?></div>
-                                    </div>
-                                    <div class="d-row <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vFinalTeam2; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vFinalTeam2); ?></div>
-                                        <div class="d-score <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam2 ? 'green' : 'red'; ?>"><?php echo $vFinalScore2 !== null ? (int)$vFinalScore2 : '-'; ?></div>
-                                    </div>
-                                    <span class="d-rank first" style="animation-delay:.35s;"><?php echo $vFinalTopRankText; ?></span>
-                                    <span class="d-rank second" style="animation-delay:.4s;"><?php echo $vFinalBottomRankText; ?></span>
-                                </div>
-                                <div class="d-match" style="left:460px; top:380px; animation-delay:.3s;">
-                                    <div class="d-row <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vThirdTeam1; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vThirdTeam1); ?></div>
-                                        <div class="d-score <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam1 ? 'green' : 'red'; ?>"><?php echo $vThirdScore1 !== null ? (int)$vThirdScore1 : '-'; ?></div>
-                                    </div>
-                                    <div class="d-row <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$vThirdTeam2; ?>">
-                                        <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vThirdTeam2); ?></div>
-                                        <div class="d-score <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam2 ? 'green' : 'red'; ?>"><?php echo $vThirdScore2 !== null ? (int)$vThirdScore2 : '-'; ?></div>
-                                    </div>
-                                    <span class="d-rank third" style="animation-delay:.45s;"><?php echo $vThirdTopRankText; ?></span>
-                                    <span class="d-rank fourth" style="animation-delay:.5s;"><?php echo $vThirdBottomRankText; ?></span>
-                                </div>
-                                <div class="d-line gold" style="left:270px; top:84px; width:90px; border-top-width:3px; animation-delay:.28s;"></div>
-                                <div class="d-line gold" style="left:360px; top:84px; height:92px; border-right-width:3px; animation-delay:.32s;"></div>
-                                <div class="d-line gold" style="left:360px; top:176px; width:100px; border-top-width:3px; animation-delay:.36s;"></div>
-                                <div class="d-line" style="left:270px; top:276px; width:90px; border-top-width:3px; animation-delay:.3s;"></div>
-                                <div class="d-line" style="left:360px; top:176px; height:100px; border-right-width:3px; animation-delay:.34s;"></div>
-                                <div class="d-line" style="left:360px; top:176px; width:100px; border-top-width:3px; animation-delay:.38s;"></div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-        <?php else: ?>
-            <div class="panel">
-                <div class="panel-title">Setup Bracket (4 Tim)</div>
-                <?php if (count($teams) < 4): ?>
-                    <p class="muted">Tim kategori ini kurang dari 4. Minimal 4 tim untuk mode bracket ini.</p>
-                <?php else: ?>
-                    <form method="post">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
-                        <input type="hidden" name="action" value="save_bracket">
-                        <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
-                        <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($effectiveCategory); ?>">
-
-                        <div class="grid grid-4">
-                            <div class="form-group">
-                                <label>SF1 Team A</label>
-                                <select class="form-control" id="sf1_team1_id" name="sf1_team1_id" required>
-                                    <option value="">Pilih Tim</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf1Team1 === (int)$team['id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>SF1 Team B</label>
-                                <select class="form-control" id="sf1_team2_id" name="sf1_team2_id" required>
-                                    <option value="">Pilih Tim</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf1Team2 === (int)$team['id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>SF2 Team A</label>
-                                <select class="form-control" id="sf2_team1_id" name="sf2_team1_id" required>
-                                    <option value="">Pilih Tim</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf2Team1 === (int)$team['id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>SF2 Team B</label>
-                                <select class="form-control" id="sf2_team2_id" name="sf2_team2_id" required>
-                                    <option value="">Pilih Tim</option>
-                                    <?php foreach ($teams as $team): ?>
-                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf2Team2 === (int)$team['id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-4">
-                            <div class="form-group">
-                                <label>Skor SF1 Team A</label>
-                                <input class="form-control" id="sf1_score1" type="number" min="0" name="sf1_score1" value="<?php echo $sf1Score1 !== null ? (int)$sf1Score1 : ''; ?>">
-                                <div class="muted" id="sf1_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf1Team1)); ?></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Skor SF1 Team B</label>
-                                <input class="form-control" id="sf1_score2" type="number" min="0" name="sf1_score2" value="<?php echo $sf1Score2 !== null ? (int)$sf1Score2 : ''; ?>">
-                                <div class="muted" id="sf1_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf1Team2)); ?></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Skor SF2 Team A</label>
-                                <input class="form-control" id="sf2_score1" type="number" min="0" name="sf2_score1" value="<?php echo $sf2Score1 !== null ? (int)$sf2Score1 : ''; ?>">
-                                <div class="muted" id="sf2_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf2Team1)); ?></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Skor SF2 Team B</label>
-                                <input class="form-control" id="sf2_score2" type="number" min="0" name="sf2_score2" value="<?php echo $sf2Score2 !== null ? (int)$sf2Score2 : ''; ?>">
-                                <div class="muted" id="sf2_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $sf2Team2)); ?></div>
-                            </div>
-                        </div>
-
-                        <div class="section-divider"></div>
-                        <div class="grid grid-4">
-                            <div class="form-group">
-                                <label>Skor Final Team A</label>
-                                <input class="form-control" type="number" min="0" name="final_score1" value="<?php echo $finalScore1 !== null ? (int)$finalScore1 : ''; ?>">
-                                <div class="muted" id="final_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $finalTeam1)); ?></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Skor Final Team B</label>
-                                <input class="form-control" type="number" min="0" name="final_score2" value="<?php echo $finalScore2 !== null ? (int)$finalScore2 : ''; ?>">
-                                <div class="muted" id="final_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $finalTeam2)); ?></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Skor 3rd Team A</label>
-                                <input class="form-control" type="number" min="0" name="third_score1" value="<?php echo $thirdScore1 !== null ? (int)$thirdScore1 : ''; ?>">
-                                <div class="muted" id="third_team1_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $thirdTeam1)); ?></div>
-                            </div>
-                            <div class="form-group">
-                                <label>Skor 3rd Team B</label>
-                                <input class="form-control" type="number" min="0" name="third_score2" value="<?php echo $thirdScore2 !== null ? (int)$thirdScore2 : ''; ?>">
-                                <div class="muted" id="third_team2_label" style="margin-top:6px;">Tim: <?php echo htmlspecialchars(teamNameById($teamMap, $thirdTeam2)); ?></div>
-                            </div>
-                        </div>
-
-                        <div class="section-divider"></div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Simpan Bracket</button>
-                        </div>
-                    </form>
-                    <form method="post" style="margin-top:8px;">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
-                        <input type="hidden" name="action" value="clear_bracket">
-                        <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
-                        <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($effectiveCategory); ?>">
-                        <button class="btn btn-danger" type="submit"><i class="fas fa-eraser"></i> Reset Bracket</button>
-                    </form>
-                <?php endif; ?>
             </div>
 
-            <div class="panel">
-                <div class="panel-title">Preview Bracket</div>
-                <div class="diagram-wrap">
-                    <div class="diagram-title">Bracket</div>
-                    <div class="diagram-note">Klik match form di atas untuk update skor pertandingan.</div>
-                    <div class="diagram-canvas">
-                        <?php
-                        $sf1Done = ((string)$sf1Outcome['status'] === 'done');
-                        $sf2Done = ((string)$sf2Outcome['status'] === 'done');
-                        $finalDone = ((string)$finalOutcome['status'] === 'done');
-                        $thirdDone = ((string)$thirdOutcome['status'] === 'done');
-
-                        $finalTopRankText = '1st';
-                        $finalBottomRankText = '2nd';
-                        if ($finalDone && (int)$finalOutcome['winner'] === $finalTeam2) {
-                            $finalTopRankText = '2nd';
-                            $finalBottomRankText = '1st';
-                        }
-                        $thirdTopRankText = '3rd';
-                        $thirdBottomRankText = '4th';
-                        if ($thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2) {
-                            $thirdTopRankText = '4th';
-                            $thirdBottomRankText = '3rd';
-                        }
-                        ?>
-                        <div class="d-match" style="left:10px; top:48px; animation-delay:.05s;">
-                            <div class="d-row <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$sf1Team1; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf1Team1); ?></div>
-                                <div class="d-score <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team1 ? 'green' : 'red'; ?>"><?php echo $sf1Score1 !== null ? (int)$sf1Score1 : '-'; ?></div>
-                            </div>
-                            <div class="d-row <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$sf1Team2; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf1Team2); ?></div>
-                                <div class="d-score <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team2 ? 'green' : 'red'; ?>"><?php echo $sf1Score2 !== null ? (int)$sf1Score2 : '-'; ?></div>
-                            </div>
-                        </div>
-
-                        <div class="d-match" style="left:10px; top:240px; animation-delay:.15s;">
-                            <div class="d-row <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$sf2Team1; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf2Team1); ?></div>
-                                <div class="d-score <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team1 ? 'green' : 'red'; ?>"><?php echo $sf2Score1 !== null ? (int)$sf2Score1 : '-'; ?></div>
-                            </div>
-                            <div class="d-row <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$sf2Team2; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf2Team2); ?></div>
-                                <div class="d-score <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team2 ? 'green' : 'red'; ?>"><?php echo $sf2Score2 !== null ? (int)$sf2Score2 : '-'; ?></div>
-                            </div>
-                        </div>
-
-                        <div class="d-match" style="left:460px; top:145px; animation-delay:.25s;">
-                            <div class="d-row <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$finalTeam1; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $finalTeam1); ?></div>
-                                <div class="d-score <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam1 ? 'green' : 'red'; ?>"><?php echo $finalScore1 !== null ? (int)$finalScore1 : '-'; ?></div>
-                            </div>
-                            <div class="d-row <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$finalTeam2; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $finalTeam2); ?></div>
-                                <div class="d-score <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam2 ? 'green' : 'red'; ?>"><?php echo $finalScore2 !== null ? (int)$finalScore2 : '-'; ?></div>
-                            </div>
-                            <span class="d-rank first" style="animation-delay:.35s;"><?php echo $finalTopRankText; ?></span>
-                            <span class="d-rank second" style="animation-delay:.4s;"><?php echo $finalBottomRankText; ?></span>
-                        </div>
-
-                        <div class="d-match" style="left:460px; top:380px; animation-delay:.3s;">
-                            <div class="d-row <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam1 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$thirdTeam1; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $thirdTeam1); ?></div>
-                                <div class="d-score <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam1 ? 'green' : 'red'; ?>"><?php echo $thirdScore1 !== null ? (int)$thirdScore1 : '-'; ?></div>
-                            </div>
-                            <div class="d-row <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2 ? 'win' : 'lose'; ?>" data-team-id="<?php echo (int)$thirdTeam2; ?>">
-                                <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $thirdTeam2); ?></div>
-                                <div class="d-score <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2 ? 'green' : 'red'; ?>"><?php echo $thirdScore2 !== null ? (int)$thirdScore2 : '-'; ?></div>
-                            </div>
-                            <span class="d-rank third" style="animation-delay:.45s;"><?php echo $thirdTopRankText; ?></span>
-                            <span class="d-rank fourth" style="animation-delay:.5s;"><?php echo $thirdBottomRankText; ?></span>
-                        </div>
-
-                        <div class="d-line gold" style="left:270px; top:84px; width:90px; border-top-width:3px; animation-delay:.28s;"></div>
-                        <div class="d-line gold" style="left:360px; top:84px; height:92px; border-right-width:3px; animation-delay:.32s;"></div>
-                        <div class="d-line gold" style="left:360px; top:176px; width:100px; border-top-width:3px; animation-delay:.36s;"></div>
-
-                        <div class="d-line" style="left:270px; top:276px; width:90px; border-top-width:3px; animation-delay:.3s;"></div>
-                        <div class="d-line" style="left:360px; top:176px; height:100px; border-right-width:3px; animation-delay:.34s;"></div>
-                        <div class="d-line" style="left:360px; top:176px; width:100px; border-top-width:3px; animation-delay:.38s;"></div>
+            <div class="event-hub">
+                <!-- Editorial Header -->
+                <header class="dashboard-hero reveal d-1">
+                    <div class="hero-content">
+                        <span class="hero-label">Manajemen Kompetisi</span>
+                        <h1 class="hero-title">Visualisasi Bracket</h1>
+                        <p class="hero-description">Kelola alur turnamen, dari babak semifinal hingga partai puncak untuk event <strong><?php echo htmlspecialchars($operator_event_name); ?></strong>.</p>
                     </div>
+                    <div class="hero-actions">
+                        <a href="event.php" class="btn-premium btn-cancel">
+                            <i class="fas fa-arrow-left"></i> Kembali ke Hub
+                        </a>
+                        <?php if ($effectiveCategory !== ''): ?>
+                            <a href="event_bracket.php?event_id=<?php echo (int)$eventId; ?>&sport_type=Liga" class="btn-premium btn-cancel">
+                                <i class="fas fa-layer-group"></i> Preview Semua
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </header>
+
+                <?php if ($success !== ''): ?>
+                    <div class="alert alert-success reveal d-1">
+                        <i class="fas fa-check-circle"></i>
+                        <span><?php echo htmlspecialchars($success); ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php foreach ($errors as $error): ?>
+                    <div class="alert alert-danger reveal d-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span><?php echo htmlspecialchars($error); ?></span>
+                    </div>
+                <?php endforeach; ?>
+
+                <?php if ($operator_read_only): ?>
+                    <div class="alert alert-danger reveal d-1">
+                        <i class="fas fa-lock"></i>
+                        <span>Event Anda sedang non-aktif. Mode operator hanya lihat data.</span>
+                    </div>
+                <?php endif; ?>
+
+                <!-- SELECTION CARD -->
+                <div class="heritage-card reveal d-2">
+                    <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                        <i class="fas fa-filter" style="color: var(--heritage-gold);"></i> Filter Data
+                    </div>
+                    <form method="get">
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label>Pilih Event</label>
+                                <select class="form-select" name="event_id" onchange="this.form.submit()" disabled>
+                                    <option value=""><?php echo $eventId > 0 ? 'Event Operator' : 'Event belum ditetapkan'; ?></option>
+                                </select>
+                                <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                            </div>
+                            <div class="form-group">
+                                <label>Pilih Kategori</label>
+                                <select class="form-select" name="sport_type" onchange="this.form.submit()">
+                                    <option value="">Pilih Kategori</option>
+                                    <option value="Liga" <?php echo isAllCategorySelection($selectedCategory) ? 'selected' : ''; ?>>Semua Kategori (Preview)</option>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $selectedCategory === $category ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($category); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <p class="muted" style="margin-top:10px;">Catatan: jika skor belum diisi atau seri, posisi pemenang belum ditentukan.</p>
+
+                <?php if ($eventId <= 0): ?>
+                    <div class="heritage-card reveal d-2">
+                        <p class="muted">Pilih event dan kategori dulu untuk mengelola bracket.</p>
+                    </div>
+                <?php elseif ($effectiveCategory === ''): ?>
+                    <div class="heritage-card reveal d-2">
+                        <div class="section-header" style="margin-bottom: 24px;">
+                            <div class="section-title-wrap">
+                                <h2 class="section-title">Preview Semua Kategori</h2>
+                                <div class="section-line"></div>
+                            </div>
+                        </div>
+                        
+                        <?php if (empty($specificCategories)): ?>
+                            <p class="muted">Belum ada kategori spesifik untuk event ini.</p>
+                        <?php else: ?>
+                            <p class="muted" style="margin-bottom: 32px;">Mode Liga menampilkan semua kategori. Klik tombol "Kelola" pada kategori terkait untuk edit bracket.</p>
+                            
+                            <?php foreach ($allBracketViews as $view): ?>
+                                <?php
+                                $vCategory = (string)$view['category'];
+                                $vTeamMap = (array)$view['teamMap'];
+                                $vTeamLogoMap = (array)$view['teamLogoMap'];
+                                $vSf1Team1 = (int)$view['sf1Team1'];
+                                $vSf1Team2 = (int)$view['sf1Team2'];
+                                $vSf2Team1 = (int)$view['sf2Team1'];
+                                $vSf2Team2 = (int)$view['sf2Team2'];
+                                $vSf1Score1 = $view['sf1Score1'];
+                                $vSf1Score2 = $view['sf1Score2'];
+                                $vSf2Score1 = $view['sf2Score1'];
+                                $vSf2Score2 = $view['sf2Score2'];
+                                $vFinalScore1 = $view['finalScore1'];
+                                $vFinalScore2 = $view['finalScore2'];
+                                $vThirdScore1 = $view['thirdScore1'];
+                                $vThirdScore2 = $view['thirdScore2'];
+                                $vSf1Outcome = (array)$view['sf1Outcome'];
+                                $vSf2Outcome = (array)$view['sf2Outcome'];
+                                $vFinalTeam1 = (int)$view['finalTeam1'];
+                                $vFinalTeam2 = (int)$view['finalTeam2'];
+                                $vThirdTeam1 = (int)$view['thirdTeam1'];
+                                $vThirdTeam2 = (int)$view['thirdTeam2'];
+                                $vFinalOutcome = (array)$view['finalOutcome'];
+                                $vThirdOutcome = (array)$view['thirdOutcome'];
+                                $vSf1Done = ((string)($vSf1Outcome['status'] ?? '') === 'done');
+                                $vSf2Done = ((string)($vSf2Outcome['status'] ?? '') === 'done');
+                                $vFinalDone = ((string)($vFinalOutcome['status'] ?? '') === 'done');
+                                $vThirdDone = ((string)($vThirdOutcome['status'] ?? '') === 'done');
+
+                                $vFinalTopRankText = '1st';
+                                $vFinalBottomRankText = '2nd';
+                                if ($vFinalDone && (int)($vFinalOutcome['winner'] ?? 0) === $vFinalTeam2) {
+                                    $vFinalTopRankText = '2nd';
+                                    $vFinalBottomRankText = '1st';
+                                }
+                                $vThirdTopRankText = '3rd';
+                                $vThirdBottomRankText = '4th';
+                                if ($vThirdDone && (int)($vThirdOutcome['winner'] ?? 0) === $vThirdTeam2) {
+                                    $vThirdTopRankText = '4th';
+                                    $vThirdBottomRankText = '3rd';
+                                }
+                                ?>
+                                <div class="diagram-wrap" style="margin-bottom: 64px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                                        <div>
+                                            <div class="diagram-title"><?php echo htmlspecialchars($vCategory); ?></div>
+                                            <div class="diagram-note">Visualisasi jalur turnamen babak gugur.</div>
+                                        </div>
+                                        <a class="btn-premium btn-save" href="event_bracket.php?event_id=<?php echo (int)$eventId; ?>&sport_type=<?php echo urlencode($vCategory); ?>" style="height: 44px; padding: 0 20px; font-size: 0.9rem;">
+                                            <i class="fas fa-edit"></i> Kelola
+                                        </a>
+                                    </div>
+
+                                    <div class="diagram-canvas">
+                                        <!-- Stage Labels (Mobile Only) -->
+                                        <div class="stage-label mobile-only">Semifinal</div>
+
+                                        <!-- Semifinal 1 -->
+                                        <div class="d-match match-sf1">
+                                            <div class="d-row <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team1 ? 'win' : ($vSf1Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vSf1Team1; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf1Team1); ?></div>
+                                                <div class="d-score"><?php echo $vSf1Score1 !== null ? (int)$vSf1Score1 : '-'; ?></div>
+                                            </div>
+                                            <div class="d-row <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team2 ? 'win' : ($vSf1Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vSf1Team2; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf1Team2); ?></div>
+                                                <div class="d-score"><?php echo $vSf1Score2 !== null ? (int)$vSf1Score2 : '-'; ?></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Semifinal 2 -->
+                                        <div class="d-match match-sf2">
+                                            <div class="d-row <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team1 ? 'win' : ($vSf2Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vSf2Team1; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf2Team1); ?></div>
+                                                <div class="d-score"><?php echo $vSf2Score1 !== null ? (int)$vSf2Score1 : '-'; ?></div>
+                                            </div>
+                                            <div class="d-row <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team2 ? 'win' : ($vSf2Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vSf2Team2; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf2Team2); ?></div>
+                                                <div class="d-score"><?php echo $vSf2Score2 !== null ? (int)$vSf2Score2 : '-'; ?></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Stage Label (Mobile Only) -->
+                                        <div class="stage-label mobile-only">Grand Final</div>
+
+                                        <!-- Final -->
+                                        <div class="d-match match-final">
+                                            <div class="d-row <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam1 ? 'win' : ($vFinalDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vFinalTeam1; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vFinalTeam1); ?></div>
+                                                <div class="d-score"><?php echo $vFinalScore1 !== null ? (int)$vFinalScore1 : '-'; ?></div>
+                                            </div>
+                                            <div class="d-row <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam2 ? 'win' : ($vFinalDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vFinalTeam2; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vFinalTeam2); ?></div>
+                                                <div class="d-score"><?php echo $vFinalScore2 !== null ? (int)$vFinalScore2 : '-'; ?></div>
+                                            </div>
+                                            <span class="d-rank first"><?php echo $vFinalTopRankText; ?></span>
+                                            <span class="d-rank second"><?php echo $vFinalBottomRankText; ?></span>
+                                        </div>
+
+                                        <!-- Stage Label (Mobile Only) -->
+                                        <div class="stage-label mobile-only">Perebutan Juara 3</div>
+
+                                        <!-- Juara 3 -->
+                                        <div class="d-match match-third">
+                                            <div class="d-row <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam1 ? 'win' : ($vThirdDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vThirdTeam1; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vThirdTeam1); ?></div>
+                                                <div class="d-score"><?php echo $vThirdScore1 !== null ? (int)$vThirdScore1 : '-'; ?></div>
+                                            </div>
+                                            <div class="d-row <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam2 ? 'win' : ($vThirdDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vThirdTeam2; ?>">
+                                                <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vThirdTeam2); ?></div>
+                                                <div class="d-score"><?php echo $vThirdScore2 !== null ? (int)$vThirdScore2 : '-'; ?></div>
+                                            </div>
+                                            <span class="d-rank third"><?php echo $vThirdTopRankText; ?></span>
+                                            <span class="d-rank fourth"><?php echo $vThirdBottomRankText; ?></span>
+                                        </div>
+
+                                        <!-- Lines (Desktop Only) -->
+                                        <div class="d-line line-sf1-final gold"></div>
+                                        <div class="d-line line-sf1-v gold"></div>
+                                        <div class="d-line line-final-h gold"></div>
+                                        <div class="d-line line-sf2-connector"></div>
+                                        <div class="d-line line-final-connector-v"></div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <!-- SETUP FORM -->
+                    <div class="heritage-card reveal d-2">
+                        <div class="section-title" style="margin-bottom: 24px; color: var(--heritage-text); font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;">
+                            <i class="fas fa-cog" style="color: var(--heritage-gold);"></i> Setup Bracket (4 Tim)
+                        </div>
+                        
+                        <?php if (count($teams) < 4): ?>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Tim kategori ini kurang dari 4. Minimal 4 tim untuk mengaktifkan mode bracket.</span>
+                            </div>
+                        <?php else: ?>
+                            <form method="post">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                                <input type="hidden" name="action" value="save_bracket">
+                                <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                                <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($effectiveCategory); ?>">
+
+                                <div class="setup-grid">
+                                    <div class="match-setup-card">
+                                        <div class="match-setup-title"><i class="fas fa-play"></i> Semifinal 1</div>
+                                        <div class="form-grid form-grid-2">
+                                            <div class="form-group">
+                                                <label>Team A</label>
+                                                <select class="form-select" id="sf1_team1_id" name="sf1_team1_id" required>
+                                                    <option value="">Pilih Tim</option>
+                                                    <?php foreach ($teams as $team): ?>
+                                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf1Team1 === (int)$team['id'] ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Skor A</label>
+                                                <input class="form-input" id="sf1_score1" type="number" min="0" name="sf1_score1" value="<?php echo $sf1Score1 !== null ? (int)$sf1Score1 : ''; ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Team B</label>
+                                                <select class="form-select" id="sf1_team2_id" name="sf1_team2_id" required>
+                                                    <option value="">Pilih Tim</option>
+                                                    <?php foreach ($teams as $team): ?>
+                                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf1Team2 === (int)$team['id'] ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Skor B</label>
+                                                <input class="form-input" id="sf1_score2" type="number" min="0" name="sf1_score2" value="<?php echo $sf1Score2 !== null ? (int)$sf1Score2 : ''; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="match-setup-card">
+                                        <div class="match-setup-title"><i class="fas fa-play"></i> Semifinal 2</div>
+                                        <div class="form-grid form-grid-2">
+                                            <div class="form-group">
+                                                <label>Team A</label>
+                                                <select class="form-select" id="sf2_team1_id" name="sf2_team1_id" required>
+                                                    <option value="">Pilih Tim</option>
+                                                    <?php foreach ($teams as $team): ?>
+                                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf2Team1 === (int)$team['id'] ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Skor A</label>
+                                                <input class="form-input" id="sf2_score1" type="number" min="0" name="sf2_score1" value="<?php echo $sf2Score1 !== null ? (int)$sf2Score1 : ''; ?>">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Team B</label>
+                                                <select class="form-select" id="sf2_team2_id" name="sf2_team2_id" required>
+                                                    <option value="">Pilih Tim</option>
+                                                    <?php foreach ($teams as $team): ?>
+                                                        <option value="<?php echo (int)$team['id']; ?>" <?php echo $sf2Team2 === (int)$team['id'] ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars((string)($team['name'] ?? '-')); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Skor B</label>
+                                                <input class="form-input" id="sf2_score2" type="number" min="0" name="sf2_score2" value="<?php echo $sf2Score2 !== null ? (int)$sf2Score2 : ''; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="match-setup-card">
+                                        <div class="match-setup-title"><i class="fas fa-trophy"></i> Grand Final</div>
+                                        <div class="form-grid form-grid-2">
+                                            <div class="form-group">
+                                                <label id="final_team1_label">Pemenang SF1</label>
+                                                <input class="form-input" type="number" min="0" name="final_score1" value="<?php echo $finalScore1 !== null ? (int)$finalScore1 : ''; ?>" placeholder="Skor">
+                                            </div>
+                                            <div class="form-group">
+                                                <label id="final_team2_label">Pemenang SF2</label>
+                                                <input class="form-input" type="number" min="0" name="final_score2" value="<?php echo $finalScore2 !== null ? (int)$finalScore2 : ''; ?>" placeholder="Skor">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="match-setup-card">
+                                        <div class="match-setup-title"><i class="fas fa-award"></i> Perebutan Juara 3</div>
+                                        <div class="form-grid form-grid-2">
+                                            <div class="form-group">
+                                                <label id="third_team1_label">Kalah SF1</label>
+                                                <input class="form-input" type="number" min="0" name="third_score1" value="<?php echo $thirdScore1 !== null ? (int)$thirdScore1 : ''; ?>" placeholder="Skor">
+                                            </div>
+                                            <div class="form-group">
+                                                <label id="third_team2_label">Kalah SF2</label>
+                                                <input class="form-input" type="number" min="0" name="third_score2" value="<?php echo $thirdScore2 !== null ? (int)$thirdScore2 : ''; ?>" placeholder="Skor">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button class="btn-premium btn-save" type="submit"><i class="fas fa-save"></i> Simpan Bracket</button>
+                                </div>
+                            </form>
+                            
+                            <form method="post" style="margin-top: 12px; display: flex; justify-content: flex-end;">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf); ?>">
+                                <input type="hidden" name="action" value="clear_bracket">
+                                <input type="hidden" name="event_id" value="<?php echo (int)$eventId; ?>">
+                                <input type="hidden" name="sport_type" value="<?php echo htmlspecialchars($effectiveCategory); ?>">
+                                <button class="btn-premium btn-cancel" type="submit" style="color: var(--heritage-crimson);"><i class="fas fa-eraser"></i> Reset Bracket</button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- PREVIEW DIAGRAM -->
+                    <div class="heritage-card reveal d-3">
+                        <div class="diagram-wrap">
+                            <div class="diagram-title">Visualisasi Turnamen</div>
+                            <div class="diagram-note">Peta persaingan menuju tangga juara.</div>
+                            
+                            <div class="diagram-canvas">
+                                <!-- Stage Labels (Mobile Only) -->
+                                <div class="stage-label mobile-only">Semifinal</div>
+
+                                <?php
+                                $sf1Done = ((string)$sf1Outcome['status'] === 'done');
+                                $sf2Done = ((string)$sf2Outcome['status'] === 'done');
+                                $finalDone = ((string)$finalOutcome['status'] === 'done');
+                                $thirdDone = ((string)$thirdOutcome['status'] === 'done');
+
+                                $finalTopRankText = '1st';
+                                $finalBottomRankText = '2nd';
+                                if ($finalDone && (int)$finalOutcome['winner'] === $finalTeam2) {
+                                    $finalTopRankText = '2nd';
+                                    $finalBottomRankText = '1st';
+                                }
+                                $thirdTopRankText = '3rd';
+                                $thirdBottomRankText = '4th';
+                                if ($thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2) {
+                                    $thirdTopRankText = '4th';
+                                    $thirdBottomRankText = '3rd';
+                                }
+                                ?>
+                                <!-- Semifinal 1 -->
+                                <div class="d-match match-sf1">
+                                    <div class="d-row <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team1 ? 'win' : ($sf1Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$sf1Team1; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf1Team1); ?></div>
+                                        <div class="d-score"><?php echo $sf1Score1 !== null ? (int)$sf1Score1 : '-'; ?></div>
+                                    </div>
+                                    <div class="d-row <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team2 ? 'win' : ($sf1Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$sf1Team2; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf1Team2); ?></div>
+                                        <div class="d-score"><?php echo $sf1Score2 !== null ? (int)$sf1Score2 : '-'; ?></div>
+                                    </div>
+                                </div>
+
+                                <!-- Semifinal 2 -->
+                                <div class="d-match match-sf2">
+                                    <div class="d-row <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team1 ? 'win' : ($sf2Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$sf2Team1; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf2Team1); ?></div>
+                                        <div class="d-score"><?php echo $sf2Score1 !== null ? (int)$sf2Score1 : '-'; ?></div>
+                                    </div>
+                                    <div class="d-row <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team2 ? 'win' : ($sf2Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$sf2Team2; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf2Team2); ?></div>
+                                        <div class="d-score"><?php echo $sf2Score2 !== null ? (int)$sf2Score2 : '-'; ?></div>
+                                    </div>
+                                </div>
+
+                                <!-- Stage Label (Mobile Only) -->
+                                <div class="stage-label mobile-only">Grand Final</div>
+
+                                <!-- Final -->
+                                <div class="d-match match-final">
+                                    <div class="d-row <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam1 ? 'win' : ($vFinalDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$finalTeam1; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $finalTeam1); ?></div>
+                                        <div class="d-score"><?php echo $finalScore1 !== null ? (int)$finalScore1 : '-'; ?></div>
+                                    </div>
+                                    <div class="d-row <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam2 ? 'win' : ($vFinalDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$finalTeam2; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $finalTeam2); ?></div>
+                                        <div class="d-score"><?php echo $finalScore2 !== null ? (int)$finalScore2 : '-'; ?></div>
+                                    </div>
+                                    <span class="d-rank first"><?php echo $finalTopRankText; ?></span>
+                                    <span class="d-rank second"><?php echo $finalBottomRankText; ?></span>
+                                </div>
+
+                                <!-- Stage Label (Mobile Only) -->
+                                <div class="stage-label mobile-only">Perebutan Juara 3</div>
+
+                                <!-- Juara 3 -->
+                                <div class="d-match match-third">
+                                    <div class="d-row <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam1 ? 'win' : ($vThirdDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$thirdTeam1; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $thirdTeam1); ?></div>
+                                        <div class="d-score"><?php echo $thirdScore1 !== null ? (int)$thirdScore1 : '-'; ?></div>
+                                    </div>
+                                    <div class="d-row <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam2 ? 'win' : ($vThirdDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$thirdTeam2; ?>">
+                                        <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $thirdTeam2); ?></div>
+                                        <div class="d-score"><?php echo $thirdScore2 !== null ? (int)$thirdScore2 : '-'; ?></div>
+                                    </div>
+                                    <span class="d-rank third"><?php echo $thirdTopRankText; ?></span>
+                                    <span class="d-rank fourth"><?php echo $thirdBottomRankText; ?></span>
+                                </div>
+
+                                <!-- Lines (Desktop Only) -->
+                                <div class="d-line line-sf1-final gold"></div>
+                                <div class="d-line line-sf1-v gold"></div>
+                                <div class="d-line line-final-h gold"></div>
+                                <div class="d-line line-sf2-connector"></div>
+                                <div class="d-line line-final-connector-v"></div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
-        <?php endif; ?>
+        </div>
     </div>
-</div>
-<script>
-(function() {
-    const rows = Array.from(document.querySelectorAll('.diagram-canvas .d-row[data-team-id]'));
-    if (!rows.length) return;
+    
+    <script>
+    (function() {
+        const rows = Array.from(document.querySelectorAll('.diagram-canvas .d-row[data-team-id]'));
+        if (!rows.length) return;
 
-    function clearLinked() {
-        rows.forEach(function(row) { row.classList.remove('linked-highlight'); });
-    }
+        function clearLinked() {
+            rows.forEach(function(row) { row.classList.remove('linked-highlight'); });
+        }
 
-    function applyLinked(teamId) {
-        if (!teamId || teamId === '0') return;
+        function applyLinked(teamId) {
+            if (!teamId || teamId === '0') return;
+            rows.forEach(function(row) {
+                if (row.getAttribute('data-team-id') === teamId) {
+                    row.classList.add('linked-highlight');
+                }
+            });
+        }
+
         rows.forEach(function(row) {
-            if (row.getAttribute('data-team-id') === teamId) {
-                row.classList.add('linked-highlight');
-            }
-        });
-    }
-
-    rows.forEach(function(row) {
-        row.addEventListener('mouseenter', function() {
-            clearLinked();
-            applyLinked(row.getAttribute('data-team-id'));
-        });
-        row.addEventListener('mouseleave', function() {
-            clearLinked();
-        });
-    });
-})();
-
-(function() {
-    const sf1Team1 = document.getElementById('sf1_team1_id');
-    const sf1Team2 = document.getElementById('sf1_team2_id');
-    const sf2Team1 = document.getElementById('sf2_team1_id');
-    const sf2Team2 = document.getElementById('sf2_team2_id');
-    const sf1Score1 = document.getElementById('sf1_score1');
-    const sf1Score2 = document.getElementById('sf1_score2');
-    const sf2Score1 = document.getElementById('sf2_score1');
-    const sf2Score2 = document.getElementById('sf2_score2');
-
-    const finalTeam1Label = document.getElementById('final_team1_label');
-    const finalTeam2Label = document.getElementById('final_team2_label');
-    const thirdTeam1Label = document.getElementById('third_team1_label');
-    const thirdTeam2Label = document.getElementById('third_team2_label');
-    const sf1Team1Label = document.getElementById('sf1_team1_label');
-    const sf1Team2Label = document.getElementById('sf1_team2_label');
-    const sf2Team1Label = document.getElementById('sf2_team1_label');
-    const sf2Team2Label = document.getElementById('sf2_team2_label');
-
-    if (!sf1Team1 || !sf1Team2 || !sf2Team1 || !sf2Team2 || !sf1Score1 || !sf1Score2 || !sf2Score1 || !sf2Score2) return;
-    if (!finalTeam1Label || !finalTeam2Label || !thirdTeam1Label || !thirdTeam2Label) return;
-    if (!sf1Team1Label || !sf1Team2Label || !sf2Team1Label || !sf2Team2Label) return;
-
-    function parseScore(input) {
-        const raw = String(input.value || '').trim();
-        if (raw === '') return null;
-        const value = parseInt(raw, 10);
-        if (Number.isNaN(value)) return null;
-        return Math.max(0, value);
-    }
-
-    function selectedTeam(select) {
-        const id = parseInt(select.value || '0', 10) || 0;
-        if (id <= 0) return { id: 0, name: '-' };
-        const option = select.options[select.selectedIndex];
-        const name = option ? String(option.text || '').trim() : '-';
-        return { id, name: name !== '' ? name : '-' };
-    }
-
-    function resolveOutcome(teamA, teamB, scoreA, scoreB) {
-        if (!teamA.id || !teamB.id) {
-            return { winner: '-', loser: '-', status: 'pending' };
-        }
-        if (scoreA === null || scoreB === null) {
-            return { winner: 'Menunggu hasil SF', loser: 'Menunggu hasil SF', status: 'pending' };
-        }
-        if (scoreA === scoreB) {
-            return { winner: 'Skor seri (belum valid)', loser: 'Skor seri (belum valid)', status: 'tie' };
-        }
-        if (scoreA > scoreB) {
-            return { winner: teamA.name, loser: teamB.name, status: 'done' };
-        }
-        return { winner: teamB.name, loser: teamA.name, status: 'done' };
-    }
-
-    function updateDerivedTeamLabels() {
-        const m1TeamA = selectedTeam(sf1Team1);
-        const m1TeamB = selectedTeam(sf1Team2);
-        const m2TeamA = selectedTeam(sf2Team1);
-        const m2TeamB = selectedTeam(sf2Team2);
-
-        sf1Team1Label.textContent = 'Tim: ' + m1TeamA.name;
-        sf1Team2Label.textContent = 'Tim: ' + m1TeamB.name;
-        sf2Team1Label.textContent = 'Tim: ' + m2TeamA.name;
-        sf2Team2Label.textContent = 'Tim: ' + m2TeamB.name;
-
-        const m1 = resolveOutcome(m1TeamA, m1TeamB, parseScore(sf1Score1), parseScore(sf1Score2));
-        const m2 = resolveOutcome(m2TeamA, m2TeamB, parseScore(sf2Score1), parseScore(sf2Score2));
-
-        finalTeam1Label.textContent = 'Tim: ' + m1.winner;
-        finalTeam2Label.textContent = 'Tim: ' + m2.winner;
-        thirdTeam1Label.textContent = 'Tim: ' + m1.loser;
-        thirdTeam2Label.textContent = 'Tim: ' + m2.loser;
-    }
-
-    function syncUniqueTeamSelections() {
-        const selects = [sf1Team1, sf1Team2, sf2Team1, sf2Team2];
-        const selectedIds = selects.map(function(sel) {
-            return parseInt(sel.value || '0', 10) || 0;
-        });
-
-        selects.forEach(function(sel, idx) {
-            const ownId = selectedIds[idx];
-            Array.from(sel.options).forEach(function(opt, optIdx) {
-                if (optIdx === 0) {
-                    opt.disabled = false;
-                    return;
-                }
-                const optId = parseInt(opt.value || '0', 10) || 0;
-                if (optId <= 0) {
-                    opt.disabled = false;
-                    return;
-                }
-                const usedInOtherSlot = selectedIds.some(function(id, otherIdx) {
-                    return otherIdx !== idx && id > 0 && id === optId;
-                });
-                opt.disabled = usedInOtherSlot && optId !== ownId;
+            row.addEventListener('mouseenter', function() {
+                clearLinked();
+                applyLinked(row.getAttribute('data-team-id'));
+            });
+            row.addEventListener('mouseleave', function() {
+                clearLinked();
             });
         });
-    }
+    })();
 
-    [sf1Team1, sf1Team2, sf2Team1, sf2Team2, sf1Score1, sf1Score2, sf2Score1, sf2Score2].forEach(function(el) {
-        el.addEventListener('change', updateDerivedTeamLabels);
-        el.addEventListener('input', updateDerivedTeamLabels);
-        el.addEventListener('change', syncUniqueTeamSelections);
-    });
+    (function() {
+        const sf1Team1 = document.getElementById('sf1_team1_id');
+        const sf1Team2 = document.getElementById('sf1_team2_id');
+        const sf2Team1 = document.getElementById('sf2_team1_id');
+        const sf2Team2 = document.getElementById('sf2_team2_id');
+        const sf1Score1 = document.getElementById('sf1_score1');
+        const sf1Score2 = document.getElementById('sf1_score2');
+        const sf2Score1 = document.getElementById('sf2_score1');
+        const sf2Score2 = document.getElementById('sf2_score2');
 
-    syncUniqueTeamSelections();
-    updateDerivedTeamLabels();
-})();
-</script>
-<?php include __DIR__ . '/includes/sidebar_js.php'; ?>
+        const finalTeam1Label = document.getElementById('final_team1_label');
+        const finalTeam2Label = document.getElementById('final_team2_label');
+        const thirdTeam1Label = document.getElementById('third_team1_label');
+        const thirdTeam2Label = document.getElementById('third_team2_label');
+
+        if (!sf1Team1 || !sf1Team2 || !sf2Team1 || !sf2Team2 || !sf1Score1 || !sf1Score2 || !sf2Score1 || !sf2Score2) return;
+        if (!finalTeam1Label || !finalTeam2Label || !thirdTeam1Label || !thirdTeam2Label) return;
+
+        function parseScore(input) {
+            const raw = String(input.value || '').trim();
+            if (raw === '') return null;
+            const value = parseInt(raw, 10);
+            return isNaN(value) ? null : Math.max(0, value);
+        }
+
+        function selectedTeam(select) {
+            const id = parseInt(select.value || '0', 10) || 0;
+            if (id <= 0) return { id: 0, name: '-' };
+            const option = select.options[select.selectedIndex];
+            return { id, name: option ? option.text.trim() : '-' };
+        }
+
+        function resolveOutcome(teamA, teamB, scoreA, scoreB) {
+            if (!teamA.id || !teamB.id) return { winner: '-', loser: '-' };
+            if (scoreA === null || scoreB === null) return { winner: 'TBD', loser: 'TBD' };
+            if (scoreA > scoreB) return { winner: teamA.name, loser: teamB.name };
+            if (scoreB > scoreA) return { winner: teamB.name, loser: teamA.name };
+            return { winner: 'Draw', loser: 'Draw' };
+        }
+
+        function updateDerivedTeamLabels() {
+            const m1 = resolveOutcome(selectedTeam(sf1Team1), selectedTeam(sf1Team2), parseScore(sf1Score1), parseScore(sf1Score2));
+            const m2 = resolveOutcome(selectedTeam(sf2Team1), selectedTeam(sf2Team2), parseScore(sf2Score1), parseScore(sf2Score2));
+
+            finalTeam1Label.textContent = 'Pemenang SF1: ' + m1.winner;
+            finalTeam2Label.textContent = 'Pemenang SF2: ' + m2.winner;
+            thirdTeam1Label.textContent = 'Kalah SF1: ' + m1.loser;
+            thirdTeam2Label.textContent = 'Kalah SF2: ' + m2.loser;
+        }
+
+        [sf1Team1, sf1Team2, sf2Team1, sf2Team2, sf1Score1, sf1Score2, sf2Score1, sf2Score2].forEach(el => {
+            el.addEventListener('change', updateDerivedTeamLabels);
+            el.addEventListener('input', updateDerivedTeamLabels);
+        });
+
+        updateDerivedTeamLabels();
+    })();
+    </script>
+    <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>
 </html>

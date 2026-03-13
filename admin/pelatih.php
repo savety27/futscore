@@ -1249,7 +1249,7 @@ body {
             <div class="action-buttons">
                 <a href="pelatih_create.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
-                    Tambah Pelatih
+                    Tambah User
                 </a>
                 <button class="btn btn-success" onclick="exportPelatih()">
                     <i class="fas fa-download"></i>

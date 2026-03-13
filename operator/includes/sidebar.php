@@ -49,3 +49,11 @@ $has_event_logo = ($operator_event_image !== '' && file_exists(__DIR__ . '/../..
         </div>
     </div>
 </div>
+
+<!-- Mobile Menu Toggle -->
+<button class="mobile-menu-toggle" aria-label="Toggle Menu">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Menu Overlay -->
+<div class="menu-overlay"></div>

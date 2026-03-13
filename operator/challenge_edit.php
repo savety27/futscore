@@ -507,233 +507,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edit Challenge</title>
+<title>Edit Challenge - Futscore</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
+<link rel="stylesheet" href="css/challenge.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/challenge.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <link rel="stylesheet" href="../css/challenge_official_combobox.css?v=<?php echo (int) @filemtime(__DIR__ . '/../css/challenge_official_combobox.css'); ?>">
 <style>
-:root {
-    --primary: #0f2744;
-    --secondary: #f59e0b;
-    --accent: #3b82f6;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --light: #F8F9FA;
-    --dark: #1e293b;
-    --gray: #64748b;
-    --glass-white: rgba(255, 255, 255, 0.85);
-    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-    --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
-    color: var(--dark);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* ===== MAIN CONTENT ===== */
-.main {
-    flex: 1;
-    padding: 30px;
-    margin-left: 280px;
-    width: calc(100% - 280px);
-    max-width: calc(100vw - 280px);
-    overflow-x: hidden;
-    transition: var(--transition);
-}
-
-/* Topbar */
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40px;
-    padding: 20px 25px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
-}
-
-.greeting h1 {
-    font-size: 28px;
-    color: var(--primary);
-    margin-bottom: 5px;
-}
-
-.greeting p {
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.user-actions {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.logout-btn {
-    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
-    color: white;
-    padding: 12px 28px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
-}
-
-.logout-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
-}
-
-/* Page Header */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.page-title {
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.page-title i {
-    color: var(--secondary);
-    font-size: 32px;
-}
-
-.search-bar {
-    position: relative;
-    width: 400px;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 15px 50px 15px 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-}
-
-.search-bar input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.search-bar button {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 15px;
-}
-
-.btn {
-    padding: 12px 25px;
-    border-radius: 12px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    font-size: 15px;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: white;
-    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(10, 36, 99, 0.3);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, var(--success), #4CAF50);
-    color: white;
-    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
-}
-
-.btn-success:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
-}
-
-.btn-secondary {
-    background: #6b7280;
-    color: white;
-    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
-}
-
-.btn-secondary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-}
-
-/* Form Styles */
+/* Heritage Form Customizations */
 .form-container {
-    background: white;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 30px;
+    background: var(--heritage-card);
+    border: 1px solid var(--heritage-border);
+    border-radius: 28px;
+    padding: 40px;
+    margin-bottom: 40px;
+    box-shadow: var(--soft-shadow);
+}
+
+@media screen and (max-width: 768px) {
+    .form-container {
+        padding: 24px 20px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+    }
 }
 
 .form-section {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--heritage-border);
+}
+
+@media screen and (max-width: 768px) {
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+    }
 }
 
 .form-section:last-child {
@@ -743,385 +553,262 @@ body {
 }
 
 .section-title {
-    font-size: 20px;
-    color: var(--primary);
-    margin-bottom: 20px;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--heritage-text);
+    margin-bottom: 25px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+}
+
+@media screen and (max-width: 768px) {
+    .section-title {
+        font-size: 1.15rem;
+        margin-bottom: 20px;
+    }
+}
+
+.section-title i {
+    color: var(--heritage-gold);
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 24px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .form-label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--dark);
-    font-size: 14px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--heritage-text-muted);
 }
 
 .required {
-    color: var(--danger);
+    color: var(--heritage-crimson);
 }
 
-.form-input {
+.form-input, .form-select, .form-textarea {
     width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    font-family: inherit;
+    padding: 14px 20px;
+    border: 1px solid var(--heritage-border);
+    border-radius: 16px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--heritage-text);
+    background: #fdfcfb;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
-.form-input:focus {
+.form-input:focus, .form-select:focus, .form-textarea:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: var(--heritage-gold);
     background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+    box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.05);
 }
 
 .form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    font-family: inherit;
     resize: vertical;
-    min-height: 100px;
+    min-height: 120px;
 }
 
-.form-select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    cursor: pointer;
-}
-
-.form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-/* Action Buttons */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid #f0f0f0;
-}
-
-/* Alert */
-.alert {
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.alert-danger {
-    background: rgba(211, 47, 47, 0.1);
-    border-left: 4px solid var(--danger);
-    color: var(--danger);
-}
-
-.alert-success {
-    background: rgba(46, 125, 50, 0.1);
-    border-left: 4px solid var(--success);
-    color: var(--success);
-}
-
-/* Error styling */
-.error {
-    color: var(--danger);
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-}
-
-.is-invalid {
-    border-color: var(--danger) !important;
-}
-
-/* Team vs Team Display */
+/* VS Display Redesign */
 .vs-display {
     text-align: center;
-    padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 12px;
-    margin: 20px 0;
+    padding: 40px;
+    background: var(--heritage-bg);
+    border: 1px solid var(--heritage-border);
+    border-radius: 28px;
+    margin: 30px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+    .vs-display {
+        padding: 30px 20px;
+        margin: 20px 0;
+        border-radius: 20px;
+    }
+}
+
+.vs-display::before {
+    content: "MATCHUP";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-display);
+    font-size: 6rem;
+    font-weight: 900;
+    color: rgba(0,0,0,0.02);
+    z-index: 0;
+    white-space: nowrap;
+}
+
+@media screen and (max-width: 768px) {
+    .vs-display::before {
+        font-size: 3rem;
+    }
 }
 
 .vs-title {
-    font-size: 18px;
-    color: var(--primary);
-    margin-bottom: 15px;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--heritage-gold);
+    letter-spacing: 0.2em;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 1;
 }
 
 .team-vs-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 30px;
-    flex-wrap: wrap;
+    gap: 40px;
+    position: relative;
+    z-index: 1;
 }
 
 .team-box {
+    flex: 1;
     text-align: center;
-    min-width: 200px;
 }
 
 .team-box h4 {
-    font-size: 16px;
-    color: var(--dark);
-    margin-bottom: 5px;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--heritage-text);
+    margin: 0;
 }
 
-.team-box p {
-    font-size: 14px;
-    color: var(--gray);
+@media screen and (max-width: 768px) {
+    .team-box h4 {
+        font-size: 1.25rem;
+    }
 }
 
 .vs-symbol {
-    font-size: 32px;
-    font-weight: bold;
-    color: var(--secondary);
-    background: var(--primary);
-    width: 60px;
-    height: 60px;
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--heritage-gold);
+    font-style: italic;
+    background: var(--heritage-text);
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 20px rgba(30, 27, 75, 0.2);
 }
 
-/* Status Badge */
+/* Status Badge Large */
 .status-badge-large {
     padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-    display: inline-block;
-    margin-left: 10px;
+    border-radius: 100px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.status-open {
-    background: rgba(76, 201, 240, 0.1);
-    color: #4CC9F0;
-    border: 1px solid #4CC9F0;
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid var(--heritage-border);
 }
 
-.status-accepted {
-    background: rgba(46, 125, 50, 0.1);
-    color: var(--success);
-    border: 1px solid var(--success);
-}
-
-.status-rejected {
-    background: rgba(211, 47, 47, 0.1);
-    color: var(--danger);
-    border: 1px solid var(--danger);
-}
-
-.status-expired {
-    background: rgba(108, 117, 125, 0.1);
-    color: var(--gray);
-    border: 1px solid var(--gray);
-}
-
-.status-completed {
-    background: rgba(37, 99, 235, 0.12);
-    color: #1d4ed8;
-    border: 1px solid #1d4ed8;
-}
-
-
-/* =========================================
-   MOBILE RESPONSIVE DESIGN
-   ========================================= */
-
-/* Default: Hide mobile-only elements on desktop */
-
-
-/* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
-
-    .main {
-        margin-left: 240px;
-        width: calc(100% - 240px);
-        max-width: calc(100vw - 240px);
-    }
-}
-
-/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
 @media screen and (max-width: 768px) {
-    
-
-
-    /* Main Content: Full width on mobile */
-    .main {
-        margin-left: 0;
-        padding: 20px 15px;
-        width: 100%;
-        max-width: 100vw;
-    }
-
-    /* Topbar: Stack vertically */
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .greeting h1 {
-        font-size: 24px;
-    }
-
-    .user-actions {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    /* Page Header: Stack vertically */
-    .page-header {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-    }
-
-    .page-title {
-        width: 100%;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .search-bar {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .action-buttons {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        flex: 1;
-        justify-content: center;
-    }
-    
-    /* Form Layout adaptations */
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
     .form-actions {
         flex-direction: column-reverse;
-        gap: 10px;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 24px;
     }
-    
-    .team-vs-container {
+    .form-actions .btn-premium {
+        width: 100%;
+        justify-content: center;
+        padding: 16px;
+    }
+}
+
+.error {
+    color: var(--heritage-crimson);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 6px;
+    display: block;
+}
+
+.is-invalid {
+    border-color: var(--heritage-crimson) !important;
+}
+
+/* Dashboard Hero Mobile Refinements */
+@media screen and (max-width: 768px) {
+    .dashboard-hero {
+        padding-bottom: 24px;
+        margin-bottom: 32px;
+    }
+    .hero-title {
+        font-size: 2.5rem !important;
+        margin-bottom: 12px !important;
+    }
+    .hero-description {
+        font-size: 1rem !important;
+    }
+    .hero-actions {
+        display: flex;
         flex-direction: column;
-        gap: 20px;
+        width: 100%;
+        gap: 12px;
+        align-items: flex-start !important;
     }
-    
-    .team-box {
-        min-width: 100%;
+    .hero-actions .btn-premium {
+        width: 100%;
+        margin-right: 0 !important;
+        justify-content: center;
     }
-}
-
-/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
-@media screen and (max-width: 480px) {
-    
-    /* Reduce font sizes */
-    .greeting h1 {
-        font-size: 20px;
-    }
-    
-    .greeting p {
-        font-size: 13px;
-    }
-
-    .page-title {
-        font-size: 20px;
-    }
-
-    .page-title i {
-        font-size: 24px;
-    }
-
-
-    .logo,
-    .logo img {
-        max-width: 120px;
-    }
-
-    
-
-    .menu-link {
-        padding: 14px 15px;
-        font-size: 15px;
-    }
-
-    .menu-icon {
-        font-size: 20px;
-        width: 28px;
-    }
-
-
-    /* Compact buttons */
-    .btn {
-        padding: 10px 18px;
-        font-size: 14px;
-    }
-
-    .logout-btn {
-        padding: 10px 20px;
-        font-size: 14px;
+    .status-badge-large {
+        width: fit-content;
     }
 }
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+
+@media screen and (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; gap: 16px; }
+    .team-vs-container { flex-direction: column; gap: 20px; }
+    .vs-symbol { width: 50px; height: 50px; font-size: 1.75rem; }
+    .vs-display::before { font-size: 4rem; }
 }
 </style>
 </head>
 <body>
-
 
 <div class="wrapper">
     <?php include __DIR__ . '/includes/sidebar.php'; ?>
@@ -1129,7 +816,7 @@ body {
     <!-- MAIN CONTENT -->
     <div class="main">
         <!-- TOPBAR -->
-        <div class="topbar">
+        <div class="topbar reveal">
             <div class="greeting">
                 <h1>Edit Challenge 🏆</h1>
                 <p>Perbarui challenge: <?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></p>
@@ -1143,33 +830,34 @@ body {
             </div>
         </div>
 
-        <!-- PAGE HEADER -->
-        <div class="page-header">
-            <div class="page-title">
-                <i class="fas fa-edit"></i>
-                <span>Edit Challenge</span>
+        <!-- EDITORIAL HEADER -->
+        <header class="dashboard-hero reveal d-1">
+            <div class="hero-content">
+                <span class="hero-label">Manajemen Pertandingan</span>
+                <h1 class="hero-title">Perbarui Challenge</h1>
+                <p class="hero-description">Perbarui detail tantangan, lokasi, waktu, dan perangkat pertandingan secara real-time.</p>
+            </div>
+            <div class="hero-actions">
+                <a href="challenge.php" class="btn-premium btn-export" style="margin-right: 12px;">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
                 <span class="status-badge-large status-<?php echo strtolower($challenge_data['status']); ?>">
+                    <i class="fas fa-circle" style="font-size: 8px;"></i>
                     <?php echo htmlspecialchars($challenge_data['status'] ?? ''); ?>
                 </span>
             </div>
-            <div class="action-buttons">
-                <a href="challenge.php" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Kembali
-                </a>
-            </div>
-        </div>
+        </header>
 
         <!-- ERROR MESSAGES -->
         <?php if (isset($errors['database'])): ?>
-        <div class="alert alert-danger">
+        <div class="alert alert-danger reveal d-2">
             <i class="fas fa-exclamation-circle"></i>
-            <?php echo $errors['database']; ?>
+            <span><?php echo $errors['database']; ?></span>
         </div>
         <?php endif; ?>
 
         <!-- EDIT CHALLENGE FORM -->
-        <div class="form-container">
+        <div class="form-container reveal d-2">
             <form method="POST" action="" id="challengeForm">
                 <input type="hidden" name="id" value="<?php echo $challenge_id; ?>">
                 
@@ -1224,7 +912,7 @@ body {
                     
                     <!-- VS Display -->
                     <div class="vs-display">
-                        <div class="vs-title">PERTANDINGAN</div>
+                        <div class="vs-title">MATCH PREVIEW</div>
                         <div class="team-vs-container">
                             <div class="team-box" id="challengerBox">
                                 <h4><?php echo htmlspecialchars($challenge_data['challenger_name'] ?? ''); ?></h4>
@@ -1240,7 +928,7 @@ body {
                 <div class="form-section">
                     <div class="section-title">
                         <i class="fas fa-calendar-alt"></i>
-                        Detail Challenge
+                        Detail Pertandingan
                     </div>
                     
                     <div class="form-grid">
@@ -1263,9 +951,7 @@ body {
                             <label class="form-label" for="event_id">
                                 Event Aktif <span class="required">*</span>
                             </label>
-                            <select id="event_id" name="event_id"
-                                    class="form-select <?php echo isset($errors['event_id']) ? 'is-invalid' : ''; ?>"
-                                    required disabled>
+                            <select id="event_id_display" class="form-select" disabled>
                                 <?php if ($operator_event_locked): ?>
                                     <option value="<?php echo (int)$operator_event_id; ?>" selected>
                                         <?php echo htmlspecialchars($operator_event_name); ?>
@@ -1274,18 +960,14 @@ body {
                                     <option value="">Akun operator belum terhubung ke event</option>
                                 <?php endif; ?>
                             </select>
-                            <input type="hidden" name="event_id" value="<?php echo htmlspecialchars($challenge_data['event_id'] ?? ''); ?>">
-                            <?php if (isset($errors['event_id'])): ?>
-                                <span class="error"><?php echo $errors['event_id']; ?></span>
-                            <?php endif; ?>
-                            <small style="color:#666; display:block; margin-top:5px;">
+                            <input type="hidden" name="event_id" id="event_id" value="<?php echo htmlspecialchars($challenge_data['event_id'] ?? ''); ?>">
+                            <small style="color:var(--heritage-text-muted); display:block; margin-top:5px; font-size: 0.75rem;">
                                 Event dikunci otomatis sesuai akun operator.
                             </small>
                         </div>
                     </div>
 
                     <div class="form-grid">
-                        
                         <div class="form-group">
                             <label class="form-label" for="venue_id">
                                 Venue/Lokasi <span class="required">*</span>
@@ -1305,9 +987,7 @@ body {
                                 <span class="error"><?php echo $errors['venue_id']; ?></span>
                             <?php endif; ?>
                         </div>
-                    </div>
-                    
-                    <div class="form-grid">
+
                         <div class="form-group">
                             <label class="form-label" for="sport_type">
                                 Kategori <span class="required">*</span>
@@ -1326,14 +1006,6 @@ body {
                                 <span class="error"><?php echo $errors['sport_type']; ?></span>
                             <?php endif; ?>
                             <span class="error" id="teamCategoryWarning" style="display: none;"></span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="expiry_info">
-                                Challenge Expiry
-                            </label>
-                            <input type="text" id="expiry_info" class="form-input" value="Diatur otomatis oleh sistem" readonly>
-                            <small style="color: #666;">Offset saat ini dipertahankan: <?php echo htmlspecialchars($preserved_expiry_label); ?> sebelum pertandingan.</small>
                         </div>
                     </div>
                     
@@ -1369,9 +1041,9 @@ body {
                             <?php endif; ?>
                         </div>
                     </div>
-                    
+
                     <div class="form-grid">
-                        <div class="form-group">
+                         <div class="form-group">
                             <label class="form-label" for="match_official_search">
                                 Wasit/Pengawas
                             </label>
@@ -1394,28 +1066,34 @@ body {
                             <?php if (isset($errors['match_official'])): ?>
                                 <span class="error"><?php echo $errors['match_official']; ?></span>
                             <?php endif; ?>
-                            <small style="color: #666;">Daftar diambil dari data Perangkat aktif.</small>
+                            <small style="color:var(--heritage-text-muted); font-size: 0.75rem;">Daftar diambil dari data Perangkat aktif.</small>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="notes">
-                                Catatan Tambahan
+                            <label class="form-label" for="expiry_info">
+                                Challenge Expiry
                             </label>
-                            <textarea id="notes" name="notes" class="form-textarea" 
-                                      placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes'] ?? ''); ?></textarea>
+                            <input type="text" id="expiry_info" class="form-input" value="Diatur otomatis oleh sistem" readonly style="background: #f3f4f6;">
+                            <small style="color:var(--heritage-text-muted); font-size: 0.75rem;">Offset saat ini: <?php echo htmlspecialchars($preserved_expiry_label); ?> sebelum pertandingan.</small>
                         </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="notes">
+                            Catatan Tambahan
+                        </label>
+                        <textarea id="notes" name="notes" class="form-textarea" 
+                                  placeholder="Masukkan catatan atau informasi tambahan..."><?php echo htmlspecialchars($challenge_data['notes'] ?? ''); ?></textarea>
                     </div>
                 </div>
 
                 <!-- Form Actions -->
                 <div class="form-actions">
-                    <button type="reset" class="btn btn-secondary">
-                        <i class="fas fa-redo"></i>
-                        Reset
+                    <button type="reset" class="btn-premium btn-export">
+                        <i class="fas fa-redo"></i> Reset
                     </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Update Challenge
+                    <button type="submit" class="btn-premium btn-add">
+                        <i class="fas fa-save"></i> Update Challenge
                     </button>
                 </div>
             </form>
@@ -1478,6 +1156,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('opponent_id').addEventListener('change', updateVSDisplay);
     document.getElementById('sport_type').addEventListener('change', updateVSDisplay);
     updateVSDisplay();
+    
     if (typeof initOfficialSearch === 'function') {
         initOfficialSearch('match_official', 'match_official_search');
     } else {
@@ -1538,3 +1217,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+</body>
+</html>

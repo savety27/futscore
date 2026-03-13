@@ -40,156 +40,92 @@ if ($operator_id > 0) {
     }
 }
 
-$page_title = 'Event';
+$page_title = 'Event Management';
 $current_page = 'event';
 $operator_event_name = $event_name !== '' ? $event_name : 'Event Operator';
-$operator_event_image = $event_image;
 $operator_read_only = ($event_id > 0 && !$event_is_active);
-$topbar_title = 'Event Management 🗓️';
-$topbar_subtitle = 'Kelola data event dengan konsep tampilan seragam';
 
 $event_value_url = $event_id > 0 ? 'event_value.php?event_id=' . $event_id : '#';
 $event_bracket_url = $event_id > 0 ? 'event_bracket.php?event_id=' . $event_id : '#';
-
-require_once __DIR__ . '/includes/header.php';
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $page_title; ?></title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
+    <link rel="stylesheet" href="css/event.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/event.css'); ?>">
+</head>
+<body>
+<div class="menu-overlay"></div>
+<button class="mobile-menu-toggle" aria-label="Toggle menu">
+    <i class="fas fa-bars"></i>
+</button>
 
-<style>
-    /* Align with dashboard tone and avoid yellow active menu on this page */
-    .main {
-        background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%) !important;
-    }
-    .menu-link.active {
-        background: linear-gradient(90deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.02) 100%) !important;
-        color: #f59e0b !important;
-        border-right: 4px solid #f59e0b !important;
-    }
+<div class="wrapper">
+    <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
-    .event-hub {
-        max-width: 1100px;
-        margin: 0 auto;
-        display: grid;
-        gap: 20px;
-    }
-    .hub-header {
-        background: #fff;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 8px 24px rgba(15, 39, 68, 0.1);
-    }
-    .hub-title {
-        margin: 0;
-        font-size: 30px;
-        color: #0f2744;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .hub-subtitle {
-        margin-top: 10px;
-        color: #64748b;
-    }
-    .hub-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-    }
-    .hub-card {
-        background: #fff;
-        border-radius: 18px;
-        border: 1px solid #dbeafe;
-        padding: 24px;
-        box-shadow: 0 10px 24px rgba(15, 39, 68, 0.08);
-        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-        text-decoration: none;
-        color: inherit;
-    }
-    .hub-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 28px rgba(15, 39, 68, 0.15);
-        border-color: #93c5fd;
-    }
-    .hub-card.disabled {
-        opacity: .65;
-        pointer-events: none;
-        transform: none;
-    }
-    .hub-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #0f2744, #1e40af);
-        color: #fff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        margin-bottom: 16px;
-    }
-    .hub-card h3 {
-        margin: 0 0 8px;
-        color: #0f2744;
-    }
-    .hub-card p {
-        margin: 0 0 16px;
-        color: #64748b;
-        line-height: 1.5;
-    }
-    .hub-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #1d4ed8;
-        font-weight: 600;
-    }
-    .hub-alert {
-        padding: 14px 16px;
-        border-radius: 12px;
-        background: #fef3c7;
-        color: #92400e;
-        border-left: 4px solid #f59e0b;
-        margin-bottom: 4px;
-    }
-    @media (max-width: 768px) {
-        .hub-title {
-            font-size: 24px;
-        }
-    }
-</style>
-
-<div class="event-hub">
-    <?php if ($event_id <= 0): ?>
-        <div class="hub-alert">
-            Akun operator belum terhubung ke event. Hubungi admin untuk menetapkan event terlebih dahulu.
+    <div class="main">
+        <!-- TOPBAR -->
+        <div class="topbar reveal">
+            <div class="greeting">
+                <h1>Pusat Event 🗓️</h1>
+                <p>Kelola data event dengan konsep tampilan premium</p>
+            </div>
+            
+            <div class="user-actions">
+                <a href="../operator/logout.php" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Keluar
+                </a>
+            </div>
         </div>
-    <?php elseif ($operator_read_only): ?>
-        <div class="hub-alert">
-            Event saat ini non-aktif. Anda masih bisa melihat data, tetapi perubahan data dapat dibatasi.
+
+        <div class="event-hub">
+            <!-- Alerts -->
+            <?php if ($event_id <= 0): ?>
+                <div class="hub-alert alert-warning reveal d-1">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Akun operator belum terhubung ke event. Hubungi admin untuk menetapkan event terlebih dahulu.</span>
+                </div>
+            <?php elseif ($operator_read_only): ?>
+                <div class="hub-alert alert-danger reveal d-1">
+                    <i class="fas fa-lock"></i>
+                    <span>Event saat ini non-aktif. Anda masih bisa melihat data, tetapi perubahan data dapat dibatasi.</span>
+                </div>
+            <?php endif; ?>
+
+            <!-- Editorial Header -->
+            <header class="dashboard-hero reveal d-1">
+                <div class="hero-content">
+                    <span class="hero-label">Manajemen Konten</span>
+                    <h1 class="hero-title">Event Hub</h1>
+                    <p class="hero-description">Kelola nilai pertandingan, skor, dan bracket untuk event <strong><?php echo htmlspecialchars($operator_event_name); ?></strong> secara terpusat.</p>
+                </div>
+            </header>
+
+            <div class="hub-grid reveal d-2">
+                <a class="hub-card <?php echo $event_id <= 0 ? 'disabled' : ''; ?>" href="<?php echo htmlspecialchars($event_value_url); ?>">
+                    <div class="hub-icon"><i class="fas fa-list-ol"></i></div>
+                    <h3>Event Value</h3>
+                    <p>Atur klasemen, poin, hasil pertandingan, dan kartu pemain per kategori event.</p>
+                    <span class="hub-link">Buka Halaman <i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a class="hub-card <?php echo $event_id <= 0 ? 'disabled' : ''; ?>" href="<?php echo htmlspecialchars($event_bracket_url); ?>">
+                    <div class="hub-icon"><i class="fas fa-diagram-project"></i></div>
+                    <h3>Event Bracket</h3>
+                    <p>Susun semifinal, final, perebutan juara 3, sekaligus update skor bracket event.</p>
+                    <span class="hub-link">Buka Halaman <i class="fas fa-arrow-right"></i></span>
+                </a>
+            </div>
         </div>
-    <?php endif; ?>
-
-    <div class="hub-header">
-        <h2 class="hub-title"><i class="fas fa-trophy"></i> Manajemen Event</h2>
-        <div class="hub-subtitle">
-            Kelola nilai pertandingan, skor, dan bracket untuk event operator.
-        </div>
-    </div>
-
-    <div class="hub-grid">
-        <a class="hub-card <?php echo $event_id <= 0 ? 'disabled' : ''; ?>" href="<?php echo htmlspecialchars($event_value_url); ?>">
-            <div class="hub-icon"><i class="fas fa-list-ol"></i></div>
-            <h3>Event Value</h3>
-            <p>Atur klasemen, poin, hasil pertandingan, dan kartu pemain per kategori event.</p>
-            <span class="hub-link">Buka Halaman <i class="fas fa-arrow-right"></i></span>
-        </a>
-
-        <a class="hub-card <?php echo $event_id <= 0 ? 'disabled' : ''; ?>" href="<?php echo htmlspecialchars($event_bracket_url); ?>">
-            <div class="hub-icon"><i class="fas fa-diagram-project"></i></div>
-            <h3>Event Bracket</h3>
-            <p>Susun semifinal, final, perebutan juara 3, sekaligus update skor bracket event.</p>
-            <span class="hub-link">Buka Halaman <i class="fas fa-arrow-right"></i></span>
-        </a>
     </div>
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+</body>
+</html>
