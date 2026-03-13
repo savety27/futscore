@@ -1220,4 +1220,28 @@
     .custom-tooltip {
         width: 280px;
     }
+
+    /* Mobile: stack filter actions like staff */
+    .players-filter-card {
+        padding: 24px 16px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+    }
+
+    .players-filter-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .players-filter-actions {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .players-filter-actions .btn-filter,
+    .players-filter-actions .clear-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
 }

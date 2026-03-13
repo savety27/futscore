@@ -487,7 +487,7 @@ $reset_match_url = 'schedule.php' . (!empty($reset_match_params) ? '?' . http_bu
 
     <div class="filter-container reveal d-2">
         <div class="teams-filter-card">
-            <form action="" method="GET" class="teams-filter-form">
+            <form action="" method="GET" class="teams-inline-filter">
                 <?php if (!empty($result_filter)): ?>
                 <input type="hidden" name="result" value="<?php echo htmlspecialchars($result_filter); ?>">
                 <?php endif; ?>
@@ -503,22 +503,18 @@ $reset_match_url = 'schedule.php' . (!empty($reset_match_params) ? '?' . http_bu
                 <?php if (!empty($match_filter)): ?>
                 <input type="hidden" name="match_status" value="<?php echo htmlspecialchars($match_filter); ?>">
                 <?php endif; ?>
-                <div class="filter-group">
-                    <label>Pencarian</label>
-                    <div class="teams-search-group">
-                        <i class="fas fa-search"></i>
-                        <input
-                            type="text"
-                            name="search"
-                            placeholder="Cari kode, team, event, atau status pertandingan..."
-                            value="<?php echo htmlspecialchars($search); ?>"
-                            class="teams-search-input"
-                        >
-                    </div>
+                <div class="filter-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        name="search"
+                        placeholder="Cari kode, team, event, atau status..."
+                        value="<?php echo htmlspecialchars($search); ?>"
+                        class="teams-search-input"
+                    >
                 </div>
 
-                <div class="filter-group">
-                    <label>Kategori Event</label>
+                <div style="min-width: 220px;">
                     <div class="schedule-select-wrap">
                         <div class="schedule-custom-select" id="scheduleSportSelect">
                             <input type="hidden" name="sport" id="scheduleSportValue" value="<?php echo htmlspecialchars($sport_filter); ?>">
@@ -541,16 +537,12 @@ $reset_match_url = 'schedule.php' . (!empty($reset_match_params) ? '?' . http_bu
                     </div>
                 </div>
 
-                <div class="teams-filter-actions">
-                    <button type="submit" class="btn-filter">
-                        <i class="fas fa-filter"></i> Terapkan
-                    </button>
-                    <?php if (!empty($search) || !empty($sport_filter) || !empty($result_filter) || !empty($day_filter) || !empty($lineup_filter) || !empty($range_filter) || !empty($match_filter)): ?>
-                    <a href="schedule.php" class="clear-filter-btn">
-                        <i class="fas fa-times"></i> Reset
-                    </a>
-                    <?php endif; ?>
-                </div>
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i> Cari
+                </button>
+                <a href="schedule.php" class="clear-filter-btn">
+                    <i class="fas fa-times"></i> Reset
+                </a>
             </form>
         </div>
     </div>

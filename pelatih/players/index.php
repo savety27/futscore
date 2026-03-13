@@ -243,7 +243,7 @@ $players_export_url = 'export.php' . (!empty($base_query_params) ? '?' . http_bu
                     </div>
                 </div>
                 <div class="players-filter-actions">
-                    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+                    <button type="submit" class="btn-filter"><i class="fas fa-search"></i> Cari</button>
                     <a href="./" class="clear-filter-btn"><i class="fas fa-times"></i> Reset</a>
                 </div>
             </form>

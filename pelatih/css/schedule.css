@@ -235,7 +235,7 @@
 
 .filter-container {
     position: relative;
-    z-index: 200;
+    z-index: 2;
 }
 
 .teams-filter-form {
@@ -266,9 +266,32 @@
     width: 100%;
 }
 
+/* Inline filter layout (match matches.php concept) */
+.teams-inline-filter {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.teams-inline-filter .filter-input-wrapper {
+    flex: 1;
+    position: relative;
+    min-width: 220px;
+}
+
+.teams-inline-filter .filter-input-wrapper i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--heritage-text-muted);
+}
+
 .schedule-custom-select {
     position: relative;
-    z-index: 50;
+    z-index: 3;
 }
 
 .teams-search-group i.fa-search,
@@ -291,7 +314,7 @@
     border-radius: 16px;
     padding: 0 20px;
     font-family: var(--font-body);
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--heritage-text);
     transition: all 0.3s ease;
     box-sizing: border-box;
@@ -299,6 +322,10 @@
 
 .teams-search-input {
     padding-left: 48px;
+}
+
+.teams-search-input::placeholder {
+    font-size: 0.88rem;
 }
 
 .teams-search-input:focus,
@@ -342,6 +369,12 @@
     text-overflow: ellipsis;
 }
 
+/* Allow long category labels to wrap (avoid U-13... truncation) */
+#scheduleSportSelect .schedule-custom-select-text {
+    white-space: normal;
+    line-height: 1.1;
+}
+
 .schedule-custom-select-trigger .select-icon-right {
     position: absolute;
     right: 16px;
@@ -368,7 +401,7 @@
     padding: 8px;
     max-height: 260px;
     overflow-y: auto;
-    z-index: 100;
+    z-index: 4;
 }
 
 .schedule-custom-select.open .schedule-custom-select-menu {
@@ -438,8 +471,9 @@
 }
 
 .clear-filter-btn:hover {
-    background: #fdfcfb;
-    border-color: var(--heritage-text);
+    background: var(--heritage-gold);
+    color: #fff;
+    border-color: var(--heritage-gold);
 }
 
 
@@ -832,23 +866,60 @@
 
     /* Filters Mobile Optimization */
     .teams-filter-card {
-        padding: 20px;
+        padding: 24px 16px;
         border-radius: 20px;
     }
 
     .teams-filter-form {
-        gap: 16px;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .teams-search-input,
+    .teams-filter-select,
+    .schedule-custom-select-trigger {
+        height: 50px;
+        font-size: 0.9rem;
+    }
+
+    .teams-search-input::placeholder {
+        font-size: 0.85rem;
+    }
+
+    .schedule-custom-select-trigger {
+        padding-left: 12px;
+        padding-right: 40px;
+    }
+
+    .schedule-custom-select-text {
+        white-space: normal;
+        line-height: 1.1;
     }
 
     .teams-filter-actions {
         flex-direction: column;
         width: 100%;
-        margin-top: 8px;
+        margin-top: 0;
+        gap: 10px;
     }
 
     .btn-filter, .clear-filter-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    /* Inline filter stack (matches.php concept) */
+    .teams-inline-filter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .teams-inline-filter > div,
+    .teams-inline-filter > button,
+    .teams-inline-filter > a {
+        width: 100%;
+        min-width: 0 !important;
     }
 
     /* Table Responsiveness Fix */
