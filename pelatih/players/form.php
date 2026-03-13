@@ -129,6 +129,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
             <input type="hidden" name="action" value="<?php echo $action; ?>">
             <input type="hidden" name="id" value="<?php echo $player_id; ?>">
             <input type="hidden" id="hasExistingKk" value="<?php echo !empty($player['kk_image']) ? '1' : '0'; ?>">
+            <input type="hidden" id="hasExistingPhoto" value="<?php echo !empty($player['photo']) ? '1' : '0'; ?>">
             
             <!-- Basic Information Section -->
             <div class="form-section reveal d-1">
@@ -668,17 +669,28 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadArea.classList.remove('dragover');
             if (e.dataTransfer.files.length) {
                 fileInputField.files = e.dataTransfer.files;
-                handleFileSelect(e.dataTransfer.files[0], previewContainer);
+                handleFileSelect(e.dataTransfer.files[0], previewContainer, uploadArea, fileInputField);
             }
         });
         fileInputField.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFileSelect(e.target.files[0], previewContainer);
+            if (e.target.files.length) handleFileSelect(e.target.files[0], previewContainer, uploadArea, fileInputField);
         });
     }
 
-    function handleFileSelect(file, previewContainer) {
-        if (!file.type.startsWith('image/')) { showClientAlert('Harap pilih file gambar!'); return; }
-        if (file.size > 5 * 1024 * 1024) { showClientAlert('Ukuran file terlalu besar! Maksimal 5MB.'); return; }
+    function handleFileSelect(file, previewContainer, uploadArea, fileInputField) {
+        if (!file.type.startsWith('image/')) {
+            showUploadError(uploadArea, 'Format file harus berupa gambar (JPEG, PNG, atau GIF)');
+            if (fileInputField) fileInputField.value = '';
+            if (previewContainer) previewContainer.innerHTML = '';
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showUploadError(uploadArea, 'Ukuran file maksimal 5MB');
+            if (fileInputField) fileInputField.value = '';
+            if (previewContainer) previewContainer.innerHTML = '';
+            return;
+        }
+        clearUploadError(uploadArea);
         const reader = new FileReader();
         reader.onload = function(e) {
             previewContainer.innerHTML = `
@@ -698,6 +710,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showUploadError(uploadArea, message) {
+        if (!uploadArea) return;
+        clearUploadError(uploadArea);
+        uploadArea.classList.add('has-error');
+        const badge = document.createElement('div');
+        badge.className = 'upload-error-badge-text';
+        badge.textContent = message;
+        uploadArea.appendChild(badge);
+    }
+
+    function clearUploadError(uploadArea) {
+        if (!uploadArea) return;
+        uploadArea.classList.remove('has-error');
+        const badge = uploadArea.querySelector('.upload-error-badge-text');
+        if (badge) badge.remove();
     }
 
     function showClientAlert(message) {
@@ -1050,6 +1079,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (playerForm) {
         playerForm.addEventListener('submit', function(e) {
             hideClientAlert();
+            const photoUploadBox = document.getElementById('photoUpload');
+            const kkUploadBox = document.getElementById('kk_imageUpload');
+            if (photoUploadBox) photoUploadBox.classList.remove('missing-required');
+            if (kkUploadBox) kkUploadBox.classList.remove('missing-required');
             const name = document.querySelector('input[name="name"]').value.trim();
             const jerseyNumber = document.querySelector('input[name="jersey_number"]').value.trim();
             const position = document.querySelector('select[name="position"]').value;
@@ -1059,11 +1092,37 @@ document.addEventListener('DOMContentLoaded', function() {
             const gender = document.querySelector('input[name="gender"]:checked');
             const nik = document.querySelector('input[name="nik"]').value.trim();
             const nisn = document.querySelector('input[name="nisn"]').value.trim();
+            const photoInput = document.getElementById('photoFile');
+            const hasExistingPhotoEl = document.getElementById('hasExistingPhoto');
+            const hasExistingPhoto = hasExistingPhotoEl ? hasExistingPhotoEl.value === '1' : false;
+            const photoSelected = photoInput && photoInput.files && photoInput.files.length > 0;
+
+            function focusField(el) {
+                if (!el) return;
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (typeof el.focus === 'function') el.focus();
+            }
 
             if (!name || !jerseyNumber || !position || !sportType || !birthDate || !birthPlace || !gender || !nik || !nisn) {
                 e.preventDefault();
                 showClientAlert('Harap lengkapi semua field yang wajib diisi!');
+                if (!name) return focusField(document.querySelector('input[name="name"]'));
+                if (!jerseyNumber) return focusField(document.querySelector('input[name="jersey_number"]'));
+                if (!position) return focusField(document.querySelector('select[name="position"]'));
+                if (!sportType) return focusField(document.querySelector('select[name="sport_type"]'));
+                if (!birthDate) return focusField(document.querySelector('input[name="birth_date"]'));
+                if (!birthPlace) return focusField(document.querySelector('input[name="birth_place"]'));
+                if (!gender) return focusField(document.querySelector('input[name="gender"]'));
+                if (!nik) return focusField(document.querySelector('input[name="nik"]'));
+                if (!nisn) return focusField(document.querySelector('input[name="nisn"]'));
                 return false;
+            }
+
+            if (!hasExistingPhoto && !photoSelected) {
+                e.preventDefault();
+                showClientAlert('Foto profil wajib diupload!');
+                if (photoUploadBox) photoUploadBox.classList.add('missing-required');
+                return focusField(document.getElementById('photoUpload'));
             }
 
             // Validate NIK format
@@ -1084,14 +1143,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (nikVerified.value !== '1') {
                 e.preventDefault();
                 showClientAlert('NIK belum terverifikasi.');
-                nikInput.focus();
                 return false;
             }
 
             if (nisnVerified.value !== '1') {
                 e.preventDefault();
                 showClientAlert('NISN belum terverifikasi.');
-                nisnInput.focus();
                 return false;
             }
 
@@ -1103,6 +1160,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hasExistingKk && !kkSelected) {
                 e.preventDefault();
                 showClientAlert('File Kartu Keluarga (KK) wajib diupload!');
+                if (kkUploadBox) kkUploadBox.classList.add('missing-required');
+                focusField(document.getElementById('kk_imageUpload'));
                 return false;
             }
 

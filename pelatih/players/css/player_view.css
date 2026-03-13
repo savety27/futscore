@@ -105,8 +105,8 @@
 .btn-primary { background: var(--heritage-text); color: white; }
 .btn-primary:hover { background: var(--heritage-gold); transform: translateY(-2px); }
 
-.btn-warning { background: var(--heritage-gold); color: white; }
-.btn-warning:hover { opacity: 0.9; transform: translateY(-2px); }
+.btn-warning { background: #1e88e5; color: white; }
+.btn-warning:hover { background: #1565c0; transform: translateY(-2px); }
 
 .btn-success { background: var(--heritage-accent); color: white; }
 .btn-success:hover { background: #065f46; transform: translateY(-2px); }

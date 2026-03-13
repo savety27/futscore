@@ -9,6 +9,21 @@ require_once '../includes/header.php';
 $team_id = $_SESSION['team_id'] ?? 0;
 $filter_category = trim((string)($_GET['category'] ?? ''));
 $filter_search = trim((string)($_GET['q'] ?? ''));
+$filter_status = trim((string)($_GET['status'] ?? ''));
+
+// Fixed category options
+$category_options = [
+    'LIGA AAFI BATAM U-13 PUTRA 2026',
+    'LIGA AAFI BATAM U-16 PUTRA 2026',
+    'LIGA AAFI BATAM U-16 PUTRI 2026',
+];
+if ($filter_category !== '' && !in_array($filter_category, $category_options, true)) {
+    $filter_category = '';
+}
+$status_options = ['active' => 'Aktif', 'inactive' => 'Non-Aktif'];
+if ($filter_status !== '' && !array_key_exists($filter_status, $status_options)) {
+    $filter_status = '';
+}
 
 // Pagination settings
 $players_per_page = 10;
@@ -19,7 +34,6 @@ $offset = ($current_page_num - 1) * $players_per_page;
 $total_players = 0;
 $players = [];
 $total_pages = 1;
-$category_options = [];
 
 function tableExists(PDO $conn, string $table): bool
 {
@@ -62,15 +76,6 @@ function hasPlayerRelatedData(PDO $conn, int $playerId, array $usageMap): bool
 
 if ($team_id) {
     try {
-        $stmtCategory = $conn->prepare("SELECT DISTINCT sport_type 
-                                        FROM players 
-                                        WHERE team_id = :team_id 
-                                          AND sport_type IS NOT NULL 
-                                          AND sport_type <> '' 
-                                        ORDER BY sport_type ASC");
-        $stmtCategory->execute([':team_id' => $team_id]);
-        $category_options = $stmtCategory->fetchAll(PDO::FETCH_COLUMN) ?: [];
-
         $where = ["team_id = :team_id"];
         $params = [':team_id' => $team_id];
 
@@ -84,6 +89,11 @@ if ($team_id) {
             $search_like = '%' . $filter_search . '%';
             $params[':search_name'] = $search_like;
             $params[':search_jersey'] = $search_like;
+        }
+
+        if ($filter_status !== '') {
+            $where[] = "status = :status";
+            $params[':status'] = $filter_status;
         }
 
         $where_sql = implode(' AND ', $where);
@@ -147,6 +157,9 @@ if ($filter_category !== '') {
 if ($filter_search !== '') {
     $base_query_params['q'] = $filter_search;
 }
+if ($filter_status !== '') {
+    $base_query_params['status'] = $filter_status;
+}
 $build_page_url = function(int $page) use ($base_query_params): string {
     $params = $base_query_params;
     $params['page'] = $page;
@@ -178,16 +191,55 @@ $players_export_url = 'export.php' . (!empty($base_query_params) ? '?' . http_bu
                         <input type="text" name="q" class="players-search-input" placeholder="Cari nama atau nomor..." value="<?php echo htmlspecialchars($filter_search); ?>">
                     </div>
                 </div>
-                <div class="filter-group">
+                <div class="filter-group filter-category">
                     <label>Kategori</label>
-                    <select name="category" class="players-filter-select">
-                        <option value="">Semua Kategori</option>
-                        <?php foreach ($category_options as $category): ?>
-                            <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $filter_category === $category ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="schedule-select-wrap">
+                        <div class="schedule-custom-select" id="playersCategorySelect">
+                            <input type="hidden" name="category" id="playersCategoryValue" value="<?php echo htmlspecialchars($filter_category); ?>">
+                            <button type="button" class="schedule-custom-select-trigger" id="playersCategoryTrigger" aria-expanded="false">
+                                <span class="schedule-custom-select-label">
+                                    <i class="fas fa-filter"></i>
+                                    <span id="playersCategoryLabel" class="schedule-custom-select-text">
+                                        <?php echo $filter_category !== '' ? htmlspecialchars($filter_category) : 'Semua Kategori'; ?>
+                                    </span>
+                                </span>
+                                <i class="fas fa-chevron-down select-icon-right"></i>
+                            </button>
+                            <div class="schedule-custom-select-menu" id="playersCategoryMenu">
+                                <button type="button" class="schedule-custom-option <?php echo $filter_category === '' ? 'active' : ''; ?>" data-value="">Semua Kategori</button>
+                                <?php foreach ($category_options as $category): ?>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_category === $category ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($category); ?>">
+                                        <?php echo htmlspecialchars($category); ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-group filter-status">
+                    <label>Status</label>
+                    <div class="schedule-select-wrap">
+                        <div class="schedule-custom-select" id="playersStatusSelect">
+                            <input type="hidden" name="status" id="playersStatusValue" value="<?php echo htmlspecialchars($filter_status); ?>">
+                            <button type="button" class="schedule-custom-select-trigger" id="playersStatusTrigger" aria-expanded="false">
+                                <span class="schedule-custom-select-label">
+                                    <i class="fas fa-filter"></i>
+                                    <span id="playersStatusLabel" class="schedule-custom-select-text">
+                                        <?php echo $filter_status !== '' ? htmlspecialchars($status_options[$filter_status] ?? $filter_status) : 'Semua Status'; ?>
+                                    </span>
+                                </span>
+                                <i class="fas fa-chevron-down select-icon-right"></i>
+                            </button>
+                            <div class="schedule-custom-select-menu" id="playersStatusMenu">
+                                <button type="button" class="schedule-custom-option <?php echo $filter_status === '' ? 'active' : ''; ?>" data-value="">Semua Status</button>
+                                <?php foreach ($status_options as $value => $label): ?>
+                                    <button type="button" class="schedule-custom-option <?php echo $filter_status === $value ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($value); ?>">
+                                        <?php echo htmlspecialchars($label); ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="players-filter-actions">
                     <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
@@ -838,8 +890,106 @@ style.textContent = `
     font-size: 24px !important;
     margin-bottom: 20px !important;
 }
+
+.swal2-container {
+    z-index: 10000 !important;
+}
 `;
 document.head.appendChild(style);
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectRoot = document.getElementById('playersCategorySelect');
+    if (!selectRoot) return;
+    const trigger = document.getElementById('playersCategoryTrigger');
+    const menu = document.getElementById('playersCategoryMenu');
+    const hiddenInput = document.getElementById('playersCategoryValue');
+    const label = document.getElementById('playersCategoryLabel');
+    const options = menu.querySelectorAll('.schedule-custom-option');
+
+    function closeMenu() {
+        selectRoot.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+        selectRoot.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    trigger.addEventListener('click', function() {
+        if (selectRoot.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            const value = opt.getAttribute('data-value') || '';
+            hiddenInput.value = value;
+            label.textContent = opt.textContent.trim();
+            options.forEach(function(o) { o.classList.remove('active'); });
+            opt.classList.add('active');
+            closeMenu();
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!selectRoot.contains(e.target)) {
+            closeMenu();
+        }
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectRoot = document.getElementById('playersStatusSelect');
+    if (!selectRoot) return;
+    const trigger = document.getElementById('playersStatusTrigger');
+    const menu = document.getElementById('playersStatusMenu');
+    const hiddenInput = document.getElementById('playersStatusValue');
+    const label = document.getElementById('playersStatusLabel');
+    const options = menu.querySelectorAll('.schedule-custom-option');
+
+    function closeMenu() {
+        selectRoot.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+        selectRoot.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    trigger.addEventListener('click', function() {
+        if (selectRoot.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            const value = opt.getAttribute('data-value') || '';
+            hiddenInput.value = value;
+            label.textContent = opt.textContent.trim();
+            options.forEach(function(o) { o.classList.remove('active'); });
+            opt.classList.add('active');
+            closeMenu();
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!selectRoot.contains(e.target)) {
+            closeMenu();
+        }
+    });
+});
 </script>
 
 <!-- Add SweetAlert2 for better delete confirmation -->

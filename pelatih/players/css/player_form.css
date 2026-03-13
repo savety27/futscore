@@ -468,6 +468,39 @@
     transform: scale(1.02);
 }
 
+/* Missing required upload highlight */
+.file-upload.missing-required,
+.file-upload-container.missing-required {
+    border-color: var(--heritage-crimson);
+    background: #fef2f2;
+}
+
+/* Error state for upload (badge) */
+.file-upload.has-error,
+.file-upload-container.has-error {
+    border-style: solid;
+    border-color: var(--heritage-crimson);
+    background: #fef2f2;
+}
+
+.upload-error-badge-text {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--heritage-crimson);
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    box-shadow: 0 4px 10px rgba(153, 27, 27, 0.2);
+    z-index: 10;
+    max-width: calc(100% - 20px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .file-upload input[type="file"] {
     position: absolute;
     width: 0.1px;
@@ -873,14 +906,29 @@
     cursor: pointer;
     transition: all 0.3s ease;
     white-space: nowrap;
+    box-shadow: 0 8px 16px rgba(30, 27, 75, 0.18);
 }
 
 .verify-btn:hover:not(:disabled) {
     background: var(--heritage-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(180, 83, 9, 0.28);
 }
 
 .verify-btn.verified {
     background: var(--heritage-accent);
+    box-shadow: 0 8px 16px rgba(6, 78, 59, 0.2);
+}
+
+.verify-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.verify-btn.loading {
+    cursor: wait;
+    opacity: 0.85;
 }
 
 .verify-details {

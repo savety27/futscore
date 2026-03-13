@@ -359,12 +359,12 @@ $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_
                             <button type="button" class="schedule-custom-select-trigger" id="scheduleSportTrigger" aria-expanded="false">
                                 <span class="schedule-custom-select-label">
                                     <i class="fas fa-trophy"></i>
-                                    <span id="scheduleSportLabel" class="schedule-custom-select-text"><?php echo $sport_filter !== '' ? htmlspecialchars($sport_filter) : 'Semua Event'; ?></span>
+                                    <span id="scheduleSportLabel" class="schedule-custom-select-text"><?php echo $sport_filter !== '' ? htmlspecialchars($sport_filter) : 'Semua Kategori'; ?></span>
                                 </span>
                                 <i class="fas fa-chevron-down select-icon-right"></i>
                             </button>
                             <div class="schedule-custom-select-menu" id="scheduleSportMenu">
-                                <button type="button" class="schedule-custom-option <?php echo $sport_filter === '' ? 'active' : ''; ?>" data-value="">Semua Event</button>
+                                <button type="button" class="schedule-custom-option <?php echo $sport_filter === '' ? 'active' : ''; ?>" data-value="">Semua Kategori</button>
                                 <?php foreach ($sport_types as $sport): ?>
                                     <button type="button" class="schedule-custom-option <?php echo $sport_filter === $sport ? 'active' : ''; ?>" data-value="<?php echo htmlspecialchars($sport); ?>">
                                         <?php echo htmlspecialchars($sport); ?>
