@@ -663,6 +663,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.08);
     }
 
+    .category-display {
+        font-size: 0.85rem;
+        line-height: 1.2;
+        height: auto;
+        padding: 8px 10px;
+        white-space: normal;
+    }
+
     /* Custom Select (match schedule style) */
     .lineup-select-wrap {
         position: relative;
@@ -1147,10 +1155,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="hidden" name="id" value="<?php echo (int)$challenge_id; ?>">
             
             <div>
-                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Event</label>
-                <select name="event" class="form-control" disabled style="background: #f3f4f6;">
-                    <option selected><?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?></option>
-                </select>
+                <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px;">Kategori</label>
+                <div class="form-control category-display" aria-readonly="true">
+                    <?php echo htmlspecialchars($challenge['sport_type'] ?? '-'); ?>
+                </div>
                 <input type="hidden" name="event" value="<?php echo htmlspecialchars($challenge['sport_type'] ?? ''); ?>">
             </div>
 
@@ -1364,7 +1372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <?php if ($is_suspended): ?>
                                                 <span class="status-badge status-suspend">Suspend <?php echo date('d/m', strtotime($suspend_until)); ?></span>
                                             <?php elseif (!$is_valid): ?>
-                                                <span class="status-badge status-bad">Beda Event</span>
+                                                <span class="status-badge status-bad">Beda Kategori</span>
                                             <?php else: ?>
                                                 <span class="status-badge status-ok">Ready</span>
                                             <?php endif; ?>

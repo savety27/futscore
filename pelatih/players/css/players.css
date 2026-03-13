@@ -905,7 +905,7 @@
     background: #fdfcfb;
     border: 1px solid var(--heritage-border);
     border-radius: 16px;
-    padding: 0 20px 0 16px;
+    padding: 0 44px 0 16px;
     font-family: var(--font-body);
     font-size: 1rem;
     color: var(--heritage-text);
@@ -915,6 +915,7 @@
     display: flex;
     align-items: center;
     box-sizing: border-box;
+    position: relative;
 }
 
 .schedule-custom-select-trigger:focus,
@@ -1243,5 +1244,48 @@
     .players-filter-actions .clear-filter-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    /* Mobile: make category/status labels wrap */
+    .schedule-custom-select-trigger {
+        font-size: 0.9rem;
+        padding-left: 12px;
+        padding-right: 40px;
+        height: auto;
+        min-height: 50px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .schedule-custom-select-text {
+        white-space: normal;
+        line-height: 1.1;
+    }
+
+    /* Mobile: let dropdown push layout (like matches.php) */
+    .schedule-custom-select-menu {
+        position: static;
+        margin-top: 6px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .schedule-custom-option {
+        white-space: normal;
+        line-height: 1.3;
+        padding: 12px 14px;
+        display: block;
+        word-break: break-word;
+        font-size: 0.9rem;
+    }
+
+    /* Mobile: full-width filter columns */
+    .filter-category,
+    .filter-status {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .filter-group {
+        width: 100%;
     }
 }
