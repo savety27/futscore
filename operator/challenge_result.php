@@ -390,417 +390,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Input Hasil Challenge</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo file_exists(__DIR__ . '/../pelatih/css/style.css') ? filemtime(__DIR__ . '/../pelatih/css/style.css') : time(); ?>">
+<link rel="stylesheet" href="../pelatih/css/style.css?v=<?php echo (int)@filemtime(__DIR__ . '/../pelatih/css/style.css'); ?>">
+<link rel="stylesheet" href="css/challenge.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/challenge.css'); ?>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
-:root {
-    --primary: #0f2744;
-    --secondary: #f59e0b;
-    --accent: #3b82f6;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --light: #F8F9FA;
-    --dark: #1e293b;
-    --gray: #64748b;
-    --glass-white: rgba(255, 255, 255, 0.85);
-    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-    --premium-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --transition: cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+/* Heritage Result Custom Styling */
+.challenge-container {
+    padding-bottom: 60px;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(180deg, #eaf6ff 0%, #dff1ff 45%, #f4fbff 100%);
-    color: var(--dark);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.wrapper {
-    display: flex;
-    min-height: 100vh;
-}
-
-/* ===== MAIN CONTENT ===== */
-.main {
-    flex: 1;
-    padding: 30px;
-    margin-left: 280px;
-    width: calc(100% - 280px);
-    max-width: calc(100vw - 280px);
-    overflow-x: hidden;
-    transition: var(--transition);
-}
-
-/* Topbar */
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40px;
-    padding: 20px 25px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    animation: slideDown 0.5s ease-out;
-}
-
-.greeting h1 {
-    font-size: 28px;
-    color: var(--primary);
-    margin-bottom: 5px;
-}
-
-.greeting p {
-    color: var(--gray);
-    font-size: 14px;
-}
-
-.user-actions {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.logout-btn {
-    background: linear-gradient(135deg, var(--danger) 0%, #B71C1C 100%);
-    color: white;
-    padding: 12px 28px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2);
-}
-
-.logout-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.3);
-}
-
-/* Page Header */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: var(--card-shadow);
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.page-title {
-    font-size: 28px;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.page-title i {
-    color: var(--secondary);
-    font-size: 32px;
-}
-
-.search-bar {
-    position: relative;
-    width: 400px;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 15px 50px 15px 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-}
-
-.search-bar input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.search-bar button {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 15px;
-}
-
-.btn {
-    padding: 12px 25px;
-    border-radius: 12px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: var(--transition);
-    font-size: 15px;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: white;
-    box-shadow: 0 5px 15px rgba(10, 36, 99, 0.2);
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(10, 36, 99, 0.3);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, var(--success), #4CAF50);
-    color: white;
-    box-shadow: 0 5px 15px rgba(46, 125, 50, 0.2);
-}
-
-.btn-success:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.3);
-}
-
-.btn-secondary {
-    background: #6b7280;
-    color: white;
-    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
-}
-
-.btn-secondary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-}
-
-/* Form Styles */
 .form-container {
-    background: white;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 30px;
+    background: var(--heritage-card);
+    border: 1px solid var(--heritage-border);
+    border-radius: 28px;
+    padding: 40px;
+    box-shadow: var(--soft-shadow);
+    margin-bottom: 40px;
 }
 
 .form-section {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 40px;
 }
 
-.form-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.section-title {
-    font-size: 20px;
-    color: var(--primary);
-    margin-bottom: 20px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--dark);
-    font-size: 14px;
-}
-
-.required {
-    color: var(--danger);
-}
-
-.form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    font-family: inherit;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-.form-textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 100px;
-}
-
-.form-select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    font-size: 16px;
-    transition: var(--transition);
-    background: #f8f9fa;
-    cursor: pointer;
-}
-
-.form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
-}
-
-/* Action Buttons */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px solid #f0f0f0;
-}
-
-/* Alert */
-.alert {
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.alert-danger {
-    background: rgba(211, 47, 47, 0.1);
-    border-left: 4px solid var(--danger);
-    color: var(--danger);
-}
-
-.alert-success {
-    background: rgba(46, 125, 50, 0.1);
-    border-left: 4px solid var(--success);
-    color: var(--success);
-}
-
-/* Error styling */
-.error {
-    color: var(--danger);
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-}
-
-.form-help {
-    display: block;
-    margin-top: 6px;
-    font-size: 12px;
-    color: var(--gray);
-}
-
-.official-combobox {
-    position: relative;
-}
-
-.official-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    max-height: 220px;
-    overflow-y: auto;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
-    z-index: 25;
-}
-
-.official-dropdown-item {
-    display: block;
-    width: 100%;
-    border: 0;
-    background: transparent;
-    text-align: left;
-    padding: 10px 12px;
-    font-size: 14px;
-    color: #1f2937;
-    cursor: pointer;
-}
-
-.official-dropdown-item:hover,
-.official-dropdown-item.active {
-    background: #e5e7eb;
-}
-
-.official-dropdown-empty {
-    padding: 10px 12px;
-    font-size: 13px;
-    color: #6b7280;
-}
-
-.is-invalid {
-    border-color: var(--danger) !important;
-}
-
-/* Score Input Section */
+/* Score Input Section Heritage */
 .score-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 12px;
-    padding: 30px;
+    background: #fdfcfb;
+    border: 1px solid var(--heritage-border);
+    border-radius: 24px;
+    padding: 40px;
     margin: 20px 0;
 }
 
@@ -808,310 +428,192 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 40px;
+    gap: 60px;
     flex-wrap: wrap;
 }
 
 .team-score-box {
     text-align: center;
-    min-width: 200px;
+    min-width: 220px;
 }
 
 .team-logo-medium {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    border-radius: 20px;
     object-fit: cover;
-    border: 4px solid white;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    margin-bottom: 15px;
+    border: 2px solid var(--heritage-border);
+    background: white;
+    padding: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
 }
 
 .team-name {
-    font-size: 18px;
-    color: var(--dark);
-    margin-bottom: 10px;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--heritage-text);
+    margin-bottom: 15px;
+    font-weight: 800;
 }
 
 .score-input {
-    width: 100px;
-    height: 100px;
-    font-size: 48px;
-    font-weight: bold;
+    width: 110px;
+    height: 110px;
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 800;
     text-align: center;
-    border: 3px solid #e0e0e0;
-    border-radius: 12px;
+    border: 2px solid var(--heritage-border);
+    border-radius: 24px;
     background: white;
-    transition: var(--transition);
+    color: var(--heritage-text);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .score-input:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+    border-color: var(--heritage-gold);
+    box-shadow: 0 0 0 6px rgba(180, 83, 9, 0.05);
+    transform: translateY(-4px);
 }
 
 .vs-symbol {
-    font-size: 32px;
-    font-weight: bold;
-    color: var(--secondary);
-    background: var(--primary);
-    width: 60px;
-    height: 60px;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--heritage-gold);
+    background: var(--heritage-bg);
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--heritage-border);
+    font-style: italic;
 }
 
 .result-preview {
     text-align: center;
-    margin-top: 20px;
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--primary);
+    margin-top: 30px;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--heritage-gold);
     min-height: 40px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-
-/* =========================================
-   MOBILE RESPONSIVE DESIGN
-   ========================================= */
-
-/* Default: Hide mobile-only elements on desktop */
-
-
-/* ===== TABLET (max-width: 1024px) ===== */
-@media screen and (max-width: 1024px) {
-
-    .main {
-        margin-left: 240px;
-        width: calc(100% - 240px);
-        max-width: calc(100vw - 240px);
-    }
-}
-
-/* ===== MOBILE LANDSCAPE (max-width: 768px) ===== */
-@media screen and (max-width: 768px) {
-    
-
-
-    /* Main Content: Full width on mobile */
-    .main {
-        margin-left: 0;
-        padding: 20px 15px;
-        width: 100%;
-        max-width: 100vw;
-    }
-
-    /* Topbar: Stack vertically */
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .greeting h1 {
-        font-size: 24px;
-    }
-
-    .user-actions {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    /* Page Header: Stack vertically */
-    .page-header {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-    }
-
-    .page-title {
-        width: 100%;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .search-bar {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .action-buttons {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        flex: 1;
-        justify-content: center;
-    }
-
-    /* Form Layout adaptations */
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-actions {
-        flex-direction: column-reverse;
-        gap: 10px;
-    }
-    
-    .score-input-container {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .team-score-box {
-        min-width: 100%;
-    }
-    
-    .score-input {
-        width: 80px;
-        height: 80px;
-        font-size: 36px;
-    }
-}
-
-/* ===== MOBILE PORTRAIT (max-width: 480px) ===== */
-@media screen and (max-width: 480px) {
-    
-    /* Reduce font sizes */
-    .greeting h1 {
-        font-size: 20px;
-    }
-    
-    .greeting p {
-        font-size: 13px;
-    }
-
-    .page-title {
-        font-size: 20px;
-    }
-
-    .page-title i {
-        font-size: 24px;
-    }
-
-
-    .logo,
-    .logo img {
-        max-width: 120px;
-    }
-
-    
-
-    .menu-link {
-        padding: 14px 15px;
-        font-size: 15px;
-    }
-
-    .menu-icon {
-        font-size: 20px;
-        width: 28px;
-    }
-
-
-    /* Compact buttons */
-    .btn {
-        padding: 10px 18px;
-        font-size: 14px;
-    }
-
-    .logout-btn {
-        padding: 10px 20px;
-        font-size: 14px;
-    }
-    
-    .team-logo-medium {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .team-name {
-        font-size: 16px;
-    }
-}
-
-/* Goal Entry Styles */
+/* Goal Entry Styles Heritage */
 .goal-entry-row {
     display: grid;
-    grid-template-columns: 1.3fr 2fr 1fr 1fr 50px;
-    gap: 15px;
+    grid-template-columns: 1.5fr 2fr 1fr 1fr 60px;
+    gap: 16px;
     align-items: center;
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #e0e0e0;
-    transition: var(--transition);
+    background: #fdfcfb;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    border: 1px solid var(--heritage-border);
+    transition: all 0.3s ease;
 }
 
 .goal-entry-row:hover {
     background: white;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-color: var(--heritage-gold);
+    transform: translateX(4px);
 }
 
 .btn-add-goal {
-    margin-top: 10px;
-    background: rgba(10, 36, 99, 0.1);
-    color: var(--primary);
-    border: 2px dashed var(--primary);
+    margin-top: 20px;
+    background: #fdfcfb;
+    color: var(--heritage-text);
+    border: 2px dashed var(--heritage-border);
     width: 100%;
-    padding: 15px;
-    border-radius: 12px;
+    padding: 18px;
+    border-radius: 20px;
     cursor: pointer;
-    font-weight: 600;
-    transition: var(--transition);
+    font-family: var(--font-display);
+    font-weight: 700;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .btn-add-goal:hover {
-    background: var(--primary);
-    color: white;
+    background: white;
+    border-color: var(--heritage-gold);
+    color: var(--heritage-gold);
 }
 
 .btn-remove-goal {
-    color: var(--danger);
-    background: rgba(211, 47, 47, 0.1);
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    color: var(--heritage-crimson);
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
+    transition: all 0.3s ease;
 }
 
 .btn-remove-goal:hover {
-    background: var(--danger);
+    background: var(--heritage-crimson);
     color: white;
+    border-color: var(--heritage-crimson);
+}
+
+.form-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--heritage-text-muted);
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: #fdfcfb;
+    border: 1px solid var(--heritage-border);
+    border-radius: 16px;
+    padding: 12px 20px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--heritage-text);
+    transition: all 0.3s ease;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--heritage-gold);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.05);
+}
+
+@media (max-width: 1024px) {
+    .goal-entry-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .btn-remove-goal {
+        grid-column: span 2;
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {
-    .goal-entry-row {
-        grid-template-columns: 1fr;
-    }
-}
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    .form-container { padding: 25px; }
+    .score-input-container { gap: 30px; }
+    .score-input { width: 90px; height: 90px; font-size: 2.5rem; }
 }
 </style>
 </head>
@@ -1124,10 +626,10 @@ body {
     <!-- MAIN CONTENT -->
     <div class="main">
         <!-- TOPBAR -->
-        <div class="topbar">
+        <div class="topbar reveal">
             <div class="greeting">
                 <h1>Input Hasil Pertandingan ⚽</h1>
-                <p>Challenge: <?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></p>
+                <p>Update statistik dan skor akhir pertandingan</p>
             </div>
             
             <div class="user-actions">
@@ -1138,37 +640,40 @@ body {
             </div>
         </div>
 
-        <!-- PAGE HEADER -->
-        <div class="page-header">
-            <div class="page-title">
-                <i class="fas fa-futbol"></i>
-                <span>Input Hasil Challenge</span>
-            </div>
-            <div class="action-buttons">
-                <a href="challenge_view.php?id=<?php echo $challenge_id; ?>" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i>
-                    Kembali
-                </a>
-            </div>
-        </div>
+        <div class="challenge-container">
+            <!-- Editorial Header -->
+            <header class="dashboard-hero reveal d-1">
+                <div class="hero-content">
+                    <span class="hero-label">Manajemen Pertandingan</span>
+                    <h1 class="hero-title">Input Hasil</h1>
+                    <p class="hero-description">Challenge Code: <strong><?php echo htmlspecialchars($challenge_data['challenge_code'] ?? ''); ?></strong>. Masukkan skor dan detail pencetak gol di bawah ini.</p>
+                </div>
+                <div class="hero-actions">
+                    <a href="challenge.php" class="btn-premium btn-export">
+                        <i class="fas fa-arrow-left"></i> Kembali
+                    </a>
+                </div>
+            </header>
 
-        <!-- ERROR MESSAGES -->
-        <?php if (isset($errors['database'])): ?>
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <?php echo $errors['database']; ?>
-        </div>
-        <?php endif; ?>
+            <!-- ERROR MESSAGES -->
+            <?php if (isset($errors['database'])): ?>
+            <div class="alert alert-danger reveal d-2">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?php echo $errors['database']; ?></span>
+            </div>
+            <?php endif; ?>
 
-        <!-- INPUT RESULT FORM -->
-        <div class="form-container">
-            <form method="POST" action="" id="resultForm">
+            <!-- INPUT RESULT FORM -->
+            <div class="form-container reveal d-2">
+                <form method="POST" action="" id="resultForm">
                 <input type="hidden" name="id" value="<?php echo $challenge_id; ?>">
                 
                 <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-trophy"></i>
-                        Skor Pertandingan
+                    <div class="section-header">
+                        <div class="section-title-wrap">
+                            <h2 class="section-title">Skor Pertandingan</h2>
+                            <div class="section-line"></div>
+                        </div>
                     </div>
                     
                     <!-- Score Input Section -->
@@ -1233,9 +738,11 @@ body {
                 </div>
 
                 <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-futbol"></i>
-                        Pencetak Gol
+                    <div class="section-header">
+                        <div class="section-title-wrap">
+                            <h2 class="section-title">Pencetak Gol</h2>
+                            <div class="section-line"></div>
+                        </div>
                     </div>
                     <?php if (isset($errors['goal_players'])): ?>
                         <div class="alert alert-danger" style="margin-bottom: 12px;">
@@ -1243,9 +750,8 @@ body {
                             <?php echo $errors['goal_players']; ?>
                         </div>
                     <?php endif; ?>
-                    <div class="note" style="margin-bottom: 12px;">
-                        Daftar pemain otomatis difilter sesuai kategori challenge:
-                        <strong><?php echo htmlspecialchars($challenge_data['sport_type'] ?? '-'); ?></strong>
+                    <div class="note" style="margin-bottom: 20px; color: var(--heritage-text-muted); font-size: 0.9rem;">
+                        <i class="fas fa-info-circle" style="color: var(--heritage-gold);"></i> Daftar pemain difilter untuk: <strong><?php echo htmlspecialchars($challenge_data['sport_type'] ?? '-'); ?></strong>
                     </div>
                     
                     <div id="goal-entries">
@@ -1258,12 +764,14 @@ body {
                 </div>
 
                 <div class="form-section">
-                    <div class="section-title">
-                        <i class="fas fa-info-circle"></i>
-                        Detail Pertandingan
+                    <div class="section-header">
+                        <div class="section-title-wrap">
+                            <h2 class="section-title">Detail Pertandingan</h2>
+                            <div class="section-line"></div>
+                        </div>
                     </div>
                     
-                    <div class="form-grid">
+                    <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
                         <div class="form-group">
                             <label class="form-label" for="match_status">
                                 Status Match <span class="required">*</span>
@@ -1303,24 +811,22 @@ body {
                     </div>
                     
                     
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label" for="match_notes">
-                                Catatan Pertandingan
-                            </label>
-                            <textarea id="match_notes" name="match_notes" class="form-textarea" 
-                                      placeholder="Masukkan catatan pertandingan (kondisi lapangan, kejadian penting, dll)..."><?php echo isset($form_data['match_notes']) ? htmlspecialchars($form_data['match_notes'] ?? '') : ($challenge_data['match_notes'] ? htmlspecialchars($challenge_data['match_notes'] ?? '') : ''); ?></textarea>
-                        </div>
+                    <div class="form-group" style="margin-top: 24px;">
+                        <label class="form-label" for="match_notes">
+                            Catatan Pertandingan
+                        </label>
+                        <textarea id="match_notes" name="match_notes" class="form-textarea" style="min-height: 120px;"
+                                  placeholder="Masukkan catatan pertandingan (kondisi lapangan, kejadian penting, dll)..."><?php echo isset($form_data['match_notes']) ? htmlspecialchars($form_data['match_notes'] ?? '') : ($challenge_data['match_notes'] ? htmlspecialchars($challenge_data['match_notes'] ?? '') : ''); ?></textarea>
                     </div>
                 </div>
 
                 <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="reset" class="btn btn-secondary">
+                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 40px; border-top: 1px solid var(--heritage-border); padding-top: 30px;">
+                    <button type="reset" class="btn-premium btn-export">
                         <i class="fas fa-redo"></i>
                         Reset
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn-premium btn-add">
                         <i class="fas fa-save"></i>
                         Simpan Hasil
                     </button>
