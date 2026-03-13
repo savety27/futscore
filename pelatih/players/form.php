@@ -125,7 +125,7 @@ if ($selected_sport_type !== '' && !in_array($selected_sport_type, $event_option
     </div>
 
     <div class="form-container">
-        <form action="actions.php" method="POST" enctype="multipart/form-data" id="playerForm">
+        <form action="actions.php" method="POST" enctype="multipart/form-data" id="playerForm" novalidate>
             <input type="hidden" name="action" value="<?php echo $action; ?>">
             <input type="hidden" name="id" value="<?php echo $player_id; ?>">
             <input type="hidden" id="hasExistingKk" value="<?php echo !empty($player['kk_image']) ? '1' : '0'; ?>">
@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (badge) badge.remove();
     }
 
-    function showClientAlert(message) {
+    function showClientAlert(message, shouldScroll = true) {
         const alertBox = document.getElementById('clientAlertBox');
         const alertText = document.getElementById('clientAlertText');
         if (!alertBox || !alertText) {
@@ -738,7 +738,9 @@ document.addEventListener('DOMContentLoaded', function() {
         alertText.textContent = message;
         alertBox.style.display = 'flex';
         alertBox.className = 'alert alert-danger';
-        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (shouldScroll) {
+            alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     function hideClientAlert() {
@@ -1099,30 +1101,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
             function focusField(el) {
                 if (!el) return;
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                if (typeof el.focus === 'function') el.focus();
+                
+                // For custom selects, target the wrapper for scrolling
+                let scrollTarget = el;
+                if (el.tagName === 'SELECT' && el.classList.contains('custom-select')) {
+                    const wrapper = el.nextElementSibling;
+                    if (wrapper && wrapper.classList.contains('custom-select-wrapper')) {
+                        scrollTarget = wrapper;
+                    }
+                }
+                
+                scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Try focusing the actual input
+                if (typeof el.focus === 'function' && el.style.display !== 'none' && el.type !== 'hidden') {
+                    setTimeout(() => el.focus(), 100);
+                }
+
+                // Add red highlight to parent form-group
+                const formGroup = el.closest('.form-group');
+                if (formGroup) {
+                    formGroup.classList.add('missing-required');
+                    setTimeout(() => formGroup.classList.remove('missing-required'), 1500);
+                }
             }
 
             if (!name || !jerseyNumber || !position || !sportType || !birthDate || !birthPlace || !gender || !nik || !nisn) {
                 e.preventDefault();
                 showClientAlert('Harap lengkapi semua field yang wajib diisi!');
-                if (!name) return focusField(document.querySelector('input[name="name"]'));
-                if (!jerseyNumber) return focusField(document.querySelector('input[name="jersey_number"]'));
-                if (!position) return focusField(document.querySelector('select[name="position"]'));
-                if (!sportType) return focusField(document.querySelector('select[name="sport_type"]'));
-                if (!birthDate) return focusField(document.querySelector('input[name="birth_date"]'));
-                if (!birthPlace) return focusField(document.querySelector('input[name="birth_place"]'));
-                if (!gender) return focusField(document.querySelector('input[name="gender"]'));
-                if (!nik) return focusField(document.querySelector('input[name="nik"]'));
-                if (!nisn) return focusField(document.querySelector('input[name="nisn"]'));
+                if (!name) { focusField(document.querySelector('input[name="name"]')); return false; }
+                if (!jerseyNumber) { focusField(document.querySelector('input[name="jersey_number"]')); return false; }
+                if (!sportType) { focusField(document.querySelector('select[name="sport_type"]')); return false; }
+                if (!position) { focusField(document.querySelector('select[name="position"]')); return false; }
+                if (!birthDate) { focusField(document.querySelector('input[name="birth_date"]')); return false; }
+                if (!birthPlace) { focusField(document.querySelector('input[name="birth_place"]')); return false; }
+                if (!gender) { 
+                    const firstGenderRadio = document.querySelector('input[name="gender"]');
+                    focusField(firstGenderRadio); 
+                    return false; 
+                }
+                if (!nik) { focusField(document.querySelector('input[name="nik"]')); return false; }
+                if (!nisn) { focusField(document.querySelector('input[name="nisn"]')); return false; }
                 return false;
-            }
-
-            if (!hasExistingPhoto && !photoSelected) {
-                e.preventDefault();
-                showClientAlert('Foto profil wajib diupload!');
-                if (photoUploadBox) photoUploadBox.classList.add('missing-required');
-                return focusField(document.getElementById('photoUpload'));
             }
 
             // Validate NIK format
@@ -1142,14 +1162,22 @@ document.addEventListener('DOMContentLoaded', function() {
             // CHECK VERIFICATION STATUS
             if (nikVerified.value !== '1') {
                 e.preventDefault();
-                showClientAlert('NIK belum terverifikasi.');
+                showClientAlert('NIK belum terverifikasi.', false);
+                focusField(document.querySelector('input[name="nik"]'));
                 return false;
             }
 
             if (nisnVerified.value !== '1') {
                 e.preventDefault();
-                showClientAlert('NISN belum terverifikasi.');
+                showClientAlert('NISN belum terverifikasi.', false);
+                focusField(document.querySelector('input[name="nisn"]'));
                 return false;
+            }
+
+            if (!hasExistingPhoto && !photoSelected) {
+                e.preventDefault();
+                showClientAlert('Foto profil wajib diupload!');
+                return focusField(document.getElementById('photoUpload'));
             }
 
             // Validate KK upload requirement
@@ -1160,7 +1188,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hasExistingKk && !kkSelected) {
                 e.preventDefault();
                 showClientAlert('File Kartu Keluarga (KK) wajib diupload!');
-                if (kkUploadBox) kkUploadBox.classList.add('missing-required');
                 focusField(document.getElementById('kk_imageUpload'));
                 return false;
             }
