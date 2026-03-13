@@ -13,6 +13,7 @@ require_once '../config/database.php';
 $team_id = (int)($_SESSION['team_id'] ?? 0);
 $filter_category = trim((string)($_GET['category'] ?? ''));
 $filter_search = trim((string)($_GET['q'] ?? ''));
+$filter_status = trim((string)($_GET['status'] ?? ''));
 
 function pelatihFormatPlayerGender(string $gender): string
 {
@@ -62,10 +63,16 @@ try {
     }
 
     if ($filter_search !== '') {
-        $query .= " AND (name LIKE :search_name OR jersey_number LIKE :search_jersey)";
+        $query .= " AND (name LIKE :search_name OR jersey_number LIKE :search_jersey OR position LIKE :search_position)";
         $search_like = '%' . $filter_search . '%';
         $params[':search_name'] = $search_like;
         $params[':search_jersey'] = $search_like;
+        $params[':search_position'] = $search_like;
+    }
+
+    if ($filter_status !== '') {
+        $query .= " AND status = :status";
+        $params[':status'] = $filter_status;
     }
 
     $query .= " ORDER BY jersey_number ASC, name ASC";
