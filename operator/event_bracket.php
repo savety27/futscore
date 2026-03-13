@@ -766,8 +766,11 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                     </div>
 
                                     <div class="diagram-canvas">
+                                        <!-- Stage Labels (Mobile Only) -->
+                                        <div class="stage-label mobile-only">Semifinal</div>
+
                                         <!-- Semifinal 1 -->
-                                        <div class="d-match" style="left:10px; top:48px;">
+                                        <div class="d-match match-sf1">
                                             <div class="d-row <?php echo $vSf1Done && (int)$vSf1Outcome['winner'] === $vSf1Team1 ? 'win' : ($vSf1Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vSf1Team1; ?>">
                                                 <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf1Team1); ?></div>
                                                 <div class="d-score"><?php echo $vSf1Score1 !== null ? (int)$vSf1Score1 : '-'; ?></div>
@@ -779,7 +782,7 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                         </div>
 
                                         <!-- Semifinal 2 -->
-                                        <div class="d-match" style="left:10px; top:240px;">
+                                        <div class="d-match match-sf2">
                                             <div class="d-row <?php echo $vSf2Done && (int)$vSf2Outcome['winner'] === $vSf2Team1 ? 'win' : ($vSf2Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vSf2Team1; ?>">
                                                 <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vSf2Team1); ?></div>
                                                 <div class="d-score"><?php echo $vSf2Score1 !== null ? (int)$vSf2Score1 : '-'; ?></div>
@@ -790,8 +793,11 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                             </div>
                                         </div>
 
+                                        <!-- Stage Label (Mobile Only) -->
+                                        <div class="stage-label mobile-only">Grand Final</div>
+
                                         <!-- Final -->
-                                        <div class="d-match" style="left:460px; top:145px; border-color: var(--heritage-gold); border-width: 2px;">
+                                        <div class="d-match match-final">
                                             <div class="d-row <?php echo $vFinalDone && (int)$vFinalOutcome['winner'] === $vFinalTeam1 ? 'win' : ($vFinalDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vFinalTeam1; ?>">
                                                 <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vFinalTeam1); ?></div>
                                                 <div class="d-score"><?php echo $vFinalScore1 !== null ? (int)$vFinalScore1 : '-'; ?></div>
@@ -804,8 +810,11 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                             <span class="d-rank second"><?php echo $vFinalBottomRankText; ?></span>
                                         </div>
 
+                                        <!-- Stage Label (Mobile Only) -->
+                                        <div class="stage-label mobile-only">Perebutan Juara 3</div>
+
                                         <!-- Juara 3 -->
-                                        <div class="d-match" style="left:460px; top:380px;">
+                                        <div class="d-match match-third">
                                             <div class="d-row <?php echo $vThirdDone && (int)$vThirdOutcome['winner'] === $vThirdTeam1 ? 'win' : ($vThirdDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$vThirdTeam1; ?>">
                                                 <div class="d-name"><?php echo renderTeamLabelById($vTeamMap, $vTeamLogoMap, $vThirdTeam1); ?></div>
                                                 <div class="d-score"><?php echo $vThirdScore1 !== null ? (int)$vThirdScore1 : '-'; ?></div>
@@ -818,13 +827,12 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                             <span class="d-rank fourth"><?php echo $vThirdBottomRankText; ?></span>
                                         </div>
 
-                                        <!-- Lines -->
-                                        <div class="d-line gold" style="left:250px; top:74px; width:110px; border-top-width:2px;"></div>
-                                        <div class="d-line gold" style="left:360px; top:74px; height:98px; border-right-width:2px;"></div>
-                                        <div class="d-line gold" style="left:360px; top:172px; width:100px; border-top-width:2px;"></div>
-
-                                        <div class="d-line" style="left:250px; top:266px; width:110px; border-top-width:2px;"></div>
-                                        <div class="d-line" style="left:360px; top:172px; height:94px; border-right-width:2px;"></div>
+                                        <!-- Lines (Desktop Only) -->
+                                        <div class="d-line line-sf1-final gold"></div>
+                                        <div class="d-line line-sf1-v gold"></div>
+                                        <div class="d-line line-final-h gold"></div>
+                                        <div class="d-line line-sf2-connector"></div>
+                                        <div class="d-line line-final-connector-v"></div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -973,6 +981,9 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                             <div class="diagram-note">Peta persaingan menuju tangga juara.</div>
                             
                             <div class="diagram-canvas">
+                                <!-- Stage Labels (Mobile Only) -->
+                                <div class="stage-label mobile-only">Semifinal</div>
+
                                 <?php
                                 $sf1Done = ((string)$sf1Outcome['status'] === 'done');
                                 $sf2Done = ((string)$sf2Outcome['status'] === 'done');
@@ -993,7 +1004,7 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                 }
                                 ?>
                                 <!-- Semifinal 1 -->
-                                <div class="d-match" style="left:10px; top:48px;">
+                                <div class="d-match match-sf1">
                                     <div class="d-row <?php echo $sf1Done && (int)$sf1Outcome['winner'] === $sf1Team1 ? 'win' : ($sf1Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$sf1Team1; ?>">
                                         <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf1Team1); ?></div>
                                         <div class="d-score"><?php echo $sf1Score1 !== null ? (int)$sf1Score1 : '-'; ?></div>
@@ -1005,7 +1016,7 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                 </div>
 
                                 <!-- Semifinal 2 -->
-                                <div class="d-match" style="left:10px; top:240px;">
+                                <div class="d-match match-sf2">
                                     <div class="d-row <?php echo $sf2Done && (int)$sf2Outcome['winner'] === $sf2Team1 ? 'win' : ($sf2Done ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$sf2Team1; ?>">
                                         <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $sf2Team1); ?></div>
                                         <div class="d-score"><?php echo $sf2Score1 !== null ? (int)$sf2Score1 : '-'; ?></div>
@@ -1016,8 +1027,11 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                     </div>
                                 </div>
 
+                                <!-- Stage Label (Mobile Only) -->
+                                <div class="stage-label mobile-only">Grand Final</div>
+
                                 <!-- Final -->
-                                <div class="d-match" style="left:460px; top:145px; border-color: var(--heritage-gold); border-width: 2px;">
+                                <div class="d-match match-final">
                                     <div class="d-row <?php echo $finalDone && (int)$finalOutcome['winner'] === $finalTeam1 ? 'win' : ($vFinalDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$finalTeam1; ?>">
                                         <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $finalTeam1); ?></div>
                                         <div class="d-score"><?php echo $finalScore1 !== null ? (int)$finalScore1 : '-'; ?></div>
@@ -1030,8 +1044,11 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                     <span class="d-rank second"><?php echo $finalBottomRankText; ?></span>
                                 </div>
 
+                                <!-- Stage Label (Mobile Only) -->
+                                <div class="stage-label mobile-only">Perebutan Juara 3</div>
+
                                 <!-- Juara 3 -->
-                                <div class="d-match" style="left:460px; top:380px;">
+                                <div class="d-match match-third">
                                     <div class="d-row <?php echo $thirdDone && (int)$thirdOutcome['winner'] === $thirdTeam1 ? 'win' : ($vThirdDone ? 'lose' : ''); ?>" data-team-id="<?php echo (int)$thirdTeam1; ?>">
                                         <div class="d-name"><?php echo renderTeamLabelById($teamMap, $teamLogoMap, $thirdTeam1); ?></div>
                                         <div class="d-score"><?php echo $thirdScore1 !== null ? (int)$thirdScore1 : '-'; ?></div>
@@ -1044,13 +1061,12 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                     <span class="d-rank fourth"><?php echo $thirdBottomRankText; ?></span>
                                 </div>
 
-                                <!-- Lines -->
-                                <div class="d-line gold" style="left:250px; top:74px; width:110px; border-top-width:2px;"></div>
-                                <div class="d-line gold" style="left:360px; top:74px; height:98px; border-right-width:2px;"></div>
-                                <div class="d-line gold" style="left:360px; top:172px; width:100px; border-top-width:2px;"></div>
-
-                                <div class="d-line" style="left:250px; top:266px; width:110px; border-top-width:2px;"></div>
-                                <div class="d-line" style="left:360px; top:172px; height:94px; border-right-width:2px;"></div>
+                                <!-- Lines (Desktop Only) -->
+                                <div class="d-line line-sf1-final gold"></div>
+                                <div class="d-line line-sf1-v gold"></div>
+                                <div class="d-line line-final-h gold"></div>
+                                <div class="d-line line-sf2-connector"></div>
+                                <div class="d-line line-final-connector-v"></div>
                             </div>
                         </div>
                     </div>
