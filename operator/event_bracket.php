@@ -634,6 +634,11 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                         <a href="event.php" class="btn-premium btn-cancel">
                             <i class="fas fa-arrow-left"></i> Kembali ke Hub
                         </a>
+                        <?php if ($effectiveCategory !== ''): ?>
+                            <a href="event_bracket.php?event_id=<?php echo (int)$eventId; ?>&sport_type=Liga" class="btn-premium btn-cancel">
+                                <i class="fas fa-layer-group"></i> Preview Semua
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </header>
 
@@ -676,6 +681,7 @@ $thirdOutcome = resolveMatchOutcome($thirdTeam1, $thirdTeam2, $thirdScore1 !== n
                                 <label>Pilih Kategori</label>
                                 <select class="form-select" name="sport_type" onchange="this.form.submit()">
                                     <option value="">Pilih Kategori</option>
+                                    <option value="Liga" <?php echo isAllCategorySelection($selectedCategory) ? 'selected' : ''; ?>>Semua Kategori (Preview)</option>
                                     <?php foreach ($categories as $category): ?>
                                         <option value="<?php echo htmlspecialchars($category); ?>" <?php echo $selectedCategory === $category ? 'selected' : ''; ?>>
                                             <?php echo htmlspecialchars($category); ?>
