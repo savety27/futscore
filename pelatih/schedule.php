@@ -31,6 +31,8 @@ $sport_filter = isset($_GET['sport']) ? trim($_GET['sport']) : '';
 $result_filter = isset($_GET['result']) ? trim($_GET['result']) : ''; // menang | seri | kalah
 $day_filter = isset($_GET['day']) ? trim($_GET['day']) : ''; // today
 $lineup_filter = isset($_GET['lineup']) ? trim($_GET['lineup']) : ''; // needed
+$range_filter = isset($_GET['range']) ? trim($_GET['range']) : ''; // 7d
+$match_filter = isset($_GET['match_status']) ? trim($_GET['match_status']) : ''; // ongoing, scheduled, completed, cancelled
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 10;
 $offset = ($page - 1) * $limit;
@@ -147,6 +149,18 @@ if ($day_filter === 'today') {
     $count_query .= " AND DATE(c.challenge_date) = CURDATE()";
 }
 
+// Tambahkan kondisi untuk filter rentang tanggal (H-7)
+if ($range_filter === '7d') {
+    $base_query .= " AND DATE(c.challenge_date) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 6 DAY)";
+    $count_query .= " AND DATE(c.challenge_date) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 6 DAY)";
+}
+
+// Tambahkan kondisi untuk filter status pertandingan (ongoing/scheduled/completed/cancelled)
+if ($match_filter !== '') {
+    $base_query .= " AND c.match_status = ?";
+    $count_query .= " AND c.match_status = ?";
+}
+
 // Tambahkan kondisi untuk filter lineup (butuh lineup)
 if ($lineup_filter === 'needed') {
     $base_query .= " AND c.status = 'accepted' AND NOT EXISTS (
@@ -189,6 +203,9 @@ try {
     }
     if (!empty($sport_filter)) {
         $filter_params[] = $sport_filter;
+    }
+    if ($match_filter !== '') {
+        $filter_params[] = $match_filter;
     }
     if ($lineup_filter === 'needed') {
         $filter_params[] = $my_team_id;
@@ -284,6 +301,12 @@ if ($day_filter !== '') {
 if ($lineup_filter !== '') {
     $schedule_export_params['lineup'] = $lineup_filter;
 }
+if ($range_filter !== '') {
+    $schedule_export_params['range'] = $range_filter;
+}
+if ($match_filter !== '') {
+    $schedule_export_params['match_status'] = $match_filter;
+}
 $schedule_export_url = 'schedule_export.php' . (!empty($schedule_export_params) ? '?' . http_build_query($schedule_export_params) : '');
 
 // Label for active result filter
@@ -291,22 +314,42 @@ $result_filter_labels = ['menang' => '🏆 Menang', 'seri' => '🤝 Seri', 'kala
 $result_filter_label = $result_filter_labels[$result_filter] ?? '';
 
 // Build reset URL preserving other filters but removing result
-$reset_result_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'day' => $day_filter, 'lineup' => $lineup_filter]);
+$reset_result_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'day' => $day_filter, 'lineup' => $lineup_filter, 'range' => $range_filter, 'match_status' => $match_filter]);
 $reset_result_url = 'schedule.php' . (!empty($reset_result_params) ? '?' . http_build_query($reset_result_params) : '');
 
 // Label for active day filter
 $day_filter_label = $day_filter === 'today' ? 'Hari Ini' : '';
 
 // Build reset URL preserving other filters but removing day
-$reset_day_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'lineup' => $lineup_filter]);
+$reset_day_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'lineup' => $lineup_filter, 'range' => $range_filter, 'match_status' => $match_filter]);
 $reset_day_url = 'schedule.php' . (!empty($reset_day_params) ? '?' . http_build_query($reset_day_params) : '');
 
 // Label for active lineup filter
 $lineup_filter_label = $lineup_filter === 'needed' ? 'Butuh Lineup' : '';
 
 // Build reset URL preserving other filters but removing lineup
-$reset_lineup_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'day' => $day_filter]);
+$reset_lineup_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'day' => $day_filter, 'range' => $range_filter, 'match_status' => $match_filter]);
 $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_build_query($reset_lineup_params) : '');
+
+// Label for active range filter
+$range_filter_label = $range_filter === '7d' ? 'H-7 (7 Hari Ke Depan)' : '';
+
+// Build reset URL preserving other filters but removing range
+$reset_range_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'day' => $day_filter, 'lineup' => $lineup_filter, 'match_status' => $match_filter]);
+$reset_range_url = 'schedule.php' . (!empty($reset_range_params) ? '?' . http_build_query($reset_range_params) : '');
+
+// Label for active match status filter
+$match_filter_label_map = [
+    'ongoing' => 'Ongoing',
+    'scheduled' => 'Scheduled',
+    'completed' => 'Completed',
+    'cancelled' => 'Cancelled',
+];
+$match_filter_label = $match_filter_label_map[$match_filter] ?? '';
+
+// Build reset URL preserving other filters but removing match_status
+$reset_match_params = array_filter(['search' => $search, 'sport' => $sport_filter, 'result' => $result_filter, 'day' => $day_filter, 'lineup' => $lineup_filter, 'range' => $range_filter]);
+$reset_match_url = 'schedule.php' . (!empty($reset_match_params) ? '?' . http_build_query($reset_match_params) : '');
 ?>
 
 <link rel="stylesheet" href="css/schedule.css?v=<?php echo (int)@filemtime(__DIR__ . '/css/schedule.css'); ?>">
@@ -402,6 +445,26 @@ $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_
     </div>
     <?php endif; ?>
 
+    <?php if (!empty($range_filter) && !empty($range_filter_label)): ?>
+    <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #f5f3ff; border: 1.5px solid #a78bfa; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #5b21b6;">
+        <i class="fas fa-calendar-week"></i>
+        Menampilkan pertandingan: <strong><?php echo htmlspecialchars($range_filter_label); ?></strong>
+        <a href="<?php echo htmlspecialchars($reset_range_url); ?>" style="margin-left: auto; font-size: 0.82rem; background: #ede9fe; color: #5b21b6; padding: 4px 12px; border-radius: 20px; text-decoration: none; border: 1px solid #c4b5fd;">
+            <i class="fas fa-times"></i> Hapus Filter Ini
+        </a>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($match_filter) && !empty($match_filter_label)): ?>
+    <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #ecfdf5; border: 1.5px solid #34d399; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #065f46;">
+        <i class="fas fa-bolt"></i>
+        Menampilkan pertandingan: <strong><?php echo htmlspecialchars($match_filter_label); ?></strong>
+        <a href="<?php echo htmlspecialchars($reset_match_url); ?>" style="margin-left: auto; font-size: 0.82rem; background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; text-decoration: none; border: 1px solid #6ee7b7;">
+            <i class="fas fa-times"></i> Hapus Filter Ini
+        </a>
+    </div>
+    <?php endif; ?>
+
     <?php if (!empty($lineup_filter) && !empty($lineup_filter_label)): ?>
     <div style="margin: 0 0 16px 0; padding: 12px 20px; background: #fff7ed; border: 1.5px solid #fb923c; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.95rem; color: #9a3412;">
         <i class="fas fa-users-cog"></i>
@@ -433,6 +496,12 @@ $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_
                 <?php endif; ?>
                 <?php if (!empty($lineup_filter)): ?>
                 <input type="hidden" name="lineup" value="<?php echo htmlspecialchars($lineup_filter); ?>">
+                <?php endif; ?>
+                <?php if (!empty($range_filter)): ?>
+                <input type="hidden" name="range" value="<?php echo htmlspecialchars($range_filter); ?>">
+                <?php endif; ?>
+                <?php if (!empty($match_filter)): ?>
+                <input type="hidden" name="match_status" value="<?php echo htmlspecialchars($match_filter); ?>">
                 <?php endif; ?>
                 <div class="filter-group">
                     <label>Pencarian</label>
@@ -476,7 +545,7 @@ $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_
                     <button type="submit" class="btn-filter">
                         <i class="fas fa-filter"></i> Terapkan
                     </button>
-                    <?php if (!empty($search) || !empty($sport_filter) || !empty($result_filter) || !empty($day_filter) || !empty($lineup_filter)): ?>
+                    <?php if (!empty($search) || !empty($sport_filter) || !empty($result_filter) || !empty($day_filter) || !empty($lineup_filter) || !empty($range_filter) || !empty($match_filter)): ?>
                     <a href="schedule.php" class="clear-filter-btn">
                         <i class="fas fa-times"></i> Reset
                     </a>
@@ -617,10 +686,10 @@ $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=1&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Halaman Pertama">
+                <a href="?page=1&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&range=<?php echo urlencode($range_filter); ?>&match_status=<?php echo urlencode($match_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Halaman Pertama">
                     <i class="fas fa-angle-double-left"></i>
                 </a>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Sebelumnya">
+                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&range=<?php echo urlencode($range_filter); ?>&match_status=<?php echo urlencode($match_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Sebelumnya">
                     <i class="fas fa-angle-left"></i>
                 </a>
             <?php endif; ?>
@@ -634,7 +703,7 @@ $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_
             <?php endif; ?>
             
             <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
+                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&range=<?php echo urlencode($range_filter); ?>&match_status=<?php echo urlencode($match_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link <?php echo $i == $page ? 'active' : ''; ?>">
                     <?php echo $i; ?>
                 </a>
             <?php endfor; ?>
@@ -644,10 +713,10 @@ $reset_lineup_url = 'schedule.php' . (!empty($reset_lineup_params) ? '?' . http_
             <?php endif; ?>
             
             <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Berikutnya">
+                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&range=<?php echo urlencode($range_filter); ?>&match_status=<?php echo urlencode($match_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Berikutnya">
                     <i class="fas fa-angle-right"></i>
                 </a>
-                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Halaman Terakhir">
+                <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>&sport=<?php echo urlencode($sport_filter); ?>&day=<?php echo urlencode($day_filter); ?>&lineup=<?php echo urlencode($lineup_filter); ?>&range=<?php echo urlencode($range_filter); ?>&match_status=<?php echo urlencode($match_filter); ?>&result=<?php echo urlencode($result_filter); ?>" class="page-link" title="Halaman Terakhir">
                     <i class="fas fa-angle-double-right"></i>
                 </a>
             <?php endif; ?>

@@ -54,14 +54,11 @@ if ($team_id) {
         $stmt->execute([$team_id, $team_id]);
         $draws = $stmt->fetchColumn();
 
-        // Get Ongoing Matches
-        // Definition: status 'accepted' and match time is today and near current time (let's say match lasts 2 hours)
+        // Get Ongoing Matches (match_status based, consistent with schedule filter)
         $stmt = $conn->prepare("
             SELECT COUNT(*) FROM challenges 
-            WHERE status = 'accepted' 
-            AND (challenger_id = ? OR opponent_id = ?) 
-            AND challenge_date <= NOW() 
-            AND challenge_date >= DATE_SUB(NOW(), INTERVAL 2 HOUR)
+            WHERE (challenger_id = ? OR opponent_id = ?)
+            AND LOWER(match_status) = 'ongoing'
         ");
         $stmt->execute([$team_id, $team_id]);
         $ongoing = $stmt->fetchColumn();
@@ -952,7 +949,7 @@ if ($team_id) {
                     </div>
                     <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Butuh Lineup (Upcoming)</div>
                 </a>
-                <a class="heritage-card quick-action-card" href="schedule.php#daftar-jadwal-pertandingan" aria-label="Pertandingan Terdekat" style="border-bottom: 3px solid var(--heritage-text);">
+                <a class="heritage-card quick-action-card" href="schedule.php?range=7d#daftar-jadwal-pertandingan" aria-label="Pertandingan Terdekat" style="border-bottom: 3px solid var(--heritage-text);">
                     <div class="card-meta">
                         <span class="card-label">Pertandingan</span>
                         <i class="fas fa-calendar-day card-icon" style="color: var(--heritage-text);"></i>
@@ -1020,14 +1017,14 @@ if ($team_id) {
             </a>
 
             <!-- Row 3 -->
-            <div class="heritage-card reveal d-4" style="border-bottom: 3px solid var(--heritage-gold);">
+            <a class="heritage-card reveal d-4 heritage-card-link" href="schedule.php?match_status=ongoing#daftar-jadwal-pertandingan" style="border-bottom: 3px solid var(--heritage-gold);" aria-label="Pertandingan Ongoing">
                 <div class="card-meta">
                     <span class="card-label">Ongoing</span>
                     <i class="fas fa-clock card-icon" style="color: var(--heritage-gold);"></i>
                 </div>
                 <div class="card-value" style="color: var(--heritage-gold);" data-count="<?php echo (int)$ongoing; ?>"><?php echo (int)$ongoing; ?></div>
                 <div style="font-size: 0.8rem; color: var(--heritage-text-muted); margin-top: 4px;">Sedang Berlangsung</div>
-            </div>
+            </a>
             <!-- Performance Chart Card (replaces Win Rate) -->
             <div class="heritage-card reveal d-5 perf-chart-card" style="grid-column: span 2; background: var(--heritage-text); color: white; padding: 28px 28px 20px; position: relative;">
                 <div class="card-meta" style="margin-bottom: 12px;">
