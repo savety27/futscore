@@ -613,6 +613,14 @@
     padding: 0 8px;
 }
 
+/* Teams table alignment */
+.matches-cell,
+.established-cell,
+.data-table th.matches-cell,
+.data-table th.established-cell {
+    text-align: center;
+}
+
 /* Custom Tooltip - Premium Design */
 .custom-tooltip {
     position: absolute;

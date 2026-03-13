@@ -131,8 +131,8 @@ $team_export_url = 'export.php' . ($search !== '' ? '?' . http_build_query(['sea
                         <th>Manager</th>
                         <th>Pemain</th>
                         <th>Staf</th>
-                        <th>Pertandingan</th>
-                        <th>Tanggal Berdiri</th>
+                        <th class="matches-cell">Pertandingan</th>
+                        <th class="established-cell">Tanggal Berdiri</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -165,7 +165,7 @@ $team_export_url = 'export.php' . ($search !== '' ? '?' . http_build_query(['sea
                                 <span class="count-cell staff"><?php echo $team['staff_count']; ?></span>
                             </a>
                         </td>
-                        <td>
+                        <td class="matches-cell">
                             <a href="matches.php?team_id=<?php echo $team['id']; ?>" class="count-link" title="Lihat <?php echo $team['match_count']; ?> pertandingan">
                                 <span class="count-cell matches"><?php echo $team['match_count']; ?></span>
                             </a>
