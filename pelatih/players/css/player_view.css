@@ -116,7 +116,7 @@
     color: var(--heritage-text);
     border: 1px solid var(--heritage-border);
 }
-.btn-outline:hover { border-color: var(--heritage-text); background: #fdfcfb; }
+.btn-outline:hover { border-color: var(--heritage-gold); background: var(--heritage-gold); color: #fff; }
 
 /* Sections */
 .section-header {

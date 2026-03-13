@@ -184,13 +184,31 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                 </div>
                 <div class="filter-group">
                     <label>Status Aktif</label>
-                    <div class="teams-search-group">
-                        <i class="fas fa-filter"></i>
-                        <select name="active" class="teams-search-input" style="padding-left: 44px; appearance: none; cursor: pointer;">
-                            <option value="">Semua Status</option>
-                            <option value="1" <?php echo $filter_active === '1' ? 'selected' : ''; ?>>Aktif</option>
-                            <option value="0" <?php echo $filter_active === '0' ? 'selected' : ''; ?>>Non-Aktif</option>
-                        </select>
+                    <div class="schedule-select-wrap">
+                        <div class="schedule-custom-select" id="staffStatusSelect">
+                            <input type="hidden" name="active" id="staffStatusValue" value="<?php echo htmlspecialchars($filter_active); ?>">
+                            <button type="button" class="schedule-custom-select-trigger" id="staffStatusTrigger" aria-expanded="false">
+                                <span class="schedule-custom-select-label">
+                                    <i class="fas fa-filter"></i>
+                                    <span id="staffStatusLabel" class="schedule-custom-select-text">
+                                        <?php
+                                        $status_labels = [
+                                            '' => 'Semua Status',
+                                            '1' => 'Aktif',
+                                            '0' => 'Non-Aktif'
+                                        ];
+                                        echo htmlspecialchars($status_labels[$filter_active] ?? 'Semua Status');
+                                        ?>
+                                    </span>
+                                </span>
+                                <i class="fas fa-chevron-down select-icon-right"></i>
+                            </button>
+                            <div class="schedule-custom-select-menu" id="staffStatusMenu">
+                                <button type="button" class="schedule-custom-option <?php echo $filter_active === '' ? 'active' : ''; ?>" data-value="">Semua Status</button>
+                                <button type="button" class="schedule-custom-option <?php echo $filter_active === '1' ? 'active' : ''; ?>" data-value="1">Aktif</button>
+                                <button type="button" class="schedule-custom-option <?php echo $filter_active === '0' ? 'active' : ''; ?>" data-value="0">Non-Aktif</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -315,13 +333,6 @@ $build_page_url = function(int $page) use ($filter_query_params): string {
                                 <a href="form.php?id=<?php echo $staff['id']; ?>" class="btn-primary btn-sm" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="actions.php" method="POST" class="delete-form" onsubmit="return confirm('Apakah Anda yakin ingin menghapus staf ini?');">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="id" value="<?php echo $staff['id']; ?>">
-                                    <button type="submit" class="btn-primary btn" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
                             </div>
                         </td>
                     </tr>
@@ -441,6 +452,54 @@ document.addEventListener('DOMContentLoaded', function() {
         
         xhr.send();
     }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectRoot = document.getElementById('staffStatusSelect');
+    if (!selectRoot) return;
+
+    const trigger = document.getElementById('staffStatusTrigger');
+    const menu = document.getElementById('staffStatusMenu');
+    const hiddenInput = document.getElementById('staffStatusValue');
+    const label = document.getElementById('staffStatusLabel');
+    const options = menu.querySelectorAll('.schedule-custom-option');
+
+    function closeMenu() {
+        selectRoot.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openMenu() {
+        selectRoot.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    trigger.addEventListener('click', function() {
+        if (selectRoot.classList.contains('open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+    });
+
+    options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            const value = opt.getAttribute('data-value') || '';
+            hiddenInput.value = value;
+            label.textContent = opt.textContent.trim();
+            options.forEach(function(o) { o.classList.remove('active'); });
+            opt.classList.add('active');
+            closeMenu();
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!selectRoot.contains(e.target)) {
+            closeMenu();
+        }
+    });
 });
 </script>
 

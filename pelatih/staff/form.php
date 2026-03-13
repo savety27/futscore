@@ -67,6 +67,7 @@ if ($is_edit) {
     <title><?php echo $page_title; ?> - Area Pelatih</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../players/css/player_form.css?v=<?php echo (int)@filemtime(__DIR__ . '/../players/css/player_form.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 </head>
 <body>
 
@@ -118,15 +119,41 @@ if ($is_edit) {
                             <span class="required-field">Jabatan</span>
                             <span class="note">Wajib</span>
                         </label>
-                        <select name="position" class="form-control" required>
-                            <option value="">Pilih Jabatan</option>
-                            <option value="manager" <?php echo $staff_data['position'] == 'manager' ? 'selected' : ''; ?>>Manager</option>
-                            <option value="headcoach" <?php echo $staff_data['position'] == 'headcoach' ? 'selected' : ''; ?>>Head Coach</option>
-                            <option value="coach" <?php echo $staff_data['position'] == 'coach' ? 'selected' : ''; ?>>Assistant Coach</option>
-                            <option value="goalkeeper_coach" <?php echo $staff_data['position'] == 'goalkeeper_coach' ? 'selected' : ''; ?>>Goalkeeper Coach</option>
-                            <option value="medic" <?php echo $staff_data['position'] == 'medic' ? 'selected' : ''; ?>>Medic</option>
-                            <option value="official" <?php echo $staff_data['position'] == 'official' ? 'selected' : ''; ?>>Official</option>
-                        </select>
+                        <div class="schedule-select-wrap">
+                            <div class="schedule-custom-select" id="staffPositionSelect">
+                                <input type="hidden" name="position" id="staffPositionValue" value="<?php echo htmlspecialchars($staff_data['position']); ?>" required>
+                                <button type="button" class="schedule-custom-select-trigger" id="staffPositionTrigger" aria-expanded="false">
+                                    <span class="schedule-custom-select-label">
+                                        <i class="fas fa-user-tag"></i>
+                                        <span id="staffPositionLabel" class="schedule-custom-select-text">
+                                            <?php
+                                            $position_labels = [
+                                                'manager' => 'Manager',
+                                                'headcoach' => 'Head Coach',
+                                                'coach' => 'Assistant Coach',
+                                                'goalkeeper_coach' => 'Goalkeeper Coach',
+                                                'medic' => 'Medic',
+                                                'official' => 'Official',
+                                            ];
+                                            echo $staff_data['position'] !== ''
+                                                ? htmlspecialchars($position_labels[$staff_data['position']] ?? $staff_data['position'])
+                                                : 'Pilih Jabatan';
+                                            ?>
+                                        </span>
+                                    </span>
+                                    <i class="fas fa-chevron-down select-icon-right"></i>
+                                </button>
+                                <div class="schedule-custom-select-menu" id="staffPositionMenu">
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === '' ? 'active' : ''; ?>" data-value="">Pilih Jabatan</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === 'manager' ? 'active' : ''; ?>" data-value="manager">Manager</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === 'headcoach' ? 'active' : ''; ?>" data-value="headcoach">Head Coach</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === 'coach' ? 'active' : ''; ?>" data-value="coach">Assistant Coach</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === 'goalkeeper_coach' ? 'active' : ''; ?>" data-value="goalkeeper_coach">Goalkeeper Coach</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === 'medic' ? 'active' : ''; ?>" data-value="medic">Medic</button>
+                                    <button type="button" class="schedule-custom-option <?php echo $staff_data['position'] === 'official' ? 'active' : ''; ?>" data-value="official">Official</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -294,6 +321,34 @@ if ($is_edit) {
                                     <?php endif; ?>
                                 </div>
                             </div>
+                            <?php
+                                $certificate_file = basename($cert['certificate_file'] ?? '');
+                                $certificate_url = $certificate_file !== '' ? '../../uploads/certificates/' . $certificate_file : '';
+                                $is_image_cert = $certificate_file !== '' && preg_match('/\.(jpe?g|png|gif|webp)$/i', $certificate_file);
+                            ?>
+                            <div style="border: 1px solid var(--heritage-border); border-radius: 12px; overflow: hidden; background: #fff;">
+                                <?php if ($certificate_url !== ''): ?>
+                                    <?php if ($is_image_cert): ?>
+                                        <img src="<?php echo htmlspecialchars($certificate_url); ?>"
+                                             alt="<?php echo htmlspecialchars($cert['certificate_name']); ?>"
+                                             style="width: 100%; height: auto; display: block;"
+                                             onerror="this.onerror=null; this.src='../../images/default-certificate.png'">
+                                    <?php else: ?>
+                                        <div style="padding: 16px; display: flex; align-items: center; gap: 10px; color: var(--heritage-text);">
+                                            <i class="fas fa-file-alt" style="font-size: 20px;"></i>
+                                            <div style="font-size: 0.9rem; font-weight: 600;">File tersimpan</div>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div style="padding: 10px 12px; border-top: 1px solid var(--heritage-border); display: flex; justify-content: flex-end;">
+                                        <a href="<?php echo htmlspecialchars($certificate_url); ?>" target="_blank"
+                                           style="text-decoration: none; font-weight: 700; font-size: 0.8rem; color: var(--heritage-text);">
+                                            <i class="fas fa-expand"></i> Lihat File
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <div style="padding: 16px; color: var(--heritage-text-muted); font-size: 0.85rem;">File belum tersedia</div>
+                                <?php endif; ?>
+                            </div>
                             <div style="display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--heritage-border);">
                                 <input type="checkbox" name="delete_certificates[]" 
                                        value="<?php echo $cert['id']; ?>" 
@@ -387,8 +442,63 @@ if ($is_edit) {
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    if (window.toastr) {
+        toastr.options = {
+            positionClass: 'toast-top-right',
+            timeOut: 1800,
+            closeButton: true,
+            progressBar: true
+        };
+    }
+
+    const positionSelect = document.getElementById('staffPositionSelect');
+    if (positionSelect) {
+        const trigger = document.getElementById('staffPositionTrigger');
+        const menu = document.getElementById('staffPositionMenu');
+        const hiddenInput = document.getElementById('staffPositionValue');
+        const label = document.getElementById('staffPositionLabel');
+        const options = menu.querySelectorAll('.schedule-custom-option');
+
+        function closeMenu() {
+            positionSelect.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function openMenu() {
+            positionSelect.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+
+        trigger.addEventListener('click', function() {
+            if (positionSelect.classList.contains('open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        options.forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                const value = opt.getAttribute('data-value') || '';
+                hiddenInput.value = value;
+                label.textContent = opt.textContent.trim();
+                options.forEach(function(o) { o.classList.remove('active'); });
+                opt.classList.add('active');
+                closeMenu();
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!positionSelect.contains(e.target)) {
+                closeMenu();
+            }
+        });
+    }
     // Basic file upload handling for Profile Photo
     const photoUpload = document.getElementById('photoUpload');
     const photoFile = document.getElementById('photoFile');
@@ -414,16 +524,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handlePhotoPreview(file) {
         if (!file.type.startsWith('image/')) {
-            alert('Harap pilih file gambar untuk profil!');
+            showUploadError(photoUpload, 'Format file harus berupa gambar (JPEG, PNG, atau GIF)');
             photoFile.value = '';
+            photoPreview.innerHTML = '';
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            alert('Ukuran file terlalu besar! Maksimal 5MB.');
+            showUploadError(photoUpload, 'Ukuran file maksimal 5MB');
             photoFile.value = '';
+            photoPreview.innerHTML = '';
             return;
         }
         
+        clearUploadError(photoUpload);
         const reader = new FileReader();
         reader.onload = function(e) {
             photoPreview.innerHTML = `
@@ -438,13 +551,30 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsDataURL(file);
     }
 
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
 });
+
+function showUploadError(container, message) {
+    if (window.toastr) {
+        toastr.error(message);
+    }
+    clearUploadError(container);
+}
+
+function clearUploadError(container) {
+    container.classList.remove('has-error');
+    const badge = container.querySelector('.upload-error-badge');
+    if (badge) badge.remove();
+    const parent = container.parentElement;
+    if (!parent) return;
+    parent.querySelectorAll('.error[data-upload-error="1"]').forEach(el => el.remove());
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024, sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 function addCertificateField() {
     const container = document.getElementById('certificateContainer');
@@ -504,12 +634,14 @@ function addCertificateField() {
     }
 }
 
-function initCertificateUpload(fileInput) {
-    const uploadContainer = fileInput.closest('.file-upload-container');
-    if (!uploadContainer) return;
+    function initCertificateUpload(fileInput) {
+        const uploadContainer = fileInput.closest('.file-upload-container');
+        if (!uploadContainer) return;
 
-    const uploadText = uploadContainer.querySelector('.file-upload-text');
-    const defaultText = 'Klik untuk upload sertifikat';
+        const uploadText = uploadContainer.querySelector('.file-upload-text');
+        const defaultText = 'Klik untuk upload sertifikat';
+        const maxSizeBytes = 10 * 1024 * 1024;
+        const allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx'];
 
     function clearIndicator() {
         const indicator = uploadContainer.querySelector('.file-selected-indicator');
@@ -551,8 +683,71 @@ function initCertificateUpload(fileInput) {
             resetState();
             return;
         }
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        if (!allowedExt.includes(fileExt)) {
+            showUploadError(uploadContainer, 'Format file harus JPG, PNG, GIF, PDF, DOC, atau DOCX.');
+            fileInput.value = '';
+            resetState();
+            return;
+        }
+        if (file.size > maxSizeBytes) {
+            showUploadError(uploadContainer, 'Ukuran file maksimal 10MB.');
+            fileInput.value = '';
+            resetState();
+            return;
+        }
+        clearUploadError(uploadContainer);
         markSelected(file.name);
+        renderCertificatePreview(file, uploadContainer);
     });
+}
+
+function renderCertificatePreview(file, uploadContainer) {
+    if (!uploadContainer) return;
+    const formGroup = uploadContainer.parentElement;
+    if (!formGroup) return;
+
+    let preview = formGroup.querySelector('.certificate-preview');
+    if (!preview) {
+        preview = document.createElement('div');
+        preview.className = 'certificate-preview';
+        preview.style.marginTop = '12px';
+        preview.style.border = '1px solid var(--heritage-border)';
+        preview.style.borderRadius = '12px';
+        preview.style.padding = '10px';
+        preview.style.background = '#fff';
+        preview.style.display = 'flex';
+        preview.style.alignItems = 'center';
+        preview.style.gap = '10px';
+        formGroup.appendChild(preview);
+    }
+
+    preview.innerHTML = '';
+
+    if (file.type.startsWith('image/')) {
+        const img = document.createElement('img');
+        img.style.width = '72px';
+        img.style.height = '72px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '10px';
+        img.style.border = '1px solid var(--heritage-border)';
+        img.src = URL.createObjectURL(file);
+        img.onload = () => URL.revokeObjectURL(img.src);
+        preview.appendChild(img);
+    } else {
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-file-alt';
+        icon.style.fontSize = '20px';
+        icon.style.color = 'var(--heritage-text-muted)';
+        preview.appendChild(icon);
+    }
+
+    const info = document.createElement('div');
+    info.innerHTML = `
+        <div style="font-weight:700; font-size:0.85rem;">${file.name}</div>
+        <div style="font-size:0.75rem; color: var(--heritage-text-muted);">${formatFileSize(file.size)}</div>
+    `;
+    preview.appendChild(info);
 }
 
 document.querySelectorAll('.certificate-file-input').forEach(initCertificateUpload);

@@ -467,68 +467,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        // --- DELETE STAFF ---
+        // --- DELETE STAFF (DISABLED) ---
         elseif ($action === 'delete') {
-            $id = (int)($_POST['id'] ?? 0);
-            
-            if ($id <= 0) {
-                throw new Exception('Invalid staff ID.');
-            }
-            
-            // Get staff data for file deletion (with team security check)
-            $stmt = $conn->prepare("SELECT photo FROM team_staff WHERE id = ? AND team_id = ?");
-            $stmt->execute([$id, $team_id]);
-            $staff = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$staff) {
-                throw new Exception('Staff tidak ditemukan atau akses ditolak.');
-            }
-            
-            $conn->beginTransaction();
-            
-            // Get certificates for deletion (with team security check)
-            $stmt = $conn->prepare("
-                SELECT sc.certificate_file 
-                FROM staff_certificates sc
-                JOIN team_staff ts ON sc.staff_id = ts.id
-                WHERE sc.staff_id = ? AND ts.team_id = ?
-            ");
-            $stmt->execute([$id, $team_id]);
-            $certificates = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Delete certificates files
-            foreach ($certificates as $cert) {
-                $file_path = '../../uploads/certificates/' . $cert['certificate_file'];
-                if (file_exists($file_path)) {
-                    @unlink($file_path);
-                }
-            }
-            
-            // Delete staff photo
-            if (!empty($staff['photo']) && file_exists('../../' . $staff['photo'])) {
-                @unlink('../../' . $staff['photo']);
-            }
-            
-            // Delete certificates from database
-            $stmt = $conn->prepare("
-                DELETE sc FROM staff_certificates sc
-                JOIN team_staff ts ON sc.staff_id = ts.id
-                WHERE sc.staff_id = ? AND ts.team_id = ?
-            ");
-            $stmt->execute([$id, $team_id]);
-            
-            // Delete staff (with team security check)
-            $stmt = $conn->prepare("DELETE FROM team_staff WHERE id = ? AND team_id = ?");
-            $success = $stmt->execute([$id, $team_id]);
-            
-            if ($success && $stmt->rowCount() > 0) {
-                $conn->commit();
-                $_SESSION['success_message'] = "Staff berhasil dihapus!";
-            } else {
-                $conn->rollBack();
-                $_SESSION['error_message'] = "Gagal menghapus staff atau akses ditolak.";
-            }
-            
+            $_SESSION['error_message'] = "Fitur hapus staff dinonaktifkan.";
             header("Location: index.php");
             exit;
         }
