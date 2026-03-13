@@ -546,6 +546,123 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         font-size: 1.1rem;
         color: var(--heritage-text);
     }
+
+    /* MOBILE RESPONSIVE OVERRIDES */
+    .form-group-full {
+        grid-column: span 2;
+    }
+
+    @media screen and (max-width: 768px) {
+        .main {
+            padding: 20px 15px !important;
+        }
+
+        .topbar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px !important;
+            border-radius: 20px !important;
+        }
+
+        .greeting h1 {
+            font-size: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem !important;
+            gap: 10px;
+        }
+
+        .form-section {
+            padding: 24px 16px;
+            border-radius: 20px;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+        }
+
+        .form-group-full {
+            grid-column: span 1;
+        }
+
+        .status-options {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status-option label {
+            padding: 16px;
+            flex-direction: row;
+            justify-content: flex-start;
+            gap: 15px;
+        }
+
+        .status-option label i {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+        }
+
+        .media-dropzone {
+            padding: 40px 20px;
+            border-radius: 24px;
+        }
+
+        .upload-icon-circle {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+
+        .upload-prompt h3 {
+            font-size: 1.1rem;
+        }
+
+        .polaroid-frame {
+            padding: 12px 12px 45px 12px;
+            transform: rotate(0);
+        }
+
+        .media-toolbar {
+            top: -10px;
+            right: -10px;
+        }
+
+        .toolbar-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+            gap: 12px;
+            padding-top: 24px;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 12px 24px;
+        }
+
+        /* Summernote Responsive Fix */
+        .note-editor .note-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .edit-stats-banner {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
 </style>
 </head>
 <body>
@@ -621,7 +738,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </h2>
                         
                         <div class="form-grid">
-                            <div class="form-group" style="grid-column: span 2;">
+                            <div class="form-group form-group-full">
                                 <label class="form-label">
                                     Judul Berita <span class="required">*</span>
                                 </label>
@@ -668,7 +785,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                        readonly>
                             </div>
 
-                            <div class="form-group" style="grid-column: span 2;">
+                            <div class="form-group form-group-full">
                                 <label class="form-label">
                                     Tags & Label
                                 </label>

@@ -511,6 +511,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 20px;
         }
 
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
         .section-title {
             font-size: 1.25rem;
         }
@@ -692,7 +697,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 </small>
                             </div>
 
-                            <div class="form-group" style="grid-column: span 2;">
+                            <div class="form-group form-group-full">
                                 <label class="form-label">
                                     Tags & Label
                                 </label>
