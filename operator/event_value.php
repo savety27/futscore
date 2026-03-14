@@ -1363,7 +1363,8 @@ if ($eventId > 0) {
                             <p>Silakan input nilai team menggunakan form di atas.</p>
                         </div>
                     <?php else: ?>
-                        <?php foreach ($standingsByCategory as $group): ?>
+                        <?php foreach ($standingsByCategory as $grpIdx => $group): ?>
+                            <?php $totalRows = count($group['rows'] ?? []); $grpId = 'klasemen-grp-' . $grpIdx; ?>
                             <div class="section-title-wrap" style="margin-bottom: 20px;">
                                 <h3 style="font-family: var(--font-display); font-weight: 800; color: var(--heritage-gold); font-size: 1.25rem;">
                                     <?php echo htmlspecialchars($group['title'] ?? 'Klasemen Category'); ?>
@@ -1393,8 +1394,8 @@ if ($eventId > 0) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach (($group['rows'] ?? []) as $row): ?>
-                                            <tr>
+                                        <?php foreach (($group['rows'] ?? []) as $rowIdx => $row): ?>
+                                            <tr<?php echo $rowIdx >= 5 ? ' class="klasemen-extra-row" style="display:none;" data-grp="' . $grpId . '"' : ''; ?>>
                                                 <td style="text-align: left; font-weight: 700; color: var(--heritage-text);"><?php echo htmlspecialchars($row['team_name']); ?></td>
                                                 <td><?php echo (int)$row['mn']; ?></td>
                                                 <td><?php echo (int)$row['m']; ?></td>
@@ -1439,6 +1440,13 @@ if ($eventId > 0) {
                                     </tbody>
                                 </table>
                             </div>
+                            <?php if ($totalRows > 5): ?>
+                            <div class="klasemen-show-more-wrap" id="wrap-<?php echo $grpId; ?>">
+                                <button type="button" class="klasemen-show-more-btn" data-grp="<?php echo $grpId; ?>" data-total="<?php echo $totalRows; ?>">
+                                    <i class="fas fa-eye"></i> Lihat Semua (<?php echo $totalRows; ?> Team)
+                                </button>
+                            </div>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
@@ -1917,6 +1925,27 @@ if ($eventId > 0) {
                 if (editPlayerEmpty) editPlayerEmpty.style.display = 'block';
             });
         }
+
+        // Klasemen Show More functionality
+        const showMoreBtns = document.querySelectorAll('.klasemen-show-more-btn');
+        showMoreBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const grpId = this.dataset.grp;
+                const total = this.dataset.total;
+                const rows = document.querySelectorAll('tr[data-grp="' + grpId + '"]');
+                const isExpanded = this.classList.contains('expanded');
+
+                if (isExpanded) {
+                    rows.forEach(r => r.style.display = 'none');
+                    this.classList.remove('expanded');
+                    this.innerHTML = '<i class="fas fa-eye"></i> Lihat Semua (' + total + ' Team)';
+                } else {
+                    rows.forEach(r => r.style.display = '');
+                    this.classList.add('expanded');
+                    this.innerHTML = '<i class="fas fa-eye-slash"></i> Tampilkan Lebih Sedikit';
+                }
+            });
+        });
     </script>
 <?php include __DIR__ . '/includes/sidebar_js.php'; ?>
 </body>

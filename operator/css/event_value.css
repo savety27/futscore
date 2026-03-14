@@ -377,6 +377,60 @@
 .d-2 { animation-delay: 0.2s; }
 .d-3 { animation-delay: 0.3s; }
 
+/* Klasemen Show More Button */
+.klasemen-show-more-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: -32px;
+    margin-bottom: 48px;
+    width: 100%;
+}
+
+.klasemen-show-more-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 52px;
+    background: #fef3c7; /* Lighter orange/yellow */
+    color: var(--heritage-gold);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    border: 1px solid var(--heritage-border);
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.klasemen-show-more-btn:hover {
+    background: #fde68a;
+    color: #92400e;
+}
+
+.klasemen-show-more-btn.expanded {
+    background: #f3f4f6; /* Gray background */
+    color: var(--heritage-text-muted);
+}
+
+.klasemen-show-more-btn.expanded:hover {
+    background: #e5e7eb; /* Darker gray on hover */
+    color: var(--heritage-text);
+}
+
+/* Make sure the table rounded bottom corners match when not expanded */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+    margin-bottom: 0;
+    border: 1px solid var(--heritage-border);
+    background: white;
+}
+
 /* Responsive */
 @media screen and (max-width: 1024px) {
     .main { margin-left: 240px !important; width: calc(100% - 240px) !important; padding: 30px !important; }
@@ -388,4 +442,5 @@
     .topbar { flex-direction: column; align-items: flex-start; gap: 15px; }
     .hero-title { font-size: 2.25rem; }
     .form-grid-4, .form-grid-3, .form-grid-2 { grid-template-columns: 1fr; }
+    .klasemen-show-more-btn { font-size: 0.85rem; height: 48px; }
 }
