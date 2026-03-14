@@ -806,7 +806,8 @@
     box-shadow: var(--soft-shadow);
     position: relative;
     overflow: visible;
-    z-index: 3000;
+    /* cukup tinggi untuk di atas tabel, tapi tidak terlalu ekstrem */
+    z-index: 20;
 }
 
 .players-filter-form {
@@ -836,7 +837,7 @@
 
 .filter-container {
     position: relative;
-    z-index: 3000;
+    z-index: 20;
 }
 
 .filter-group label {
@@ -894,7 +895,8 @@
 
 .schedule-custom-select {
     position: relative;
-    z-index: 3001;
+    /* sedikit di atas kartu filter */
+    z-index: 21;
 }
 
 .schedule-custom-select-trigger {
@@ -971,7 +973,8 @@
     padding: 8px;
     max-height: 260px;
     overflow-y: auto;
-    z-index: 3002;
+    /* dropdown di atas trigger */
+    z-index: 22;
 }
 
 .schedule-custom-select.open .schedule-custom-select-menu {
