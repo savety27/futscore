@@ -448,7 +448,7 @@ try {
                         <i class="fas fa-arrow-left"></i> Kembali
                     </a>
                     <?php if ($challenge_data['status'] == 'open'): ?>
-                    <a href="../admin/challenge_edit.php?id=<?php echo $challenge_id; ?>" class="btn-premium btn-primary">
+                    <a href="challenge_edit.php?id=<?php echo $challenge_id; ?>" class="btn-premium btn-primary">
                         <i class="fas fa-edit"></i> Edit
                     </a>
                     <?php endif; ?>
